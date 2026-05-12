@@ -1,0 +1,1 @@
+kubectl exec -n otel-demo checkout-6985f55d55-rfzjw -c checkout -- /bin/sh -c 'docker inspect -f=\"{{.Config.Image}}\" checkout'

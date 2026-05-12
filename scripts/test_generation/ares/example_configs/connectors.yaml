@@ -1,0 +1,254 @@
+connectors:
+  huggingface:
+    type: ares.connectors.huggingface.HuggingFaceConnector
+    name: huggingface
+    model_config:
+      pretrained_model_name_or_path: 'Qwen/Qwen2-0.5B-Instruct'
+      dtype: 'bfloat16'
+    tokenizer_config:
+      pretrained_model_name_or_path: 'Qwen/Qwen2-0.5B-Instruct'
+      padding_side: 'left'
+    generate_kwargs:
+      chat_template:
+        return_tensors: 'pt'
+        thinking: true,
+        return_dict: true,
+        add_generation_prompt: true,
+      generate_params:
+        max_new_tokens: 50
+    seed: 42
+    device: auto
+  watsonx_agent:
+    type: ares.connectors.watsonx_agent_connector.WatsonxAgentConnector
+    name: watsonx_agent
+    api_config:
+      api_endpoint: https://us-south.ml.cloud.ibm.com/ml/v4/deployments/INSERT_YOUR_DEPLOYMENT_ID/ai_service?version=2021-05-01
+      timeout: 200
+      header:
+        Content-Type: "application/json"
+        Authorization: "Bearer $HEADER_TAG"
+      request_template:
+        messages: "$MESSAGES"
+      prepend_message_queue: True
+      other:
+        iam_url: https://iam.cloud.ibm.com/identity/token
+        grant_type: urn:ibm:params:oauth:grant-type:apikey
+        token_response_timeout: 400
+  watsonx:
+    type: ares.connectors.watsonx_connector.WatsonxConnector
+    name: watsonx
+    model_id: "ibm/granite-3-3-8b-instruct"
+    chat: True
+    add_assistant: True
+    system_prompt: "You are helpful assistant"
+    assistant_response: "Sure,"
+    model_config:
+      min_new_tokens: 0
+      max_new_tokens: 1000
+      decoding_method: greedy
+      repetition_penalty: 1
+    generate_kwargs:
+      guardrails: true
+      guardrails_hap_params:
+        input: true
+        output: true
+        threshold: 0.45
+      guardrails_pii_params:
+        input: true
+        output: true
+        mask:
+        remove_entity_value: true
+    hap_response: I'm sorry, I cannot return harmful content
+    pii_response: I'm sorry, I cannot return sensitive content
+  watsonx_rest:
+    type: ares.connectors.watsonx_rest_connector.WatsonxRESTConnector
+    name: watsonx_rest_granite
+    api_config:
+      api_endpoint: https://INSERT_YOUR_WATSONX_URL/ml/v1/text/chat?version=2024-03-14  # https://cloud.ibm.com/apidocs/watsonx-ai#text-chat
+      timeout: 200
+      header:
+        Content-Type: "application/json"
+        Authorization: "Bearer $HEADER_TAG"
+        Accept: "application/json"
+      request_template:
+        model_id: "ibm/granite-3-3-8b-instruct"
+        messages: "$MESSAGES"
+        parameters:
+          max_new_tokens: 100
+          time_limit: 1000
+      other:
+        iam_url: https://iam.cloud.ibm.com/identity/token
+        grant_type: urn:ibm:params:oauth:grant-type:apikey
+        token_response_timeout: 40
+  shieldgemma-2b:
+    type: ares.connectors.guardrails.shield_gemma_hf.ShieldGemmaHF
+    name: shieldgemma-2b
+    model_config:
+      pretrained_model_name_or_path: 'google/shieldgemma-2b'
+      dtype: 'bfloat16'
+    tokenizer_config:
+      pretrained_model_name_or_path: 'google/shieldgemma-2b'
+      padding_side: 'left'
+    generate_kwargs:
+      chat_template:
+        return_tensors: 'pt'
+        return_dict: true,
+        add_generation_prompt: true,
+      generate_params:
+        max_new_tokens: 20
+    device: auto
+  granite-guardian-3.0:
+    type: ares.connectors.guardrails.granite_guardian_hf.GraniteGuardianHF
+    name: granite-guardian-3.0-2
+    model_config:
+      pretrained_model_name_or_path: 'ibm-granite/granite-guardian-3.0-2b'
+      dtype: 'bfloat16'
+    tokenizer_config:
+      pretrained_model_name_or_path: 'ibm-granite/granite-guardian-3.0-2b'
+      padding_side: 'left'
+    generate_kwargs:
+      chat_template:
+        return_tensors: 'pt'
+        return_dict: true,
+        add_generation_prompt: true,
+      generate_params:
+        max_new_tokens: 20
+    device: auto
+    input_risk_name: 'harm'
+    output_risk_name: 'harm'
+  granite-guardian-3.3:
+    type: ares.connectors.guardrails.granite_guardian_hf.GraniteGuardianHF
+    name: granite-guardian-3.3-8b
+    model_config:
+      pretrained_model_name_or_path: 'ibm-granite/granite-guardian-3.3-8b'
+      dtype: 'bfloat16'
+    tokenizer_config:
+      pretrained_model_name_or_path: 'ibm-granite/granite-guardian-3.3-8b'
+      padding_side: 'left'
+    generate_kwargs:
+      chat_template:
+        return_tensors: 'pt'
+        return_dict: true,
+        add_generation_prompt: true,
+      generate_params:
+        max_new_tokens: 20
+    device: auto
+    input_risk_name: 'harm'
+    output_risk_name: 'harm'
+  granite-guardian-3.3-8b:
+    type: ares.connectors.guardrails.granite_guardian_hf.GraniteGuardianHF
+    name: granite-guardian-3.3-8b
+    model_config:
+      pretrained_model_name_or_path: 'ibm-granite/granite-guardian-3.3-8b'
+      dtype: 'bfloat16'
+    tokenizer_config:
+      pretrained_model_name_or_path: 'ibm-granite/granite-guardian-3.3-8b'
+      padding_side: 'left'
+    generate_kwargs:
+      chat_template:
+        return_tensors: 'pt'
+        return_dict: true,
+        add_generation_prompt: true,
+      generate_params:
+        max_new_tokens: 20
+    device: auto
+    input_criteria_id: 'jailbreak'
+    output_criteria_id: 'harm'
+  input-reject-all:
+    type: ares.connectors.guardrails.reject.RejectGuardrail
+    name: input-reject-all
+  granite-guardian-3.1:
+    type: ares.connectors.guardrails.granite_guardian_hf.GraniteGuardianHF
+    name: granite-guardian-3.0-2
+    model_config:
+      pretrained_model_name_or_path: 'ibm-granite/granite-guardian-3.1-2b'
+    tokenizer_config:
+      pretrained_model_name_or_path: 'ibm-granite/granite-guardian-3.1-2b'
+    generate_kwargs:
+      generate_params:
+        max_new_tokens: 20
+    device: auto
+    input_risk_name: 'harm'
+    output_risk_name: 'harm'
+  harmbench-eval-llama:
+    type: ares.connectors.huggingface.HuggingFaceConnector
+    name: cais/HarmBench-Llama-2-13b-cls
+    model_config:
+      pretrained_model_name_or_path: 'cais/HarmBench-Llama-2-13b-cls'
+      dtype: 'float16'
+    tokenizer_config:
+      pretrained_model_name_or_path: 'cais/HarmBench-Llama-2-13b-cls'
+      truncation_side: 'left'
+    generate_kwargs:
+      generate_params:
+        max_new_tokens: 1
+        do_sample: False
+    device: "auto"
+  reject-all:
+    type: ares.connectors.guardrails.reject.RejectGuardrail
+    name: reject-all
+  icarus_connector:
+    type: "ares_icarus_connector.connector.ICARUSConnector"
+    name: "ICARUS"
+    target: "http://localhost:8501/"
+    headless: "false"
+    keep-session: "true"  # useful for multi-turn attacks
+    max-retry: 3
+    sleep-time: 1.5
+    timeout: 10
+  wxo:
+    type: ares_watsonx_orchestrate.connector.wxo_connector.WXOAgentConnector
+    name: wxo_agent
+    keep-session: False
+    api_config:
+      api_endpoint: "http://localhost:4321/api/v1/orchestrate/runs?stream=true&stream_timeout=120000&multiple_content=true"
+      timeout: 500
+      api_key_env_var: WXO_LOCAL_APIKEY # name for local WXO API key from ~/.cache/orchestrate/credentials.yaml that should be added to .env
+      header:
+        Content-Type: "application/json"
+        Authorization: "Bearer $HEADER_TAG"
+      request_template:
+        message: "$MESSAGES"
+        agent_id: "$AGENT_ID"  # run `orchestrate agents list` to know your agent's ID.
+  crescendo-helper:
+    type: ares.connectors.watsonx_connector.WatsonxConnector
+    name: helper
+    model_id: meta-llama/llama-4-maverick-17b-128e-instruct-fp8
+    chat: True
+    model_config:
+      min_new_tokens: 0
+      max_new_tokens: 1000
+      decoding_method: greedy
+      repetition_penalty: 1
+    generate_kwargs:
+      guardrails: False
+    system_prompt:
+      role: system
+      content: "Use system prompt from https://github.com/Azure/PyRIT/blob/main/pyrit/datasets/executors/crescendo/crescendo_variant_1.yaml"
+  crescendo-judge:
+    type: ares.connectors.watsonx_connector.WatsonxConnector
+    name: judge
+    model_id: openai/gpt-oss-120b
+    chat: True
+    model_config:
+      min_new_tokens: 0
+      max_new_tokens: 1000
+      decoding_method: greedy
+      repetition_penalty: 1
+    generate_kwargs:
+      guardrails: False
+    system_prompt: 
+      role: system
+      content: "Use system prompt from https://github.com/Azure/PyRIT/blob/main/pyrit/score/config/scales/red_teamer_system_prompt.yaml"
+  litellm_connector_ollama:
+    type: ares_litellm.LiteLLMConnector
+    name: "gpt-oss-20-on-ollama"
+    endpoint-type: "ollama"
+    model: "ollama/gpt-oss:20b"
+  litellm_connector:
+    name: "gpt-oss-120b-on-watsonx"
+    endpoint-type: "watsonx"
+    endpoint: ""
+    model: "openai/gpt-oss-120b"
+    reasoning_effort: "low"
+    prompt_path: 'assets/gptoss_prompt.yaml'

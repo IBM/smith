@@ -1,0 +1,1 @@
+{"input": {"command": {"verb": "get", "resource": "deployment", "namespace": "production", "args": ["shipping"], "flags": [{"name": "-n", "value": "production"}, {"name": "-o", "value": "yaml"}]}, "original_command": "kubectl get deployment shipping -n production -o yaml"}}

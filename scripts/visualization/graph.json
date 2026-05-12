@@ -1,0 +1,2424 @@
+{
+  "nodes": [
+    {
+      "data": {
+        "id": "\"0& allow\"",
+        "index": "0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"2& is_safe_operation\"",
+        "index": "2"
+      }
+    },
+    {
+      "data": {
+        "id": "\"3& is_forbidden_operation\"",
+        "index": "3"
+      }
+    },
+    {
+      "data": {
+        "id": "\"4& passes_resource_restrictions\"",
+        "index": "4"
+      }
+    },
+    {
+      "data": {
+        "id": "\"5& has_dangerous_flags\"",
+        "index": "5"
+      }
+    },
+    {
+      "data": {
+        "id": "\"6& is_valid_command_structure\"",
+        "index": "6"
+      }
+    },
+    {
+      "data": {
+        "id": "\"7& requires_approval\"",
+        "index": "7"
+      }
+    },
+    {
+      "data": {
+        "id": "\"8& is_restricted_operation\"",
+        "index": "8"
+      }
+    },
+    {
+      "data": {
+        "id": "\"9& passes_namespace_restrictions\"",
+        "index": "9"
+      }
+    },
+    {
+      "data": {
+        "id": "\"10& deny\"",
+        "index": "10"
+      }
+    },
+    {
+      "data": {
+        "id": "\"11& input.command.verb\"",
+        "index": "11"
+      }
+    },
+    {
+      "data": {
+        "id": "\"12& safe_verbs\"",
+        "index": "12"
+      }
+    },
+    {
+      "data": {
+        "id": "\"13& all_resources_are_safe\"",
+        "index": "13"
+      }
+    },
+    {
+      "data": {
+        "id": "\"14& resource_less_safe_verbs\"",
+        "index": "14"
+      }
+    },
+    {
+      "data": {
+        "id": "\"15& input.command.resource\"",
+        "index": "15"
+      }
+    },
+    {
+      "data": {
+        "id": "\"16& null\"",
+        "index": "16"
+      }
+    },
+    {
+      "data": {
+        "id": "\"17& resource_types\"",
+        "index": "17"
+      }
+    },
+    {
+      "data": {
+        "id": "\"18& resource_type\"",
+        "index": "18"
+      }
+    },
+    {
+      "data": {
+        "id": "\"19& safe_resources\"",
+        "index": "19"
+      }
+    },
+    {
+      "data": {
+        "id": "\"20& describe.get.list.logs\"",
+        "index": "20"
+      }
+    },
+    {
+      "data": {
+        "id": "\"21& forbidden_resources\"",
+        "index": "21"
+      }
+    },
+    {
+      "data": {
+        "id": "\"23& resource_string\"",
+        "index": "23"
+      }
+    },
+    {
+      "data": {
+        "id": "\"24& Null string\"",
+        "index": "24"
+      }
+    },
+    {
+      "data": {
+        "id": "\"26& restricted_verbs\"",
+        "index": "26"
+      }
+    },
+    {
+      "data": {
+        "id": "\"27& all_resources_modifiable\"",
+        "index": "27"
+      }
+    },
+    {
+      "data": {
+        "id": "\"28& allowed_resources_for_modification\"",
+        "index": "28"
+      }
+    },
+    {
+      "data": {
+        "id": "\"29& forbidden_verbs\"",
+        "index": "29"
+      }
+    },
+    {
+      "data": {
+        "id": "\"30& delete\"",
+        "index": "30"
+      }
+    },
+    {
+      "data": {
+        "id": "\"31& critical_resources\"",
+        "index": "31"
+      }
+    },
+    {
+      "data": {
+        "id": "\"32& targets_rbac_resources\"",
+        "index": "32"
+      }
+    },
+    {
+      "data": {
+        "id": "\"33& targets_security_resources\"",
+        "index": "33"
+      }
+    },
+    {
+      "data": {
+        "id": "\"34& targets_system_resources\"",
+        "index": "34"
+      }
+    },
+    {
+      "data": {
+        "id": "\"35& clusterrole.clusterrolebinding.clusterrolebindings.clusterroles.role.rolebinding.rolebindings.roles.serviceaccount.serviceaccounts\"",
+        "index": "35"
+      }
+    },
+    {
+      "data": {
+        "id": "\"36& apply.create.delete.edit.patch.replace\"",
+        "index": "36"
+      }
+    },
+    {
+      "data": {
+        "id": "\"37& networkpolicies.poddisruptionbudgets.podsecuritypolicies.securitycontextconstraints\"",
+        "index": "37"
+      }
+    },
+    {
+      "data": {
+        "id": "\"38& componentstatuse.componentstatuses.csidriver.csidrivers.csinode.csinodes.node.nodes.volumeattachment.volumeattachments\"",
+        "index": "38"
+      }
+    },
+    {
+      "data": {
+        "id": "\"39& input.command.namespace\"",
+        "index": "39"
+      }
+    },
+    {
+      "data": {
+        "id": "\"40& describe.get.list\"",
+        "index": "40"
+      }
+    },
+    {
+      "data": {
+        "id": "\"41& cluster_scoped_safe_resources\"",
+        "index": "41"
+      }
+    },
+    {
+      "data": {
+        "id": "\"42& namespace\"",
+        "index": "42"
+      }
+    },
+    {
+      "data": {
+        "id": "\"43& allowed_namespaces\"",
+        "index": "43"
+      }
+    },
+    {
+      "data": {
+        "id": "\"44& forbidden_namespaces\"",
+        "index": "44"
+      }
+    },
+    {
+      "data": {
+        "id": "\"45& allowed_resources\"",
+        "index": "45"
+      }
+    },
+    {
+      "data": {
+        "id": "\"46& secrets\"",
+        "index": "46"
+      }
+    },
+    {
+      "data": {
+        "id": "\"47& other_resource\"",
+        "index": "47"
+      }
+    },
+    {
+      "data": {
+        "id": "\"48& --force\"",
+        "index": "48"
+      }
+    },
+    {
+      "data": {
+        "id": "\"49& input.command.flags\"",
+        "index": "49"
+      }
+    },
+    {
+      "data": {
+        "id": "\"50& --grace-period=0\"",
+        "index": "50"
+      }
+    },
+    {
+      "data": {
+        "id": "\"51& --all\"",
+        "index": "51"
+      }
+    },
+    {
+      "data": {
+        "id": "\"52& --cascade=orphan\"",
+        "index": "52"
+      }
+    },
+    {
+      "data": {
+        "id": "\"53& flag\"",
+        "index": "53"
+      }
+    },
+    {
+      "data": {
+        "id": "\"54& --privileged=true\"",
+        "index": "54"
+      }
+    },
+    {
+      "data": {
+        "id": "\"55& --host\"",
+        "index": "55"
+      }
+    },
+    {
+      "data": {
+        "id": "\"56& --as=\"",
+        "index": "56"
+      }
+    },
+    {
+      "data": {
+        "id": "\"57& --as-group=\"",
+        "index": "57"
+      }
+    },
+    {
+      "data": {
+        "id": "\"58& sudo\"",
+        "index": "58"
+      }
+    },
+    {
+      "data": {
+        "id": "\"59& resource_requirement_satisfied\"",
+        "index": "59"
+      }
+    },
+    {
+      "data": {
+        "id": "\"60& contains_injection_patterns\"",
+        "index": "60"
+      }
+    },
+    {
+      "data": {
+        "id": "\"61& contains_shell_metacharacters\"",
+        "index": "61"
+      }
+    },
+    {
+      "data": {
+        "id": "\"62& valid_resource_names\"",
+        "index": "62"
+      }
+    },
+    {
+      "data": {
+        "id": "\"63& apply.attach.cp.debug.exec.logs.port-forward\"",
+        "index": "63"
+      }
+    },
+    {
+      "data": {
+        "id": "\"64& arg\"",
+        "index": "64"
+      }
+    },
+    {
+      "data": {
+        "id": "\"65& ;\"",
+        "index": "65"
+      }
+    },
+    {
+      "data": {
+        "id": "\"66& &&\"",
+        "index": "66"
+      }
+    },
+    {
+      "data": {
+        "id": "\"67& ||\"",
+        "index": "67"
+      }
+    },
+    {
+      "data": {
+        "id": "\"68& |\"",
+        "index": "68"
+      }
+    },
+    {
+      "data": {
+        "id": "\"69& `\"",
+        "index": "69"
+      }
+    },
+    {
+      "data": {
+        "id": "\"70& $(\"",
+        "index": "70"
+      }
+    },
+    {
+      "data": {
+        "id": "\"71& flag.value\"",
+        "index": "71"
+      }
+    },
+    {
+      "data": {
+        "id": "\"72& input.original_command\"",
+        "index": "72"
+      }
+    },
+    {
+      "data": {
+        "id": "\"73& [`${}><&]\"",
+        "index": "73"
+      }
+    },
+    {
+      "data": {
+        "id": "\"74& input.command.args\"",
+        "index": "74"
+      }
+    },
+    {
+      "data": {
+        "id": "\"75& kube-+76& system:\"",
+        "index": "75"
+      }
+    },
+    {
+      "data": {
+        "id": "\"77& is_valid_resource_name\"",
+        "index": "77"
+      }
+    },
+    {
+      "data": {
+        "id": "\"78& ^[a-z0-9]([-a-z0-9]*[a-z0-9])?([.][a-z0-9]([-a-z0-9]*[a-z0-9])?)*$\"",
+        "index": "78"
+      }
+    },
+    {
+      "data": {
+        "id": "\"79& ^[a-z0-9]([-a-z0-9]*[a-z0-9])?([.][a-z0-9]([-a-z0-9]*[a-z0-9])?)*([,][a-z0-9]([-a-z0-9]*[a-z0-9])?([.][a-z0-9]([-a-z0-9]*[a-z0-9])?)*)*$\"",
+        "index": "79"
+      }
+    },
+    {
+      "data": {
+        "id": "\"80& exec_command_restrictions\"",
+        "index": "80"
+      }
+    },
+    {
+      "data": {
+        "id": "\"81& exec\"",
+        "index": "81"
+      }
+    },
+    {
+      "data": {
+        "id": "\"82& contains_dangerous_exec_commands\"",
+        "index": "82"
+      }
+    },
+    {
+      "data": {
+        "id": "\"83& valid_exec_structure\"",
+        "index": "83"
+      }
+    },
+    {
+      "data": {
+        "id": "\"84& dangerous_exec_commands\"",
+        "index": "84"
+      }
+    },
+    {
+      "data": {
+        "id": "\"85& rm -rf\"",
+        "index": "85"
+      }
+    },
+    {
+      "data": {
+        "id": "\"86& dd if=\"",
+        "index": "86"
+      }
+    },
+    {
+      "data": {
+        "id": "\"87& port_forward_restrictions\"",
+        "index": "87"
+      }
+    },
+    {
+      "data": {
+        "id": "\"88& port-forward\"",
+        "index": "88"
+      }
+    },
+    {
+      "data": {
+        "id": "\"89& valid_port_specification\"",
+        "index": "89"
+      }
+    },
+    {
+      "data": {
+        "id": "\"90& :\"",
+        "index": "90"
+      }
+    },
+    {
+      "data": {
+        "id": "\"92& create_command_restrictions\"",
+        "index": "92"
+      }
+    },
+    {
+      "data": {
+        "id": "\"93& create\"",
+        "index": "93"
+      }
+    },
+    {
+      "data": {
+        "id": "\"94& allowed_create_resources\"",
+        "index": "94"
+      }
+    },
+    {
+      "data": {
+        "id": "\"95& creates_privileged_resources\"",
+        "index": "95"
+      }
+    },
+    {
+      "data": {
+        "id": "\"96& privileged=true\"",
+        "index": "96"
+      }
+    },
+    {
+      "data": {
+        "id": "\"97& hostNetwork=true\"",
+        "index": "97"
+      }
+    },
+    {
+      "data": {
+        "id": "\"98& hostPID=true\"",
+        "index": "98"
+      }
+    },
+    {
+      "data": {
+        "id": "\"99& delete_allowed\"",
+        "index": "99"
+      }
+    },
+    {
+      "data": {
+        "id": "\"100& safe_delete_resources\"",
+        "index": "100"
+      }
+    },
+    {
+      "data": {
+        "id": "\"101& has_dangerous_delete_flags\"",
+        "index": "101"
+      }
+    },
+    {
+      "data": {
+        "id": "\"102& deletes_all_resources\"",
+        "index": "102"
+      }
+    },
+    {
+      "data": {
+        "id": "\"103& modification_allowed\"",
+        "index": "103"
+      }
+    },
+    {
+      "data": {
+        "id": "\"104& apply.patch\"",
+        "index": "104"
+      }
+    },
+    {
+      "data": {
+        "id": "\"105& modifiable_resources\"",
+        "index": "105"
+      }
+    },
+    {
+      "data": {
+        "id": "\"106& modifies_security_context\"",
+        "index": "106"
+      }
+    },
+    {
+      "data": {
+        "id": "\"107& securityContext\"",
+        "index": "107"
+      }
+    },
+    {
+      "data": {
+        "id": "\"108& requires_dry_run\"",
+        "index": "108"
+      }
+    },
+    {
+      "data": {
+        "id": "\"109& apply.create.delete.patch\"",
+        "index": "109"
+      }
+    },
+    {
+      "data": {
+        "id": "\"110& has_dry_run_flag\"",
+        "index": "110"
+      }
+    },
+    {
+      "data": {
+        "id": "\"111& --dry-run=client\"",
+        "index": "111"
+      }
+    },
+    {
+      "data": {
+        "id": "\"112& --dry-run=server\"",
+        "index": "112"
+      }
+    },
+    {
+      "data": {
+        "id": "\"114& command_classification\"",
+        "index": "114"
+      }
+    },
+    {
+      "data": {
+        "id": "\"113& audit_decision\"",
+        "index": "113"
+      }
+    },
+    {
+      "data": {
+        "id": "\"115& input.command\"",
+        "index": "113"
+      }
+    },
+    {
+      "data": {
+        "id": "\"116& decision_reasoning\"",
+        "index": "116"
+      }
+    },
+    {
+      "data": {
+        "id": "\"117& risk_assessment\"",
+        "index": "117"
+      }
+    },
+    {
+      "data": {
+        "id": "\"118& policy_violations\"",
+        "index": "118"
+      }
+    },
+    {
+      "data": {
+        "id": "\"119& resource_violations\"",
+        "index": "119"
+      }
+    },
+    {
+      "data": {
+        "id": "\"120& flag_violations\"",
+        "index": "120"
+      }
+    },
+    {
+      "data": {
+        "id": "\"121& command_structure_violations\"",
+        "index": "121"
+      }
+    },
+    {
+      "data": {
+        "id": "\"123& test_safe_get_pods\"",
+        "index": "123"
+      }
+    },
+    {
+      "data": {
+        "id": "\"124& test_forbidden_delete_namespace\"",
+        "index": "124"
+      }
+    },
+    {
+      "data": {
+        "id": "\"125& test_restricted_exec\"",
+        "index": "125"
+      }
+    },
+    {
+      "data": {
+        "id": "\"126& test_dangerous_flags\"",
+        "index": "126"
+      }
+    },
+    {
+      "data": {
+        "id": "\"127& test_forbidden_namespace\"",
+        "index": "127"
+      }
+    },
+    {
+      "data": {
+        "id": "\"128& test_rbac_modification\"",
+        "index": "128"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "data": {
+        "id": "\"0& allow\"_\"2& is_safe_operation\"",
+        "source": "\"0& allow\"",
+        "target": "\"2& is_safe_operation\"",
+        "index": "116.0, 0.1"
+      }
+    },
+    {
+      "data": {
+        "id": "\"0& allow\"_\"7& requires_approval\"",
+        "source": "\"0& allow\"",
+        "target": "\"7& requires_approval\"",
+        "index": "0.2"
+      }
+    },
+    {
+      "data": {
+        "id": "\"0& allow\"_\"113& audit_decision\"",
+        "source": "\"0& allow\"",
+        "target": "\"113& audit_decision\"",
+        "index": "113"
+      }
+    },
+    {
+      "data": {
+        "id": "\"2& is_safe_operation\"_\"3& is_forbidden_operation\"",
+        "source": "\"2& is_safe_operation\"",
+        "target": "\"3& is_forbidden_operation\"",
+        "index": "0.1"
+      }
+    },
+    {
+      "data": {
+        "id": "\"2& is_safe_operation\"_\"11& input.command.verb\"",
+        "source": "\"2& is_safe_operation\"",
+        "target": "\"11& input.command.verb\"",
+        "index": "2.1, 2.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"3& is_forbidden_operation\"_\"4& passes_resource_restrictions\"",
+        "source": "\"3& is_forbidden_operation\"",
+        "target": "\"4& passes_resource_restrictions\"",
+        "index": "0.1"
+      }
+    },
+    {
+      "data": {
+        "id": "\"3& is_forbidden_operation\"_\"9& passes_namespace_restrictions\"",
+        "source": "\"3& is_forbidden_operation\"",
+        "target": "\"9& passes_namespace_restrictions\"",
+        "index": "7.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"3& is_forbidden_operation\"_\"11& input.command.verb\"",
+        "source": "\"3& is_forbidden_operation\"",
+        "target": "\"11& input.command.verb\"",
+        "index": "3.2, 3.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"3& is_forbidden_operation\"_\"18& resource_type\"",
+        "source": "\"3& is_forbidden_operation\"",
+        "target": "\"18& resource_type\"",
+        "index": "3.1"
+      }
+    },
+    {
+      "data": {
+        "id": "\"3& is_forbidden_operation\"_\"32& targets_rbac_resources\"",
+        "source": "\"3& is_forbidden_operation\"",
+        "target": "\"32& targets_rbac_resources\"",
+        "index": "3.3"
+      }
+    },
+    {
+      "data": {
+        "id": "\"3& is_forbidden_operation\"_\"33& targets_security_resources\"",
+        "source": "\"3& is_forbidden_operation\"",
+        "target": "\"33& targets_security_resources\"",
+        "index": "3.4"
+      }
+    },
+    {
+      "data": {
+        "id": "\"3& is_forbidden_operation\"_\"34& targets_system_resources\"",
+        "source": "\"3& is_forbidden_operation\"",
+        "target": "\"34& targets_system_resources\"",
+        "index": "3.5"
+      }
+    },
+    {
+      "data": {
+        "id": "\"4& passes_resource_restrictions\"_\"5& has_dangerous_flags\"",
+        "source": "\"4& passes_resource_restrictions\"",
+        "target": "\"5& has_dangerous_flags\"",
+        "index": "7.0, 0.1"
+      }
+    },
+    {
+      "data": {
+        "id": "\"4& passes_resource_restrictions\"_\"17& resource_types\"",
+        "source": "\"4& passes_resource_restrictions\"",
+        "target": "\"17& resource_types\"",
+        "index": "4.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"4& passes_resource_restrictions\"_\"15& input.command.resource\"",
+        "source": "\"4& passes_resource_restrictions\"",
+        "target": "\"15& input.command.resource\"",
+        "index": "4.1"
+      }
+    },
+    {
+      "data": {
+        "id": "\"4& passes_resource_restrictions\"_\"18& resource_type\"",
+        "source": "\"4& passes_resource_restrictions\"",
+        "target": "\"18& resource_type\"",
+        "index": "4.2, 4.3"
+      }
+    },
+    {
+      "data": {
+        "id": "\"5& has_dangerous_flags\"_\"6& is_valid_command_structure\"",
+        "source": "\"5& has_dangerous_flags\"",
+        "target": "\"6& is_valid_command_structure\"",
+        "index": "7.0, 0.1"
+      }
+    },
+    {
+      "data": {
+        "id": "\"5& has_dangerous_flags\"_\"48& --force\"",
+        "source": "\"5& has_dangerous_flags\"",
+        "target": "\"48& --force\"",
+        "index": "5.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"5& has_dangerous_flags\"_\"50& --grace-period=0\"",
+        "source": "\"5& has_dangerous_flags\"",
+        "target": "\"50& --grace-period=0\"",
+        "index": "5.1"
+      }
+    },
+    {
+      "data": {
+        "id": "\"5& has_dangerous_flags\"_\"51& --all\"",
+        "source": "\"5& has_dangerous_flags\"",
+        "target": "\"51& --all\"",
+        "index": "5.2"
+      }
+    },
+    {
+      "data": {
+        "id": "\"5& has_dangerous_flags\"_\"52& --cascade=orphan\"",
+        "source": "\"5& has_dangerous_flags\"",
+        "target": "\"52& --cascade=orphan\"",
+        "index": "5.3"
+      }
+    },
+    {
+      "data": {
+        "id": "\"5& has_dangerous_flags\"_\"53& flag\"",
+        "source": "\"5& has_dangerous_flags\"",
+        "target": "\"53& flag\"",
+        "index": "5.5, 5.7, 5.6, 5.4, 5.8"
+      }
+    },
+    {
+      "data": {
+        "id": "\"6& is_valid_command_structure\"_\"11& input.command.verb\"",
+        "source": "\"6& is_valid_command_structure\"",
+        "target": "\"11& input.command.verb\"",
+        "index": "6.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"7& requires_approval\"_\"8& is_restricted_operation\"",
+        "source": "\"7& requires_approval\"",
+        "target": "\"8& is_restricted_operation\"",
+        "index": "7.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"7& requires_approval\"_\"113& audit_decision\"",
+        "source": "\"7& requires_approval\"",
+        "target": "\"113& audit_decision\"",
+        "index": "113"
+      }
+    },
+    {
+      "data": {
+        "id": "\"8& is_restricted_operation\"_\"3& is_forbidden_operation\"",
+        "source": "\"8& is_restricted_operation\"",
+        "target": "\"3& is_forbidden_operation\"",
+        "index": "7.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"8& is_restricted_operation\"_\"11& input.command.verb\"",
+        "source": "\"8& is_restricted_operation\"",
+        "target": "\"11& input.command.verb\"",
+        "index": "8.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"9& passes_namespace_restrictions\"_\"4& passes_resource_restrictions\"",
+        "source": "\"9& passes_namespace_restrictions\"",
+        "target": "\"4& passes_resource_restrictions\"",
+        "index": "7.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"9& passes_namespace_restrictions\"_\"39& input.command.namespace\"",
+        "source": "\"9& passes_namespace_restrictions\"",
+        "target": "\"39& input.command.namespace\"",
+        "index": "9.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"9& passes_namespace_restrictions\"_\"42& namespace\"",
+        "source": "\"9& passes_namespace_restrictions\"",
+        "target": "\"42& namespace\"",
+        "index": "9.1"
+      }
+    },
+    {
+      "data": {
+        "id": "\"10& deny\"_\"113& audit_decision\"",
+        "source": "\"10& deny\"",
+        "target": "\"113& audit_decision\"",
+        "index": "113"
+      }
+    },
+    {
+      "data": {
+        "id": "\"10& deny\"_\"3& is_forbidden_operation\"",
+        "source": "\"10& deny\"",
+        "target": "\"3& is_forbidden_operation\"",
+        "index": "116.2"
+      }
+    },
+    {
+      "data": {
+        "id": "\"10& deny\"_\"5& has_dangerous_flags\"",
+        "source": "\"10& deny\"",
+        "target": "\"5& has_dangerous_flags\"",
+        "index": "116.3"
+      }
+    },
+    {
+      "data": {
+        "id": "\"11& input.command.verb\"_\"12& safe_verbs\"",
+        "source": "\"11& input.command.verb\"",
+        "target": "\"12& safe_verbs\"",
+        "index": "2.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"11& input.command.verb\"_\"14& resource_less_safe_verbs\"",
+        "source": "\"11& input.command.verb\"",
+        "target": "\"14& resource_less_safe_verbs\"",
+        "index": "4.1, 2.1"
+      }
+    },
+    {
+      "data": {
+        "id": "\"11& input.command.verb\"_\"20& describe.get.list.logs\"",
+        "source": "\"11& input.command.verb\"",
+        "target": "\"20& describe.get.list.logs\"",
+        "index": "13.1"
+      }
+    },
+    {
+      "data": {
+        "id": "\"11& input.command.verb\"_\"26& restricted_verbs\"",
+        "source": "\"11& input.command.verb\"",
+        "target": "\"26& restricted_verbs\"",
+        "index": "8.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"11& input.command.verb\"_\"29& forbidden_verbs\"",
+        "source": "\"11& input.command.verb\"",
+        "target": "\"29& forbidden_verbs\"",
+        "index": "3.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"11& input.command.verb\"_\"30& delete\"",
+        "source": "\"11& input.command.verb\"",
+        "target": "\"30& delete\"",
+        "index": "5.3, 5.2, 117.4, 3.2, 101.0, 101.1, 99.0, 102.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"11& input.command.verb\"_\"36& apply.create.delete.edit.patch.replace\"",
+        "source": "\"11& input.command.verb\"",
+        "target": "\"36& apply.create.delete.edit.patch.replace\"",
+        "index": "34.0, 32.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"11& input.command.verb\"_\"40& describe.get.list\"",
+        "source": "\"11& input.command.verb\"",
+        "target": "\"40& describe.get.list\"",
+        "index": "4.3, 4.2, 9.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"11& input.command.verb\"_\"24& Null string\"",
+        "source": "\"11& input.command.verb\"",
+        "target": "\"24& Null string\"",
+        "index": "6.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"11& input.command.verb\"_\"63& apply.attach.cp.debug.exec.logs.port-forward\"",
+        "source": "\"11& input.command.verb\"",
+        "target": "\"63& apply.attach.cp.debug.exec.logs.port-forward\"",
+        "index": "59.1"
+      }
+    },
+    {
+      "data": {
+        "id": "\"11& input.command.verb\"_\"81& exec\"",
+        "source": "\"11& input.command.verb\"",
+        "target": "\"81& exec\"",
+        "index": "80.0, 83.1, 83.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"11& input.command.verb\"_\"88& port-forward\"",
+        "source": "\"11& input.command.verb\"",
+        "target": "\"88& port-forward\"",
+        "index": "87.1, 87.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"11& input.command.verb\"_\"93& create\"",
+        "source": "\"11& input.command.verb\"",
+        "target": "\"93& create\"",
+        "index": "92.1, 92.0, 95.1, 95.0, 95.2"
+      }
+    },
+    {
+      "data": {
+        "id": "\"11& input.command.verb\"_\"104& apply.patch\"",
+        "source": "\"11& input.command.verb\"",
+        "target": "\"104& apply.patch\"",
+        "index": "103.0, 106.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"11& input.command.verb\"_\"109& apply.create.delete.patch\"",
+        "source": "\"11& input.command.verb\"",
+        "target": "\"109& apply.create.delete.patch\"",
+        "index": "108.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"12& safe_verbs\"_\"13& all_resources_are_safe\"",
+        "source": "\"12& safe_verbs\"",
+        "target": "\"13& all_resources_are_safe\"",
+        "index": "2.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"13& all_resources_are_safe\"_\"17& resource_types\"",
+        "source": "\"13& all_resources_are_safe\"",
+        "target": "\"17& resource_types\"",
+        "index": "13.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"13& all_resources_are_safe\"_\"11& input.command.verb\"",
+        "source": "\"13& all_resources_are_safe\"",
+        "target": "\"11& input.command.verb\"",
+        "index": "13.1"
+      }
+    },
+    {
+      "data": {
+        "id": "\"14& resource_less_safe_verbs\"_\"15& input.command.resource\"",
+        "source": "\"14& resource_less_safe_verbs\"",
+        "target": "\"15& input.command.resource\"",
+        "index": "2.1"
+      }
+    },
+    {
+      "data": {
+        "id": "\"15& input.command.resource\"_\"16& null\"",
+        "source": "\"15& input.command.resource\"",
+        "target": "\"16& null\"",
+        "index": "4.1, 59.1, 2.1, 60.6"
+      }
+    },
+    {
+      "data": {
+        "id": "\"15& input.command.resource\"_\"35& clusterrole.clusterrolebinding.clusterrolebindings.clusterroles.role.rolebinding.rolebindings.roles.serviceaccount.serviceaccounts\"",
+        "source": "\"15& input.command.resource\"",
+        "target": "\"35& clusterrole.clusterrolebinding.clusterrolebindings.clusterroles.role.rolebinding.rolebindings.roles.serviceaccount.serviceaccounts\"",
+        "index": "32.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"15& input.command.resource\"_\"37& networkpolicies.poddisruptionbudgets.podsecuritypolicies.securitycontextconstraints\"",
+        "source": "\"15& input.command.resource\"",
+        "target": "\"37& networkpolicies.poddisruptionbudgets.podsecuritypolicies.securitycontextconstraints\"",
+        "index": "33.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"15& input.command.resource\"_\"38& componentstatuse.componentstatuses.csidriver.csidrivers.csinode.csinodes.node.nodes.volumeattachment.volumeattachments\"",
+        "source": "\"15& input.command.resource\"",
+        "target": "\"38& componentstatuse.componentstatuses.csidriver.csidrivers.csinode.csinodes.node.nodes.volumeattachment.volumeattachments\"",
+        "index": "34.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"15& input.command.resource\"_\"41& cluster_scoped_safe_resources\"",
+        "source": "\"15& input.command.resource\"",
+        "target": "\"41& cluster_scoped_safe_resources\"",
+        "index": "9.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"15& input.command.resource\"_\"24& Null string\"",
+        "source": "\"15& input.command.resource\"",
+        "target": "\"24& Null string\"",
+        "index": "59.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"15& input.command.resource\"_\"70& $(\"",
+        "source": "\"15& input.command.resource\"",
+        "target": "\"70& $(\"",
+        "index": "60.6"
+      }
+    },
+    {
+      "data": {
+        "id": "\"15& input.command.resource\"_\"94& allowed_create_resources\"",
+        "source": "\"15& input.command.resource\"",
+        "target": "\"94& allowed_create_resources\"",
+        "index": "92.1"
+      }
+    },
+    {
+      "data": {
+        "id": "\"15& input.command.resource\"_\"100& safe_delete_resources\"",
+        "source": "\"15& input.command.resource\"",
+        "target": "\"100& safe_delete_resources\"",
+        "index": "99.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"15& input.command.resource\"_\"105& modifiable_resources\"",
+        "source": "\"15& input.command.resource\"",
+        "target": "\"105& modifiable_resources\"",
+        "index": "103.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"15& input.command.resource\"_\"31& critical_resources\"",
+        "source": "\"15& input.command.resource\"",
+        "target": "\"31& critical_resources\"",
+        "index": "117.4"
+      }
+    },
+    {
+      "data": {
+        "id": "\"15& input.command.resource\"_\"21& forbidden_resources\"",
+        "source": "\"15& input.command.resource\"",
+        "target": "\"21& forbidden_resources\"",
+        "index": "119.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"16& null\"_\"17& resource_types\"",
+        "source": "\"16& null\"",
+        "target": "\"17& resource_types\"",
+        "index": "22.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"16& null\"_\"11& input.command.verb\"",
+        "source": "\"16& null\"",
+        "target": "\"11& input.command.verb\"",
+        "index": "4.1, 59.1"
+      }
+    },
+    {
+      "data": {
+        "id": "\"16& null\"_\"15& input.command.resource\"",
+        "source": "\"16& null\"",
+        "target": "\"15& input.command.resource\"",
+        "index": "60.6"
+      }
+    },
+    {
+      "data": {
+        "id": "\"17& resource_types\"_\"18& resource_type\"",
+        "source": "\"17& resource_types\"",
+        "target": "\"18& resource_type\"",
+        "index": "4.0, 27.0, 13.1, 13.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"17& resource_types\"_\"24& Null string\"",
+        "source": "\"17& resource_types\"",
+        "target": "\"24& Null string\"",
+        "index": "22.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"17& resource_types\"_\"47& other_resource\"",
+        "source": "\"17& resource_types\"",
+        "target": "\"47& other_resource\"",
+        "index": "4.2, 4.3"
+      }
+    },
+    {
+      "data": {
+        "id": "\"18& resource_type\"_\"19& safe_resources\"",
+        "source": "\"18& resource_type\"",
+        "target": "\"19& safe_resources\"",
+        "index": "13.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"18& resource_type\"_\"21& forbidden_resources\"",
+        "source": "\"18& resource_type\"",
+        "target": "\"21& forbidden_resources\"",
+        "index": "3.1, 13.1"
+      }
+    },
+    {
+      "data": {
+        "id": "\"18& resource_type\"_\"28& allowed_resources_for_modification\"",
+        "source": "\"18& resource_type\"",
+        "target": "\"28& allowed_resources_for_modification\"",
+        "index": "27.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"18& resource_type\"_\"31& critical_resources\"",
+        "source": "\"18& resource_type\"",
+        "target": "\"31& critical_resources\"",
+        "index": "3.2"
+      }
+    },
+    {
+      "data": {
+        "id": "\"18& resource_type\"_\"45& allowed_resources\"",
+        "source": "\"18& resource_type\"",
+        "target": "\"45& allowed_resources\"",
+        "index": "4.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"18& resource_type\"_\"46& secrets\"",
+        "source": "\"18& resource_type\"",
+        "target": "\"46& secrets\"",
+        "index": "4.2, 4.3"
+      }
+    },
+    {
+      "data": {
+        "id": "\"20& describe.get.list.logs\"_\"17& resource_types\"",
+        "source": "\"20& describe.get.list.logs\"",
+        "target": "\"17& resource_types\"",
+        "index": "13.1"
+      }
+    },
+    {
+      "data": {
+        "id": "\"23& resource_string\"_\"16& null\"",
+        "source": "\"23& resource_string\"",
+        "target": "\"16& null\"",
+        "index": "22.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"24& Null string\"_\"11& input.command.verb\"",
+        "source": "\"24& Null string\"",
+        "target": "\"11& input.command.verb\"",
+        "index": "9.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"24& Null string\"_\"42& namespace\"",
+        "source": "\"24& Null string\"",
+        "target": "\"42& namespace\"",
+        "index": "9.1"
+      }
+    },
+    {
+      "data": {
+        "id": "\"24& Null string\"_\"59& resource_requirement_satisfied\"",
+        "source": "\"24& Null string\"",
+        "target": "\"59& resource_requirement_satisfied\"",
+        "index": "6.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"26& restricted_verbs\"_\"27& all_resources_modifiable\"",
+        "source": "\"26& restricted_verbs\"",
+        "target": "\"27& all_resources_modifiable\"",
+        "index": "8.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"27& all_resources_modifiable\"_\"3& is_forbidden_operation\"",
+        "source": "\"27& all_resources_modifiable\"",
+        "target": "\"3& is_forbidden_operation\"",
+        "index": "8.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"27& all_resources_modifiable\"_\"17& resource_types\"",
+        "source": "\"27& all_resources_modifiable\"",
+        "target": "\"17& resource_types\"",
+        "index": "27.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"30& delete\"_\"18& resource_type\"",
+        "source": "\"30& delete\"",
+        "target": "\"18& resource_type\"",
+        "index": "3.2"
+      }
+    },
+    {
+      "data": {
+        "id": "\"30& delete\"_\"15& input.command.resource\"",
+        "source": "\"30& delete\"",
+        "target": "\"15& input.command.resource\"",
+        "index": "99.0, 117.4"
+      }
+    },
+    {
+      "data": {
+        "id": "\"30& delete\"_\"51& --all\"",
+        "source": "\"30& delete\"",
+        "target": "\"51& --all\"",
+        "index": "101.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"30& delete\"_\"48& --force\"",
+        "source": "\"30& delete\"",
+        "target": "\"48& --force\"",
+        "index": "101.1"
+      }
+    },
+    {
+      "data": {
+        "id": "\"30& delete\"_\"64& arg\"",
+        "source": "\"30& delete\"",
+        "target": "\"64& arg\"",
+        "index": "102.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"32& targets_rbac_resources\"_\"15& input.command.resource\"",
+        "source": "\"32& targets_rbac_resources\"",
+        "target": "\"15& input.command.resource\"",
+        "index": "32.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"33& targets_security_resources\"_\"15& input.command.resource\"",
+        "source": "\"33& targets_security_resources\"",
+        "target": "\"15& input.command.resource\"",
+        "index": "33.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"34& targets_system_resources\"_\"15& input.command.resource\"",
+        "source": "\"34& targets_system_resources\"",
+        "target": "\"15& input.command.resource\"",
+        "index": "34.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"35& clusterrole.clusterrolebinding.clusterrolebindings.clusterroles.role.rolebinding.rolebindings.roles.serviceaccount.serviceaccounts\"_\"11& input.command.verb\"",
+        "source": "\"35& clusterrole.clusterrolebinding.clusterrolebindings.clusterroles.role.rolebinding.rolebindings.roles.serviceaccount.serviceaccounts\"",
+        "target": "\"11& input.command.verb\"",
+        "index": "32.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"38& componentstatuse.componentstatuses.csidriver.csidrivers.csinode.csinodes.node.nodes.volumeattachment.volumeattachments\"_\"11& input.command.verb\"",
+        "source": "\"38& componentstatuse.componentstatuses.csidriver.csidrivers.csinode.csinodes.node.nodes.volumeattachment.volumeattachments\"",
+        "target": "\"11& input.command.verb\"",
+        "index": "34.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"39& input.command.namespace\"_\"24& Null string\"",
+        "source": "\"39& input.command.namespace\"",
+        "target": "\"24& Null string\"",
+        "index": "9.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"39& input.command.namespace\"_\"42& namespace\"",
+        "source": "\"39& input.command.namespace\"",
+        "target": "\"42& namespace\"",
+        "index": "9.1"
+      }
+    },
+    {
+      "data": {
+        "id": "\"40& describe.get.list\"_\"15& input.command.resource\"",
+        "source": "\"40& describe.get.list\"",
+        "target": "\"15& input.command.resource\"",
+        "index": "9.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"40& describe.get.list\"_\"17& resource_types\"",
+        "source": "\"40& describe.get.list\"",
+        "target": "\"17& resource_types\"",
+        "index": "4.2, 4.3"
+      }
+    },
+    {
+      "data": {
+        "id": "\"42& namespace\"_\"39& input.command.namespace\"",
+        "source": "\"42& namespace\"",
+        "target": "\"39& input.command.namespace\"",
+        "index": "9.1"
+      }
+    },
+    {
+      "data": {
+        "id": "\"42& namespace\"_\"24& Null string\"",
+        "source": "\"42& namespace\"",
+        "target": "\"24& Null string\"",
+        "index": "9.1"
+      }
+    },
+    {
+      "data": {
+        "id": "\"42& namespace\"_\"43& allowed_namespaces\"",
+        "source": "\"42& namespace\"",
+        "target": "\"43& allowed_namespaces\"",
+        "index": "9.1"
+      }
+    },
+    {
+      "data": {
+        "id": "\"42& namespace\"_\"44& forbidden_namespaces\"",
+        "source": "\"42& namespace\"",
+        "target": "\"44& forbidden_namespaces\"",
+        "index": "9.1"
+      }
+    },
+    {
+      "data": {
+        "id": "\"43& allowed_namespaces\"_\"42& namespace\"",
+        "source": "\"43& allowed_namespaces\"",
+        "target": "\"42& namespace\"",
+        "index": "9.1"
+      }
+    },
+    {
+      "data": {
+        "id": "\"46& secrets\"_\"11& input.command.verb\"",
+        "source": "\"46& secrets\"",
+        "target": "\"11& input.command.verb\"",
+        "index": "4.2, 4.3"
+      }
+    },
+    {
+      "data": {
+        "id": "\"47& other_resource\"_\"46& secrets\"",
+        "source": "\"47& other_resource\"",
+        "target": "\"46& secrets\"",
+        "index": "4.2"
+      }
+    },
+    {
+      "data": {
+        "id": "\"47& other_resource\"_\"45& allowed_resources\"",
+        "source": "\"47& other_resource\"",
+        "target": "\"45& allowed_resources\"",
+        "index": "4.3"
+      }
+    },
+    {
+      "data": {
+        "id": "\"48& --force\"_\"49& input.command.flags\"",
+        "source": "\"48& --force\"",
+        "target": "\"49& input.command.flags\"",
+        "index": "101.1, 5.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"49& input.command.flags\"_\"11& input.command.verb\"",
+        "source": "\"49& input.command.flags\"",
+        "target": "\"11& input.command.verb\"",
+        "index": "5.3, 5.2"
+      }
+    },
+    {
+      "data": {
+        "id": "\"50& --grace-period=0\"_\"49& input.command.flags\"",
+        "source": "\"50& --grace-period=0\"",
+        "target": "\"49& input.command.flags\"",
+        "index": "5.1"
+      }
+    },
+    {
+      "data": {
+        "id": "\"51& --all\"_\"49& input.command.flags\"",
+        "source": "\"51& --all\"",
+        "target": "\"49& input.command.flags\"",
+        "index": "101.0, 5.2"
+      }
+    },
+    {
+      "data": {
+        "id": "\"52& --cascade=orphan\"_\"49& input.command.flags\"",
+        "source": "\"52& --cascade=orphan\"",
+        "target": "\"49& input.command.flags\"",
+        "index": "5.3"
+      }
+    },
+    {
+      "data": {
+        "id": "\"53& flag\"_\"54& --privileged=true\"",
+        "source": "\"53& flag\"",
+        "target": "\"54& --privileged=true\"",
+        "index": "5.4"
+      }
+    },
+    {
+      "data": {
+        "id": "\"53& flag\"_\"55& --host\"",
+        "source": "\"53& flag\"",
+        "target": "\"55& --host\"",
+        "index": "5.5"
+      }
+    },
+    {
+      "data": {
+        "id": "\"53& flag\"_\"56& --as=\"",
+        "source": "\"53& flag\"",
+        "target": "\"56& --as=\"",
+        "index": "5.6"
+      }
+    },
+    {
+      "data": {
+        "id": "\"53& flag\"_\"57& --as-group=\"",
+        "source": "\"53& flag\"",
+        "target": "\"57& --as-group=\"",
+        "index": "5.7"
+      }
+    },
+    {
+      "data": {
+        "id": "\"53& flag\"_\"58& sudo\"",
+        "source": "\"53& flag\"",
+        "target": "\"58& sudo\"",
+        "index": "5.8"
+      }
+    },
+    {
+      "data": {
+        "id": "\"53& flag\"_\"96& privileged=true\"",
+        "source": "\"53& flag\"",
+        "target": "\"96& privileged=true\"",
+        "index": "95.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"53& flag\"_\"97& hostNetwork=true\"",
+        "source": "\"53& flag\"",
+        "target": "\"97& hostNetwork=true\"",
+        "index": "95.1"
+      }
+    },
+    {
+      "data": {
+        "id": "\"53& flag\"_\"98& hostPID=true\"",
+        "source": "\"53& flag\"",
+        "target": "\"98& hostPID=true\"",
+        "index": "95.2"
+      }
+    },
+    {
+      "data": {
+        "id": "\"53& flag\"_\"107& securityContext\"",
+        "source": "\"53& flag\"",
+        "target": "\"107& securityContext\"",
+        "index": "106.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"59& resource_requirement_satisfied\"_\"60& contains_injection_patterns\"",
+        "source": "\"59& resource_requirement_satisfied\"",
+        "target": "\"60& contains_injection_patterns\"",
+        "index": "6.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"59& resource_requirement_satisfied\"_\"15& input.command.resource\"",
+        "source": "\"59& resource_requirement_satisfied\"",
+        "target": "\"15& input.command.resource\"",
+        "index": "59.0, 59.1"
+      }
+    },
+    {
+      "data": {
+        "id": "\"60& contains_injection_patterns\"_\"61& contains_shell_metacharacters\"",
+        "source": "\"60& contains_injection_patterns\"",
+        "target": "\"61& contains_shell_metacharacters\"",
+        "index": "6.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"60& contains_injection_patterns\"_\"64& arg\"",
+        "source": "\"60& contains_injection_patterns\"",
+        "target": "\"64& arg\"",
+        "index": "60.4, 60.1, 60.3, 60.2, 60.5, 60.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"60& contains_injection_patterns\"_\"15& input.command.resource\"",
+        "source": "\"60& contains_injection_patterns\"",
+        "target": "\"15& input.command.resource\"",
+        "index": "60.6"
+      }
+    },
+    {
+      "data": {
+        "id": "\"60& contains_injection_patterns\"_\"71& flag.value\"",
+        "source": "\"60& contains_injection_patterns\"",
+        "target": "\"71& flag.value\"",
+        "index": "60.12, 60.9, 60.10, 60.8, 60.7, 60.11"
+      }
+    },
+    {
+      "data": {
+        "id": "\"60& contains_injection_patterns\"_\"72& input.original_command\"",
+        "source": "\"60& contains_injection_patterns\"",
+        "target": "\"72& input.original_command\"",
+        "index": "60.13"
+      }
+    },
+    {
+      "data": {
+        "id": "\"61& contains_shell_metacharacters\"_\"62& valid_resource_names\"",
+        "source": "\"61& contains_shell_metacharacters\"",
+        "target": "\"62& valid_resource_names\"",
+        "index": "6.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"61& contains_shell_metacharacters\"_\"73& [`${}><&]\"",
+        "source": "\"61& contains_shell_metacharacters\"",
+        "target": "\"73& [`${}><&]\"",
+        "index": "61.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"62& valid_resource_names\"_\"74& input.command.args\"",
+        "source": "\"62& valid_resource_names\"",
+        "target": "\"74& input.command.args\"",
+        "index": "62.1"
+      }
+    },
+    {
+      "data": {
+        "id": "\"64& arg\"_\"65& ;\"",
+        "source": "\"64& arg\"",
+        "target": "\"65& ;\"",
+        "index": "60.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"64& arg\"_\"66& &&\"",
+        "source": "\"64& arg\"",
+        "target": "\"66& &&\"",
+        "index": "60.1"
+      }
+    },
+    {
+      "data": {
+        "id": "\"64& arg\"_\"67& ||\"",
+        "source": "\"64& arg\"",
+        "target": "\"67& ||\"",
+        "index": "60.2"
+      }
+    },
+    {
+      "data": {
+        "id": "\"64& arg\"_\"68& |\"",
+        "source": "\"64& arg\"",
+        "target": "\"68& |\"",
+        "index": "60.3"
+      }
+    },
+    {
+      "data": {
+        "id": "\"64& arg\"_\"69& `\"",
+        "source": "\"64& arg\"",
+        "target": "\"69& `\"",
+        "index": "60.4"
+      }
+    },
+    {
+      "data": {
+        "id": "\"64& arg\"_\"70& $(\"",
+        "source": "\"64& arg\"",
+        "target": "\"70& $(\"",
+        "index": "60.5"
+      }
+    },
+    {
+      "data": {
+        "id": "\"64& arg\"_\"75& kube-+76& system\"",
+        "source": "\"64& arg\"",
+        "target": "\"75& kube-+76& system\"",
+        "index": "62.1"
+      }
+    },
+    {
+      "data": {
+        "id": "\"64& arg\"_\"77& is_valid_resource_name\"",
+        "source": "\"64& arg\"",
+        "target": "\"77& is_valid_resource_name\"",
+        "index": "62.1"
+      }
+    },
+    {
+      "data": {
+        "id": "\"64& arg\"_\"84& dangerous_exec_commands\"",
+        "source": "\"64& arg\"",
+        "target": "\"84& dangerous_exec_commands\"",
+        "index": "82.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"64& arg\"_\"85& rm -rf\"",
+        "source": "\"64& arg\"",
+        "target": "\"85& rm -rf\"",
+        "index": "82.1"
+      }
+    },
+    {
+      "data": {
+        "id": "\"64& arg\"_\"86& dd if=\"",
+        "source": "\"64& arg\"",
+        "target": "\"86& dd if=\"",
+        "index": "82.2"
+      }
+    },
+    {
+      "data": {
+        "id": "\"64& arg\"_\"90& \"",
+        "source": "\"64& arg\"",
+        "target": "\"90& \"",
+        "index": "89.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"64& arg\"_\"51& --all\"",
+        "source": "\"64& arg\"",
+        "target": "\"51& --all\"",
+        "index": "102.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"71& flag.value\"_\"70& $(\"",
+        "source": "\"71& flag.value\"",
+        "target": "\"70& $(\"",
+        "index": "60.7"
+      }
+    },
+    {
+      "data": {
+        "id": "\"71& flag.value\"_\"69& `\"",
+        "source": "\"71& flag.value\"",
+        "target": "\"69& `\"",
+        "index": "60.8"
+      }
+    },
+    {
+      "data": {
+        "id": "\"71& flag.value\"_\"65& ;\"",
+        "source": "\"71& flag.value\"",
+        "target": "\"65& ;\"",
+        "index": "60.9"
+      }
+    },
+    {
+      "data": {
+        "id": "\"71& flag.value\"_\"66& &&\"",
+        "source": "\"71& flag.value\"",
+        "target": "\"66& &&\"",
+        "index": "60.10"
+      }
+    },
+    {
+      "data": {
+        "id": "\"71& flag.value\"_\"67& ||\"",
+        "source": "\"71& flag.value\"",
+        "target": "\"67& ||\"",
+        "index": "60.11"
+      }
+    },
+    {
+      "data": {
+        "id": "\"71& flag.value\"_\"68& |\"",
+        "source": "\"71& flag.value\"",
+        "target": "\"68& |\"",
+        "index": "60.12"
+      }
+    },
+    {
+      "data": {
+        "id": "\"72& input.original_command\"_\"70& $(\"",
+        "source": "\"72& input.original_command\"",
+        "target": "\"70& $(\"",
+        "index": "60.13"
+      }
+    },
+    {
+      "data": {
+        "id": "\"73& [`${}><&]\"_\"64& arg\"",
+        "source": "\"73& [`${}><&]\"",
+        "target": "\"64& arg\"",
+        "index": "61.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"74& input.command.args\"_\"64& arg\"",
+        "source": "\"74& input.command.args\"",
+        "target": "\"64& arg\"",
+        "index": "62.1"
+      }
+    },
+    {
+      "data": {
+        "id": "\"77& is_valid_resource_name\"_\"78& ^[a-z0-9]([-a-z0-9]*[a-z0-9])?([.][a-z0-9]([-a-z0-9]*[a-z0-9])?)*$\"",
+        "source": "\"77& is_valid_resource_name\"",
+        "target": "\"78& ^[a-z0-9]([-a-z0-9]*[a-z0-9])?([.][a-z0-9]([-a-z0-9]*[a-z0-9])?)*$\"",
+        "index": "77.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"77& is_valid_resource_name\"_\"79& ^[a-z0-9]([-a-z0-9]*[a-z0-9])?([.][a-z0-9]([-a-z0-9]*[a-z0-9])?)*([,][a-z0-9]([-a-z0-9]*[a-z0-9])?([.][a-z0-9]([-a-z0-9]*[a-z0-9])?)*)*$\"",
+        "source": "\"77& is_valid_resource_name\"",
+        "target": "\"79& ^[a-z0-9]([-a-z0-9]*[a-z0-9])?([.][a-z0-9]([-a-z0-9]*[a-z0-9])?)*([,][a-z0-9]([-a-z0-9]*[a-z0-9])?([.][a-z0-9]([-a-z0-9]*[a-z0-9])?)*)*$\"",
+        "index": "77.1"
+      }
+    },
+    {
+      "data": {
+        "id": "\"78& ^[a-z0-9]([-a-z0-9]*[a-z0-9])?([.][a-z0-9]([-a-z0-9]*[a-z0-9])?)*$\"_\"64& arg\"",
+        "source": "\"78& ^[a-z0-9]([-a-z0-9]*[a-z0-9])?([.][a-z0-9]([-a-z0-9]*[a-z0-9])?)*$\"",
+        "target": "\"64& arg\"",
+        "index": "77.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"79& ^[a-z0-9]([-a-z0-9]*[a-z0-9])?([.][a-z0-9]([-a-z0-9]*[a-z0-9])?)*([,][a-z0-9]([-a-z0-9]*[a-z0-9])?([.][a-z0-9]([-a-z0-9]*[a-z0-9])?)*)*$\"_\"64& arg\"",
+        "source": "\"79& ^[a-z0-9]([-a-z0-9]*[a-z0-9])?([.][a-z0-9]([-a-z0-9]*[a-z0-9])?)*([,][a-z0-9]([-a-z0-9]*[a-z0-9])?([.][a-z0-9]([-a-z0-9]*[a-z0-9])?)*)*$\"",
+        "target": "\"64& arg\"",
+        "index": "77.1"
+      }
+    },
+    {
+      "data": {
+        "id": "\"80& exec_command_restrictions\"_\"11& input.command.verb\"",
+        "source": "\"80& exec_command_restrictions\"",
+        "target": "\"11& input.command.verb\"",
+        "index": "80.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"81& exec\"_\"82& contains_dangerous_exec_commands\"",
+        "source": "\"81& exec\"",
+        "target": "\"82& contains_dangerous_exec_commands\"",
+        "index": "80.0, 83.1"
+      }
+    },
+    {
+      "data": {
+        "id": "\"82& contains_dangerous_exec_commands\"_\"83& valid_exec_structure\"",
+        "source": "\"82& contains_dangerous_exec_commands\"",
+        "target": "\"83& valid_exec_structure\"",
+        "index": "80.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"82& contains_dangerous_exec_commands\"_\"64& arg\"",
+        "source": "\"82& contains_dangerous_exec_commands\"",
+        "target": "\"64& arg\"",
+        "index": "82.1, 82.2, 82.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"83& valid_exec_structure\"_\"11& input.command.verb\"",
+        "source": "\"83& valid_exec_structure\"",
+        "target": "\"11& input.command.verb\"",
+        "index": "83.1, 83.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"87& port_forward_restrictions\"_\"11& input.command.verb\"",
+        "source": "\"87& port_forward_restrictions\"",
+        "target": "\"11& input.command.verb\"",
+        "index": "87.1, 87.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"88& port-forward\"_\"89& valid_port_specification\"",
+        "source": "\"88& port-forward\"",
+        "target": "\"89& valid_port_specification\"",
+        "index": "87.1"
+      }
+    },
+    {
+      "data": {
+        "id": "\"89& valid_port_specification\"_\"64& arg\"",
+        "source": "\"89& valid_port_specification\"",
+        "target": "\"64& arg\"",
+        "index": "89.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"92& create_command_restrictions\"_\"11& input.command.verb\"",
+        "source": "\"92& create_command_restrictions\"",
+        "target": "\"11& input.command.verb\"",
+        "index": "92.0, 92.1"
+      }
+    },
+    {
+      "data": {
+        "id": "\"93& create\"_\"15& input.command.resource\"",
+        "source": "\"93& create\"",
+        "target": "\"15& input.command.resource\"",
+        "index": "92.1"
+      }
+    },
+    {
+      "data": {
+        "id": "\"93& create\"_\"53& flag\"",
+        "source": "\"93& create\"",
+        "target": "\"53& flag\"",
+        "index": "95.2, 95.1, 95.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"94& allowed_create_resources\"_\"95& creates_privileged_resources\"",
+        "source": "\"94& allowed_create_resources\"",
+        "target": "\"95& creates_privileged_resources\"",
+        "index": "92.1"
+      }
+    },
+    {
+      "data": {
+        "id": "\"95& creates_privileged_resources\"_\"11& input.command.verb\"",
+        "source": "\"95& creates_privileged_resources\"",
+        "target": "\"11& input.command.verb\"",
+        "index": "95.2, 95.1, 95.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"99& delete_allowed\"_\"11& input.command.verb\"",
+        "source": "\"99& delete_allowed\"",
+        "target": "\"11& input.command.verb\"",
+        "index": "99.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"100& safe_delete_resources\"_\"101& has_dangerous_delete_flags\"",
+        "source": "\"100& safe_delete_resources\"",
+        "target": "\"101& has_dangerous_delete_flags\"",
+        "index": "99.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"101& has_dangerous_delete_flags\"_\"102& deletes_all_resources\"",
+        "source": "\"101& has_dangerous_delete_flags\"",
+        "target": "\"102& deletes_all_resources\"",
+        "index": "99.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"101& has_dangerous_delete_flags\"_\"11& input.command.verb\"",
+        "source": "\"101& has_dangerous_delete_flags\"",
+        "target": "\"11& input.command.verb\"",
+        "index": "101.1, 101.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"102& deletes_all_resources\"_\"11& input.command.verb\"",
+        "source": "\"102& deletes_all_resources\"",
+        "target": "\"11& input.command.verb\"",
+        "index": "102.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"103& modification_allowed\"_\"11& input.command.verb\"",
+        "source": "\"103& modification_allowed\"",
+        "target": "\"11& input.command.verb\"",
+        "index": "103.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"104& apply.patch\"_\"15& input.command.resource\"",
+        "source": "\"104& apply.patch\"",
+        "target": "\"15& input.command.resource\"",
+        "index": "103.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"104& apply.patch\"_\"53& flag\"",
+        "source": "\"104& apply.patch\"",
+        "target": "\"53& flag\"",
+        "index": "106.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"105& modifiable_resources\"_\"106& modifies_security_context\"",
+        "source": "\"105& modifiable_resources\"",
+        "target": "\"106& modifies_security_context\"",
+        "index": "103.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"106& modifies_security_context\"_\"11& input.command.verb\"",
+        "source": "\"106& modifies_security_context\"",
+        "target": "\"11& input.command.verb\"",
+        "index": "106.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"108& requires_dry_run\"_\"11& input.command.verb\"",
+        "source": "\"108& requires_dry_run\"",
+        "target": "\"11& input.command.verb\"",
+        "index": "108.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"109& apply.create.delete.patch\"_\"110& has_dry_run_flag\"",
+        "source": "\"109& apply.create.delete.patch\"",
+        "target": "\"110& has_dry_run_flag\"",
+        "index": "108.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"110& has_dry_run_flag\"_\"111& --dry-run=client\"",
+        "source": "\"110& has_dry_run_flag\"",
+        "target": "\"111& --dry-run=client\"",
+        "index": "110.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"110& has_dry_run_flag\"_\"112& --dry-run=server\"",
+        "source": "\"110& has_dry_run_flag\"",
+        "target": "\"112& --dry-run=server\"",
+        "index": "110.1"
+      }
+    },
+    {
+      "data": {
+        "id": "\"111& --dry-run=client\"_\"49& input.command.flags\"",
+        "source": "\"111& --dry-run=client\"",
+        "target": "\"49& input.command.flags\"",
+        "index": "110.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"112& --dry-run=server\"_\"49& input.command.flags\"",
+        "source": "\"112& --dry-run=server\"",
+        "target": "\"49& input.command.flags\"",
+        "index": "110.1"
+      }
+    },
+    {
+      "data": {
+        "id": "\"114& command_classification\"_\"2& is_safe_operation\"",
+        "source": "\"114& command_classification\"",
+        "target": "\"2& is_safe_operation\"",
+        "index": "114.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"114& command_classification\"_\"8& is_restricted_operation\"",
+        "source": "\"114& command_classification\"",
+        "target": "\"8& is_restricted_operation\"",
+        "index": "114.1"
+      }
+    },
+    {
+      "data": {
+        "id": "\"114& command_classification\"_\"3& is_forbidden_operation\"",
+        "source": "\"114& command_classification\"",
+        "target": "\"3& is_forbidden_operation\"",
+        "index": "114.2"
+      }
+    },
+    {
+      "data": {
+        "id": "\"113& audit_decision\"_\"114& command_classification\"",
+        "source": "\"113& audit_decision\"",
+        "target": "\"114& command_classification\"",
+        "index": "113"
+      }
+    },
+    {
+      "data": {
+        "id": "\"113& audit_decision\"_\"115& input.command\"",
+        "source": "\"113& audit_decision\"",
+        "target": "\"115& input.command\"",
+        "index": "113"
+      }
+    },
+    {
+      "data": {
+        "id": "\"113& audit_decision\"_\"116& decision_reasoning\"",
+        "source": "\"113& audit_decision\"",
+        "target": "\"116& decision_reasoning\"",
+        "index": "113"
+      }
+    },
+    {
+      "data": {
+        "id": "\"113& audit_decision\"_\"117& risk_assessment\"",
+        "source": "\"113& audit_decision\"",
+        "target": "\"117& risk_assessment\"",
+        "index": "113"
+      }
+    },
+    {
+      "data": {
+        "id": "\"113& audit_decision\"_\"118& policy_violations\"",
+        "source": "\"113& audit_decision\"",
+        "target": "\"118& policy_violations\"",
+        "index": "113"
+      }
+    },
+    {
+      "data": {
+        "id": "\"116& decision_reasoning\"_\"0& allow\"",
+        "source": "\"116& decision_reasoning\"",
+        "target": "\"0& allow\"",
+        "index": "116.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"116& decision_reasoning\"_\"7& requires_approval\"",
+        "source": "\"116& decision_reasoning\"",
+        "target": "\"7& requires_approval\"",
+        "index": "116.1"
+      }
+    },
+    {
+      "data": {
+        "id": "\"116& decision_reasoning\"_\"10& deny\"",
+        "source": "\"116& decision_reasoning\"",
+        "target": "\"10& deny\"",
+        "index": "116.2, 116.3"
+      }
+    },
+    {
+      "data": {
+        "id": "\"117& risk_assessment\"_\"2& is_safe_operation\"",
+        "source": "\"117& risk_assessment\"",
+        "target": "\"2& is_safe_operation\"",
+        "index": "117.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"117& risk_assessment\"_\"8& is_restricted_operation\"",
+        "source": "\"117& risk_assessment\"",
+        "target": "\"8& is_restricted_operation\"",
+        "index": "117.1"
+      }
+    },
+    {
+      "data": {
+        "id": "\"117& risk_assessment\"_\"3& is_forbidden_operation\"",
+        "source": "\"117& risk_assessment\"",
+        "target": "\"3& is_forbidden_operation\"",
+        "index": "117.2"
+      }
+    },
+    {
+      "data": {
+        "id": "\"117& risk_assessment\"_\"32& targets_rbac_resources\"",
+        "source": "\"117& risk_assessment\"",
+        "target": "\"32& targets_rbac_resources\"",
+        "index": "117.3"
+      }
+    },
+    {
+      "data": {
+        "id": "\"117& risk_assessment\"_\"11& input.command.verb\"",
+        "source": "\"117& risk_assessment\"",
+        "target": "\"11& input.command.verb\"",
+        "index": "117.4"
+      }
+    },
+    {
+      "data": {
+        "id": "\"119& resource_violations\"_\"15& input.command.resource\"",
+        "source": "\"119& resource_violations\"",
+        "target": "\"15& input.command.resource\"",
+        "index": "119.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"120& flag_violations\"_\"5& has_dangerous_flags\"",
+        "source": "\"120& flag_violations\"",
+        "target": "\"5& has_dangerous_flags\"",
+        "index": "120.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"121& command_structure_violations\"_\"6& is_valid_command_structure\"",
+        "source": "\"121& command_structure_violations\"",
+        "target": "\"6& is_valid_command_structure\"",
+        "index": "121.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"123& test_safe_get_pods\"_\"0& allow\"",
+        "source": "\"123& test_safe_get_pods\"",
+        "target": "\"0& allow\"",
+        "index": "123.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"124& test_forbidden_delete_namespace\"_\"10& deny\"",
+        "source": "\"124& test_forbidden_delete_namespace\"",
+        "target": "\"10& deny\"",
+        "index": "124.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"125& test_restricted_exec\"_\"7& requires_approval\"",
+        "source": "\"125& test_restricted_exec\"",
+        "target": "\"7& requires_approval\"",
+        "index": "125.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"126& test_dangerous_flags\"_\"10& deny\"",
+        "source": "\"126& test_dangerous_flags\"",
+        "target": "\"10& deny\"",
+        "index": "126.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"127& test_forbidden_namespace\"_\"10& deny\"",
+        "source": "\"127& test_forbidden_namespace\"",
+        "target": "\"10& deny\"",
+        "index": "127.0"
+      }
+    },
+    {
+      "data": {
+        "id": "\"128& test_rbac_modification\"_\"10& deny\"",
+        "source": "\"128& test_rbac_modification\"",
+        "target": "\"10& deny\"",
+        "index": "128.0"
+      }
+    }
+  ]
+}

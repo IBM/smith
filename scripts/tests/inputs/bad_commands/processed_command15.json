@@ -1,0 +1,1 @@
+{"input": {"command": {"verb": "apply", "resource": null, "namespace": null, "args": [], "flags": [{"name": "-f", "value": "/path/to/frontend-deployment.yaml"}]}, "original_command": "kubectl apply -f /path/to/frontend-deployment.yaml"}}

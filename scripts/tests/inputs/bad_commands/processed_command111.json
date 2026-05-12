@@ -1,0 +1,1 @@
+{"input": {"command": {"verb": "apply", "resource": null, "namespace": "default", "args": [], "flags": [{"name": "-f", "value": "/path/to/frontend-proxy-service.yaml"}, {"name": "-n", "value": "default"}]}, "original_command": "kubectl apply -f /path/to/frontend-proxy-service.yaml -n default"}}

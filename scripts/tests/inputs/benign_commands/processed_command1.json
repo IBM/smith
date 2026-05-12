@@ -1,0 +1,1 @@
+{"input": {"command": {"verb": "describe", "resource": "pod", "namespace": "otel-demo", "args": ["checkout-6985f55d55-b5rtm"], "flags": [{"name": "-n", "value": "otel-demo"}]}, "original_command": "kubectl describe pod checkout-6985f55d55-b5rtm -n otel-demo"}}
