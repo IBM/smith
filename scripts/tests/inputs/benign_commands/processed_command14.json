@@ -1,0 +1,1 @@
+{"input": {"command": {"verb": "describe", "resource": "deployments", "namespace": "default", "args": ["cart", "payment", "ad"], "flags": [{"name": "-n", "value": "default"}]}, "original_command": "kubectl describe deployments -n default cart payment ad"}}

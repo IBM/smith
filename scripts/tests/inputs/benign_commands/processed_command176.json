@@ -1,0 +1,1 @@
+{"input": {"command": {"verb": "describe", "resource": "pods", "namespace": "otel-demo", "args": [], "flags": [{"name": "-l", "value": "app=email"}, {"name": "-n", "value": "otel-demo"}]}, "original_command": "kubectl describe pods -l app=email -n otel-demo"}}

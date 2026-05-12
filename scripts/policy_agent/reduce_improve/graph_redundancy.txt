@@ -1,0 +1,52 @@
+subgraph 1:
+node:
+['test_dangerous_flags']
+
+subgraph 2:
+node:
+['test_safe_get_pods']
+
+subgraph 3:
+node:
+['delete_allowed']
+
+subgraph 4:
+node:
+['create_command_restrictions']
+
+subgraph 5:
+node:
+['exec_command_restrictions']
+
+subgraph 6:
+node:
+['resource_string']
+
+subgraph 7:
+node:
+['test_restricted_exec']
+
+subgraph 8:
+node:
+['test_forbidden_namespace']
+
+subgraph 9:
+node:
+['test_forbidden_delete_namespace']
+
+subgraph 10:
+node:
+['requires_dry_run']
+
+subgraph 11:
+node:
+['modification_allowed']
+
+subgraph 12:
+node:
+['port_forward_restrictions']
+
+subgraph 13:
+node:
+['test_rbac_modification']
+

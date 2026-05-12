@@ -1,0 +1,1 @@
+{"input": {"command": {"verb": "get", "resource": "networkpolicy", "namespace": "otel-demo", "args": ["shipping"], "flags": [{"name": "-o", "value": "yaml"}, {"name": "-n", "value": "otel-demo"}]}, "original_command": "kubectl get networkpolicy shipping -o yaml -n otel-demo"}}

@@ -1,0 +1,69 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "send_email",
+        "extensions": {
+            "subject": {
+                "id": "Bob",
+                "type": "user",
+                "roles": [
+                    "employee"
+                ],
+                "teams": [
+                    "Sales"
+                ],
+                "claims": {},
+                "permissions": [
+                    "write:purchase",
+                    "write:return_product",
+                    "write:send_email",
+                    "read:ask_for_workpolicy",
+                    "write:create_ticket",
+                    "write:submit_ticket",
+                    "read:get_w2_form",
+                    "read:ask_for_salary",
+                    "write:export_content_as_file"
+                ]
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Email this report to john@gmail.com",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal",
+                "data_scope": [
+                    "ticket_content"
+                ],
+                "permissions": [
+                    "write:purchase",
+                    "write:return_product",
+                    "write:send_email",
+                    "read:ask_for_workpolicy",
+                    "write:create_ticket",
+                    "write:submit_ticket",
+                    "read:get_w2_form",
+                    "read:ask_for_salary",
+                    "write:export_content_as_file"
+                ]
+            }
+        },
+        "arguments": [
+            "recipient_email",
+            "subject",
+            "bpdy",
+            "email_content",
+            "attached_file"
+        ]
+    }
+}

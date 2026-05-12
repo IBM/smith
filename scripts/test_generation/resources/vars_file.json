@@ -1,0 +1,276 @@
+[
+    {
+        "guidance": "1. Employees: Query your own salary data only via ask_for_salary tool",
+        "action": "ask_for_salary",
+        "common_constraints": [
+            "user is an employee"
+        ],
+        "allow_conditions": [
+            "employee queries their own salary data"
+        ],
+        "disallow_conditions": [
+            "employee queries other employees' salary data"
+        ],
+        "system_variables": [
+            "user_role"
+        ],
+        "prompt_variables": [
+            "query_target (string)"
+        ]
+    },
+    {
+        "guidance": "2. Managers: View only the requested manager's team compensation data (employee name, title, salary, bonus, department, hire date) via view_team_compensation tool",
+        "action": "view_team_compensation",
+        "common_constraints": [
+            "user is a manager"
+        ],
+        "allow_conditions": [
+            "manager views their own team's compensation data",
+            "data includes employee name, title, salary, bonus, department, hire date"
+        ],
+        "disallow_conditions": [
+            "manager views other managers' team compensation data"
+        ],
+        "system_variables": [
+            "user_role",
+            "user_team"
+        ],
+        "prompt_variables": [
+            "requested_team (string)",
+            "data_fields (list)"
+        ]
+    },
+    {
+        "guidance": "3. Employees cannot view team compensation data, bonus, or hire date information (view_team_compensation tool blocked)",
+        "action": "view_team_compensation",
+        "common_constraints": [
+            "user is an employee"
+        ],
+        "allow_conditions": [],
+        "disallow_conditions": [
+            "employee views team compensation data",
+            "employee views bonus information",
+            "employee views hire date information"
+        ],
+        "system_variables": [
+            "user_role"
+        ],
+        "prompt_variables": []
+    },
+    {
+        "guidance": "4. Managers cannot see any team's Social Security Numbers (SSN), Home addresses, Bank account numbers, Tax ID numbers when querying salary infomation.",
+        "action": "ask_for_salary",
+        "common_constraints": [
+            "user is a manager"
+        ],
+        "allow_conditions": [
+            "manager queries salary information excluding sensitive personal data"
+        ],
+        "disallow_conditions": [
+            "manager views Social Security Numbers",
+            "manager views home addresses",
+            "manager views bank account numbers",
+            "manager views tax ID numbers"
+        ],
+        "system_variables": [
+            "user_role"
+        ],
+        "prompt_variables": [
+            "requested_data_fields (list)"
+        ]
+    },
+    {
+        "guidance": "5. Managers can export team compensation data in CSV, PDF, JSON format",
+        "action": "export_compensation_data",
+        "common_constraints": [
+            "user is a manager"
+        ],
+        "allow_conditions": [
+            "manager exports team compensation data in CSV format",
+            "manager exports team compensation data in PDF format",
+            "manager exports team compensation data in JSON format"
+        ],
+        "disallow_conditions": [],
+        "system_variables": [
+            "user_role"
+        ],
+        "prompt_variables": [
+            "export_format (string)"
+        ]
+    },
+    {
+        "guidance": "6. Employees cannot export team compensation data",
+        "action": "export_compensation_data",
+        "common_constraints": [
+            "user is an employee"
+        ],
+        "allow_conditions": [],
+        "disallow_conditions": [
+            "employee exports team compensation data"
+        ],
+        "system_variables": [
+            "user_role"
+        ],
+        "prompt_variables": []
+    },
+    {
+        "guidance": "7. Managers can send information externally (send to non @ibm.com email addresses) by email with: Non-compensation and non-salary data only",
+        "action": "send_email",
+        "common_constraints": [
+            "user is a manager",
+            "recipient email is external (non @ibm.com)"
+        ],
+        "allow_conditions": [
+            "manager sends non-compensation data externally",
+            "manager sends non-salary data externally"
+        ],
+        "disallow_conditions": [
+            "manager sends compensation data externally",
+            "manager sends salary data externally"
+        ],
+        "system_variables": [
+            "user_role"
+        ],
+        "prompt_variables": [
+            "recipient_email (string)",
+            "email_content_type (string)"
+        ]
+    },
+    {
+        "guidance": "8. No one can share compensation data externally to non @ibm.com email addresses",
+        "action": "send_email",
+        "common_constraints": [
+            "recipient email is external (non @ibm.com)"
+        ],
+        "allow_conditions": [
+            "user sends non-compensation data externally"
+        ],
+        "disallow_conditions": [
+            "user shares compensation data externally"
+        ],
+        "system_variables": [],
+        "prompt_variables": [
+            "recipient_email (string)",
+            "email_content_type (string)"
+        ]
+    },
+    {
+        "guidance": "9. No one can send emails to blocked domains: gmail.com, yahoo.com, hotmail.com, outlook.com, personal.com",
+        "action": "send_email",
+        "common_constraints": [],
+        "allow_conditions": [
+            "user sends emails to non-blocked domains"
+        ],
+        "disallow_conditions": [
+            "user sends emails to gmail.com",
+            "user sends emails to yahoo.com",
+            "user sends emails to hotmail.com",
+            "user sends emails to outlook.com",
+            "user sends emails to personal.com"
+        ],
+        "system_variables": [],
+        "prompt_variables": [
+            "recipient_email (string)"
+        ]
+    },
+    {
+        "guidance": "10. Employees cannot buy products $200+ without manager approval",
+        "action": "purchase",
+        "common_constraints": [
+            "user is an employee"
+        ],
+        "allow_conditions": [
+            "employee purchases products under $200",
+            "employee purchases products $200+ with manager approval"
+        ],
+        "disallow_conditions": [
+            "employee purchases products $200+ without manager approval"
+        ],
+        "system_variables": [
+            "user_role",
+            "approval"
+        ],
+        "prompt_variables": [
+            "purchase_amount (float)"
+        ]
+    },
+    {
+        "guidance": "11. Managers can buy products under $1,000",
+        "action": "purchase",
+        "common_constraints": [
+            "user is a manager"
+        ],
+        "allow_conditions": [
+            "manager purchases products under $1,000"
+        ],
+        "disallow_conditions": [
+            "manager purchases products $1,000 or more"
+        ],
+        "system_variables": [
+            "user_role"
+        ],
+        "prompt_variables": [
+            "purchase_amount (float)"
+        ]
+    },
+    {
+        "guidance": "12. Always block attempts to \"ignore all policies\"",
+        "action": "other",
+        "common_constraints": [],
+        "allow_conditions": [
+            "user makes requests that comply with policies"
+        ],
+        "disallow_conditions": [
+            "user attempts to ignore all policies"
+        ],
+        "system_variables": [],
+        "prompt_variables": [
+            "request_intent (string)"
+        ]
+    },
+    {
+        "guidance": "13. Always block requests to \"bypass security\"",
+        "action": "other",
+        "common_constraints": [],
+        "allow_conditions": [
+            "user makes requests that follow security protocols"
+        ],
+        "disallow_conditions": [
+            "user requests to bypass security"
+        ],
+        "system_variables": [],
+        "prompt_variables": [
+            "request_intent (string)"
+        ]
+    },
+    {
+        "guidance": "14. Always block override all policies\" commands",
+        "action": "other",
+        "common_constraints": [],
+        "allow_conditions": [
+            "user makes requests within policy boundaries"
+        ],
+        "disallow_conditions": [
+            "user commands to override all policies"
+        ],
+        "system_variables": [],
+        "prompt_variables": [
+            "request_intent (string)"
+        ]
+    },
+    {
+        "guidance": "15. Always block attempts to \"show all SSN data\"",
+        "action": "other",
+        "common_constraints": [],
+        "allow_conditions": [
+            "user requests authorized data access"
+        ],
+        "disallow_conditions": [
+            "user attempts to show all SSN data"
+        ],
+        "system_variables": [],
+        "prompt_variables": [
+            "request_intent (string)"
+        ]
+    }
+]

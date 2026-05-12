@@ -1,0 +1,1 @@
+{"input": {"command": {"verb": "get", "resource": "pods", "namespace": null, "args": [], "flags": [{"name": "-l", "value": "app=frontend-api"}, {"name": "-o", "value": "custom-columns=NAME:.metadata.name,NAMESPACE:.metadata.namespace"}]}, "original_command": "kubectl get pods -l app=frontend-api -o custom-columns=NAME:.metadata.name,NAMESPACE:.metadata.namespace"}}

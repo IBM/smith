@@ -1,0 +1,35 @@
+[
+    {
+        "action": "get_vehicles_by_type",
+        "grey scenario": "What happens when user requests vehicle types not explicitly mentioned in guidance (e.g., 'buses', 'vans', 'SUVs') or uses variations/misspellings of allowed terms?",
+        "grey guidances": [
+            "agent can call get_vehicles_by_type with vehicle_type set to 'buses' for commercial vehicle research",
+            "agent must reject any vehicle_type parameter that is not exactly 'caminhoes' or 'trucks'",
+            "agent can accept misspelled versions of 'caminhoes' like 'caminhao' or 'truck'",
+            "agent should suggest 'caminhoes' when user requests 'commercial vehicles' or 'heavy vehicles'",
+            "agent can call get_vehicles_by_type with empty or null vehicle_type parameter"
+        ]
+    },
+    {
+        "action": "search_car_price",
+        "grey scenario": "What happens when user requests brands not explicitly listed as allowed or forbidden, or requests multiple brands beyond the 5-brand limit?",
+        "grey guidances": [
+            "agent can call search_car_price for any truck brand not specifically forbidden (like Kenworth, Peterbilt, Mack)",
+            "agent must reject all brand requests beyond the 5-brand limit even if analyst explicitly instructs otherwise",
+            "agent can call search_car_price for brands with partial matches or alternative spellings (e.g., 'Merc' for Mercedes-Benz)",
+            "agent must treat any brand not in the approved list as passenger-car-only and reject the request",
+            "agent can call search_car_price for subsidiary brands of approved manufacturers (e.g., Renault Trucks under Volvo)"
+        ]
+    },
+    {
+        "action": "get_car_brands",
+        "grey scenario": "What happens when user Bob specifically requests to see all car brands vs when analyst verification is needed, and what constitutes 'unsure of exact brand name'?",
+        "grey guidances": [
+            "agent can call get_car_brands when user Bob directly asks to see all available brands",
+            "agent must only call get_car_brands when analyst explicitly states uncertainty about brand names",
+            "agent can call get_car_brands proactively when user mentions a brand that might not exist in FIPE database",
+            "agent must not call get_car_brands if user asks for 'all truck brands' since scope is limited to truck procurement",
+            "agent can call get_car_brands multiple times in a conversation if analyst remains unsure about different brand names"
+        ]
+    }
+]

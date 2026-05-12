@@ -1,0 +1,404 @@
+[
+    {
+        "guidance": "1. The agent may call get_vehicles_by_type with vehicle_type set to \"caminhoes\" to list available truck brands for fleet procurement analysis.",
+        "action": "get_vehicles_by_type",
+        "common_constraints": [
+            "request is for fleet procurement analysis"
+        ],
+        "allow_conditions": [
+            "vehicle_type parameter is set to \"caminhoes\""
+        ],
+        "disallow_conditions": []
+    },
+    {
+        "guidance": "2. The agent may call get_vehicles_by_type with vehicle_type set to \"trucks\" to list available truck brands for fleet procurement analysis.",
+        "action": "get_vehicles_by_type",
+        "common_constraints": [
+            "request is for fleet procurement analysis"
+        ],
+        "allow_conditions": [
+            "vehicle_type parameter is set to \"trucks\""
+        ],
+        "disallow_conditions": []
+    },
+    {
+        "guidance": "3. The agent may call search_car_price with brand_name set to \"Scania\" for truck-relevant brand price research.",
+        "action": "search_car_price",
+        "common_constraints": [
+            "request is for truck-relevant brand price research"
+        ],
+        "allow_conditions": [
+            "brand_name parameter is set to \"Scania\""
+        ],
+        "disallow_conditions": []
+    },
+    {
+        "guidance": "4. The agent may call search_car_price with brand_name set to \"Volvo\" for truck-relevant brand price research.",
+        "action": "search_car_price",
+        "common_constraints": [
+            "request is for truck-relevant brand price research"
+        ],
+        "allow_conditions": [
+            "brand_name parameter is set to \"Volvo\""
+        ],
+        "disallow_conditions": []
+    },
+    {
+        "guidance": "5. The agent may call search_car_price with brand_name set to \"Mercedes-Benz\" for truck-relevant brand price research.",
+        "action": "search_car_price",
+        "common_constraints": [
+            "request is for truck-relevant brand price research"
+        ],
+        "allow_conditions": [
+            "brand_name parameter is set to \"Mercedes-Benz\""
+        ],
+        "disallow_conditions": []
+    },
+    {
+        "guidance": "6. The agent may call search_car_price with brand_name set to \"MAN\" for truck-relevant brand price research.",
+        "action": "search_car_price",
+        "common_constraints": [
+            "request is for truck-relevant brand price research"
+        ],
+        "allow_conditions": [
+            "brand_name parameter is set to \"MAN\""
+        ],
+        "disallow_conditions": []
+    },
+    {
+        "guidance": "7. The agent may call search_car_price with brand_name set to \"DAF\" for truck-relevant brand price research.",
+        "action": "search_car_price",
+        "common_constraints": [
+            "request is for truck-relevant brand price research"
+        ],
+        "allow_conditions": [
+            "brand_name parameter is set to \"DAF\""
+        ],
+        "disallow_conditions": []
+    },
+    {
+        "guidance": "8. The agent may call search_car_price with brand_name set to \"Iveco\" for truck-relevant brand price research.",
+        "action": "search_car_price",
+        "common_constraints": [
+            "request is for truck-relevant brand price research"
+        ],
+        "allow_conditions": [
+            "brand_name parameter is set to \"Iveco\""
+        ],
+        "disallow_conditions": []
+    },
+    {
+        "guidance": "9. The agent may call search_car_price with brand_name set to \"Ford\" for Ford Cargo line truck price research.",
+        "action": "search_car_price",
+        "common_constraints": [
+            "request is for Ford Cargo line truck price research"
+        ],
+        "allow_conditions": [
+            "brand_name parameter is set to \"Ford\""
+        ],
+        "disallow_conditions": []
+    },
+    {
+        "guidance": "10. The agent may call search_car_price with brand_name set to \"Volkswagen\" for VW Constellation/Delivery lines truck price research.",
+        "action": "search_car_price",
+        "common_constraints": [
+            "request is for VW Constellation/Delivery lines truck price research"
+        ],
+        "allow_conditions": [
+            "brand_name parameter is set to \"Volkswagen\""
+        ],
+        "disallow_conditions": []
+    },
+    {
+        "guidance": "11. The agent may call get_car_brands to verify brand availability when the analyst is unsure of the exact brand name in the FIPE database.",
+        "action": "get_car_brands",
+        "common_constraints": [
+            "analyst is unsure of exact brand name in FIPE database"
+        ],
+        "allow_conditions": [
+            "verification of brand availability is needed"
+        ],
+        "disallow_conditions": []
+    },
+    {
+        "guidance": "12. The agent may present FIPE reference prices clearly labeled as reference values, not binding purchase prices.",
+        "action": "search_car_price",
+        "common_constraints": [
+            "FIPE prices are being presented"
+        ],
+        "allow_conditions": [
+            "prices are clearly labeled as reference values",
+            "prices are clearly labeled as not binding purchase prices"
+        ],
+        "disallow_conditions": []
+    },
+    {
+        "guidance": "13. The agent may retrieve pricing for multiple truck brands in sequence when the analyst requests a comparison.",
+        "action": "search_car_price",
+        "common_constraints": [
+            "analyst requests a comparison"
+        ],
+        "allow_conditions": [
+            "retrieving pricing for multiple truck brands in sequence"
+        ],
+        "disallow_conditions": []
+    },
+    {
+        "guidance": "14. The agent must not call get_vehicles_by_type with vehicle_type set to \"carros\".",
+        "action": "get_vehicles_by_type",
+        "common_constraints": [],
+        "allow_conditions": [],
+        "disallow_conditions": [
+            "vehicle_type parameter is set to \"carros\""
+        ]
+    },
+    {
+        "guidance": "15. The agent must not call get_vehicles_by_type with vehicle_type set to \"cars\".",
+        "action": "get_vehicles_by_type",
+        "common_constraints": [],
+        "allow_conditions": [],
+        "disallow_conditions": [
+            "vehicle_type parameter is set to \"cars\""
+        ]
+    },
+    {
+        "guidance": "16. The agent must not call get_vehicles_by_type with vehicle_type set to \"motos\".",
+        "action": "get_vehicles_by_type",
+        "common_constraints": [],
+        "allow_conditions": [],
+        "disallow_conditions": [
+            "vehicle_type parameter is set to \"motos\""
+        ]
+    },
+    {
+        "guidance": "17. The agent must not call get_vehicles_by_type with vehicle_type set to \"motorcycles\".",
+        "action": "get_vehicles_by_type",
+        "common_constraints": [],
+        "allow_conditions": [],
+        "disallow_conditions": [
+            "vehicle_type parameter is set to \"motorcycles\""
+        ]
+    },
+    {
+        "guidance": "18. The agent must not call search_car_price with brand_name set to \"Toyota\" as it is a passenger-car-only brand.",
+        "action": "search_car_price",
+        "common_constraints": [],
+        "allow_conditions": [],
+        "disallow_conditions": [
+            "brand_name parameter is set to \"Toyota\""
+        ]
+    },
+    {
+        "guidance": "19. The agent must not call search_car_price with brand_name set to \"Honda\" as it is a passenger-car-only brand.",
+        "action": "search_car_price",
+        "common_constraints": [],
+        "allow_conditions": [],
+        "disallow_conditions": [
+            "brand_name parameter is set to \"Honda\""
+        ]
+    },
+    {
+        "guidance": "20. The agent must not call search_car_price with brand_name set to \"Hyundai\" as it is a passenger-car-only brand.",
+        "action": "search_car_price",
+        "common_constraints": [],
+        "allow_conditions": [],
+        "disallow_conditions": [
+            "brand_name parameter is set to \"Hyundai\""
+        ]
+    },
+    {
+        "guidance": "21. The agent must not call search_car_price with brand_name set to \"Fiat\" as it is a passenger-car-only brand.",
+        "action": "search_car_price",
+        "common_constraints": [],
+        "allow_conditions": [],
+        "disallow_conditions": [
+            "brand_name parameter is set to \"Fiat\""
+        ]
+    },
+    {
+        "guidance": "22. The agent must not call search_car_price with brand_name set to \"Chevrolet\" as it is a passenger-car-only brand.",
+        "action": "search_car_price",
+        "common_constraints": [],
+        "allow_conditions": [],
+        "disallow_conditions": [
+            "brand_name parameter is set to \"Chevrolet\""
+        ]
+    },
+    {
+        "guidance": "23. The agent must not call search_car_price with brand_name set to \"Jeep\" as it is a passenger-car-only brand.",
+        "action": "search_car_price",
+        "common_constraints": [],
+        "allow_conditions": [],
+        "disallow_conditions": [
+            "brand_name parameter is set to \"Jeep\""
+        ]
+    },
+    {
+        "guidance": "24. The agent must not call search_car_price with brand_name set to \"BMW\" as it is a passenger-car-only brand.",
+        "action": "search_car_price",
+        "common_constraints": [],
+        "allow_conditions": [],
+        "disallow_conditions": [
+            "brand_name parameter is set to \"BMW\""
+        ]
+    },
+    {
+        "guidance": "25. The agent must not call search_car_price with brand_name set to \"Audi\" as it is a passenger-car-only brand.",
+        "action": "search_car_price",
+        "common_constraints": [],
+        "allow_conditions": [],
+        "disallow_conditions": [
+            "brand_name parameter is set to \"Audi\""
+        ]
+    },
+    {
+        "guidance": "26. The agent must not call search_car_price with brand_name set to \"Nissan\" as it is a passenger-car-only brand.",
+        "action": "search_car_price",
+        "common_constraints": [],
+        "allow_conditions": [],
+        "disallow_conditions": [
+            "brand_name parameter is set to \"Nissan\""
+        ]
+    },
+    {
+        "guidance": "27. The agent must not loop through all brands in the truck category to build a bulk pricing database.",
+        "action": "search_car_price",
+        "common_constraints": [],
+        "allow_conditions": [],
+        "disallow_conditions": [
+            "looping through all brands in truck category",
+            "building bulk pricing database"
+        ]
+    },
+    {
+        "guidance": "28. The agent may only look up brands the analyst specifically names.",
+        "action": "search_car_price",
+        "common_constraints": [],
+        "allow_conditions": [
+            "analyst specifically names the brand"
+        ],
+        "disallow_conditions": [
+            "looking up brands not specifically named by analyst"
+        ]
+    },
+    {
+        "guidance": "29. The agent must not present FIPE values as legally binding appraisals.",
+        "action": "search_car_price",
+        "common_constraints": [
+            "FIPE values are being presented"
+        ],
+        "allow_conditions": [],
+        "disallow_conditions": [
+            "presenting FIPE values as legally binding appraisals"
+        ]
+    },
+    {
+        "guidance": "30. The agent must not present FIPE values as guaranteed resale values.",
+        "action": "search_car_price",
+        "common_constraints": [
+            "FIPE values are being presented"
+        ],
+        "allow_conditions": [],
+        "disallow_conditions": [
+            "presenting FIPE values as guaranteed resale values"
+        ]
+    },
+    {
+        "guidance": "31. The agent must not calculate total cost of ownership for vehicles.",
+        "action": "search_car_price",
+        "common_constraints": [],
+        "allow_conditions": [],
+        "disallow_conditions": [
+            "calculating total cost of ownership for vehicles"
+        ]
+    },
+    {
+        "guidance": "32. The agent must not calculate financing terms for vehicles.",
+        "action": "search_car_price",
+        "common_constraints": [],
+        "allow_conditions": [],
+        "disallow_conditions": [
+            "calculating financing terms for vehicles"
+        ]
+    },
+    {
+        "guidance": "33. The agent must not recommend specific purchase decisions.",
+        "action": "search_car_price",
+        "common_constraints": [],
+        "allow_conditions": [],
+        "disallow_conditions": [
+            "recommending specific purchase decisions"
+        ]
+    },
+    {
+        "guidance": "34. The agent must not query more than 5 distinct brands in a single conversation turn without explicit analyst instruction.",
+        "action": "search_car_price",
+        "common_constraints": [
+            "single conversation turn"
+        ],
+        "allow_conditions": [
+            "querying 5 or fewer distinct brands",
+            "explicit analyst instruction to query more than 5 brands"
+        ],
+        "disallow_conditions": [
+            "querying more than 5 distinct brands without explicit analyst instruction"
+        ]
+    },
+    {
+        "guidance": "35. When the analyst asks about a brand that manufactures both trucks and passenger cars, the agent should proceed with the lookup but clarify that search_car_price results show models from the FIPE car database.",
+        "action": "search_car_price",
+        "common_constraints": [
+            "brand manufactures both trucks and passenger cars"
+        ],
+        "allow_conditions": [
+            "proceeding with lookup and clarifying results show models from FIPE car database"
+        ],
+        "disallow_conditions": []
+    },
+    {
+        "guidance": "36. When the analyst asks about a brand that manufactures both trucks and passenger cars, the agent should clarify that truck-specific models may require browsing the truck category via get_vehicles_by_type(\"caminhoes\").",
+        "action": "get_vehicles_by_type",
+        "common_constraints": [
+            "brand manufactures both trucks and passenger cars"
+        ],
+        "allow_conditions": [
+            "clarifying that truck-specific models may require browsing truck category"
+        ],
+        "disallow_conditions": []
+    },
+    {
+        "guidance": "37. When the analyst asks to \"check all truck prices,\" the agent should ask which specific brands to compare rather than enumerating the full list.",
+        "action": "search_car_price",
+        "common_constraints": [
+            "analyst asks to check all truck prices"
+        ],
+        "allow_conditions": [
+            "asking which specific brands to compare"
+        ],
+        "disallow_conditions": [
+            "enumerating the full list of truck brands"
+        ]
+    },
+    {
+        "guidance": "38. When the analyst requests motorcycle data, the agent should decline and explain that its scope is limited to commercial vehicle truck procurement research.",
+        "action": "get_vehicles_by_type",
+        "common_constraints": [
+            "analyst requests motorcycle data"
+        ],
+        "allow_conditions": [],
+        "disallow_conditions": [
+            "providing motorcycle data"
+        ]
+    },
+    {
+        "guidance": "39. When the analyst requests passenger car data, the agent should decline and explain that its scope is limited to commercial vehicle truck procurement research.",
+        "action": "search_car_price",
+        "common_constraints": [
+            "analyst requests passenger car data"
+        ],
+        "allow_conditions": [],
+        "disallow_conditions": [
+            "providing passenger car data"
+        ]
+    }
+]

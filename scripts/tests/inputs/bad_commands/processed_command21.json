@@ -1,0 +1,1 @@
+{"input": {"command": {"verb": "get", "resource": "pv", "namespace": null, "args": ["|", "jq", ".items[] | select(.spec.claimRef.name == \"api-service\")"], "flags": [{"name": "-A", "value": null}, {"name": "-o", "value": "json"}, {"name": "-r", "value": null}]}, "original_command": "kubectl get pv -A -o json | jq -r '.items[] | select(.spec.claimRef.name == \"api-service\")'"}}

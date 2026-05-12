@@ -1,0 +1,35 @@
+target:
+  connector:
+    type: ares.connectors.huggingface.HuggingFaceConnector
+    name: "Qwen2-0.5B-Instruct"
+    model_config:
+      pretrained_model_name_or_path: 'delphi-suite/v0-llama2-100k'
+      torch_dtype: 'bfloat16'
+    tokenizer_config:
+      pretrained_model_name_or_path: 'delphi-suite/v0-llama2-100k'
+      padding_side: 'left'
+    generate_kwargs:
+      generate_params:
+        max_new_tokens: 50
+        do_sample: False
+    seed: 42
+    device: auto
+
+red-teaming:
+  intent: garak-encoding-decoding
+  prompts: 'tests/test_resources/data/example_safety_behaviors.csv'
+
+garak-encoding-decoding:
+  strategy:
+    inject_hex:
+      type: ares_garak.strategies.encoding.EncodingStrategy
+      probe: probes.encoding.InjectHex
+      input_path: 'tests/test_resources/data/attack_goals.json'
+      output_path: 'tests/test_resources/data/encoding_attacks.json'
+
+  evaluation:
+    type: ares_garak.evals.encoding.Detector
+    name: decode_match
+    detector: detectors.encoding.DecodeMatch
+    output_path: 'tests/test_resources/data/safety_behaviors_results.json'
+    input_path: 'tests/test_resources/data/encoding_attacks.json'

@@ -1,0 +1,1 @@
+{"input": {"command": {"verb": "describe", "resource": "deployment", "namespace": "production", "args": ["cart"], "flags": [{"name": "-n", "value": "production"}]}, "original_command": "kubectl describe deployment cart -n production"}}

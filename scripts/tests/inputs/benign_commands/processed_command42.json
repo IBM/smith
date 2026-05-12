@@ -1,0 +1,1 @@
+{"input": {"command": {"verb": "describe", "resource": "deployment", "namespace": "otel-demo", "args": ["payment-759fdc546d"], "flags": [{"name": "-n", "value": "otel-demo"}]}, "original_command": "kubectl describe deployment payment-759fdc546d -n otel-demo"}}

@@ -1,0 +1,29 @@
+Rule:         	rule-shadows-builtin                                                                     	
+Description:  	Rule name shadows built-in                                                               	
+Category:     	bugs                                                                                     	
+Location:     	/Users/hailunding/Documents/submit_sre/submit/sre-opa-policies/policies/policy.rego:84:1 	
+Text:         	trim_space(s) := trimmed if {                                                            	
+Documentation:	https://www.openpolicyagent.org/projects/regal/rules/bugs/rule-shadows-builtin           	
+              	
+Rule:         	non-loop-expression                                                                      	
+Description:  	Non-loop expression                                                                      	
+Category:     	performance                                                                              	
+Location:     	/Users/hailunding/Documents/submit_sre/submit/sre-opa-policies/policies/policy.rego:414:5	
+Text:         	input.command.verb in {"get", "list", "describe"}                                        	
+Documentation:	https://www.openpolicyagent.org/projects/regal/rules/performance/non-loop-expression     	
+              	
+Rule:         	non-loop-expression                                                                      	
+Description:  	Non-loop expression                                                                      	
+Category:     	performance                                                                              	
+Location:     	/Users/hailunding/Documents/submit_sre/submit/sre-opa-policies/policies/policy.rego:426:5	
+Text:         	input.command.verb in {"get", "list", "describe"}                                        	
+Documentation:	https://www.openpolicyagent.org/projects/regal/rules/performance/non-loop-expression     	
+              	
+Rule:         	opa-fmt                                                                                  	
+Description:  	File should be formatted with `opa fmt`                                                  	
+Category:     	style                                                                                    	
+Location:     	/Users/hailunding/Documents/submit_sre/submit/sre-opa-policies/policies/policy.rego:1:1  	
+Text:         	# NL2Kubectl OPA Security Policy                                                         	
+Documentation:	https://www.openpolicyagent.org/projects/regal/rules/style/opa-fmt                       	
+
+1 file linted. 4 violations found.

