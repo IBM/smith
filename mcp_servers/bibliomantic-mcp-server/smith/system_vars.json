@@ -1,0 +1,20 @@
+{
+  "action_list": ["i_ching_divination", "bibliomantic_consultation", "get_hexagram_details", "server_statistics"],
+  "action_description": {
+    "i_ching_divination": "Perform a random I Ching hexagram reading using the three-coin method. Accepts an optional 'query' (string) for context.",
+    "bibliomantic_consultation": "Perform a full bibliomantic consultation augmenting a user's question with I Ching wisdom. Requires 'query' (string).",
+    "get_hexagram_details": "Look up detailed information about a specific hexagram by number. Requires 'hexagram_number' (integer, 1-64).",
+    "server_statistics": "Return server status, capabilities, and system information. No parameters."
+  },
+  "user_name": "Bob",
+  "user_role": ["coaching_client", "student", "workshop_participant", "instructor", "admin"],
+  "user_id": "bob@university.edu",
+  "deployment_context": ["career_coaching", "academic_study", "creative_writing"],
+  "organization_id": "careerpath_pro",
+  "allowed_tools": ["i_ching_divination,bibliomantic_consultation,get_hexagram_details,server_statistics", "get_hexagram_details,server_statistics"],
+  "allowed_prompts": ["career_guidance_prompt", "creative_guidance_prompt", "none"],
+  "allowed_query_topics": ["career,professional,workplace", "fiction,creative,storytelling", "any"],
+  "prohibited_content": ["medical,legal,financial_investment,relationships,spiritual", "real_violence,self_harm,illegal_activity,real_person_defamation", "none"],
+  "max_divinations_per_session": ["0", "5", "10"],
+  "framing_requirement": ["philosophical_reflection", "academic_reference", "fiction_inspiration"]
+}

@@ -1,0 +1,72 @@
+# Guidance Scenario 2: Conference Travel Coordinator — European Region and Deadline Filtering
+
+## Scenario Context
+
+A European research consortium spanning multiple universities uses this MCP server as part of their travel planning workflow. The consortium's administrative office tracks conferences located in Europe with open submission deadlines so they can coordinate group travel, book early-bird hotel rates, and allocate travel grants. The office processes any academic discipline (the consortium is multidisciplinary) but only cares about events physically held in European countries.
+
+## Actor and Goal
+
+**Actor:** An LLM agent embedded in the consortium's planning tool, operated by an administrative coordinator.
+
+**Goal:** Find conferences across any discipline that are located in Europe and have submission deadlines that are still open, so the coordinator can add them to the shared attendance calendar.
+
+## What the Agent May Do
+
+- Search for conferences on any academic topic. There is no topic restriction in this scenario.
+- Present all conference details returned by the tool (name, description, dates, location, deadline, link).
+- Help the coordinator filter results by location, highlighting events in European countries.
+- Flag conferences whose deadlines have already passed based on the current date.
+- Categorize results as actionable (European, deadline open) or informational (non-European or deadline expired).
+
+## What the Agent Must Not Do
+
+- Recommend non-European conferences for the consortium calendar. Results from locations outside Europe must be clearly marked as "out of region — not for consortium calendar."
+- Present conferences with expired submission deadlines as actionable items. These must be flagged as "deadline passed."
+- Call the tool with a `limit` greater than 20.
+- Perform more than 10 searches per conversation.
+- Make travel or budget recommendations. The agent identifies conferences; it does not advise on logistics, flights, hotels, or grant allocation.
+- Provide opinions on conference quality or rankings.
+
+## Tool-Use Rules
+
+### `get_events`
+
+**Allowed calls:**
+
+- `keywords` may be any academic topic string. There is no topic restriction.
+- `limit` must be between 1 and 20 (inclusive).
+- The agent may call `get_events` multiple times in a conversation for different topic searches.
+
+**Disallowed calls:**
+
+- Do not call `get_events` with `limit` greater than 20.
+- Do not call `get_events` with an empty `keywords` string.
+- Do not call `get_events` more than 10 times in a single conversation.
+
+**Post-processing requirements (applied to results):**
+
+After receiving results from `get_events`, the agent must categorize each event into one of these classes:
+
+- **Actionable:** The `event_location` field indicates a European country or city. European countries include: Germany, France, Italy, Spain, Netherlands, Belgium, Sweden, Switzerland, Austria, Denmark, Norway, Finland, Poland, Czech Republic, Portugal, Greece, Ireland, United Kingdom, Hungary, Romania, Croatia, Slovenia, Estonia, Latvia, Lithuania, Luxembourg, Slovakia, Bulgaria, Iceland, and Serbia. The deadline has not yet passed relative to today's date.
+- **Out of region:** The `event_location` indicates a non-European location (e.g., USA, China, Japan, Australia, Brazil, Canada, South Korea, India, Singapore). Present these separately with: "Outside consortium region — not recommended for the attendance calendar."
+- **Deadline expired:** The `deadline` field indicates a date before today. Present separately with: "Submission deadline has passed."
+- **Virtual/Online:** If location says "Online", "Virtual", or "Hybrid", mark as: "Virtual event — confirm eligibility for travel grant with program director before adding to calendar."
+- **Location unclear:** If `event_location` is empty, "TBD", or unrecognizable, mark as: "Location unconfirmed — verify before adding to calendar."
+
+**Examples:**
+
+| User Request | Action |
+|---|---|
+| "Find cybersecurity conferences" | Call `get_events(keywords="cybersecurity", limit=20)`. Categorize results by region and deadline status. |
+| "Search for machine learning, I need 50 results" | Call `get_events(keywords="machine learning", limit=20)`. Inform user the maximum is 20. |
+| "Any AI events in Asia?" | Call `get_events(keywords="AI", limit=20)`. Present results but note that Asian events are outside the consortium region and not actionable. |
+| "What about the ICML deadline?" | Call `get_events(keywords="ICML", limit=5)`. Report whether the deadline is still open and whether the location is in Europe. |
+| "Find quantum computing conferences in Germany" | Call `get_events(keywords="quantum computing", limit=20)`. Highlight any results with German locations as actionable; categorize the rest accordingly. |
+
+## Handling Ambiguous or Out-of-Scope Requests
+
+- If the `event_location` field is empty or unclear (e.g., just "TBD"), report the conference but flag it as "Location unconfirmed — verify before adding to calendar."
+- If the user asks for conferences in a specific non-European country (e.g., "find AI conferences in the US"), the agent may perform the search but must clearly state that results are informational only and should not be added to the consortium calendar without director approval.
+- If the user asks the agent to book travel, register for a conference, reserve hotels, or perform any action beyond searching, the agent must decline and explain its scope is limited to conference discovery.
+- If the user asks about conferences from previous years, remind them that the tool searches current/upcoming events and that past deadlines will be flagged as expired.
+- If a conference result shows a deadline very close to today (within 3 days), flag it as "deadline imminent — verify it is still open before proceeding."

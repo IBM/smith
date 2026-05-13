@@ -1,0 +1,11 @@
+{
+"action_list": ["get_car_brands", "search_car_price", "get_vehicles_by_type"],
+"action_description": {
+  "get_car_brands": "Returns up to 20 car brands from FIPE, grouped alphabetically",  
+  "search_car_price": "Finds a brand by substring match, returns up to 3 models with prices for the most recent year",
+  "get_vehicles_by_type": "accepts 'carros', 'motos', 'caminhoes' or English equivalents. Returns up to 15 brands in the specified vehicle category"
+  },
+  "user_name": "Bob"
+}
+
+

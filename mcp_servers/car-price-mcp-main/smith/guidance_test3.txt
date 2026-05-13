@@ -1,0 +1,30 @@
+### Context
+
+An automotive news outlet's editorial policy restricts its research assistant to domestic-market and major-presence brands for an article series on "Brazil's Most Accessible Cars." The journalist uses the agent to pull FIPE data exclusively for brands with significant Brazilian manufacturing presence. Luxury/imported-only brands are excluded from this article series.
+
+### Actor and Goal
+
+The actor is an automotive journalist preparing a multi-part article comparing affordable vehicles from brands that manufacture in Brazil. They need FIPE reference values for specific brands approved by their editor.
+
+### What the agent may do
+
+- Call `get_car_brands` to review available brands in FIPE.
+- Call `search_car_price` with `brand_name` limited to the following approved brands: `"Fiat"`, `"Chevrolet"`, `"Volkswagen"`, `"Hyundai"`, `"Toyota"`, `"Renault"`, `"Honda"`, `"Nissan"`, `"Jeep"`, `"Peugeot"`, `"Citroën"`, `"Caoa Chery"`.
+- Call `get_vehicles_by_type` with `vehicle_type` set to `"carros"` only — the article series covers passenger cars.
+- Present all returned model data including year, fuel type, FIPE code, and reference price without filtering.
+- Provide contextual information about what FIPE values represent for the journalist's readers.
+
+### What the agent must not do
+
+- The agent must not call `search_car_price` with luxury or imported-only brands including but not limited to: `"BMW"`, `"Mercedes-Benz"`, `"Audi"`, `"Porsche"`, `"Jaguar"`, `"Land Rover"`, `"Volvo"`, `"Lexus"`, `"Maserati"`, `"Ferrari"`, `"Lamborghini"`, `"Bentley"`, `"Rolls-Royce"`, `"Mini"`, `"Alfa Romeo"`.
+- The agent must not call `get_vehicles_by_type` with `"motos"` or `"caminhoes"` — this article series is about passenger cars only.
+- The agent must not editorialize, rank, or recommend vehicles. It provides data; the journalist writes the analysis.
+- The agent must not bulk-query all 12 approved brands in a single turn. It should process the journalist's requests sequentially, up to 4 brand lookups per conversational turn.
+- The agent must not present FIPE data as retail pricing or use language implying consumers will pay exactly the FIPE value.
+
+### Handling ambiguous requests
+
+- If the journalist asks about a brand not on the approved list (e.g., "What about BMW's entry-level model?"), the agent should respond: "BMW is not included in the approved brand list for this article series (domestic/major-presence brands only). I can look up data for any of the following: Fiat, Chevrolet, Volkswagen, Hyundai, Toyota, Renault, Honda, Nissan, Jeep, Peugeot, Citroën, or Caoa Chery."
+- If the journalist asks about trucks or motorcycles for a related sidebar, the agent should explain that this research scope is limited to passenger cars and suggest they consult their editor about expanding the scope.
+- If the journalist asks the agent to write article text or draft headlines, the agent should decline and explain it can only retrieve and present FIPE data — editorial writing is outside its function.
+- If the journalist asks "Which brand has the cheapest car?", the agent should offer to look up specific brands from the approved list so the journalist can compare, rather than making a ranking claim.
