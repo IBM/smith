@@ -1,0 +1,16 @@
+{
+  "action_list": ["get_events"],
+  "action_description": {
+    "get_events": "Searches WikiCFP for academic conferences matching given keywords. Returns event name, description, dates, location, deadline, and link. Accepts 'keywords' (string, required) and 'limit' (integer, default 10)."
+  },
+  "user_name": "Bob",
+  "user_role": ["faculty", "phd_student", "admin_coordinator", "advisor", "guest"],
+  "user_id": "bob@university.edu",
+  "department": ["computer_science", "electrical_engineering", "multidisciplinary"],
+  "research_area": ["federated_learning_healthcare", "natural_language_processing", "AI_ML", "cybersecurity", "software_engineering", "network_security"],
+  "organization_id": "university_of_example",
+  "max_results_per_query": ["5", "10", "15", "20"],
+  "max_queries_per_session": ["3", "5", "10"],
+  "allowed_topics": ["AI,cybersecurity,software_engineering", "any", "federated_learning,healthcare"],
+  "region_filter": ["any", "europe", "asia", "north_america"]
+}
