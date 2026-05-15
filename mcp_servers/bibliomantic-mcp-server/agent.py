@@ -46,7 +46,7 @@ def build_system_prompt(system_variables: Optional[Dict[str, str]] = None) -> st
 async def lifespan(app: FastAPI):
     global agent, mcp_client
 
-    mcp_client = MultiServerMCPClient(
+    async with MultiServerMCPClient(
         {
             "bibliomantic-mcp": {
                 "transport": "stdio",
@@ -54,32 +54,32 @@ async def lifespan(app: FastAPI):
                 "args": ["bibliomantic_fastmcp.py"],
             }
         }
-    )
+    ) as client:
+        mcp_client = client
+        tools = client.get_tools()
 
-    tools = await mcp_client.get_tools()
+        api_key = os.getenv("OPENAI_API_KEY", None)
+        api_url = os.getenv("OPENAI_BASE_URL", None)
+        model = os.getenv("MODEL", None)
 
-    api_key = os.getenv("OPENAI_API_KEY", None)
-    api_url = os.getenv("OPENAI_BASE_URL", None)
-    model = os.getenv("MODEL", None)
+        if api_key is None or api_url is None:
+            raise ValueError(
+                "OPENAI_API_KEY or OPENAI_BASE_URL not defined in environment. Create a .env file."
+            )
 
-    if api_key is None or api_url is None:
-        raise ValueError(
-            "OPENAI_API_KEY or OPENAI_BASE_URL not defined in environment. Create a .env file."
+        llm = ChatOpenAI(
+            model=model,
+            api_key=api_key,
+            base_url=api_url,
+            default_headers={"RITS_API_KEY": api_key},
         )
 
-    llm = ChatOpenAI(
-        model=model,
-        api_key=api_key,
-        base_url=api_url,
-        default_headers={"RITS_API_KEY": api_key},
-    )
+        agent = create_react_agent(
+            model=llm,
+            tools=tools,
+        )
 
-    agent = create_react_agent(
-        model=llm,
-        tools=tools,
-    )
-
-    yield
+        yield
 
 
 app = FastAPI(lifespan=lifespan)

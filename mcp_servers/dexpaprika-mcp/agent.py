@@ -13,7 +13,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-SYSTEM_PROMPT_BASE = "You are a fruit nutrition assistant that helps users look up nutritional information and botanical details about fruits."
+SYSTEM_PROMPT_BASE = "You are a DeFi data assistant that helps users query decentralized exchange data including liquidity pools, token prices, trading volumes, and historical market data across blockchain networks."
 
 
 class ChatRequest(BaseModel):
@@ -48,10 +48,10 @@ async def lifespan(app: FastAPI):
 
     async with MultiServerMCPClient(
         {
-            "fruityvice-mcp": {
+            "dexpaprika-mcp": {
                 "transport": "stdio",
-                "command": "python",
-                "args": ["server.py"],
+                "command": "node",
+                "args": ["dist/index.js"],
             }
         }
     ) as mcp_client:
