@@ -1,3 +1,0 @@
-"""
-ARES Pyrit plugins
-"""

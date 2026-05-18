@@ -16,28 +16,27 @@ connectors:
         add_generation_prompt: true,
       generate_params:
         max_new_tokens: 50
+        temperature: 0.00000001
     seed: 42
     device: auto
   watsonx_agent:
     type: ares.connectors.watsonx_agent_connector.WatsonxAgentConnector
     name: watsonx_agent
-    api_config:
-      api_endpoint: https://us-south.ml.cloud.ibm.com/ml/v4/deployments/INSERT_YOUR_DEPLOYMENT_ID/ai_service?version=2021-05-01
-      timeout: 200
-      header:
-        Content-Type: "application/json"
-        Authorization: "Bearer $HEADER_TAG"
-      request_template:
-        messages: "$MESSAGES"
-      prepend_message_queue: True
-      other:
-        iam_url: https://iam.cloud.ibm.com/identity/token
-        grant_type: urn:ibm:params:oauth:grant-type:apikey
-        token_response_timeout: 400
+    api_endpoint: https://us-south.ml.cloud.ibm.com/ml/v4/deployments/INSERT_YOUR_DEPLOYMENT_ID/ai_service?version=2021-05-01
+    timeout: 200
+    header:
+      Content-Type: "application/json"
+      Authorization: "Bearer $HEADER_TAG"
+    request_template:
+      messages: "$MESSAGES"
+    prepend_message_queue: True
+    iam_url: https://iam.cloud.ibm.com/identity/token
+    grant_type: urn:ibm:params:oauth:grant-type:apikey
+    token_response_timeout: 400
   watsonx:
     type: ares.connectors.watsonx_connector.WatsonxConnector
     name: watsonx
-    model_id: "ibm/granite-3-3-8b-instruct"
+    model_id: "ibm/granite-4-h-small"
     chat: True
     add_assistant: True
     system_prompt: "You are helpful assistant"
@@ -47,6 +46,7 @@ connectors:
       max_new_tokens: 1000
       decoding_method: greedy
       repetition_penalty: 1
+      temperature: 0
     generate_kwargs:
       guardrails: true
       guardrails_hap_params:
@@ -63,23 +63,22 @@ connectors:
   watsonx_rest:
     type: ares.connectors.watsonx_rest_connector.WatsonxRESTConnector
     name: watsonx_rest_granite
-    api_config:
-      api_endpoint: https://INSERT_YOUR_WATSONX_URL/ml/v1/text/chat?version=2024-03-14  # https://cloud.ibm.com/apidocs/watsonx-ai#text-chat
-      timeout: 200
-      header:
-        Content-Type: "application/json"
-        Authorization: "Bearer $HEADER_TAG"
-        Accept: "application/json"
-      request_template:
-        model_id: "ibm/granite-3-3-8b-instruct"
-        messages: "$MESSAGES"
-        parameters:
-          max_new_tokens: 100
-          time_limit: 1000
-      other:
-        iam_url: https://iam.cloud.ibm.com/identity/token
-        grant_type: urn:ibm:params:oauth:grant-type:apikey
-        token_response_timeout: 40
+    api_endpoint: https://INSERT_YOUR_WATSONX_URL/ml/v1/text/chat?version=2024-03-14  # https://cloud.ibm.com/apidocs/watsonx-ai#text-chat
+    timeout: 200
+    header:
+      Content-Type: "application/json"
+      Authorization: "Bearer $HEADER_TAG"
+      Accept: "application/json"
+    request_template:
+      model_id: "ibm/granite-4-h-small"
+      messages: "$MESSAGES"
+      parameters:
+        max_new_tokens: 100
+        time_limit: 1000
+        temperature: 0
+    iam_url: https://iam.cloud.ibm.com/identity/token
+    grant_type: urn:ibm:params:oauth:grant-type:apikey
+    token_response_timeout: 40
   shieldgemma-2b:
     type: ares.connectors.guardrails.shield_gemma_hf.ShieldGemmaHF
     name: shieldgemma-2b
@@ -96,6 +95,7 @@ connectors:
         add_generation_prompt: true,
       generate_params:
         max_new_tokens: 20
+        temperature: 0
     device: auto
   granite-guardian-3.0:
     type: ares.connectors.guardrails.granite_guardian_hf.GraniteGuardianHF
@@ -113,28 +113,11 @@ connectors:
         add_generation_prompt: true,
       generate_params:
         max_new_tokens: 20
+        temperature: 0
     device: auto
     input_risk_name: 'harm'
     output_risk_name: 'harm'
-  granite-guardian-3.3:
-    type: ares.connectors.guardrails.granite_guardian_hf.GraniteGuardianHF
-    name: granite-guardian-3.3-8b
-    model_config:
-      pretrained_model_name_or_path: 'ibm-granite/granite-guardian-3.3-8b'
-      dtype: 'bfloat16'
-    tokenizer_config:
-      pretrained_model_name_or_path: 'ibm-granite/granite-guardian-3.3-8b'
-      padding_side: 'left'
-    generate_kwargs:
-      chat_template:
-        return_tensors: 'pt'
-        return_dict: true,
-        add_generation_prompt: true,
-      generate_params:
-        max_new_tokens: 20
-    device: auto
-    input_risk_name: 'harm'
-    output_risk_name: 'harm'
+    version: 3.0
   granite-guardian-3.3-8b:
     type: ares.connectors.guardrails.granite_guardian_hf.GraniteGuardianHF
     name: granite-guardian-3.3-8b
@@ -147,13 +130,90 @@ connectors:
     generate_kwargs:
       chat_template:
         return_tensors: 'pt'
-        return_dict: true,
-        add_generation_prompt: true,
+        return_dict: true
+        add_generation_prompt: true
       generate_params:
-        max_new_tokens: 20
+        max_new_tokens: 2048
+        temperature: 0.0000001
     device: auto
     input_criteria_id: 'jailbreak'
     output_criteria_id: 'harm'
+    version: 3.3
+  granite-guardian-4.1-8b:
+    type: ares.connectors.guardrails.granite_guardian_hf.GraniteGuardianHF
+    name: granite-guardian-4.1-8b
+    model_config:
+      pretrained_model_name_or_path: 'ibm-granite/granite-guardian-4.1-8b'
+      dtype: 'bfloat16'
+    tokenizer_config:
+      pretrained_model_name_or_path: 'ibm-granite/granite-guardian-4.1-8b'
+      padding_side: 'left'
+    generate_kwargs:
+      chat_template:
+        return_tensors: 'pt'
+        return_dict: true
+        add_generation_prompt: true
+      generate_params:
+        max_new_tokens: 2048
+        temperature: 0.0000001
+    input_criteria: >
+      The text promotes or contains content that is universally harmful across all contexts and audiences, including content that could cause physical, psychological, or social harm.
+    output_criteria: >
+      The text promotes or contains content that is universally harmful across all contexts and audiences, including content that could cause physical, psychological, or social harm.
+    think_mode: False
+    version: 4.1
+
+  # Example configuration for function calling hallucination detection
+  # Define available_tools in config for output guardrail checking
+  # Note: RAG groundedness checking with documents parameter is not yet supported
+  granite-guardian-4.1-8b-tools:
+    type: ares.connectors.guardrails.granite_guardian_hf.GraniteGuardianHF
+    name: granite-guardian-4.1-8b-tools
+    model_config:
+      pretrained_model_name_or_path: 'ibm-granite/granite-guardian-4.1-8b'
+      dtype: 'bfloat16'
+    tokenizer_config:
+      pretrained_model_name_or_path: 'ibm-granite/granite-guardian-4.1-8b'
+      padding_side: 'left'
+    generate_kwargs:
+      chat_template:
+        return_tensors: 'pt'
+        return_dict: true
+        add_generation_prompt: true
+      generate_params:
+        max_new_tokens: 2048
+        temperature: 0.0000001
+    device: auto
+    output_criteria: >
+      Function call hallucination occurs when a text includes function calls that either don't
+      adhere to the correct format defined by the available tools or are inconsistent with the
+      query's requirements. This risk arises from function calls containing incorrect argument
+      names, values, or types that clash with the tool definitions or the query itself. Common
+      examples include calling functions not present in the tool definitions, providing invalid
+      argument values, or attempting to use parameters that don't exist.
+    think_mode: False
+    version: 4.1
+    available_tools:
+      - name: get_weather
+        description: Get current weather for a location
+        parameters:
+          location:
+            type: string
+            description: City name
+          units:
+            type: string
+            description: Temperature units (celsius/fahrenheit)
+            default: celsius
+      - name: search_web
+        description: Search the web for information
+        parameters:
+          query:
+            type: string
+            description: Search query
+          max_results:
+            type: integer
+            description: Maximum number of results
+            default: 10
   input-reject-all:
     type: ares.connectors.guardrails.reject.RejectGuardrail
     name: input-reject-all
@@ -167,9 +227,11 @@ connectors:
     generate_kwargs:
       generate_params:
         max_new_tokens: 20
+        temperature: 0
     device: auto
     input_risk_name: 'harm'
     output_risk_name: 'harm'
+    version: 3.1
   harmbench-eval-llama:
     type: ares.connectors.huggingface.HuggingFaceConnector
     name: cais/HarmBench-Llama-2-13b-cls
@@ -200,16 +262,15 @@ connectors:
     type: ares_watsonx_orchestrate.connector.wxo_connector.WXOAgentConnector
     name: wxo_agent
     keep-session: False
-    api_config:
-      api_endpoint: "http://localhost:4321/api/v1/orchestrate/runs?stream=true&stream_timeout=120000&multiple_content=true"
-      timeout: 500
-      api_key_env_var: WXO_LOCAL_APIKEY # name for local WXO API key from ~/.cache/orchestrate/credentials.yaml that should be added to .env
-      header:
-        Content-Type: "application/json"
-        Authorization: "Bearer $HEADER_TAG"
-      request_template:
-        message: "$MESSAGES"
-        agent_id: "$AGENT_ID"  # run `orchestrate agents list` to know your agent's ID.
+    api_endpoint: "http://localhost:4321/api/v1/orchestrate/runs?stream=true&stream_timeout=120000&multiple_content=true"
+    timeout: 500
+    api_key_env_var: WXO_LOCAL_APIKEY # name for local WXO API key from ~/.cache/orchestrate/credentials.yaml that should be added to .env
+    header:
+      Content-Type: "application/json"
+      Authorization: "Bearer $HEADER_TAG"
+    request_template:
+      message: "$MESSAGES"
+      agent_id: "$AGENT_ID"  # run `orchestrate agents list` to know your agent's ID.
   crescendo-helper:
     type: ares.connectors.watsonx_connector.WatsonxConnector
     name: helper
@@ -220,11 +281,12 @@ connectors:
       max_new_tokens: 1000
       decoding_method: greedy
       repetition_penalty: 1
+      temperature: 0.3 # to be updated
     generate_kwargs:
       guardrails: False
     system_prompt:
       role: system
-      content: "Use system prompt from https://github.com/Azure/PyRIT/blob/main/pyrit/datasets/executors/crescendo/crescendo_variant_1.yaml"
+      content: "Use system prompt from https://github.com/microsoft/PyRIT/blob/main/pyrit/datasets/executors/crescendo/crescendo_variant_1.yaml"
   crescendo-judge:
     type: ares.connectors.watsonx_connector.WatsonxConnector
     name: judge
@@ -235,20 +297,40 @@ connectors:
       max_new_tokens: 1000
       decoding_method: greedy
       repetition_penalty: 1
+      temperature: 0
     generate_kwargs:
       guardrails: False
     system_prompt: 
       role: system
-      content: "Use system prompt from https://github.com/Azure/PyRIT/blob/main/pyrit/score/config/scales/red_teamer_system_prompt.yaml"
+      content: "Use system prompt from https://github.com/microsoft/PyRIT/blob/main/pyrit/datasets/score/scales/red_teamer_system_prompt.yaml"
   litellm_connector_ollama:
     type: ares_litellm.LiteLLMConnector
     name: "gpt-oss-20-on-ollama"
     endpoint-type: "ollama"
     model: "ollama/gpt-oss:20b"
+    temperature: 0
   litellm_connector:
+    type: ares_litellm.LiteLLMConnector
     name: "gpt-oss-120b-on-watsonx"
     endpoint-type: "watsonx"
     endpoint: ""
-    model: "openai/gpt-oss-120b"
-    reasoning_effort: "low"
-    prompt_path: 'assets/gptoss_prompt.yaml'
+    model: "watsonx/openai/gpt-oss-120b"
+    temperature: 0
+  litellm_target:
+    type: ares_litellm.LiteLLMConnector
+    name: "granite-4-h-small-on-watsonx"
+    endpoint-type: "watsonx"
+    endpoint: ""
+    model: "watsonx/ibm/granite-4-h-small"
+    max_tokens: 500
+    temperature: 0
+  litellm_guardrail:
+    type: ares_litellm.litellm_granite_guardian.LiteLLMGraniteGuardian
+    name: "gg-on-rits"
+    endpoint-type: "rits"
+    endpoint: https://inference-3scale-apicast-production.apps.rits.fmaas.res.ibm.com/granite-guardian-3-3-8b
+    model: ibm-granite/granite-guardian-3.3-8b
+    temperature: 0
+    extra_body:
+      think: True
+    max_tokens: 2048

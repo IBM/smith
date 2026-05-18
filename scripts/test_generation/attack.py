@@ -18,7 +18,8 @@ def attack(output_file_case, output_file_attack, output_file_attack_csv, test_ge
 
     try:
         with open("ares.log", 'w') as f:
-            result=subprocess.run([test_generation_path+"ares/.venv/bin/python", "test.py"], cwd=test_generation_path+"ares/test_script/", stdout=f, stderr=subprocess.STDOUT, check=True)
+            # result=subprocess.run([test_generation_path+"ares/.venv/bin/python", "test.py"], cwd=test_generation_path+"ares/test_script/", stdout=f, stderr=subprocess.STDOUT, check=True)
+            result=subprocess.run(["ares", "evaluate", "example_configs/qwen-owasp-llm-01.yaml", "-l", "--generate-only"])#, stdout=f, stderr=subprocess.STDOUT, check=True)
     except subprocess.CalledProcessError:
         print("jail break partially failed")
     print("ATTACK FINISHED........")
