@@ -76,9 +76,9 @@ class BlueAgent:
 def generate_test(base_skill_url, system_variables, api_key, openai_base_url, model, temp, top_p, guidance_file, output_file_decompose, output_file_attack, output_file_variables, output_file_attack_csv, test_case_template_file, output_file_ready_cases, output_file_grey_guidances, output_file_attack_promptfoo, test_generation_path, output_file_flatten, output_file_cases, output_promptfoo, batch_processing=False, batch_size=10, flatten_flag=False):
     
     flatten_flag=True
-    decompose_guidance(api_key, system_variables, guidance_file, openai_base_url, model, temp, top_p, output_file_decompose, output_file_flatten, flatten_flag)
-    grey_extraction(api_key, system_variables, openai_base_url, model, temp, top_p, output_file_decompose, output_file_grey_guidances)
-    variable_extraction(api_key, system_variables, openai_base_url, model, temp, top_p, output_file_decompose, output_file_variables)
+    decompose_guidance(api_key, system_variables, guidance_file, openai_base_url, model, temp, top_p, output_file_decompose, output_file_flatten, flatten_flag, batch_processing, batch_size)
+    grey_extraction(api_key, system_variables, openai_base_url, model, temp, top_p, output_file_decompose, output_file_grey_guidances, batch_processing, batch_size)
+    variable_extraction(api_key, system_variables, openai_base_url, model, temp, top_p, output_file_decompose, output_file_variables, batch_processing, batch_size)
     case_generation(api_key, system_variables, openai_base_url, model, temp, top_p, output_file_variables, output_file_cases, batch_processing, batch_size)
     attack(output_file_cases, output_file_attack, output_file_attack_csv, test_generation_path)
     create_promptfoo_cases(base_skill_url, output_promptfoo, output_file_attack_promptfoo, test_generation_path)
@@ -87,6 +87,7 @@ def generate_test(base_skill_url, system_variables, api_key, openai_base_url, mo
 
 
 def main():
+    
     api_key = os.getenv("OPENAI_API_KEY")
     openai_base_url = os.getenv("OPENAI_BASE_URL")
     base_skill_url=os.getenv("BASE_SKILL_URL")

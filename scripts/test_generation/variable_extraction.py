@@ -10,7 +10,7 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../.."))
 load_dotenv()
 
-def variable_extraction(api_key, system_variables, openai_base_url, model, temp, top_p, output_file_decompose, output_file_variables):
+def variable_extraction(api_key, system_variables, openai_base_url, model, temp, top_p, output_file_decompose, output_file_variables, batch_processing=False, batch_size=10):
 
     system_instruction = """
     You are a policy variable extraction agent.
@@ -43,7 +43,7 @@ def variable_extraction(api_key, system_variables, openai_base_url, model, temp,
 
     Output: your output should be a list of json data. Each json maps to each guidance item, should only include its system variable names and prompt variable names.
 
-    Output format example: 
+    Output format example:
 
     [
         {
@@ -59,46 +59,89 @@ def variable_extraction(api_key, system_variables, openai_base_url, model, temp,
     print(system_variables)
     del system_variables["action_list"]
     del system_variables["action_description"]
-    user_instruction = f"""
+
+    http_client = httpx.Client(verify=False, timeout=300.0)
+    client = OpenAI(api_key=api_key, base_url=openai_base_url, http_client=http_client)
+
+    if batch_processing and isinstance(guidances, list) and len(guidances) > batch_size:
+        all_results = []
+        total_batches = (len(guidances) + batch_size - 1) // batch_size
+        for i in range(0, len(guidances), batch_size):
+            batch = guidances[i:i + batch_size]
+            batch_num = i // batch_size + 1
+            print(f"Sending batch {batch_num}/{total_batches} ({len(batch)} items) for variable extraction...")
+
+            user_instruction = f"""
+    System variable list: {system_variables}
+
+    Guidance items: {str(batch)}
+    """
+            response = client.chat.completions.create(
+                model=model,
+                messages=[
+                    {"role": "system", "content": system_instruction},
+                    {"role": "user", "content": user_instruction}
+                ],
+                temperature=temp,
+                top_p=top_p
+            )
+
+            llm_output = response.choices[0].message.content.strip()
+            match = re.search(r"```json\s*(.*?)```", llm_output, re.DOTALL)
+            if match:
+                llm_output = match.group(1).strip()
+            try:
+                batch_results = json.loads(llm_output)
+                if not isinstance(batch_results, list):
+                    batch_results = [batch_results]
+                for j in range(len(batch_results)):
+                    batch[j]["system_variables"] = batch_results[j]["system_variables"]
+                    batch[j]["prompt_variables"] = batch_results[j]["prompt_variables"]
+                all_results.extend(batch)
+            except json.JSONDecodeError as e:
+                print(f"Error parsing LLM output for batch {batch_num}:", e)
+                print("Raw output will be skipped for this batch")
+
+        with open(output_file_variables, 'w') as f:
+            json.dump(all_results, f, indent=4)
+        return all_results
+
+    else:
+        user_instruction = f"""
     System variable list: {system_variables}
 
     Guidance items: {str(guidances)}
     """
-    # Initialize OpenAI client
-    http_client = httpx.Client(verify=False, timeout=300.0)
-    client = OpenAI(api_key=api_key, base_url=openai_base_url, http_client=http_client)
+        print("Sending guidance for variable extraction...")
+        response = client.chat.completions.create(
+            model=model,
+            messages=[
+                {"role": "system", "content": system_instruction},
+                {"role": "user", "content": user_instruction}
+            ],
+            temperature=temp,
+            top_p=top_p
+        )
 
+        llm_output = response.choices[0].message.content.strip()
 
-    print("Sending guidance for variable extraction...")
-    response = client.chat.completions.create(
-        model=model,
-        messages=[
-            {"role": "system", "content": system_instruction},
-            {"role": "user", "content": user_instruction}
-        ],
-        temperature=temp,
-        top_p=top_p
-    )
+        # Extract JSON block if wrapped in ```json ... ```
+        match = re.search(r"```json\s*(.*?)```", llm_output, re.DOTALL)
+        if match:
+            llm_output = match.group(1).strip()
+        try:
+            issues_list = json.loads(llm_output)
+            for i in range(len(issues_list)):
+                guidances[i]["system_variables"]=issues_list[i]["system_variables"]
+                guidances[i]["prompt_variables"]=issues_list[i]["prompt_variables"]
+            with open(output_file_variables, 'w') as f:
+                json.dump(guidances, f, indent=4)
 
-    llm_output = response.choices[0].message.content.strip()
-    
-    # Extract JSON block if wrapped in ```json ... ```
-    match = re.search(r"```json\s*(.*?)```", llm_output, re.DOTALL)
-    if match:
-        llm_output = match.group(1).strip()
-    try:
-        issues_list = json.loads(llm_output)
-        for i in range(len(issues_list)):
-            guidances[i]["system_variables"]=issues_list[i]["system_variables"]
-            guidances[i]["prompt_variables"]=issues_list[i]["prompt_variables"]
-        with open(output_file_variables, 'w') as f:
-            json.dump(guidances, f, indent=4)
+        except json.JSONDecodeError as e:
+            print("Error parsing LLM output:", e)
+            print("LLM output was:", llm_output)
 
-    except json.JSONDecodeError as e:
-        print("Error parsing LLM output:", e)
-        print("LLM output was:", llm_output)
-
-    return guidances
+        return guidances
 
 
 if __name__ == "__main__":
