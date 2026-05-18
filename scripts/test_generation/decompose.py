@@ -23,7 +23,7 @@ def flatten_guidance(api_key, guidance_file, system_variables, openai_base_url, 
     guidances=''
     with open(guidance_file, 'r') as f:
         guidances=f.read()
-    
+
     system_instruction = """
     You are a Guidance Flattening Agent.
 
@@ -67,17 +67,19 @@ def flatten_guidance(api_key, guidance_file, system_variables, openai_base_url, 
     )
 
     llm_output = response.choices[0].message.content.strip()
+    print("flatten results saved to "+output_file_flatten)
     with open(output_file_flatten, 'w') as f:
         f.write(str(llm_output))
     return llm_output
 
-def decompose_guidance(api_key, system_variables, guidance_file, openai_base_url, model, temp, top_p, output_file_decompose, output_file_flatten, flatten_flag=True):
-    guidances: list[Any]=[]
+def decompose_guidance(api_key, system_variables, guidance_file, openai_base_url, model, temp, top_p, output_file_decompose, output_file_flatten, flatten_flag=True, batch_processing=False, batch_size=10):
+    guidances_str=''
     if flatten_flag:
-        guidances=flatten_guidance(api_key, guidance_file, system_variables, openai_base_url, model, temp, top_p, output_file_flatten)
+        guidances_str=flatten_guidance(api_key, guidance_file, system_variables, openai_base_url, model, temp, top_p, output_file_flatten)
     else:
         with open(guidance_file, 'r') as f:
-            guidances=str(f.read())
+            guidances_str=str(f.read())
+
     system_instruction = """
     You are a policy decision decomposition agent.
 
@@ -96,10 +98,10 @@ def decompose_guidance(api_key, system_variables, guidance_file, openai_base_url
     Output is a list of JSON, for each guidance, you need to output a JSON, the JSON schema for each JSON is:
     {
     'guidance': string, the original guidance,
-    'action': string, 
-      'common_constraints': [string],
-      'allow_conditions': [string],
-      'disallow_conditions': [string]
+    'action': string,
+      'common_constraints': [string],
+      'allow_conditions': [string],
+      'disallow_conditions': [string]
     }
 
     You MUST provide JSON for each guidance, you cannot skip any guidance.
@@ -110,64 +112,111 @@ def decompose_guidance(api_key, system_variables, guidance_file, openai_base_url
 
     Output example:
     [
-    { 
+    {
     "guidance": "Employees: Query your own salary data only",
     "action": salary_query,
-      "common_constraints": [user is an employee],
-      "allow_conditions": [employees query their own data],
-      "disallow_conditions": [employees query others data]
+      "common_constraints": [user is an employee],
+      "allow_conditions": [employees query their own data],
+      "disallow_conditions": [employees query others data]
     }
     ]
     """
 
-    user_instruction = f"""
-    Action list (choose from this list only): {system_variables['action_list']}
-    Explaination for actions: {system_variables['action_description']}
-    Guidances: {guidances}
-    """
-    # Initialize OpenAI client
     http_client = httpx.Client(verify=False, timeout=300.0)
     client = OpenAI(api_key=api_key, base_url=openai_base_url, http_client=http_client)
 
-    print("Sending guidance for decomposition...")
-    response = client.chat.completions.create(
-        model=model,
-        messages=[
-            {"role": "system", "content": system_instruction},
-            {"role": "user", "content": user_instruction}
-        ],
-        temperature=temp,
-        top_p=top_p
-    )
+    guidance_lines = remove_empty_line(guidances_str.split("\n"))
 
-    llm_output = response.choices[0].message.content.strip()
-    
-    # Extract JSON block if wrapped in ```json ... ```
-    match = re.search(r"```json\s*(.*?)```", llm_output, re.DOTALL)
-    if match:
-        llm_output = match.group(1).strip()
-    try:
-        issues_list = json.loads(llm_output)
-        guidances=guidances.split("\n")
-        guidances=remove_empty_line(guidances)
-        # assert len(issues_list)==len(guidances)
-        for i in range(len(issues_list)):
-            guidance=guidances[i]
-            guidances[i]={}
-            guidances[i]['guidance']=guidance
-            guidances[i]['action']=issues_list[i]["action"]
-            guidances[i]["common_constraints"]=issues_list[i]["common_constraints"]
-            guidances[i]["allow_conditions"]=issues_list[i]["allow_conditions"]
-            guidances[i]["disallow_conditions"]=issues_list[i]["disallow_conditions"]
+    if batch_processing and len(guidance_lines) > batch_size:
+        all_results = []
+        total_batches = (len(guidance_lines) + batch_size - 1) // batch_size
+        for i in range(0, len(guidance_lines), batch_size):
+            batch_lines = guidance_lines[i:i + batch_size]
+            batch_num = i // batch_size + 1
+            print(f"Sending batch {batch_num}/{total_batches} ({len(batch_lines)} items) for decomposition...")
+
+            batch_guidances = "\n".join(batch_lines)
+            user_instruction = f"""
+    Action list (choose from this list only): {system_variables['action_list']}
+    Explaination for actions: {system_variables['action_description']}
+    Guidances: {batch_guidances}
+    """
+            response = client.chat.completions.create(
+                model=model,
+                messages=[
+                    {"role": "system", "content": system_instruction},
+                    {"role": "user", "content": user_instruction}
+                ],
+                temperature=temp,
+                top_p=top_p
+            )
+
+            llm_output = response.choices[0].message.content.strip()
+            match = re.search(r"```json\s*(.*?)```", llm_output, re.DOTALL)
+            if match:
+                llm_output = match.group(1).strip()
+            try:
+                batch_results = json.loads(llm_output)
+                if not isinstance(batch_results, list):
+                    batch_results = [batch_results]
+                for j in range(len(batch_results)):
+                    result = {}
+                    result['guidance'] = batch_lines[j] if j < len(batch_lines) else batch_results[j].get("guidance", "")
+                    result['action'] = batch_results[j]["action"]
+                    result["common_constraints"] = batch_results[j]["common_constraints"]
+                    result["allow_conditions"] = batch_results[j]["allow_conditions"]
+                    result["disallow_conditions"] = batch_results[j]["disallow_conditions"]
+                    all_results.append(result)
+            except json.JSONDecodeError as e:
+                print(f"Error parsing LLM output for batch {batch_num}:", e)
+                print("Raw output will be skipped for this batch")
 
         with open(output_file_decompose, 'w') as f:
-            json.dump(guidances, f, indent=4)
+            json.dump(all_results, f, indent=4)
+        return all_results
 
-    except json.JSONDecodeError as e:
-        print("Error parsing LLM output:", e)
-        print("LLM output was:", llm_output)
+    else:
+        user_instruction = f"""
+    Action list (choose from this list only): {system_variables['action_list']}
+    Explaination for actions: {system_variables['action_description']}
+    Guidances: {guidances_str}
+    """
+        print("Sending guidance for decomposition...")
+        response = client.chat.completions.create(
+            model=model,
+            messages=[
+                {"role": "system", "content": system_instruction},
+                {"role": "user", "content": user_instruction}
+            ],
+            temperature=temp,
+            top_p=top_p
+        )
 
-    return guidances
+        llm_output = response.choices[0].message.content.strip()
+
+        match = re.search(r"```json\s*(.*?)```", llm_output, re.DOTALL)
+        if match:
+            llm_output = match.group(1).strip()
+        try:
+            issues_list = json.loads(llm_output)
+            guidances=remove_empty_line(guidances_str.split("\n"))
+            for i in range(len(issues_list)):
+                guidance=guidances[i]
+                guidances[i]={}
+                guidances[i]['guidance']=guidance
+                guidances[i]['action']=issues_list[i]["action"]
+                guidances[i]["common_constraints"]=issues_list[i]["common_constraints"]
+                guidances[i]["allow_conditions"]=issues_list[i]["allow_conditions"]
+                guidances[i]["disallow_conditions"]=issues_list[i]["disallow_conditions"]
+
+            with open(output_file_decompose, 'w') as f:
+                json.dump(guidances, f, indent=4)
+
+        except json.JSONDecodeError as e:
+            print("Error parsing LLM output:", e)
+            print("LLM output was:", llm_output)
+
+        return guidances
 
 
 if __name__ == "__main__":
@@ -180,12 +229,14 @@ if __name__ == "__main__":
     output_file_decompose=os.getenv("DECOMP_FILE")
     output_file_flatten=os.getenv("FLATTEN_FILE")
     output_file_decompose_csv=os.getenv("DECOMP_FILE_CSV")
+    batch_processing=os.getenv("BATCH_PROCESSING", "false").lower() == "true"
+    batch_size=int(os.getenv("BATCH_SIZE", "10"))
     system_variables={
     "action_list": ["salary_query", "purchase", "ticket_submit", "other Q&A"],
     "user_role": "manager",
     "user_department": "sales",
     "user_name": "Bob"
     }
-    result=decompose_guidance(api_key, system_variables, guidance_file, openai_base_url, model, temp, top_p, output_file_decompose, output_file_flatten)
+    result=decompose_guidance(api_key, system_variables, guidance_file, openai_base_url, model, temp, top_p, output_file_decompose, output_file_flatten, batch_processing=batch_processing, batch_size=batch_size)
 
     print(type(result))
