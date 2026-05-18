@@ -23,16 +23,23 @@ jobs:
     strategy:
       matrix:
         plugin_name: [
-          "ares-autodan",
-          "ares-human-jailbreak",
+          "ares-cyberseceval",
+          "ares-deepteam",
+          "ares-dynamic-llm",
+          "ares-echo-chamber",
           "ares-garak",
-          "ares-gcg",
-          "ares-intrinsics",
-          "ares-pyrit",
-          "ares-litellm-connector",
           "ares-granite-io",
-          # "ares-vllm-connector",
+          "ares-human-jailbreak",
+          "ares-litellm",
+          "ares-mcp-connector",
+          "ares-pyrit",
+          "ares-vllm-connector",
           "ares-watsonx-orchestrate",
+          "ares-tap",
+          "ares-autodan",
+  #         "ares-intrinsics",
+  #         "ares-lora-adapter-connector",
+  #         "ares-gcg",
         ]
     steps:
       - uses: actions/checkout@v6
@@ -46,8 +53,8 @@ jobs:
       - name: Install plugin dependencies
         run: |
           pushd ./plugins/${{matrix.plugin_name}}
-          pip install -r requirements.txt
+          pip install -r ./requirements.txt
       - name: Test
         run: |
-          pushd plugins/${{matrix.plugin_name}}
+          pushd ./plugins/${{matrix.plugin_name}}
           pytest --junitxml=junit/test-results.xml --cov=ares --cov-report=xml --cov-report=html tests

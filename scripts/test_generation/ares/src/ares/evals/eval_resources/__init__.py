@@ -1,3 +1,0 @@
-"""
-Recources for ARES evauators
-"""

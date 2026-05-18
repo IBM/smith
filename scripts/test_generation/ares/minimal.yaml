@@ -1,6 +1,0 @@
-# minimal.yaml
-target:
-  huggingface:
-
-red-teaming:
-  prompts: assets/pii-seeds.csv
