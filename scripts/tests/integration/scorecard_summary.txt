@@ -1,28 +1,20 @@
 Scorecard Summary
 ===================
 Experiment: Unlabeled test cases
-Directory: /../../policy_agent/red_feedback/tests
+Directory: /../../../references/test_cases/allow
 Allowed:   0
-Denied:    14
-Total:     14
---------------------------
-Experiment: Test cases that should result in a deny decision
-Directory: /../inputs/bad_commands
-Allowed:   0
-Denied:    38
-Total:     38
---------------------------
-Experiment: Test cases that should result in an allow decision
-Directory: /../inputs/benign_commands
-Allowed:   180
 Denied:    0
-Total:     180
+Total:     0
+--------------------------
+Experiment: Unlabeled test cases
+Directory: /../../../references/test_cases/disallow
+Allowed:   0
+Denied:    0
+Total:     0
 --------------------------
 ===================
 The coverage test results are: 
-      "covered_lines": 132,
-      "not_covered_lines": 112,
-      "coverage": 54.09836065573771
+
 ===================
 The line number of current policy is:
-     579
+     433
