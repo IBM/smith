@@ -14,28 +14,30 @@ test_file_path=test_path+'coverage/policy_test.rego'
 tn_command_path=test_path+'tn.txt'
 tp_command_path=test_path+'tp.txt'
 
-# def replace_quotes_in_json(obj, old_char="'", new_char='"'):
-#     for k in obj['command'].keys():
-#         if isinstance(obj['command'][k], str):
-#             obj['command'][k]=obj['command'][k].replace(old_char, new_char)
-#         elif isinstance(obj['command'][k], list):
-#             for k_index in range(len(obj['command'][k])):
-#                 if isinstance(obj['command'][k][k_index], str):
-#                     obj['command'][k][k_index]=obj['command'][k][k_index].replace(old_char, new_char)
-#                 elif isinstance(obj['command'][k][k_index], dict):
-#                     for kk in obj['command'][k][k_index].keys():
-#                         if isinstance(obj['command'][k][k_index][kk], str):
-#                             obj['command'][k][k_index][kk]=obj['command'][k][k_index][kk].replace(old_char, new_char)
-#                         else:
-#                             obj['command'][k][k_index][kk]='null'
-#                 else:
-#                     obj['command'][k][k_index]='null'
+def replace_quotes_in_json(obj, old_char="'", new_char='"'):
+    if 'command' not in obj.keys():
+        return obj
+    for k in obj['command'].keys():
+        if isinstance(obj['command'][k], str):
+            obj['command'][k]=obj['command'][k].replace(old_char, new_char)
+        elif isinstance(obj['command'][k], list):
+            for k_index in range(len(obj['command'][k])):
+                if isinstance(obj['command'][k][k_index], str):
+                    obj['command'][k][k_index]=obj['command'][k][k_index].replace(old_char, new_char)
+                elif isinstance(obj['command'][k][k_index], dict):
+                    for kk in obj['command'][k][k_index].keys():
+                        if isinstance(obj['command'][k][k_index][kk], str):
+                            obj['command'][k][k_index][kk]=obj['command'][k][k_index][kk].replace(old_char, new_char)
+                        else:
+                            obj['command'][k][k_index][kk]='null'
+                else:
+                    obj['command'][k][k_index]='null'
 
-#         else:
-#             obj['command'][k]='null'
-#     obj['original_command']=obj['original_command'].replace(old_char, new_char)
+        else:
+            obj['command'][k]='null'
+    obj['original_command']=obj['original_command'].replace(old_char, new_char)
 
-#     return str(obj)
+    return str(obj)
 
 
 def fix_package_line(file_path, new_package="policy"):
@@ -117,8 +119,7 @@ for bad_test_file in read_files(tp_command_path):
     with open(bad_test_file, 'r') as file:
         data = json.load(file)
     middle.append('test_not_allow_'+str(index)+' if {')
-    content=str(data['input'])
-    # content=str(replace_quotes_in_json(data['input']))
+    content=str(replace_quotes_in_json(data['input']))
     content=content.replace('"', '\\"')
     content=content.replace("'",'"')
     content=content.replace('"null"','null')
@@ -133,8 +134,7 @@ for benign_test_file in read_files(tn_command_path):
     with open(benign_test_file, 'r') as file:
         data = json.load(file)
     middle.append('test_allow_'+str(index)+' if {')
-    # content=str(replace_quotes_in_json(data['input']))
-    content=str(data['input'])
+    content=str(replace_quotes_in_json(data['input']))
     content=content.replace('"', '\\"')
     content=content.replace("'",'"')
     content=content.replace('"null"','null')
