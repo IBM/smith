@@ -1,579 +1,434 @@
 package policy
 
-import rego.v1
-
-# Default deny - all commands must be explicitly allowed
 default allow := false
 
-default requires_approval := false
+subject := input.extensions.subject
+obj := input.extensions.object
+args := object.get(input, "arguments", {})
 
-# =============================================================================
-# MAIN DECISION RULES
-# =============================================================================
+# =========================
+# Helpers
+# =========================
 
-# Allow safe read-only commands
+has_subject_perm(p) if {
+	subject.permissions[_] == p
+}
+
+has_object_perm(p) if {
+	obj.permissions[_] == p
+}
+
+normalized_role(role) := "user" if {
+	lower(role) == "employee"
+}
+
+normalized_role(role) := lower(role) if {
+	lower(role) != "employee"
+}
+
+is_role(r) if {
+	some role in subject.roles
+	normalized_role(role) == lower(r)
+}
+
+valid_envelope if {
+	input.kind == "tool_call"
+	input.action == "execute"
+	input.name != ""
+}
+
+email_domain(addr) := domain if {
+	parts := split(lower(addr), "@")
+	count(parts) == 2
+	domain := parts[1]
+}
+
+has_arg(k) if {
+	object.get(args, k, null) != null
+}
+
+field_in_tool_scope(tool_name, field) if {
+	some i
+	tool_data_scope[tool_name].fields[i] == field
+}
+
+# =========================
+# Constants
+# =========================
+
+forbidden_fields := {
+	"ssn",
+	"tax_id",
+	"bank_account",
+	"home_address",
+	"personal_email",
+	"emergency_contact",
+	"healthcare_id",
+	"healthcare_plan",
+}
+
+tool_data_scope := {
+	"view_team_compensation": {
+		"labels": ["financial", "PII", "confidential"],
+		"fields": [
+			"employee_name",
+			"title",
+			"department",
+			"level",
+			"hire_date",
+			"base_salary",
+			"bonus_target",
+			"actual_bonus_2024",
+			"performance_rating",
+			"next_review_date",
+			"stock_grant_value",
+			"benefits_value",
+			"total_compensation",
+		],
+		"scope": "team",
+	},
+	"ask_for_salary": {
+		"labels": ["financial", "PII", "confidential"],
+		"fields": [
+			"base_salary",
+			"total_compensation",
+			"title",
+			"department",
+			"level",
+			"bonus_target",
+			"actual_bonus_2024",
+			"performance_rating",
+		],
+		"scope": "user",
+	},
+	"export_compensation_data": {
+		"labels": ["financial", "PII", "confidential"],
+		"fields": [
+			"employee_id",
+			"name",
+			"title",
+			"level",
+			"current_salary",
+			"total_comp_2024",
+			"performance_rating",
+			"salary_history",
+			"bonus_history",
+		],
+		"scope": "team",
+	},
+	"email_compensation_report": {
+		"labels": ["financial", "confidential"],
+		"fields": ["destination", "report_data", "external_sharing", "encryption_required"],
+		"scope": "team",
+	},
+	"send_email": {
+		"labels": ["general"],
+		"fields": ["recipient_email", "subject", "body", "email_content", "attached_file"],
+		"scope": "user",
+	},
+	"create_ticket": {
+		"labels": ["general"],
+		"fields": ["ticket_content"],
+		"scope": "user",
+	},
+	"submit_ticket": {
+		"labels": ["general"],
+		"fields": ["ticket_content"],
+		"scope": "user",
+	},
+	"purchase": {
+		"labels": ["financial"],
+		"fields": ["amount", "product_name", "category", "justification"],
+		"scope": "user",
+	},
+	"return_product": {
+		"labels": ["financial"],
+		"fields": ["amount", "product_name"],
+		"scope": "user",
+	},
+	"ask_for_workpolicy": {
+		"labels": ["general"],
+		"fields": ["question"],
+		"scope": "user",
+	},
+	"get_w2_form": {
+		"labels": ["general"],
+		"fields": [],
+		"scope": "user",
+	},
+	"export_content_as_file": {
+		"labels": ["general"],
+		"fields": ["data", "file_name"],
+		"scope": "user",
+	},
+	"set_user_role": {
+		"labels": ["admin"],
+		"fields": ["user_role"],
+		"scope": "admin",
+	},
+	"test_purchase_policy": {
+		"labels": ["admin"],
+		"fields": ["amount", "product"],
+		"scope": "admin",
+	},
+}
+
+manager_view_allowed_fields := {
+	"employee_name",
+	"title",
+	"department",
+	"level",
+	"hire_date",
+	"base_salary",
+	"bonus_target",
+	"actual_bonus_2024",
+	"performance_rating",
+	"next_review_date",
+	"stock_grant_value",
+	"benefits_value",
+	"total_compensation",
+}
+
+manager_export_allowed_fields := {
+	"employee_id",
+	"name",
+	"title",
+	"level",
+	"current_salary",
+	"total_comp_2024",
+	"performance_rating",
+	"salary_history",
+	"bonus_history",
+}
+
+allowed_export_formats := {"CSV", "PDF", "JSON"}
+
+blocked_domains := {"gmail.com", "yahoo.com", "hotmail.com", "outlook.com", "personal.com"}
+internal_domain := "ibm.com"
+
+allowed_arg_keys := {
+	"view_team_compensation": {"select_fields", "id", "time_range", "format", "include_benefits"},
+	"ask_for_salary": {"question"},
+	"export_compensation_data": {"select_fields", "id", "format", "time_range", "export_type", "business_justification", "external_sharing"},
+	"email_compensation_report": {"destination", "report_data", "external_sharing", "encryption_required"},
+	"send_email": {"recipient_email", "subject", "body", "email_content", "attached_file"},
+	"create_ticket": {"ticket_content"},
+	"submit_ticket": {"ticket_content"},
+	"ask_for_workpolicy": {"question"},
+	"get_w2_form": {},
+	"purchase": {"amount", "product_name", "category", "justification"},
+	"return_product": {"amount", "product_name"},
+	"export_content_as_file": {"data", "file_name"},
+	"set_user_role": {"user_role"},
+	"test_purchase_policy": {"amount", "product"},
+}
+
+tool_permissions := {
+	"ask_for_workpolicy": {"read:ask_for_workpolicy"},
+	"create_ticket": {"write:create_ticket"},
+	"submit_ticket": {"write:submit_ticket"},
+	"get_w2_form": {"read:get_w2_form"},
+	"view_team_compensation": {"read:view_team_compensation"},
+	"ask_for_salary": {"read:ask_for_salary"},
+	"export_compensation_data": {"read:export_compensation_data", "export:file"},
+	"email_compensation_report": {"write:email_compensation_report"},
+	"send_email": {"write:send_email"},
+	"purchase": {"write:purchase"},
+	"return_product": {"write:return_product"},
+	"export_content_as_file": {"write:export_content_as_file"},
+	"set_user_role": {"write:set_user_role"},
+	"test_purchase_policy": {"write:test_purchase_policy"},
+}
+
+# =========================
+# Authorization
+# =========================
+
+authorized if {
+	valid_envelope
+	perms := tool_permissions[input.name]
+	every p in perms {
+		has_subject_perm(p)
+		has_object_perm(p)
+	}
+}
+
+# =========================
+# Global DENY rules
+# =========================
+
+deny[msg] if {
+	valid_envelope
+	some i
+	keys := object.keys(args)
+	k := keys[i]
+	not allowed_arg_keys[input.name][k]
+	msg := sprintf("Unexpected argument key '%s' for tool '%s'", [k, input.name])
+}
+
+deny[msg] if {
+	valid_envelope
+	object.get(args, "select_fields", null) != null
+	some f in args.select_fields
+	not field_in_tool_scope(input.name, f)
+	msg := sprintf("Requested field '%s' not allowed by data scope for tool '%s'", [f, input.name])
+}
+
+deny[msg] if {
+	valid_envelope
+	object.get(args, "select_fields", null) != null
+	some f in args.select_fields
+	forbidden_fields[f]
+	msg := sprintf("Requested forbidden sensitive field '%s'", [f])
+}
+
+# =========================
+# Tool-specific DENY rules
+# =========================
+
+deny[msg] if {
+	input.name == "view_team_compensation"
+	not is_role("manager")
+	msg := "Only managers can use view_team_compensation"
+}
+
+deny[msg] if {
+	input.name == "view_team_compensation"
+	is_role("manager")
+	object.get(args, "select_fields", null) != null
+	some f in args.select_fields
+	not manager_view_allowed_fields[f]
+	msg := sprintf("Manager not permitted to view field '%s' in team compensation", [f])
+}
+
+deny[msg] if {
+	input.name == "ask_for_salary"
+	not is_role("user")
+	not is_role("manager")
+	msg := "Only employees or managers can use ask_for_salary"
+}
+
+deny[msg] if {
+	input.name == "ask_for_salary"
+	has_arg("question")
+	q := lower(args.question)
+	contains(q, "team")
+	msg := "ask_for_salary is for personal or general salary questions only; team salary queries are not allowed"
+}
+
+deny[msg] if {
+	input.name == "export_compensation_data"
+	not is_role("manager")
+	msg := "Only managers can export compensation data"
+}
+
+deny[msg] if {
+	input.name == "export_compensation_data"
+	has_arg("format")
+	fmt := upper(args.format)
+	not allowed_export_formats[fmt]
+	msg := sprintf("Export format '%s' not allowed", [args.format])
+}
+
+deny[msg] if {
+	input.name == "export_compensation_data"
+	is_role("manager")
+	object.get(args, "select_fields", null) != null
+	some f in args.select_fields
+	not manager_export_allowed_fields[f]
+	msg := sprintf("Manager not permitted to export field '%s'", [f])
+}
+
+deny[msg] if {
+	input.name == "email_compensation_report"
+	not is_role("manager")
+	msg := "Only managers can email compensation reports"
+}
+
+deny[msg] if {
+	input.name == "email_compensation_report"
+	has_arg("destination")
+	email_domain(args.destination) != internal_domain
+	msg := "No one can email compensation reports to non-@ibm.com addresses"
+}
+
+deny[msg] if {
+	input.name == "email_compensation_report"
+	has_arg("destination")
+	blocked_domains[email_domain(args.destination)]
+	msg := sprintf("Destination domain '%s' is blocked", [email_domain(args.destination)])
+}
+
+deny[msg] if {
+	input.name == "send_email"
+	has_arg("recipient_email")
+	blocked_domains[email_domain(args.recipient_email)]
+	msg := sprintf("Recipient domain '%s' is blocked", [email_domain(args.recipient_email)])
+}
+
+deny[msg] if {
+	input.name == "send_email"
+	has_arg("recipient_email")
+	email_domain(args.recipient_email) != internal_domain
+	text := lower(sprintf("%v %v %v", [
+		object.get(args, "subject", ""),
+		object.get(args, "body", ""),
+		object.get(args, "email_content", ""),
+	]))
+	some kw in {"salary", "compensation", "bonus", "ssn"}
+	contains(text, kw)
+	msg := "No one can send compensation or salary data to non-@ibm.com addresses"
+}
+
+deny[msg] if {
+	input.name == "purchase"
+	not is_role("user")
+	not is_role("manager")
+	msg := "Only employees or managers can purchase items"
+}
+
+deny[msg] if {
+	input.name == "purchase"
+	is_role("user")
+	has_arg("amount")
+	to_number(args.amount) > 200
+	msg := "Employees cannot buy products above $200"
+}
+
+deny[msg] if {
+	input.name == "purchase"
+	is_role("manager")
+	has_arg("amount")
+	to_number(args.amount) > 1000
+	msg := "Managers cannot buy products above $1,000"
+}
+
+deny[msg] if {
+	input.name == "set_user_role"
+	not is_role("manager")
+	msg := "Only managers can set user roles"
+}
+
+deny[msg] if {
+	input.name == "test_purchase_policy"
+	not is_role("manager")
+	msg := "Only managers can test purchase policy"
+}
+
+# =========================
+# Deny helper
+# =========================
+
+any_deny if {
+	deny[_]
+}
+
+# =========================
+# Final ALLOW
+# =========================
+
 allow if {
-	is_safe_command
-	not is_forbidden_command
-	not is_restricted_command
-}
-
-# Allow safe commands in non-production even if they would be restricted
-allow if {
-	is_safe_command
-	not is_forbidden_command
-	is_restricted_command
-	not is_production_namespace
-}
-
-# Requires approval for restricted commands in production
-requires_approval if {
-	is_restricted_command
-	not is_forbidden_command
-	is_production_namespace
-}
-
-# =============================================================================
-# SAFE COMMANDS (Read-Only Operations)
-# =============================================================================
-
-is_safe_command if {
-	input.command.verb in safe_verbs
-	not accesses_sensitive_resource
-}
-
-# Allow create/edit/patch in non-production namespaces for SRE work
-# (even for critical resources, as long as not sensitive)
-is_safe_command if {
-	input.command.verb in {"create", "edit", "patch"}
-	not is_production_namespace
-	not accesses_sensitive_resource
-	not is_forbidden_command
-}
-
-safe_verbs := {
-	"get",
-	"describe",
-	"logs",
-	"top",
-	"explain",
-	"api-resources",
-	"api-versions",
-	"cluster-info",
-	"version",
-}
-
-# =============================================================================
-# RESTRICTED COMMANDS (Require Human Approval)
-# =============================================================================
-
-is_restricted_command if {
-	input.command.verb in restricted_verbs
-	not is_forbidden_command
-}
-
-is_restricted_command if {
-	# Exec commands always require approval
-	input.command.verb == "exec"
-}
-
-is_restricted_command if {
-	# Port-forward requires approval
-	input.command.verb == "port-forward"
-}
-
-is_restricted_command if {
-	# Modifications to production namespaces require approval
-	input.command.verb in modification_verbs
-	is_production_namespace
-}
-
-is_restricted_command if {
-	# Any modification to critical resources requires approval
-	input.command.verb in modification_verbs
-	is_critical_resource
-}
-
-restricted_verbs := {
-	"apply",
-	"patch",
-	"edit",
-	"replace",
-	"scale",
-	"rollout",
-	"annotate",
-	"label",
-	"expose",
-	"autoscale",
-	"set",
-	"cp",
-	"attach",
-	"debug",
-}
-
-modification_verbs := {
-	"apply",
-	"patch",
-	"edit",
-	"replace",
-	"create",
-	"scale",
-	"rollout",
-	"annotate",
-	"label",
-	"set",
-}
-
-# =============================================================================
-# FORBIDDEN COMMANDS (Always Denied)
-# =============================================================================
-
-is_forbidden_command if {
-	# Delete operations are forbidden
-	input.command.verb == "delete"
-}
-
-is_forbidden_command if {
-	# Drain and cordon are forbidden (node operations)
-	input.command.verb in {"drain", "cordon", "uncordon", "taint"}
-}
-
-is_forbidden_command if {
-	# RBAC modifications are forbidden
-	is_rbac_resource
-	input.command.verb in modification_verbs
-}
-
-is_forbidden_command if {
-	# Secret access is forbidden
-	input.command.resource == "secret"
-	input.command.verb != "get"
-}
-
-is_forbidden_command if {
-	# Secret access is forbidden even with get
-	input.command.resource == "secret"
-	not is_allowed_secret_namespace
-}
-
-is_forbidden_command if {
-	# Certificate operations are forbidden
-	input.command.verb in {"certificate", "approve", "deny"}
-}
-
-is_forbidden_command if {
-	# Impersonation is forbidden
-	has_impersonation_flag
-}
-
-is_forbidden_command if {
-	# Privileged exec is forbidden
-	input.command.verb == "exec"
-	has_privileged_flag
-}
-
-is_forbidden_command if {
-	# Modifications to kube-system namespace are forbidden
-	input.command.namespace == "kube-system"
-	input.command.verb in modification_verbs
-}
-
-is_forbidden_command if {
-	# Any operation on admission controllers is forbidden
-	input.command.resource in {
-		"validatingwebhookconfiguration",
-		"mutatingwebhookconfiguration",
-	}
-}
-
-is_forbidden_command if {
-	# Network policy deletions are forbidden
-	input.command.resource == "networkpolicy"
-	input.command.verb == "delete"
-}
-
-is_forbidden_command if {
-	# PodSecurityPolicy modifications are forbidden
-	input.command.resource == "podsecuritypolicy"
-	input.command.verb in modification_verbs
-}
-
-is_forbidden_command if {
-	# Commands with piping or command chaining are forbidden
-	has_command_chaining
-}
-
-is_forbidden_command if {
-	# Commands with command substitution are forbidden
-	has_command_substitution
-}
-
-is_forbidden_command if {
-	# Access to sensitive resources even with read operations
-	input.command.resource in sensitive_read_resources
-}
-
-is_forbidden_command if {
-	# Shell injection attempts
-	has_shell_injection_pattern
-}
-
-is_forbidden_command if {
-	# Suspicious command patterns in patch payloads
-	has_suspicious_patch_pattern
-}
-
-is_forbidden_command if {
-	# Excessive resource requests (resource abuse)
-	has_excessive_resources
-}
-
-is_forbidden_command if {
-	# Suspicious image names
-	has_suspicious_image_name
-}
-
-# =============================================================================
-# RESOURCE CLASSIFICATION
-# =============================================================================
-
-is_rbac_resource if {
-	input.command.resource in {
-		"role",
-		"rolebinding",
-		"clusterrole",
-		"clusterrolebinding",
-		"serviceaccount",
-	}
-}
-
-is_critical_resource if {
-	input.command.resource in {
-		"deployment",
-		"statefulset",
-		"daemonset",
-		"service",
-		"ingress",
-		"persistentvolume",
-		"persistentvolumeclaim",
-		"configmap",
-		"namespace",
-	}
-}
-
-accesses_sensitive_resource if {
-	input.command.resource in {
-		"secret",
-		"serviceaccount",
-		"role",
-		"rolebinding",
-		"clusterrole",
-		"clusterrolebinding",
-	}
-}
-
-# =============================================================================
-# NAMESPACE CLASSIFICATION
-# =============================================================================
-
-is_production_namespace if {
-	input.command.namespace in production_namespaces
-}
-
-production_namespaces := {
-	"production",
-	"prod",
-	"default",
-	"kube-system",
-	"kube-public",
-	"kube-node-lease",
-}
-
-is_allowed_secret_namespace if {
-	# Only allow secret access in specific non-production namespaces
-	input.command.namespace in {
-		"dev",
-		"development",
-		"test",
-		"staging",
-	}
-}
-
-# =============================================================================
-# FLAG DETECTION
-# =============================================================================
-
-has_impersonation_flag if {
-	some flag in input.command.flags
-	flag.name in {"--as", "--as-group", "--as-uid"}
-}
-
-has_privileged_flag if {
-	some flag in input.command.flags
-	flag.name == "--privileged"
-	flag.value == "true"
-}
-
-has_force_flag if {
-	some flag in input.command.flags
-	flag.name in {"--force", "-f"}
-}
-
-has_all_namespaces_flag if {
-	some flag in input.command.flags
-	flag.name in {"--all-namespaces", "-A"}
-}
-
-# Detect command chaining and piping
-has_command_chaining if {
-	lower_cmd := lower(input.original_command)
-	contains(lower_cmd, "|")
-}
-
-has_command_chaining if {
-	lower_cmd := lower(input.original_command)
-	contains(lower_cmd, "&&")
-}
-
-has_command_chaining if {
-	lower_cmd := lower(input.original_command)
-	contains(lower_cmd, ";")
-}
-
-# Detect command substitution
-has_command_substitution if {
-	lower_cmd := lower(input.original_command)
-	contains(lower_cmd, "$(")
-}
-
-has_command_substitution if {
-	lower_cmd := lower(input.original_command)
-	contains(lower_cmd, "`")
-}
-
-# Detect shell injection patterns
-has_shell_injection_pattern if {
-	lower_cmd := lower(input.original_command)
-	contains(lower_cmd, "/etc/passwd")
-}
-
-has_shell_injection_pattern if {
-	lower_cmd := lower(input.original_command)
-	contains(lower_cmd, "/etc/shadow")
-}
-
-has_shell_injection_pattern if {
-	lower_cmd := lower(input.original_command)
-	contains(lower_cmd, "cat ")
-	contains(lower_cmd, "/etc/")
-}
-
-# Detect suspicious patterns in patch commands
-has_suspicious_patch_pattern if {
-	input.command.verb == "patch"
-	lower_cmd := lower(input.original_command)
-	contains(lower_cmd, "evil")
-}
-
-has_suspicious_patch_pattern if {
-	input.command.verb == "patch"
-	lower_cmd := lower(input.original_command)
-	contains(lower_cmd, "back.sh")
-}
-
-has_suspicious_patch_pattern if {
-	input.command.verb == "patch"
-	lower_cmd := lower(input.original_command)
-	contains(lower_cmd, "curl")
-	contains(lower_cmd, ".sh")
-}
-
-has_suspicious_patch_pattern if {
-	input.command.verb == "patch"
-	lower_cmd := lower(input.original_command)
-	contains(lower_cmd, "sleep")
-	contains(lower_cmd, "command")
-}
-
-has_suspicious_patch_pattern if {
-	input.command.verb == "patch"
-	lower_cmd := lower(input.original_command)
-	contains(lower_cmd, "/tmp/")
-	contains(lower_cmd, ".sh")
-}
-
-has_suspicious_patch_pattern if {
-	input.command.verb == "patch"
-
-	# Check if resource contains deployment, statefulset, or daemonset
-	lower_resource := lower(input.command.resource)
-	contains(lower_resource, "deployment")
-
-	# Detect image replacement in patch commands
-	lower_cmd := lower(input.original_command)
-	contains(lower_cmd, "image")
-	contains(lower_cmd, "replace")
-}
-
-has_suspicious_patch_pattern if {
-	input.command.verb == "patch"
-	lower_resource := lower(input.command.resource)
-	contains(lower_resource, "statefulset")
-	lower_cmd := lower(input.original_command)
-	contains(lower_cmd, "image")
-	contains(lower_cmd, "replace")
-}
-
-has_suspicious_patch_pattern if {
-	input.command.verb == "patch"
-	lower_resource := lower(input.command.resource)
-	contains(lower_resource, "daemonset")
-	lower_cmd := lower(input.original_command)
-	contains(lower_cmd, "image")
-	contains(lower_cmd, "replace")
-}
-
-# Detect excessive resource requests (potential resource abuse)
-has_excessive_resources if {
-	input.command.verb == "patch"
-	lower_cmd := lower(input.original_command)
-	contains(lower_cmd, "resources")
-
-	# Check for excessive CPU (>= 5000 millicores or >= 2000 cores)
-	regex.match(`(cpu.*[5-9][0-9]{3,}|cpu.*[1-9][0-9]{4,}|cpu.*2[0-9]{3,})`, lower_cmd)
-}
-
-has_excessive_resources if {
-	input.command.verb == "patch"
-	lower_cmd := lower(input.original_command)
-	contains(lower_cmd, "resources")
-
-	# Check for excessive memory (>= 500Gi or >= 1Ti)
-	regex.match(`(memory.*[5-9][0-9]{2,}gi|memory.*[1-9][0-9]{3,}gi|memory.*[1-9]ti)`, lower_cmd)
-}
-
-# Detect suspicious image names
-has_suspicious_image_name if {
-	input.command.verb in {"create", "patch"}
-	lower_cmd := lower(input.original_command)
-	contains(lower_cmd, "image")
-
-	# Unusual naming pattern: service name with dot notation (e.g., oteldemo.AdService)
-	regex.match(`image.*[a-z]+\.[A-Z]`, input.original_command)
-}
-
-# Sensitive resources that should not be accessed even with read operations
-sensitive_read_resources := {
-	"imagepullsecret",
-	"imagepullsecrets",
-	"networkpolicy",
-	"networkpolicies",
-	"trace",
-	"traces",
-	"podsecuritypolicy",
-	"podsecuritypolicies",
-}
-
-# =============================================================================
-# ADDITIONAL SECURITY CHECKS
-# =============================================================================
-
-# Prevent commands that try to bypass policies
-is_forbidden_command if {
-	lower_cmd := lower(input.original_command)
-	contains(lower_cmd, "ignore")
-	contains(lower_cmd, "polic")
-}
-
-is_forbidden_command if {
-	lower_cmd := lower(input.original_command)
-	contains(lower_cmd, "bypass")
-}
-
-is_forbidden_command if {
-	lower_cmd := lower(input.original_command)
-	contains(lower_cmd, "override")
-	contains(lower_cmd, "polic")
-}
-
-# Prevent dangerous combinations
-is_forbidden_command if {
-	input.command.verb == "delete"
-	has_force_flag
-}
-
-is_forbidden_command if {
-	input.command.verb == "delete"
-	has_all_namespaces_flag
-}
-
-# =============================================================================
-# DECISION OUTPUT
-# =============================================================================
-
-decision := {
-	"allow": allow,
-	"requires_approval": requires_approval,
-	"deny": is_forbidden_command,
-	"reason": reason,
-	"command": input.original_command,
-	"verb": input.command.verb,
-	"resource": input.command.resource,
-	"namespace": input.command.namespace,
-}
-
-reason := "Command is safe and read-only" if {
-	allow
-	is_safe_command
-}
-
-reason := "Command requires human approval before execution" if {
-	requires_approval
-	not is_forbidden_command
-}
-
-reason := "Command is forbidden: RBAC modification" if {
-	is_forbidden_command
-	is_rbac_resource
-	input.command.verb in modification_verbs
-}
-
-reason := "Command is forbidden: Delete operation" if {
-	is_forbidden_command
-	input.command.verb == "delete"
-}
-
-reason := "Command is forbidden: Secret access" if {
-	is_forbidden_command
-	input.command.resource == "secret"
-}
-
-reason := "Command is forbidden: Impersonation attempt" if {
-	is_forbidden_command
-	has_impersonation_flag
-}
-
-reason := "Command is forbidden: Privileged execution" if {
-	is_forbidden_command
-	input.command.verb == "exec"
-	has_privileged_flag
-}
-
-reason := "Command is forbidden: kube-system modification" if {
-	is_forbidden_command
-	input.command.namespace == "kube-system"
-	input.command.verb in modification_verbs
-}
-
-reason := "Command is forbidden: Policy bypass attempt" if {
-	is_forbidden_command
-	not is_rbac_resource
-	not input.command.verb == "delete"
-	not input.command.resource == "secret"
-}
-
-reason := "Command denied by default policy" if {
-	not allow
-	not requires_approval
-	not is_forbidden_command
+	valid_envelope
+	authorized
+	not any_deny
 }

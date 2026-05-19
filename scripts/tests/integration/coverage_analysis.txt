@@ -1,1 +1,1 @@
-Error: Main policy file not found: /Users/hailunding/Documents/skill_testing/.bob/skills/blue_agent_integrate/scripts/policies/policy.rego
+Error: Main policy file not found: /Users/hailunding/Documents/skill_testing/.bob/skills/smith/scripts/policies/policy.rego

@@ -3,8 +3,7 @@
 CDIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 DIRS_TO_TEST=(
-    "$CDIR/../inputs"
-    "$CDIR/../../policy_agent/red_feedback/tests"
+    "$CDIR/../../../references/test_cases"
 )
 
 OUTPUT_FILE="$CDIR/score_test_results.txt"
@@ -27,8 +26,8 @@ done
 for BASE_INPUT_DIR in "${DIRS_TO_TEST[@]}"; do
     find "$BASE_INPUT_DIR" -type f -name "*.json" | while read -r FILE; do
         echo "Testing: $FILE" | tee -a "$OUTPUT_FILE"
-
-        if [[ "$FILE" == *"benign_commands"* ]]; then
+        echo $FILE$
+        if [[ "$FILE" == *"/allow/"* ]]; then
             echo -e "\t{\"expected\": {\"allow\": true}}"
             EXPECTED_ALLOW="true"
         else
