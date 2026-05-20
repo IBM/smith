@@ -18,6 +18,7 @@ load_dotenv()
 api_key = os.getenv("OPENAI_API_KEY", None)
 api_url = os.getenv("OPENAI_BASE_URL", None)
 model = os.getenv("MODEL", None)
+
 test_path = os.getenv("TEST_CASE_PATH", None)
 base_url=os.getenv("BASE_SKILL_URL", None)
 test_path=base_url+test_path
