@@ -73,7 +73,7 @@ class BlueAgent:
     def policy_checking_results(self):
         return run_policy_evaluation(self.test_dir, self.test_results_path)
 
-def generate_test(base_skill_url, system_variables, api_key, openai_base_url, model, temp, top_p, guidance_file, output_file_decompose, output_file_attack, output_file_variables, output_file_attack_csv, test_case_template_file, output_file_ready_cases, output_file_grey_guidances, output_file_attack_promptfoo, test_generation_path, output_file_flatten, output_file_cases, output_promptfoo, batch_processing=False, batch_size=10, flatten_flag=False):
+def generate_test(base_url, system_variables, api_key, openai_base_url, model, temp, top_p, guidance_file, output_file_decompose, output_file_attack, output_file_variables, output_file_attack_csv, test_case_template_file, output_file_ready_cases, output_file_grey_guidances, output_file_attack_promptfoo, test_generation_path, output_file_flatten, output_file_cases, output_promptfoo, batch_processing=False, batch_size=10, flatten_flag=False):
     
     flatten_flag=True
     # decompose_guidance(api_key, system_variables, guidance_file, openai_base_url, model, temp, top_p, output_file_decompose, output_file_flatten, flatten_flag, batch_processing, batch_size)
@@ -81,7 +81,7 @@ def generate_test(base_skill_url, system_variables, api_key, openai_base_url, mo
     # variable_extraction(api_key, system_variables, openai_base_url, model, temp, top_p, output_file_decompose, output_file_variables, batch_processing, batch_size)
     # case_generation(api_key, system_variables, openai_base_url, model, temp, top_p, output_file_variables, output_file_cases, batch_processing, batch_size)
     attack(output_file_cases, output_file_attack, output_file_attack_csv, test_generation_path)
-    # create_promptfoo_cases(base_skill_url, output_promptfoo, output_file_attack_promptfoo, test_generation_path)
+    # create_promptfoo_cases(base_url, output_promptfoo, output_file_attack_promptfoo, test_generation_path)
     # translate_case(output_file_cases, test_case_template_file, output_file_ready_cases, output_file_attack, output_file_attack_promptfoo)
     return ''
 
@@ -90,25 +90,25 @@ def main():
     
     api_key = os.getenv("OPENAI_API_KEY")
     openai_base_url = os.getenv("OPENAI_BASE_URL")
-    base_skill_url=os.getenv("BASE_SKILL_URL")
+    base_url=os.getenv("BASE_URL")
     model = os.getenv("MODEL_SONNET")
     temp=float(os.getenv("TEMP"))
     top_p=float(os.getenv("TOP_P"))
-    guidance_file=base_skill_url+os.getenv("GUIDANCE_FILE")
-    output_file_decompose=base_skill_url+os.getenv("DECOMP_FILE")
-    output_file_attack_csv=base_skill_url+os.getenv("TEST_GENERATION_PATH")+os.getenv("ATTACK_FILE_CSV")
-    output_file_attack=base_skill_url+os.getenv("ATTACK_FILE")
-    output_file_variables=base_skill_url+os.getenv("VARS_FILE")
-    output_file_cases=base_skill_url+os.getenv("CASE_FILE")
-    system_var_file=base_skill_url+os.getenv("SYSTEM_VAR_FILE")
-    test_case_template_file=base_skill_url+os.getenv("TEST_CASE_TEMPLATE")
-    output_file_ready_cases=base_skill_url+os.getenv("FINAL_TEST_CASES")
-    output_file_grey_guidances=base_skill_url+os.getenv("GREY_GUIDANCE_FILE")
-    output_promptfoo=base_skill_url+os.getenv("PROMPTFOO_OUTPUT_FILE")
-    output_file_attack_promptfoo=base_skill_url+os.getenv("ATTACK_FILE_PROMPT")
-    test_generation_path=base_skill_url+os.getenv("TEST_GENERATION_PATH")
+    guidance_file=base_url+os.getenv("GUIDANCE_FILE")
+    output_file_decompose=base_url+os.getenv("DECOMP_FILE")
+    output_file_attack_csv=base_url+os.getenv("TEST_GENERATION_PATH")+os.getenv("ATTACK_FILE_CSV")
+    output_file_attack=base_url+os.getenv("ATTACK_FILE")
+    output_file_variables=base_url+os.getenv("VARS_FILE")
+    output_file_cases=base_url+os.getenv("CASE_FILE")
+    system_var_file=base_url+os.getenv("SYSTEM_VAR_FILE")
+    test_case_template_file=base_url+os.getenv("TEST_CASE_TEMPLATE")
+    output_file_ready_cases=base_url+os.getenv("FINAL_TEST_CASES")
+    output_file_grey_guidances=base_url+os.getenv("GREY_GUIDANCE_FILE")
+    output_promptfoo=base_url+os.getenv("PROMPTFOO_OUTPUT_FILE")
+    output_file_attack_promptfoo=base_url+os.getenv("ATTACK_FILE_PROMPT")
+    test_generation_path=base_url+os.getenv("TEST_GENERATION_PATH")
     system_variables={}
-    output_file_flatten=base_skill_url+os.getenv("FLATTEN_FILE")
+    output_file_flatten=base_url+os.getenv("FLATTEN_FILE")
     batch_processing=os.getenv("BATCH_PROCESSING", "false").lower() == "true"
     batch_size=int(os.getenv("BATCH_SIZE", "10"))
     
@@ -133,7 +133,7 @@ def main():
     if args.flag=="red_suggestion":
         results=agent.get_red_feedback()
     if args.flag=="test_generation":
-        generate_test(base_skill_url, system_variables, api_key, openai_base_url, model, temp, top_p, guidance_file, output_file_decompose, output_file_attack, output_file_variables, output_file_attack_csv, test_case_template_file, output_file_ready_cases, output_file_grey_guidances, output_file_attack_promptfoo, test_generation_path, output_file_flatten, output_file_cases, output_promptfoo, batch_processing, batch_size)
+        generate_test(base_url, system_variables, api_key, openai_base_url, model, temp, top_p, guidance_file, output_file_decompose, output_file_attack, output_file_variables, output_file_attack_csv, test_case_template_file, output_file_ready_cases, output_file_grey_guidances, output_file_attack_promptfoo, test_generation_path, output_file_flatten, output_file_cases, output_promptfoo, batch_processing, batch_size)
 
 
 if __name__ == "__main__":
