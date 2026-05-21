@@ -4,15 +4,15 @@ An open skill for AI code agents that automates OPA policy creation, test genera
 
 ## What's Smith?
 
-Smith is a skill (plugin) for AI code agents that manages the full lifecycle of [Open Policy Agent (OPA)](https://www.openpolicyagent.org/) policies. It enables agents to:
+Smith is a skill (plugin) for AI code agents that manages the full lifecycle of [Open Policy Agent (OPA)](https://www.openpolicyagent.org/) policies (more types of policies will be supported). It enables agents to:
 
 - **Create** OPA policies from natural language guidance
-- **Generate** both legitimate and adversarial test cases using LLM-based decomposition and red-teaming
+- **Generate** both synthetic legitimate and adversarial test cases using LLM-based fuzzing and existing red-teaming tools
 - **Test** policies against generated and custom test suites
-- **Refine** policies automatically through iterative feedback loops (patches for falied test cases, deduplication, Regal formatting)
+- **Refine** policies automatically through iterative feedback loops (patches for falied test cases, deduplication, formatting etc)
 
 ```
-Guidance Document → Policy Creation → Test Generation → Policy Testing ⇄ Policy Refinement
+Guidance Description (NLP) → Enforceble Policy Creation → Test Generation → Policy Testing ⇄ Policy Refinement
 ```
 
 ## Install
@@ -22,7 +22,6 @@ Guidance Document → Policy Creation → Test Generation → Policy Testing ⇄
 - Python 3.11+
 - [Regal](https://github.com/StyraInc/regal#getting-started) (OPA linter)
 - [ARES](https://github.com/IBM/ares) (red-teaming framework)
-
 - [Promptfoo](https://www.promptfoo.dev/)(red-teaming framework) 
 
 ```
@@ -68,10 +67,9 @@ Edit `scripts/.env` and fill in your values:
 | Variable | Description |
 |----------|-------------|
 | `BASE_URL` | Absolute path to your skill folder |
-| `BASE_SKILL_URL` | Same as above, ending with `/` |
 | `OPENAI_API_KEY` | API key for your LLM provider |
 | `OPENAI_BASE_URL` | Base URL for LLM API endpoint |
-| `MODEL` | Model for duplication detection etc (e.g., `GCP/claude-opus-4`) |
+| `MODEL` | Model for policy refinement and analysis (i.e., duplication detection) (e.g., `GCP/claude-opus-4`) |
 | `MODEL_SONNET` | Model for test generation (e.g., `GCP/claude-4-sonnet`) |
 | `ARES_HOME` | Path to your ARES installation |
 
@@ -108,6 +106,7 @@ Smith operates as an agent skill with a CLI backend. The AI agent reads instruct
 Create OPA policies from natural language specifications. The agent follows `opa_policy/policy_creation/opa_policy_creation.md` to generate a `.rego` policy file.
 
 ```bash
+# CLI command in backend
 smith --flag policy_creation
 ```
 
@@ -117,8 +116,8 @@ The agent follows `test_generation/test_generation.md` to generate test cases th
 
 1. **Decomposition** — Break guidance into testable atomic conditions
 2. **Variable Extraction** — Identify system/mutable variables and their domains
-3. **Grey Condition Extraction** — Identify ambiguous boundary conditions, user needs to approve guidancies from grey condition extraction and merge it to clean space. 
-4. **Legitimate and Adversarial Case Generation** — Create benign (including allow and disallow) inputs that should pass the policy. Create adversarial inputs using ARES and promptfoo. Finally, combine into structured test cases
+3. **Grey Condition Extraction** — Identify ambiguous boundary conditions, user needs to approve guidancies from grey condition extraction and then merge them to clean space. 
+4. **Legitimate and Adversarial Case Generation** — Create benign (including allow and disallow) inputs that should pass the policy. Create adversarial inputs using ARES and promptfoo. Finally, combine into CMF compatitable structured test cases
 
 ```bash
 # CLI commands used for test case generation
@@ -139,16 +138,16 @@ Iterative improvement workflow:
 
 1. **Red Feedback** — Cluster failed malicious inputs and patch policy rules, following `opa_policy/policy_patch/policy_patch.md`
 2. **Regal Formatting** — Lint and format policy with [Regal](https://github.com/StyraInc/regal). It follows `opa_policy/policy_duplication/policy_duplication.md`
-3. **Duplication Removal** — Detect and remove redundant rules via graph analysis and LLM review
+3. **Duplication Removal** — Detect and remove redundant rules via graph analysis, LLM review, and voting.
 
 ```bash
 # CLI commands used in the refinment loop
 smith --flag red_suggestion # clustering failed test cases
 smith --flag regal_suggestion # get regal suggestions
-smith --flag duplication_suggestion # get both LLM and graph based duplication removal suggestions
+smith --flag duplication_suggestion # get both LLM and graph generated duplication removal suggestions
 ```
 
-### Policy Visualization
+### Policy Visualization (Beta)
 
 Visualize the policy's rule dependency graph:
 
@@ -166,9 +165,8 @@ Then open http://localhost:8000/graph.html in your browser.
 smith/
 ├── assets/                  # Policy files and OPA data
 │   ├── policy.rego          # Target policy under management
-│   └── opa/                 # OPA inputs/outputs/backups (AST, graphs)
-├── llm_policy/              # LLM guardrail policy related skills
-├── mcp_servers/             # MCP server and agent examples
+│   └── opa/                 # OPA intermidiate results e.g., inputs/outputs/backups (AST parsed policy, graphs)
+├── mcp_servers/             # MCP server and agent running examples
 ├── opa_policy/              # Skills rtelated to opa policy
 │   ├── policy_creation/     # OPA policy creation workflow
 │   ├── policy_patch/        # OPA policy patching workflow
