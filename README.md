@@ -1,4 +1,7 @@
 # Smith — Automated Policy Lifecycle Management for AI Agents
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
+[![Docs](https://img.shields.io/badge/docs-README-green.svg)](https://github.ibm.com/security-foundation-models/smith/blob/hl/skill/README.md) 
 
 An open skill for AI code agents that automates OPA policy creation, test generation, testing, and iterative refinement.
 
