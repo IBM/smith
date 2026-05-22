@@ -127,6 +127,24 @@ The agent follows `test_generation/test_generation.md` to generate test cases th
 smith --flag test_generation
 ```
 
+### Test Case Evaluation
+
+Evaluate generated test cases by classifying promptfoo red-team cases to their corresponding guidance items and generating an interactive HTML report. The classification uses a two-stage approach: local embedding similarity (sentence-transformers) retrieves top-N candidate guidances, then an LLM picks the best match.
+
+```bash
+# Classify promptfoo cases and generate evaluation report
+smith --flag test_case_evaluation
+```
+
+The report (`references/test_case_report.html`) groups all test cases by guidance item, with condition sub-tabs. Cases are labeled by source (Generated, ARES, Promptfoo) and type (allow/disallow) with color coding.
+
+To regenerate the HTML report standalone:
+
+```bash
+cd scripts/test_case_evaluation/visualization
+python build_report.py
+```
+
 ### Policy Testing
 
 Evaluate the current policy against all test cases and report pass/fail with coverage metrics.
@@ -206,7 +224,10 @@ For large test generation tasks, enable batch processing:
 ```env
 BATCH_PROCESSING=true
 BATCH_SIZE=10
+CASE_GENERATION_BATCH_SIZE=5
 ```
+
+`CASE_GENERATION_BATCH_SIZE` defaults to 5 (smaller than the general `BATCH_SIZE`) because test case generation handles more information per item — each guidance item produces multiple allow/disallow cases with system variable assignments — requiring a smaller batch to keep accuracy.
 
 ## Contributing
 
