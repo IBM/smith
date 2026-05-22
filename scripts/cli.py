@@ -16,6 +16,7 @@ from test_generation.case_generation import case_generation
 from test_generation.convert_test_case import translate_case
 from test_generation.grey_condition import grey_extraction
 from test_generation.attack_promptfoo import create_promptfoo_cases
+from test_case_evaluation.classify_guidance import classify_promptfoo_cases
 
 
 load_dotenv()
@@ -73,13 +74,13 @@ class BlueAgent:
     def policy_checking_results(self):
         return run_policy_evaluation(self.test_dir, self.test_results_path)
 
-def generate_test(base_url, system_variables, api_key, openai_base_url, model, temp, top_p, guidance_file, output_file_decompose, output_file_attack, output_file_variables, output_file_attack_csv, test_case_template_file, output_file_ready_cases, output_file_grey_guidances, output_file_attack_promptfoo, test_generation_path, output_file_flatten, output_file_cases, output_promptfoo, batch_processing=False, batch_size=10, flatten_flag=False):
+def generate_test(base_url, system_variables, api_key, openai_base_url, model, temp, top_p, guidance_file, output_file_decompose, output_file_attack, output_file_variables, output_file_attack_csv, test_case_template_file, output_file_ready_cases, output_file_grey_guidances, output_file_attack_promptfoo, test_generation_path, output_file_flatten, output_file_cases, output_promptfoo, case_generation_batch_size, batch_processing=False, batch_size=10, flatten_flag=False):
     
     flatten_flag=True
     # decompose_guidance(api_key, system_variables, guidance_file, openai_base_url, model, temp, top_p, output_file_decompose, output_file_flatten, flatten_flag, batch_processing, batch_size)
     # grey_extraction(api_key, system_variables, openai_base_url, model, temp, top_p, output_file_decompose, output_file_grey_guidances, batch_processing, batch_size)
     # variable_extraction(api_key, system_variables, openai_base_url, model, temp, top_p, output_file_decompose, output_file_variables, batch_processing, batch_size)
-    # case_generation(api_key, system_variables, openai_base_url, model, temp, top_p, output_file_variables, output_file_cases, batch_processing, batch_size)
+#    case_generation(api_key, system_variables, openai_base_url, model, temp, top_p, output_file_variables, output_file_cases, batch_processing, batch_size=case_generation_batch_size)
     attack(output_file_cases, output_file_attack, output_file_attack_csv, test_generation_path)
     # create_promptfoo_cases(base_url, output_promptfoo, output_file_attack_promptfoo, test_generation_path)
     # translate_case(output_file_cases, test_case_template_file, output_file_ready_cases, output_file_attack, output_file_attack_promptfoo)
@@ -111,6 +112,7 @@ def main():
     output_file_flatten=base_url+os.getenv("FLATTEN_FILE")
     batch_processing=os.getenv("BATCH_PROCESSING", "false").lower() == "true"
     batch_size=int(os.getenv("BATCH_SIZE", "10"))
+    case_generation_batch_size=int(os.getenv("CASE_GENERATION_BATCH_SIZE", "5"))
     
     with open(system_var_file, encoding="utf-8") as f:
         system_variables = json.load(f)
@@ -134,6 +136,12 @@ def main():
         results=agent.get_red_feedback()
     if args.flag=="test_generation":
         generate_test(base_url, system_variables, api_key, openai_base_url, model, temp, top_p, guidance_file, output_file_decompose, output_file_attack, output_file_variables, output_file_attack_csv, test_case_template_file, output_file_ready_cases, output_file_grey_guidances, output_file_attack_promptfoo, test_generation_path, output_file_flatten, output_file_cases, output_promptfoo, batch_processing, batch_size)
+    if args.flag=="test_case_evaluation":
+        output_file_classified = base_url + os.getenv("CLASSIFIED_PROMPTFOO_FILE", "references/decomp_attack_file_promptfoo_classified.json")
+        top_n = int(os.getenv("CLASSIFY_TOP_N", "3"))
+        classify_promptfoo_cases(api_key, openai_base_url, model, temp, top_p,
+                                  output_file_decompose, output_file_attack_promptfoo,
+                                  output_file_classified, top_n=top_n)
 
 
 if __name__ == "__main__":
