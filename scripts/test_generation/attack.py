@@ -19,7 +19,7 @@ def attack(output_file_case, output_file_attack, output_file_attack_csv, test_ge
     try:
         with open("ares.log", 'w') as f:
             # result=subprocess.run([test_generation_path+"ares/.venv/bin/python", "test.py"], cwd=test_generation_path+"ares/test_script/", stdout=f, stderr=subprocess.STDOUT, check=True)
-            result=subprocess.run(["ares", "evaluate", "example_configs/qwen-owasp-llm-01.yaml", "-l", "--generate-only"])#, stdout=f, stderr=subprocess.STDOUT, check=True)
+            result=subprocess.run(["ares", "evaluate", "example_configs/qwen-owasp-llm-01.yaml", "--generate-only"])#, stdout=f, stderr=subprocess.STDOUT, check=True)
     except subprocess.CalledProcessError:
         print("jail break partially failed")
     print("ATTACK FINISHED........")
@@ -29,7 +29,7 @@ def attack(output_file_case, output_file_attack, output_file_attack_csv, test_ge
         attack_dicts=json.load(f)
 
     attack_prompt_map={}
-    attack_file_list=["encoding_ascii85_attacks","human_jailbreak","encoding_base16_attacks","encoding_base32_attacks","encoding_base64_attacks", "encoding_base2048_attacks", "encoding_braille_attacks", "encoding_ecoji_attacks", "encoding_hex_attacks", "encoding_morse_attacks", "encoding_nato_attacks", "encoding_rot13_attacks", "encoding_uu_attacks", "encoding_zalgo_attacks"]
+    attack_file_list=["encoding_ascii85_attacks_generate","human_jailbreak_generate","encoding_base16_attacks_generate","encoding_base32_attacks_generate","encoding_base64_attacks_generate", "encoding_base2048_attacks_generate", "encoding_braille_attacks_generate", "encoding_ecoji_attacks_generate", "encoding_hex_attacks_generate", "encoding_morse_attacks_generate", "encoding_nato_attacks_generate", "encoding_rot13_attacks_generate", "encoding_uu_attacks_generate", "encoding_zalgo_attacks_generate", "direct_requests_generate"]
     for attack_file in attack_file_list:
         attack_prompt_map[attack_file]={}
         file_path=test_generation_path+"ares/assets/"+attack_file+".json"

@@ -20,7 +20,7 @@ def read_test_cases(output_file_attack_promptfoo, output_promptfoo):
         data=yaml.safe_load(f)
     for case in data['tests']:
         test_case_dict={}
-        test_case_dict['label']='disallow'
+        test_case_dict['label']='malicious_promptfoo'
         test_case_dict['user_input']=case['vars']['prompt']
         test_case_dict['system_variables']={}
         test_cases.append(test_case_dict)
