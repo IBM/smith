@@ -1,0 +1,7 @@
+mcp[cli]
+openai
+langchain
+langchain_community
+streamlit
+llm-guard
+requests
