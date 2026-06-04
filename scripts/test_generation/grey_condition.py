@@ -11,9 +11,6 @@ load_dotenv()
 def group_guidance_by_tool(guidancies, system_variables):
     new_guidance={}
     for guidance in guidancies:
-        print(guidance)
-        print(guidance['action'])
-        # exit()
         tool_name=guidance["action"]
         guidance_text=guidance["guidance"]
         if tool_name not in new_guidance.keys():

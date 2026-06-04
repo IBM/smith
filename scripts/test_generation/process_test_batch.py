@@ -15,33 +15,34 @@ from contextlib import asynccontextmanager
 import glob
 # Load .env.  change to ollama models
 load_dotenv()
-api_key = os.getenv("OPENAI_API_KEY", None)
-api_url = os.getenv("OPENAI_BASE_URL", None)
-model = os.getenv("MODEL", None)
+api_key = os.getenv("RITS_API_KEY", None)
+api_url = os.getenv("RITS_BASE_URL", None)
+model = os.getenv("RITS_MODEL", None)
 
 test_path = os.getenv("TEST_CASE_PATH", None)
 base_url=os.getenv("BASE_SKILL_URL", None)
 test_path=base_url+test_path
-permission_mapp={
-    "ask_for_workpolicy": ["read:ask_for_workpolicy"],
-    "create_ticket": ["write:create_ticket"],
-    "submit_ticket": ["write:submit_ticket"],
-    "get_w2_form": ["read:get_w2_form"],
-    "view_team_compensation": ["read:view_team_compensation"],
-    "ask_for_salary": ["read:ask_for_salary"],
-    "export_compensation_data": ["read:export_compensation_data", "export:file"],
-    "email_compensation_report": ["write:email_compensation_report"],
-    "send_email": ["write:send_email"],
-    "purchase": ["write:purchase"],
-    "return_product": ["write:return_product"],
-    "export_content_as_file": ["write:export_content_as_file"],
-    "set_user_role": ["write:set_user_role"],
-    "debug_user_context": [],
-    "other": []
-}
+# permission_mapp={
+#     "ask_for_workpolicy": ["read:ask_for_workpolicy"],
+#     "create_ticket": ["write:create_ticket"],
+#     "submit_ticket": ["write:submit_ticket"],
+#     "get_w2_form": ["read:get_w2_form"],
+#     "view_team_compensation": ["read:view_team_compensation"],
+#     "ask_for_salary": ["read:ask_for_salary"],
+#     "export_compensation_data": ["read:export_compensation_data", "export:file"],
+#     "email_compensation_report": ["write:email_compensation_report"],
+#     "send_email": ["write:send_email"],
+#     "purchase": ["write:purchase"],
+#     "return_product": ["write:return_product"],
+#     "export_content_as_file": ["write:export_content_as_file"],
+#     "set_user_role": ["write:set_user_role"],
+#     "debug_user_context": [],
+#     "other": []
+# }
+
 
 if api_key is None or api_url is None:
-    raise ValueError("OPENAI_API_KEY or OPENAI_API_BASE_URL url not defined in environment. Create a .env file")
+    raise ValueError("RITS_API_KEY or RITS_BASE_URL not defined in environment. Create a .env file")
 
 # for rits model
 client = OpenAI(api_key=api_key,
@@ -127,8 +128,6 @@ connection_manager: Optional[ConnectionManager] = None
 tool_map_cache: Dict[str, str] = {}
 tools_json_cache: List[Dict[str, Any]] = []
 
-
-
 async def chat_endpoint():
     connection_manager = ConnectionManager(SSE_SERVER_MAP)
     await connection_manager.initialize()
@@ -146,6 +145,7 @@ async def chat_endpoint():
         for tool in tool_objects
     ]
     system_var={}
+    miscalled_cases = []
     labels=['allow', 'disallow']
     for label in labels:
         files_in_current_directory = glob.glob(test_path+label+"/*")
@@ -153,9 +153,7 @@ async def chat_endpoint():
             with open(file_path, 'r') as f:
                 test_case=json.load(f)
             prompt=test_case["input"]["extensions"]['agent']['input']
-            system_var["user_role"]=test_case["input"]["extensions"]['subject']['roles']
-            system_var["user_department"]=test_case["input"]["extensions"]['subject']['teams']
-            system_var["user_name"]=test_case["input"]["extensions"]['subject']['id']
+            system_var=test_case["input"]["extensions"]['subject']
             input_messages = [
                             {
                                 "role": "system",
@@ -175,14 +173,36 @@ async def chat_endpoint():
                     tools=tools_json_cache,
                     connection_manager=connection_manager,
                 )
-            test_case["input"]["arguments"]=tool_args
-            if test_case["input"]["name"]=="promptfoo":
-                test_case["input"]["extensions"]["object"]["permissions"]=permission_mapp[tool_name]
+            assigned_tool = test_case["input"]["name"]
+            if assigned_tool.lower() == "promptfoo":
+                test_case["input"]["name"] = tool_name
+                test_case["input"]["arguments"] = tool_args
+                # test_case["input"]["extensions"]["object"]["permissions"] = permission_mapp.get(tool_name, [])
+                with open(file_path, 'w') as f:
+                    json.dump(test_case, f)
+            elif tool_name != assigned_tool:
+                miscalled_cases.append({
+                    "file_path": file_path,
+                    "label": label,
+                    "assigned_tool": assigned_tool,
+                    "actual_tool": tool_name,
+                    "agent_input": prompt,
+                    "actual_args": tool_args
+                })
+                print(f"[MISMATCH] {file_path}: assigned={assigned_tool}, actual={tool_name}, removing test case")
+                os.remove(file_path)
             else:
-                test_case["input"]["extensions"]["object"]["permissions"]=permission_mapp[test_case["input"]["name"]]
-            with open(file_path, 'w') as f:
-                print(file_path)
-                json.dump(test_case, f)
+                test_case["input"]["arguments"] = tool_args
+                # test_case["input"]["extensions"]["object"]["permissions"] = permission_mapp[test_case["input"]["name"]]
+                with open(file_path, 'w') as f:
+                    json.dump(test_case, f)
+
+    miscalled_output = test_path + "miscalled_cases.json"
+    with open(miscalled_output, 'w') as f:
+        json.dump(miscalled_cases, f, indent=4)
+    print(f"\nTotal miscalled cases: {len(miscalled_cases)}")
+    print(f"Saved to: {miscalled_output}")
+
     await connection_manager.close()
     return ''
 

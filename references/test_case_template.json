@@ -4,10 +4,6 @@
     "name": "get_compensation",
     "extensions": {
         "subject": {
-            "id": "Bob",
-            "type": "user",
-            "roles": ["employee"],
-            "teams": ["Sales"],
             "claims": {}
         },
         "headers": {"x-request-id": "req-7f2a", "x-forwarded-for": "10.0.1.5"},
