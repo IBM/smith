@@ -1,11 +1,10 @@
 {
-"action_list": ["create_ticket", "submit_ticket", "send_email", "ask_for_workpolicy", "return_product", "view_team_compensation", "export_compensation_data", "email_compensation_report", "ask_for_salary", "purchase", "other"],
+"action_list": ["create_ticket", "submit_ticket", "ask_for_workpolicy", "send_email", "return_product", "view_team_compensation", "export_compensation_data", "email_compensation_report", "purchase", "other"],
 "action_description": {
-  "view_team_compensation": "View team compensation data with realistic HR information.", 
-  "ask_for_salary": "Query salary and compensation information.",
-  "export_compensation_data": "Export team compensation data for business analysis. ",
-  "email_compensation_report": "Email compensation report with OPA domain validation." ,
-  "send_email": "Draft and send an email for user. ",
+  "view_team_compensation": "View and display team compensation/salary data on screen. Use this tool when the user wants to look at, check, or query compensation information interactively. Do NOT use this tool for exporting or downloading data as a file",
+  "export_compensation_data": "Export or download team compensation data as a file (CSV, PDF, or JSON) for business analysis. Use this tool ONLY when the user wants to export, download, save, or generate a file with compensation data.",
+  "email_compensation_report": "Email compensation, salary, payroll, bonus, or pay-related reports to a recipient. Use this tool ONLY when the email content involves compensation or salary data.",
+  "send_email": "Draft and send a general-purpose email that does NOT contain compensation, salary, payroll, or pay-related content. Use this for meeting notes, project updates, schedules etc. For compensation/salary-related emails, use email_compensation_report instead.",
   "create_ticket": "Create an inquiry ticket for user. ",
   "submit_ticket": "Submit an inquiry ticket for user. ",
   "purchase": "Process purchase requests with realistic vendor catalog and approval workflows. ",
@@ -15,8 +14,8 @@
   "export_content_as_file": "Export data/content to a file.",
   "other": "other general Q&A"
   },
-  "user_role": ["employee", "manager"],
-  "user_team": ["IT", "HR", "Sales", "Finance", "Legal", "Operations", "Marketing"],
-  "user_name": "Bob",
-  "approval": "True|False"
+  "roles": ["employee", "manager"], 
+  "teams": ["IT", "HR", "Sales", "Finance", "Legal", "Operations", "Marketing"],
+  "id": "Bob",
+  "approval": "true|false"
 }

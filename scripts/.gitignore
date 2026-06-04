@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+
+venv*
+.venv*
+.env
+
+*.log
+
+../references/test_cases/*

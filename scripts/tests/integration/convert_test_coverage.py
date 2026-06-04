@@ -113,6 +113,14 @@ def read_files(file_path):
     lines=[line.strip() for line in lines]
     return lines
 
+def try_parse_rego_json(content):
+    """Validate that content is parseable as JSON. If not, return None."""
+    try:
+        json.loads(content)
+        return content
+    except (json.JSONDecodeError, ValueError):
+        return None
+
 index=1
 for bad_test_file in read_files(tp_command_path):
     middle=[]
@@ -123,6 +131,8 @@ for bad_test_file in read_files(tp_command_path):
     content=content.replace('"', '\\"')
     content=content.replace("'",'"')
     content=content.replace('"null"','null')
+    if try_parse_rego_json(content) is None:
+        content = json.dumps(data['input'], ensure_ascii=False)
     middle.append("    not policy.allow with input as "+content)
     middle.append('}')
     final_results.append("\n".join(middle))
@@ -138,6 +148,8 @@ for benign_test_file in read_files(tn_command_path):
     content=content.replace('"', '\\"')
     content=content.replace("'",'"')
     content=content.replace('"null"','null')
+    if try_parse_rego_json(content) is None:
+        content = json.dumps(data['input'], ensure_ascii=False)
     middle.append("    policy.allow with input as "+content)
     middle.append('}')
     final_results.append("\n".join(middle))
