@@ -3,7 +3,8 @@
 CDIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 DIRS_TO_TEST=(
-    "$CDIR/../../../references/test_cases"
+    "$CDIR/../../../references/test_cases/allow"
+    "$CDIR/../../../references/test_cases/disallow"
 )
 
 OUTPUT_FILE="$CDIR/score_test_results.txt"
@@ -26,24 +27,23 @@ done
 for BASE_INPUT_DIR in "${DIRS_TO_TEST[@]}"; do
     find "$BASE_INPUT_DIR" -type f -name "*.json" | while read -r FILE; do
         echo "Testing: $FILE" | tee -a "$OUTPUT_FILE"
-        echo $FILE$
-        if [[ "$FILE" == *"/allow/"* ]]; then
-            echo -e "\t{\"expected\": {\"allow\": true}}"
-            EXPECTED_ALLOW="true"
-        else
+        if [[ "$FILE" == *"/disallow/"* ]]; then
             echo -e "\t{\"expected\": {\"allow\": false}}"
             EXPECTED_ALLOW="false"
+        else
+            echo -e "\t{\"expected\": {\"allow\": true}}"
+            EXPECTED_ALLOW="true"
         fi
 
-        RESPONSE=$(curl -s -X POST localhost:8181/v1/data/kubectl/policy/allow \
+        RESPONSE=$(curl -s -X POST localhost:8181/v1/data/mcp/policies/allow \
             -H "Content-Type: application/json" \
             --data @"$FILE")
         echo "$RESPONSE"
 
-        if [[ "$RESPONSE" == *'"allow":false'* ]]; then
-            ALLOW="false"
-        else
+        if [[ "$RESPONSE" == *'"result":true'* ]]; then
             ALLOW="true"
+        else
+            ALLOW="false"
         fi
 
         if [ "$EXPECTED_ALLOW" = "true" ] && [ "$ALLOW" = "true" ]; then
@@ -95,14 +95,14 @@ echo -e "Scorecard Summary\n===================" >> "$SCORECARD_FILE"
 ALL_DIRS=$(find "${DIRS_TO_TEST[@]}" -type f -name "*.json" | xargs -n1 dirname | sort | uniq)
 
 for DIR in $ALL_DIRS; do
-    MATCHES=$(grep "$DIR" "$TEMP_RESULTS")
-    ALLOW_TRUE=$(echo "$MATCHES" | grep -c '"allow":true')
-    ALLOW_FALSE=$(echo "$MATCHES" | grep -c '"allow":false')
+    MATCHES=$(grep -F "$DIR/" "$TEMP_RESULTS")
+    ALLOW_TRUE=$(echo "$MATCHES" | grep -c '"result":true')
+    ALLOW_FALSE=$(echo "$MATCHES" | grep -c '"result":false')
     TOTAL=$((ALLOW_TRUE + ALLOW_FALSE))
 
-    if [[ "$DIR" == *"bad_commands"* ]]; then
+    if [[ "$DIR" == *"/disallow"* ]]; then
         TITLE="Test cases that should result in a deny decision"
-    elif [[ "$DIR" == *"benign_commands"* ]]; then
+    elif [[ "$DIR" == *"/allow"* ]]; then
         TITLE="Test cases that should result in an allow decision"
     else
         TITLE="Unlabeled test cases"

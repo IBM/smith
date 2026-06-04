@@ -56,7 +56,7 @@ def variable_extraction(api_key, system_variables, openai_base_url, model, temp,
     guidances={}
     with open(output_file_decompose, 'r') as f:
         guidances=json.load(f)
-    print(system_variables)
+    # print(system_variables)
     del system_variables["action_list"]
     del system_variables["action_description"]
 

@@ -1,5 +1,5 @@
 ---
-name: blue_agent_integrate
+name: smith
 description: responsible for creating different policies, generating test cases, testing, and automatically improving policy.
 ---
 
@@ -17,16 +17,16 @@ If the user asks for creating other kinds of policies, you should tell user this
 # Policy Testing
 
 ## General testing
-If the user asks for testing existing policy, you should run `python scripts/policy_agent/pipeline.py --flag policy_testing`.
+If the user asks for testing existing policy, you should run `smith --flag policy_testing`.
 
-## Test Case Creation
-If the user asks for generating test cases, you should strictly follow instructions in `./test_generation/test_generation.md` in the skill directory. 
+## Test Case Generation & Evaluation
+If the user asks for generating test cases or evaluating test case quality, you should strictly follow instructions in `./test_generation/test_generation.md` in the skill directory.
 
 # Policy enhanchment
 When the user ask for updating/improving their policy, you should follow the following the workflow strictly:
 
 ### Step 1. 
-Run the `python scripts/policy_agent/pipeline.py --flag policy_testing` to identify FP/FN Cases, unlabeled cases should be considered as malicious and get denied. Report the results clearly to the human.
+Run the `smith --flag policy_testing` to identify FP/FN Cases, unlabeled cases should be considered as malicious and get denied. Report the results clearly to the human.
 
 ### Step 2. 
 If any false positives or false negatives are detected: Read and follow `./opa_policy/policy_patch/policy_patch.md` to fix the failed cases. Remember, `policy_patch` needs to fix all clusters before you move to the next step.
