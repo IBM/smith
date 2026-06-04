@@ -64,8 +64,16 @@ def read_files(file_path, command_dict):
     for line in lines:
         with open(line, 'r') as file:
             data = json.load(file)
-            commands.append(data['input']['original_command'])
-            command_dict[data['input']['original_command']]=line
+            # Handle both old format (original_command) and new format (agent.input)
+            if 'original_command' in data.get('input', {}):
+                command = data['input']['original_command']
+            elif 'agent' in data.get('input', {}).get('extensions', {}):
+                command = data['input']['extensions']['agent']['input']
+            else:
+                # Fallback: use the entire input as string
+                command = str(data.get('input', {}))
+            commands.append(command)
+            command_dict[command]=line
     return commands, command_dict
 
 def cluster_commands(malicious_commands, cluster_results, test_path):
@@ -85,7 +93,7 @@ def cluster_commands(malicious_commands, cluster_results, test_path):
 
     if len(commands_fp)>0:
         embeddings = model.encode(commands_fp)
-        clustering = DBSCAN(eps=0.1, min_samples=2, metric='cosine')
+        clustering = DBSCAN(eps=1.8, min_samples=2, metric='cosine')
         labels = clustering.fit_predict(embeddings)
         clusters.append("Benign commands that should be allowed: ")
         for command, label in zip(commands_fp, labels):
@@ -104,7 +112,7 @@ def cluster_commands(malicious_commands, cluster_results, test_path):
     if len(commands_fn)>0:
         cluster_dict={}
         embeddings = model.encode(commands_fn)
-        clustering = DBSCAN(eps=0.1, min_samples=2, metric='cosine')
+        clustering = DBSCAN(eps=1.8, min_samples=2, metric='cosine')
         labels = clustering.fit_predict(embeddings)
         clusters.append("Malicious commands that should not get allowed: ")
         for command, label in zip(commands_fn, labels):
