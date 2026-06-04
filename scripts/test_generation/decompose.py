@@ -41,6 +41,7 @@ def flatten_guidance(api_key, guidance_file, system_variables, openai_base_url, 
     5. Avoid merging multiple operations into one line.
     6. Carry over contextual headers, such as "Allowed commands", "Disallowed commands", "Managers", "Employees", "Only for internal data", etc., into each relevant line.
     7. If a statement contains multiple operations, split it into multiple lines.
+    8. Each line must relate to exactly one action/operation. If a guidance applies to multiple actions, split it into separate lines — one per action. Do not mix multiple actions in a single line.
 
     Do not generate test cases.
     Do not output JSON.
@@ -48,7 +49,6 @@ def flatten_guidance(api_key, guidance_file, system_variables, openai_base_url, 
     Only output the flattened guidance lines.
     """
     user_instruction = f"""
-    Action list: {system_variables['action_description']}
     Guidances: {guidances}
     """
     # Initialize OpenAI client
@@ -94,6 +94,8 @@ def decompose_guidance(api_key, system_variables, guidance_file, openai_base_url
     * If the guidance has a threshold (e.g., $300), include boundary coverage in allow/disallow.
     * Keep common constraints separate from allow/disallow.
     * Output must be valid JSON following the schema exactly.
+    * If a guidance is purely a deny/block rule (e.g. "No one can do X", "Block all Y"), leave allow_conditions as an empty list []. Do NOT infer allow conditions by negating the disallow condition.
+    * If a guidance is purely an allow/permit rule (e.g. "Managers can do X", "Users are allowed to Y"), leave disallow_conditions as an empty list []. Do NOT infer disallow conditions by negating the allow condition.
 
     Output is a list of JSON, for each guidance, you need to output a JSON, the JSON schema for each JSON is:
     {
@@ -239,4 +241,4 @@ if __name__ == "__main__":
     }
     result=decompose_guidance(api_key, system_variables, guidance_file, openai_base_url, model, temp, top_p, output_file_decompose, output_file_flatten, batch_processing=batch_processing, batch_size=batch_size)
 
-    print(type(result))
+    # print(type(result))

@@ -46,14 +46,17 @@ def submit_ticket(ticket_content: str) -> str:
 @policy_check("send_email")
 def send_email(recipient_email: str, subject: str, body: str, email_content: str, attached_file: str) -> str:
     """
-       Draft and send an email for user
+       Draft and send a general-purpose email that does NOT contain compensation, salary, payroll, or pay-related content. Use this for meeting notes, project updates, schedules etc. For compensation/salary-related emails, use email_compensation_report instead.
 
        Parameters:
+           recipient_email (str): The recipient email address
+           subject (str): The email subject
+           body (str): The email body
            email_content (str): The email content
            attached_file (str): Attached file name in this email
 
        Returns:
-           str: Confirmation of sending and email content. You should always present the email content to user. 
+           str: Confirmation of sending and email content. You should always present the email content to user.
     """
     return "Sent an email, the email content is: "+email_content+". The attached file is "+attached_file
 
@@ -111,26 +114,27 @@ def return_product(amount: int, product_name: str) -> str:
     """
     return raw_return(amount, product_name)
 
-@mcp.tool()
-@policy_check("test_purchase_policy")
-def test_purchase_policy(amount: int, product: str) -> str:
-    """
-       Test the purchase policy enforcement directly
+# @mcp.tool()
+# @policy_check("test_purchase_policy")
+# def test_purchase_policy(amount: int, product: str) -> str:
+#     """
+#        Test the purchase policy enforcement directly
        
-       Parameters:
-           amount (int): Purchase amount to test
-           product (str): Product name to test
+#        Parameters:
+#            amount (int): Purchase amount to test
+#            product (str): Product name to test
            
-       Returns:
-           str: Result of policy test
-    """
-    print(f"TEST_PURCHASE_POLICY CALLED: amount={amount}, product={product}")
-    return purchase(amount, product)
+#        Returns:
+#            str: Result of policy test
+#     """
+#     print(f"TEST_PURCHASE_POLICY CALLED: amount={amount}, product={product}")
+#     return purchase(amount, product)
 
 
 @mcp.tool()
 @policy_check("view_team_compensation")
 def view_team_compensation(
+    department: str,
     select_fields: list[str] | None = None,
     id: str | None = None,
     time_range: str = "last_quarter",
@@ -138,8 +142,16 @@ def view_team_compensation(
     include_benefits: bool = True
 ) -> str:
     """
-    View team compensation data with realistic HR information
-    
+    View and display team compensation/salary data on screen. Use this tool when the user wants to look at, check, or query compensation information interactively. Do NOT use this tool for exporting or downloading data as a file — use export_compensation_data instead.
+
+    Parameters:
+        select_fields (list[str] | None): Optional list of field names to include in each employee record. If None, all fields are returned. Available fields: employee_name, title, department, level, hire_date, base_salary, bonus_target, actual_bonus_2024, performance_rating, next_review_date, ssn, personal_email, home_address, emergency_contact, bank_account. When include_benefits is True, also available: healthcare_plan, healthcare_id, stock_grant_value, benefits_value, total_compensation
+        id (str | None): Optional employee ID to filter results to a specific team member.
+        department (str): Required. The department/team to view compensation data for. Must be one of: IT, HR, Sales, Finance, Legal, Operations, Marketing.
+        time_range (str): The time period for compensation data. Defaults to "last_quarter". Other options include "current_year", "last_year".
+        format (str): Output format for the report. "JSON" (default) or "CSV".
+        include_benefits (bool): Whether to include benefits data (stock grants, benefits value, total compensation). Defaults to True.
+
     Returns actual employee compensation data including:
     - Base salaries, bonuses, stock grants
     - Performance ratings and review dates
@@ -175,7 +187,7 @@ def view_team_compensation(
                 "performance_rating": compensation["performance_rating"],
                 "next_review_date": compensation["next_review_date"]
             }
-            
+
             # Include sensitive data - policy enforcement will filter based on permissions
             if sensitive:
                 member_data.update({
@@ -187,7 +199,7 @@ def view_team_compensation(
                     "healthcare_plan": sensitive["healthcare_plan"],
                     "healthcare_id": sensitive["healthcare_id"]
                 })
-            
+
             if include_benefits:
                 member_data.update({
                     "stock_grant_value": compensation["stock_grant_value"],
@@ -233,8 +245,17 @@ def export_compensation_data(
     external_sharing: bool = False
 ) -> str:
     """
-    Export team compensation data for business analysis
-    
+    Export or download team compensation data as a file (CSV, PDF, or JSON) for business analysis. Use this tool ONLY when the user wants to export, download, save, or generate a file with compensation data. For viewing/querying compensation data interactively on screen, use view_team_compensation instead.
+
+    Parameters:
+        select_fields (list[str] | None): Optional list of field names to include in each employee record. If None, all fields are returned. Available fields: employee_id, name, title, level, current_salary, total_comp_2024, performance_rating. When export_type is "detailed", also available: salary_history, bonus_history.
+        id (str | None): Optional employee ID to filter results to a specific team member.
+        format (str): Output format for the export. "CSV" (default), "PDF", or "JSON".
+        time_range (str): The time period for compensation data. Defaults to "last_quarter".
+        export_type (str): Level of detail in the export. "aggregated" (default) for summary data, or "detailed" for historical salary and bonus breakdowns.
+        business_justification (str): Reason for the export request. Defaults to empty string.
+        external_sharing (bool): Whether the exported data will be shared externally. Defaults to False.
+
     Generates detailed compensation exports with:
     - Historical salary progression
     - Performance correlation analysis
@@ -329,7 +350,13 @@ def email_compensation_report(
     encryption_required: bool = True
 ) -> str:
     """
-    Email compensation report with OPA domain validation
+    Email compensation, salary, payroll, bonus, or pay-related reports to a recipient. Use this tool ONLY when the email content involves compensation or salary data. For general-purpose emails (meeting notes, project updates, schedules), use send_email instead.
+
+    Parameters:
+        destination (str): The recipient's email address. Domain is extracted for policy validation.
+        report_data (str): The compensation report content to send.
+        external_sharing (bool): Whether the report is being shared to an external recipient. Defaults to False.
+        encryption_required (bool): Whether the email should be encrypted. Defaults to True.
     """
     # Extract domain for validation
     domain = destination.split("@")[1] if "@" in destination else ""
@@ -351,143 +378,149 @@ def email_compensation_report(
 The compensation report has been securely transmitted to the specified recipient.
     """
 
-@mcp.tool()
-@policy_check("ask_for_salary")
-def ask_for_salary(question: str) -> str:
-    """
-    Query salary and compensation information with realistic data analysis
+# @mcp.tool()
+# @policy_check("ask_for_salary")
+# def ask_for_salary(question: str) -> str:
+#     """
+#     Query salary and compensation information with realistic data analysis
     
-    Provides insights on:
-    - Market salary benchmarks
-    - Internal pay equity analysis
-    - Career progression paths
-    """
-    # Analyze the question to determine what information to provide
-    question_lower = question.lower()
+#     Provides insights on:
+#     - Market salary benchmarks
+#     - Internal pay equity analysis
+#     - Career progression paths
+#     """
+#     # Analyze the question to determine what information to provide
+#     question_lower = question.lower()
     
-    # Get all compensation data for analysis
-    all_compensation = []
-    for emp_id, comp_data in comp_db.compensation_data.items():
-        employee = hr_db.employees.get(emp_id)
-        sensitive = comp_db.sensitive_data.get(emp_id)
-        if employee:
-            comp_record = {
-                **comp_data,
-                "title": employee["title"],
-                "department": employee["department"],
-                "level": employee["level"]
-            }
+#     # Get all compensation data for analysis
+#     all_compensation = []
+#     for emp_id, comp_data in comp_db.compensation_data.items():
+#         employee = hr_db.employees.get(emp_id)
+#         sensitive = comp_db.sensitive_data.get(emp_id)
+#         if employee:
+#             comp_record = {
+#                 **comp_data,
+#                 "title": employee["title"],
+#                 "department": employee["department"],
+#                 "level": employee["level"]
+#             }
             
-            # Include sensitive data - policy enforcement will filter based on permissions
-            if sensitive:
-                comp_record.update({
-                    "ssn": sensitive["ssn"],
-                    "personal_email": sensitive["personal_email"],
-                    "home_address": sensitive["home_address"]
-                })
+#             # Include sensitive data - policy enforcement will filter based on permissions
+#             if sensitive:
+#                 comp_record.update({
+#                     "ssn": sensitive["ssn"],
+#                     "personal_email": sensitive["personal_email"],
+#                     "home_address": sensitive["home_address"]
+#                 })
             
-            all_compensation.append(comp_record)
+#             all_compensation.append(comp_record)
     
-    if "average" in question_lower and "engineer" in question_lower:
-        # Calculate average for engineers
-        engineer_salaries = [
-            comp["base_salary"] for comp in all_compensation 
-            if "engineer" in comp["title"].lower()
-        ]
-        avg_salary = sum(engineer_salaries) // len(engineer_salaries) if engineer_salaries else 0
+#     if "average" in question_lower and "engineer" in question_lower:
+#         # Calculate average for engineers
+#         engineer_salaries = [
+#             comp["base_salary"] for comp in all_compensation 
+#             if "engineer" in comp["title"].lower()
+#         ]
+#         avg_salary = sum(engineer_salaries) // len(engineer_salaries) if engineer_salaries else 0
         
-        return f"""
-**Average Software Engineer Compensation Analysis**
+#         return f"""
+# **Average Software Engineer Compensation Analysis**
 
-Based on current team data:
-- **Average Base Salary**: ${avg_salary:,}
-- **Salary Range**: ${min(engineer_salaries):,} - ${max(engineer_salaries):,}
-- **Sample Size**: {len(engineer_salaries)} engineers
-- **Levels Included**: L4-L5 (Mid to Senior level)
+# Based on current team data:
+# - **Average Base Salary**: ${avg_salary:,}
+# - **Salary Range**: ${min(engineer_salaries):,} - ${max(engineer_salaries):,}
+# - **Sample Size**: {len(engineer_salaries)} engineers
+# - **Levels Included**: L4-L5 (Mid to Senior level)
 
-**Breakdown by Level:**
-- L4 Engineers: ~$120,000 base salary
-- L5 Engineers: ~$141,500 base salary
+# **Breakdown by Level:**
+# - L4 Engineers: ~$120,000 base salary
+# - L5 Engineers: ~$141,500 base salary
 
-**Total Compensation (including stock & benefits):**
-- L4: ~$161,000 - $182,700
-- L5: ~$182,700 - $193,000
+# **Total Compensation (including stock & benefits):**
+# - L4: ~$161,000 - $182,700
+# - L5: ~$182,700 - $193,000
 
-*Note: Data reflects current team compensation as of {datetime.now().strftime('%B %Y')}*
-        """
+# *Note: Data reflects current team compensation as of {datetime.now().strftime('%B %Y')}*
+#         """
     
-    elif "range" in question_lower or "band" in question_lower:
-        # Provide salary ranges by level
-        level_analysis = {}
-        for comp in all_compensation:
-            level = comp["level"]
-            if level not in level_analysis:
-                level_analysis[level] = []
-            level_analysis[level].append(comp["base_salary"])
+#     elif "range" in question_lower or "band" in question_lower:
+#         # Provide salary ranges by level
+#         level_analysis = {}
+#         for comp in all_compensation:
+#             level = comp["level"]
+#             if level not in level_analysis:
+#                 level_analysis[level] = []
+#             level_analysis[level].append(comp["base_salary"])
         
-        range_info = "**Salary Ranges by Level:**\n\n"
-        for level, salaries in level_analysis.items():
-            min_sal = min(salaries)
-            max_sal = max(salaries)
-            avg_sal = sum(salaries) // len(salaries)
-            range_info += f"- **{level}**: ${min_sal:,} - ${max_sal:,} (avg: ${avg_sal:,})\n"
+#         range_info = "**Salary Ranges by Level:**\n\n"
+#         for level, salaries in level_analysis.items():
+#             min_sal = min(salaries)
+#             max_sal = max(salaries)
+#             avg_sal = sum(salaries) // len(salaries)
+#             range_info += f"- **{level}**: ${min_sal:,} - ${max_sal:,} (avg: ${avg_sal:,})\n"
         
-        return range_info
+#         return range_info
     
-    elif "bonus" in question_lower:
-        # Analyze bonus information
-        bonus_data = []
-        for comp in all_compensation:
-            bonus_data.append({
-                "level": comp["level"],
-                "bonus_target": comp["bonus_target"],
-                "actual_bonus": comp["actual_bonus_2024"],
-                "performance": comp["performance_rating"]
-            })
+#     elif "bonus" in question_lower:
+#         # Analyze bonus information
+#         bonus_data = []
+#         for comp in all_compensation:
+#             bonus_data.append({
+#                 "level": comp["level"],
+#                 "bonus_target": comp["bonus_target"],
+#                 "actual_bonus": comp["actual_bonus_2024"],
+#                 "performance": comp["performance_rating"]
+#             })
         
-        return f"""
-**Bonus Analysis for 2024:**
+#         return f"""
+# **Bonus Analysis for 2024:**
 
-**Average Bonus by Performance:**
-- Exceeds Expectations: ~$21,900 (110% of target)
-- Meets Expectations: ~$15,700 (95% of target)
+# **Average Bonus by Performance:**
+# - Exceeds Expectations: ~$21,900 (110% of target)
+# - Meets Expectations: ~$15,700 (95% of target)
 
-**Bonus Targets by Level:**
-- L4: $12,000 - $15,000
-- L5: $18,000 - $20,000  
-- L6: $25,000
+# **Bonus Targets by Level:**
+# - L4: $12,000 - $15,000
+# - L5: $18,000 - $20,000  
+# - L6: $25,000
 
-**Total Bonus Pool**: ${sum(b['actual_bonus'] for b in bonus_data):,}
-        """
+# **Total Bonus Pool**: ${sum(b['actual_bonus'] for b in bonus_data):,}
+#         """
     
-    else:
+#     else:
 
-        total_employees = len(all_compensation)
-        avg_total_comp = sum(comp["total_compensation"] for comp in all_compensation) // total_employees
+#         total_employees = len(all_compensation)
+#         avg_total_comp = sum(comp["total_compensation"] for comp in all_compensation) // total_employees
         
-        return f"""
-**Team Compensation Overview:**
+#         return f"""
+# **Team Compensation Overview:**
 
-- **Total Team Members**: {total_employees}
-- **Average Total Compensation**: ${avg_total_comp:,}
-- **Departments**: Engineering, Product, Design
-- **Performance Distribution**: 
-  - 60% Exceeds Expectations
-  - 40% Meets Expectations
+# - **Total Team Members**: {total_employees}
+# - **Average Total Compensation**: ${avg_total_comp:,}
+# - **Departments**: Engineering, Product, Design
+# - **Performance Distribution**: 
+#   - 60% Exceeds Expectations
+#   - 40% Meets Expectations
 
-**Recent Trends:**
-- Average salary increase: 4.2% (2024)
-- Bonus payout rate: 102% of target
-- Stock grant values increased 15% year-over-year
+# **Recent Trends:**
+# - Average salary increase: 4.2% (2024)
+# - Bonus payout rate: 102% of target
+# - Stock grant values increased 15% year-over-year
 
-For specific salary bands or role comparisons, please ask about particular positions or levels.
-        """
+# For specific salary bands or role comparisons, please ask about particular positions or levels.
+#         """
 
 @mcp.tool()
 @policy_check("purchase")
 def purchase(amount: int, product_name: str, category: str | None = None, justification: str | None = None) -> str:
     """
     Process purchase requests with realistic vendor catalog and approval workflows
+
+    Parameters:
+        amount (int): The purchase amount in dollars.
+        product_name (str): The name of the product to purchase. Matched against the vendor catalog.
+        category (str | None): Optional product category (e.g. "office_supplies", "software"). Auto-detected from catalog if not provided.
+        justification (str | None): Optional business justification for the purchase request.
     """
     # Check if product exists in catalog
     product_found = None
