@@ -126,7 +126,7 @@ Output only JSON. Do NOT include explanations, Markdown, or extra text.
 if __name__ == "__main__":
     api_key = os.getenv("OPENAI_API_KEY")
     openai_base_url = os.getenv("OPENAI_BASE_URL")
-    model = os.getenv("MODEL")
+    model = os.getenv("MODEL_SONNET")
     base_url = os.getenv("BASE_URL")
     copy_save_dir = os.getenv("DATA_DIR")
     policy_dir = base_url + os.getenv("POLICY_DIR")
