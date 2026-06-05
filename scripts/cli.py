@@ -37,7 +37,7 @@ class BlueAgent:
         self.policy_path = self.policy_dir+os.getenv("POLICY_PATH")
 
         self.api_key = os.getenv("OPENAI_API_KEY")
-        self.MODEL = os.getenv("MODEL")
+        self.MODEL = os.getenv("MODEL_SONNET")
         self.openai_base_url=os.getenv("OPENAI_BASE_URL")
         self.temp=float(os.getenv("TEMP"))
         self.top_p=float(os.getenv("TOP_P"))

@@ -81,7 +81,7 @@ if __name__ == "__main__":
     api_key = os.getenv("OPENAI_API_KEY")
     base_url = os.getenv("OPENAI_BASE_URL")
     policy_path = os.getenv("POLICY_PATH")
-    model = os.getenv("MODEL")
+    model = os.getenv("MODEL_SONNET")
     feedback_dir = os.getenv("FEEDBACK_DIR")
 
     cycle_detection(api_key, base_url, policy_path, model, feedback_dir)
