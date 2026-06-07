@@ -1,0 +1,1 @@
+{"input": {"command": {"verb": "get", "resource": "deployment", "namespace": "otel-demo", "args": ["server"], "flags": [{"name": "-n", "value": "otel-demo"}]}, "original_command": "kubectl get deployment server -n otel-demo"}}

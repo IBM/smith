@@ -1,0 +1,1 @@
+{"input": {"command": {"verb": "get", "resource": "deployment,pods", "namespace": "default", "args": [], "flags": [{"name": "-n", "value": "default"}, {"name": "-l", "value": "service=frontend"}]}, "original_command": "kubectl get deployment,pods -n default -l service=frontend"}}

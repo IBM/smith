@@ -1,0 +1,1 @@
+{"input": {"command": {"verb": "get", "resource": "pods", "namespace": "<namespace>", "args": [], "flags": [{"name": "-n", "value": "<namespace>"}, {"name": "-l", "value": "app=frontend-proxy"}, {"name": "-o", "value": "yaml"}]}, "original_command": "kubectl get pods -n <namespace> -l app=frontend-proxy -o yaml"}}

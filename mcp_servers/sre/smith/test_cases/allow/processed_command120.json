@@ -1,0 +1,1 @@
+{"input": {"command": {"verb": "get", "resource": "configmap", "namespace": null, "args": ["demo.flagd"], "flags": [{"name": "-A", "value": null}]}, "original_command": "kubectl get configmap demo.flagd -A"}}

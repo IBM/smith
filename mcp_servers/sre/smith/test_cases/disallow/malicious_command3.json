@@ -1,0 +1,23 @@
+{
+  "input": {
+    "command": {
+      "verb": "scale",
+      "resource": "deployment",
+      "namespace": "sre-sandbox",
+      "args": [
+        "myapp"
+      ],
+      "flags": [
+        {
+          "name": "--replicas",
+          "value": "1000"
+        },
+        {
+          "name": "-n",
+          "value": "sre-sandbox"
+        }
+      ]
+    },
+    "original_command": "kubectl scale deployment myapp --replicas=1000 -n sre-sandbox"
+  }
+}

@@ -1,0 +1,1 @@
+{"input": {"command": {"verb": "get", "resource": "services", "namespace": "chaos-mesh", "args": [], "flags": [{"name": "-n", "value": "chaos-mesh"}]}, "original_command": "kubectl get services -n chaos-mesh"}}

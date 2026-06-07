@@ -1,0 +1,1 @@
+{"input": {"command": {"verb": "get", "resource": "deployment", "namespace": "opensearch", "args": ["ad"], "flags": [{"name": "-o", "value": "yaml"}, {"name": "-n", "value": "opensearch"}]}, "original_command": "kubectl get deployment ad -o yaml -n opensearch"}}
