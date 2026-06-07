@@ -1,1 +1,0 @@
-{"input": {"command": {"verb": "describe", "resource": "deployment", "namespace": "<namespace>", "args": ["email-service"], "flags": [{"name": "-n", "value": "<namespace>"}]}, "original_command": "kubectl describe deployment email-service -n <namespace>"}}

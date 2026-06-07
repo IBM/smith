@@ -1,1 +1,0 @@
-{"input": {"command": {"verb": "get", "resource": "configmap", "namespace": "openshift-image-registry", "args": ["image-registry-configuration"], "flags": [{"name": "-n", "value": "openshift-image-registry"}, {"name": "-o", "value": "yaml"}]}, "original_command": "kubectl get configmap image-registry-configuration -n openshift-image-registry -o yaml"}}

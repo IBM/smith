@@ -1,1 +1,0 @@
-{"input": {"command": {"verb": "logs", "resource": null, "namespace": "otel-demo", "args": ["payment-759fdc546d-5ztjv"], "flags": [{"name": "-n", "value": "otel-demo"}]}, "original_command": "kubectl logs payment-759fdc546d-5ztjv -n otel-demo"}}

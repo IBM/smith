@@ -1,1 +1,0 @@
-{"input": {"command": {"verb": "get", "resource": "pods", "namespace": "otel-demo", "args": [], "flags": [{"name": "-n", "value": "otel-demo"}, {"name": "--selector", "value": "app=Recommendation"}]}, "original_command": "kubectl get pods -n otel-demo --selector=app=Recommendation"}}

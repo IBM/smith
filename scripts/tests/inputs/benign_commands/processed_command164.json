@@ -1,1 +1,0 @@
-{"input": {"command": {"verb": "describe", "resource": "pod", "namespace": null, "args": ["frontend-proxy"], "flags": []}, "original_command": "kubectl describe pod frontend-proxy"}}

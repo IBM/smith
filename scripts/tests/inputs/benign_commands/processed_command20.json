@@ -1,1 +1,0 @@
-{"input": {"command": {"verb": "logs", "resource": null, "namespace": "default", "args": ["product-catalog"], "flags": [{"name": "-n", "value": "default"}]}, "original_command": "kubectl logs product-catalog -n default"}}

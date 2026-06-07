@@ -1,1 +1,0 @@
-{"input": {"command": {"verb": "logs", "resource": null, "namespace": "default", "args": ["adservice-pod"], "flags": [{"name": "-n", "value": "default"}]}, "original_command": "kubectl logs adservice-pod -n default"}}

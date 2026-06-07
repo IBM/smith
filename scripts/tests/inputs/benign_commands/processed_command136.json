@@ -1,1 +1,0 @@
-{"input": {"command": {"verb": "logs", "resource": null, "namespace": "default", "args": ["email-service-12345"], "flags": [{"name": "-n", "value": "default"}]}, "original_command": "kubectl logs email-service-12345 -n default"}}

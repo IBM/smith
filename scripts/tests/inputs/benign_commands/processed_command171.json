@@ -1,1 +1,0 @@
-{"input": {"command": {"verb": "get", "resource": "pod", "namespace": "otel-demo", "args": ["checkout-6985f55d55-wl6s5"], "flags": [{"name": "-n", "value": "otel-demo"}, {"name": "-o", "value": "jsonpath={.spec.nodeName}"}]}, "original_command": "kubectl get pod checkout-6985f55d55-wl6s5 -n otel-demo -o jsonpath='{.spec.nodeName}'"}}

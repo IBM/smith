@@ -1,1 +1,0 @@
-{"input": {"command": {"verb": "logs", "resource": null, "namespace": "default", "args": [], "flags": [{"name": "-l", "value": "app=service"}, {"name": "-n", "value": "default"}, {"name": "--all-containers", "value": "true"}]}, "original_command": "kubectl logs -l app=service -n default --all-containers=true"}}

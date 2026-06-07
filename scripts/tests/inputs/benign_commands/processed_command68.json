@@ -1,1 +1,0 @@
-{"input": {"command": {"verb": "describe", "resource": "pod", "namespace": "otel-demo", "args": ["cart"], "flags": [{"name": "-n", "value": "otel-demo"}]}, "original_command": "kubectl describe pod cart -n otel-demo"}}

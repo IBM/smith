@@ -1,1 +1,0 @@
-{"input": {"command": {"verb": "describe", "resource": "configmaps", "namespace": null, "args": [], "flags": [{"name": "--all-namespaces", "value": null}]}, "original_command": "kubectl describe configmaps --all-namespaces"}}

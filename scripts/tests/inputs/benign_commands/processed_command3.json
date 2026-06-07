@@ -1,1 +1,0 @@
-{"input": {"command": {"verb": "get", "resource": "deployment", "namespace": "complex-us", "args": [], "flags": [{"name": "-n", "value": "complex-us"}, {"name": "-o", "value": "yaml"}, {"name": "-l", "value": "app=frontend-service"}]}, "original_command": "kubectl get deployment -n complex-us -o yaml -l app=frontend-service"}}

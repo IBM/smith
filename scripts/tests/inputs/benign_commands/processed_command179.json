@@ -1,1 +1,0 @@
-{"input": {"command": {"verb": "describe", "resource": "pod", "namespace": "otel-demo", "args": ["ad-fc478dd44-9cgmv"], "flags": [{"name": "-n", "value": "otel-demo"}]}, "original_command": "kubectl describe pod ad-fc478dd44-9cgmv -n otel-demo"}}
