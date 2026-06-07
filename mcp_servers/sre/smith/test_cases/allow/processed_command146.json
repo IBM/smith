@@ -1,0 +1,1 @@
+{"input": {"command": {"verb": "describe", "resource": "deployments", "namespace": "ingress-nginx", "args": [], "flags": [{"name": "-n", "value": "ingress-nginx"}]}, "original_command": "kubectl describe deployments -n ingress-nginx"}}

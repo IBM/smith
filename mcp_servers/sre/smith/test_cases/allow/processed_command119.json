@@ -1,0 +1,1 @@
+{"input": {"command": {"verb": "get", "resource": "daemonset", "namespace": null, "args": ["frontend-proxy"], "flags": [{"name": "-o", "value": "yaml"}, {"name": "-A", "value": null}]}, "original_command": "kubectl get daemonset frontend-proxy -o yaml -A"}}

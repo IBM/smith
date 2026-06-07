@@ -1,0 +1,1 @@
+{"input": {"command": {"verb": "describe", "resource": "service", "namespace": "default", "args": ["ad"], "flags": [{"name": "-n", "value": "default"}]}, "original_command": "kubectl describe service ad -n default"}}

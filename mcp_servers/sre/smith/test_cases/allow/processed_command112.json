@@ -1,0 +1,1 @@
+{"input": {"command": {"verb": "describe", "resource": "deployment", "namespace": "complex-us", "args": ["frontend"], "flags": [{"name": "-n", "value": "complex-us"}]}, "original_command": "kubectl describe deployment frontend -n complex-us"}}

@@ -1,0 +1,1 @@
+{"input": {"command": {"verb": "top", "resource": "node", "namespace": null, "args": ["i-0448eae150624bdb0"], "flags": [{"name": "-o", "value": "wide"}, {"name": "--sort-by", "value": "cpu"}]}, "original_command": "kubectl top node i-0448eae150624bdb0 -o wide --sort-by=cpu"}}
