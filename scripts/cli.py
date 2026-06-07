@@ -32,6 +32,8 @@ class BlueAgent:
         self.graph_path = self.user_output_dir+os.getenv("GRAPH_PATH")
         self.opa_ast_path = self.user_output_dir+os.getenv("OPA_AST_PATH")
         self.cluster_results=self.user_output_dir+os.getenv("CLUSTER_RESULTS")
+        self.cluster_eps=float(os.getenv("CLUSTER_EPS", "0.3"))
+        self.cluster_min_samples=int(os.getenv("CLUSTER_MIN_SAMPLES", "2"))
 
         self.policy_dir=self.base_url+os.getenv("POLICY_DIR")
         self.policy_path = self.policy_dir+os.getenv("POLICY_PATH")
@@ -67,7 +69,7 @@ class BlueAgent:
         return results
     
     def get_red_feedback(self):
-        return '\n'.join(cluster_commands(self.cluster_results, self.test_path))
+        return '\n'.join(cluster_commands(self.cluster_results, self.test_path, self.cluster_eps, self.cluster_min_samples))
     
     def policy_checking_results(self):
         return run_policy_evaluation(self.test_dir, self.test_results_path)
@@ -80,7 +82,7 @@ def generate_test(base_url, system_variables, api_key, openai_base_url, model, t
     # case_generation(api_key, system_variables, openai_base_url, model, temp, top_p, output_file_variables, output_file_cases, batch_processing, batch_size=case_generation_batch_size)
     # attack(output_file_cases, output_file_attack, output_file_attack_csv, test_generation_path)
     # create_promptfoo_cases(base_url, output_promptfoo, output_file_attack_promptfoo, test_generation_path)
-    # translate_case(output_file_cases, test_case_template_file, output_file_ready_cases, output_file_attack, output_file_attack_promptfoo)
+    translate_case(output_file_cases, test_case_template_file, output_file_ready_cases, output_file_attack, output_file_attack_promptfoo)
     return ''
 
 def main():
