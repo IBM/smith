@@ -72,7 +72,6 @@ Edit `scripts/.env` and fill in your values:
 | `BASE_URL` | Absolute path to your skill folder |
 | `OPENAI_API_KEY` | API key for your LLM provider |
 | `OPENAI_BASE_URL` | Base URL for LLM API endpoint |
-| `MODEL` | Model for policy refinement and analysis (i.e., duplication detection) (e.g., `GCP/claude-opus-4`) |
 | `MODEL_SONNET` | Model for test generation (e.g., `GCP/claude-4-sonnet`) |
 | `ARES_HOME` | Path to your ARES installation |
 
