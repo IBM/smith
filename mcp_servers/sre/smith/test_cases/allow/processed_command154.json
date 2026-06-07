@@ -1,0 +1,1 @@
+{"input": {"command": {"verb": "get", "resource": "services", "namespace": null, "args": [], "flags": [{"name": "--all-namespaces", "value": null}, {"name": "-l", "value": "redis-sentinel"}]}, "original_command": "kubectl get services --all-namespaces -l redis-sentinel"}}

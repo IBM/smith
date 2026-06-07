@@ -1,0 +1,1 @@
+{"input": {"command": {"verb": "get", "resource": "deployment", "namespace": "staging", "args": ["frontend"], "flags": [{"name": "-o", "value": "yaml"}, {"name": "-n", "value": "staging"}]}, "original_command": "kubectl get deployment frontend -o yaml -n staging"}}

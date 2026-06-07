@@ -1,0 +1,1 @@
+{"input": {"command": {"verb": "get", "resource": "pods", "namespace": "otel-demo", "args": [], "flags": [{"name": "-n", "value": "otel-demo"}, {"name": "-l", "value": "app.kubernetes.io/name=checkout"}]}, "original_command": "kubectl get pods -n otel-demo -l app.kubernetes.io/name=checkout"}}

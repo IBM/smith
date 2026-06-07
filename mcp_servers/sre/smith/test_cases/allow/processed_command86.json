@@ -1,0 +1,1 @@
+{"input": {"command": {"verb": "get", "resource": "cronjobs", "namespace": "default", "args": [], "flags": [{"name": "-n", "value": "default"}]}, "original_command": "kubectl get cronjobs -n default"}}

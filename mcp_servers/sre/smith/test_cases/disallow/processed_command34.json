@@ -1,0 +1,1 @@
+{"input": {"command": {"verb": "get", "resource": "secret", "namespace": "otel-demo", "args": ["quay-registry-secret"], "flags": [{"name": "-o", "value": "yaml"}, {"name": "-n", "value": "otel-demo"}]}, "original_command": "kubectl get secret quay-registry-secret -o yaml -n otel-demo"}}

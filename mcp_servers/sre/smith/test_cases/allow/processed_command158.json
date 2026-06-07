@@ -1,0 +1,1 @@
+{"input": {"command": {"verb": "describe", "resource": "deployment", "namespace": "otel-demo", "args": ["recommendation"], "flags": [{"name": "-n", "value": "otel-demo"}]}, "original_command": "kubectl describe deployment recommendation -n otel-demo"}}
