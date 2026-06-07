@@ -1,1 +1,0 @@
-{"input": {"command": {"verb": "describe", "resource": "node", "namespace": null, "args": ["i-01c3cf2df279dcbd6"], "flags": []}, "original_command": "kubectl describe node i-01c3cf2df279dcbd6"}}

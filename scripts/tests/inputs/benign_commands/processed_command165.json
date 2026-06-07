@@ -1,1 +1,0 @@
-{"input": {"command": {"verb": "get", "resource": "services", "namespace": "default", "args": [], "flags": [{"name": "-n", "value": "default"}, {"name": "-l", "value": "app=quote"}, {"name": "-o", "value": "yaml"}]}, "original_command": "kubectl get services -n default -l app=quote -o yaml"}}

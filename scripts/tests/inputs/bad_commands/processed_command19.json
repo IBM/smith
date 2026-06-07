@@ -1,1 +1,0 @@
-{"input": {"command": {"verb": "get", "resource": "pods", "namespace": null, "args": ["|", "grep", "frontend"], "flags": [{"name": "-A", "value": null}]}, "original_command": "kubectl get pods -A | grep frontend"}}

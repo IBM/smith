@@ -1,1 +1,0 @@
-{"input": {"command": {"verb": "describe", "resource": "deployment", "namespace": "production", "args": ["frontend-api"], "flags": [{"name": "-n", "value": "production"}]}, "original_command": "kubectl describe deployment frontend-api -n production"}}

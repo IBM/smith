@@ -1,1 +1,0 @@
-{"input": {"command": {"verb": "describe", "resource": "deployment", "namespace": null, "args": ["ad"], "flags": [{"name": "-A", "value": null}]}, "original_command": "kubectl describe deployment ad -A"}}

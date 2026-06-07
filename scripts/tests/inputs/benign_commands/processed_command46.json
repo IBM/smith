@@ -1,1 +1,0 @@
-{"input": {"command": {"verb": "describe", "resource": "ingresses", "namespace": null, "args": [], "flags": []}, "original_command": "kubectl describe ingresses"}}

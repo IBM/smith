@@ -1,1 +1,0 @@
-{"input": {"command": {"verb": "get", "resource": "deployment", "namespace": "default", "args": ["quote"], "flags": [{"name": "-n", "value": "default"}]}, "original_command": "kubectl get deployment quote -n default"}}

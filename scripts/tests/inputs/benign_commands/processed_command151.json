@@ -1,1 +1,0 @@
-{"input": {"command": {"verb": "get", "resource": "svc", "namespace": null, "args": ["flagd"], "flags": [{"name": "-o", "value": "jsonpath={.status.loadBalancer.ingress[0].hostname}"}]}, "original_command": "kubectl get svc flagd -o=jsonpath='{.status.loadBalancer.ingress[0].hostname}'"}}

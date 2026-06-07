@@ -1,1 +1,0 @@
-{"input": {"command": {"verb": "get", "resource": "deployments", "namespace": "openshift-monitoring", "args": [], "flags": [{"name": "-n", "value": "openshift-monitoring"}, {"name": "-o", "value": "yaml"}]}, "original_command": "kubectl get deployments -n openshift-monitoring -o yaml"}}
