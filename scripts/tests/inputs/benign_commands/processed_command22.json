@@ -1,1 +1,0 @@
-{"input": {"command": {"verb": "get", "resource": "deployment", "namespace": "complex-us", "args": ["backend-service"], "flags": [{"name": "-n", "value": "complex-us"}]}, "original_command": "kubectl get deployment backend-service -n complex-us"}}

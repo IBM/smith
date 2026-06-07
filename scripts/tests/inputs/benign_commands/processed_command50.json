@@ -1,1 +1,0 @@
-{"input": {"command": {"verb": "get", "resource": "service", "namespace": "default", "args": ["frontend-proxy"], "flags": [{"name": "-n", "value": "default"}, {"name": "-o", "value": "jsonpath={.metadata.labels}"}]}, "original_command": "kubectl get service frontend-proxy -n default -o jsonpath='{.metadata.labels}'"}}

@@ -1,1 +1,0 @@
-{"input": {"command": {"verb": "describe", "resource": "service", "namespace": null, "args": ["cart-service"], "flags": []}, "original_command": "kubectl describe service cart-service"}}

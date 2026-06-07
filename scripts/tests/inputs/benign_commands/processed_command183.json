@@ -1,1 +1,0 @@
-{"input": {"command": {"verb": "get", "resource": "service", "namespace": "production", "args": ["email-service"], "flags": [{"name": "-n", "value": "production"}]}, "original_command": "kubectl get service email-service -n production"}}

@@ -1,1 +1,0 @@
-{"input": {"command": {"verb": "describe", "resource": "pv", "namespace": null, "args": ["&&", "kubectl", "describe", "pvc"], "flags": []}, "original_command": "kubectl describe pv && kubectl describe pvc"}}

@@ -1,1 +1,0 @@
-{"input": {"command": {"verb": "describe", "resource": "pod", "namespace": "default", "args": [], "flags": [{"name": "--selector", "value": "app=frontend"}, {"name": "-n", "value": "default"}, {"name": "--sort-by", "value": ".metadata.creationTimestamp"}]}, "original_command": "kubectl describe pod --selector app=frontend -n default --sort-by=.metadata.creationTimestamp"}}

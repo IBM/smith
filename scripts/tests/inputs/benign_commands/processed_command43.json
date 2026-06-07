@@ -1,1 +1,0 @@
-{"input": {"command": {"verb": "describe", "resource": "service", "namespace": "otel-demo", "args": ["quote"], "flags": [{"name": "-n", "value": "otel-demo"}]}, "original_command": "kubectl describe service quote -n otel-demo"}}

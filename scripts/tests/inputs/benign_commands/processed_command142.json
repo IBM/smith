@@ -1,1 +1,0 @@
-{"input": {"command": {"verb": "describe", "resource": "pod", "namespace": "production", "args": ["email-service"], "flags": [{"name": "-n", "value": "production"}]}, "original_command": "kubectl describe pod email-service -n production"}}

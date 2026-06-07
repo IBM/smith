@@ -1,1 +1,0 @@
-{"input": {"command": {"verb": "describe", "resource": "deployment", "namespace": "default", "args": [], "flags": [{"name": "-n", "value": "default"}, {"name": "-l", "value": "service=frontend"}]}, "original_command": "kubectl describe deployment -n default -l service=frontend"}}

@@ -1,1 +1,0 @@
-{"input": {"command": {"verb": "describe", "resource": "secret", "namespace": "otel-demo", "args": ["product-catalog-dockercfg"], "flags": [{"name": "-n", "value": "otel-demo"}]}, "original_command": "kubectl describe secret product-catalog-dockercfg -n otel-demo"}}

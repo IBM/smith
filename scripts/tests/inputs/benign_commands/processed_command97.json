@@ -1,1 +1,0 @@
-{"input": {"command": {"verb": "create", "resource": "deployment", "namespace": "otel-demo", "args": ["adservice"], "flags": [{"name": "--image", "value": "adservice:latest"}, {"name": "-n", "value": "otel-demo"}]}, "original_command": "kubectl create deployment adservice --image=adservice:latest -n otel-demo"}}

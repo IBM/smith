@@ -1,1 +1,0 @@
-{"input": {"command": {"verb": "get", "resource": "events", "namespace": "otel-demo", "args": [], "flags": [{"name": "-n", "value": "otel-demo"}, {"name": "--field-selector", "value": "involvedObject.name=shipping-b6d77f95-wht4c"}]}, "original_command": "kubectl get events -n otel-demo --field-selector=involvedObject.name=shipping-b6d77f95-wht4c"}}

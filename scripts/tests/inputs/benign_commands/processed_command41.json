@@ -1,1 +1,0 @@
-{"input": {"command": {"verb": "get", "resource": "pods", "namespace": "checkout", "args": [], "flags": [{"name": "-n", "value": "checkout"}]}, "original_command": "kubectl get pods -n checkout"}}
