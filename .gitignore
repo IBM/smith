@@ -1,0 +1,11 @@
+__pycache__/
+smith.egg-info/
+*.pyc
+policy_generation/
+venv*
+.venv*
+.env
+scripts/test_generation/ares/assets/*generate*.json
+*.log
+scripts/tests/integration/*txt
+references/test_cases/

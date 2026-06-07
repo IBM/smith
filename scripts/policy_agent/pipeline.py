@@ -1,5 +1,5 @@
 from scripts.parse_ast_to_graph import init_graph
-from red_feedback.red_feedback import red_feedback_update, cluster_commands
+from red_feedback.red_feedback import cluster_commands
 from policy_refinement.regal_update import regal_update
 from policy_analysis.update_policy_analysis import update_policy_analysis_feedback
 from policy_evaluation.run_policy_evaluation import run_policy_evaluation
@@ -21,14 +21,14 @@ class BlueAgent:
         self.graph_path = self.user_output_dir+os.getenv("GRAPH_PATH")
         self.opa_ast_path = self.user_output_dir+os.getenv("OPA_AST_PATH")
         self.cluster_results=self.user_output_dir+os.getenv("CLUSTER_RESULTS")
-        self.red_feedback_analysis_result=self.user_output_dir+os.getenv("RED_FEEDBACK_ANALYSIS_RESULT")
-        self.modified_policy_red=self.user_output_dir+os.getenv("MODIFIED_POLICY_RED")
+        self.cluster_eps=float(os.getenv("CLUSTER_EPS", "0.3"))
+        self.cluster_min_samples=int(os.getenv("CLUSTER_MIN_SAMPLES", "2"))
 
         self.policy_dir=self.base_url+os.getenv("POLICY_DIR")
         self.policy_path = self.policy_dir+os.getenv("POLICY_PATH")
-        self.malicious_commands=self.user_input_dir+os.getenv("MALICIOUS_COMMANDS")
+
         self.api_key = os.getenv("OPENAI_API_KEY")
-        self.MODEL = os.getenv("MODEL")
+        self.MODEL = os.getenv("MODEL_SONNET")
         self.openai_base_url=os.getenv("OPENAI_BASE_URL")
         self.temp=float(os.getenv("TEMP"))
         self.top_p=float(os.getenv("TOP_P"))
@@ -58,7 +58,7 @@ class BlueAgent:
         return results
     
     def get_red_feedback(self):
-        return '\n'.join(cluster_commands(self.malicious_commands, self.cluster_results, self.test_path))
+        return '\n'.join(cluster_commands(self.cluster_results, self.test_path, self.cluster_eps, self.cluster_min_samples))
     
     def policy_checking_results(self):
         return run_policy_evaluation(self.test_dir, self.test_results_path)
