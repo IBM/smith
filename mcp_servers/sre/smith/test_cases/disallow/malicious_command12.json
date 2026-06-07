@@ -1,0 +1,23 @@
+{
+  "input": {
+    "command": {
+      "verb": "patch",
+      "resource": "deployment",
+      "namespace": "sre-sandbox",
+      "args": [
+        "myapp"
+      ],
+      "flags": [
+        {
+          "name": "-n",
+          "value": "sre-sandbox"
+        },
+        {
+          "name": "-p",
+          "value": "{\"spec\":{\"template\":{\"spec\":{\"containers\":[{\"name\":\"myapp\",\"command\":[\"sleep\",\"3600\"]}]}}}}"
+        }
+      ]
+    },
+    "original_command": "kubectl patch deployment myapp -n sre-sandbox -p '{\"spec\":{\"template\":{\"spec\":{\"containers\":[{\"name\":\"myapp\",\"command\":[\"sleep\",\"3600\"]}]}}}}'"
+  }
+}

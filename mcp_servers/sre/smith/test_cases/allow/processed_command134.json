@@ -1,0 +1,1 @@
+{"input": {"command": {"verb": "describe", "resource": "deployments,pods", "namespace": "otel-demo", "args": [], "flags": [{"name": "-n", "value": "otel-demo"}, {"name": "-l", "value": "app=checkout,shipping,frontend,frontend-proxy"}]}, "original_command": "kubectl describe deployments,pods -n otel-demo -l app=checkout,shipping,frontend,frontend-proxy"}}

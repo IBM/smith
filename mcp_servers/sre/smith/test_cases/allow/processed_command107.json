@@ -1,0 +1,1 @@
+{"input": {"command": {"verb": "describe", "resource": "service", "namespace": null, "args": ["recommendation"], "flags": []}, "original_command": "kubectl describe service recommendation"}}

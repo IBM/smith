@@ -1,0 +1,1 @@
+{"input": {"command": {"verb": "get", "resource": "pod", "namespace": null, "args": ["frontend-proxy"], "flags": [{"name": "-o", "value": "jsonpath={.metadata.namespace}"}]}, "original_command": "kubectl get pod frontend-proxy -o jsonpath='{.metadata.namespace}'"}}

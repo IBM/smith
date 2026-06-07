@@ -1,0 +1,1 @@
+{"input": {"command": {"verb": "logs", "resource": null, "namespace": "default", "args": ["checkout-service"], "flags": [{"name": "-n", "value": "default"}]}, "original_command": "kubectl logs checkout-service -n default"}}

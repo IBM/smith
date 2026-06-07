@@ -1,0 +1,1 @@
+{"input": {"command": {"verb": "describe", "resource": "namespace", "namespace": null, "args": ["clickhouse"], "flags": []}, "original_command": "kubectl describe namespace clickhouse"}}

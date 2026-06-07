@@ -1,0 +1,1 @@
+{"input": {"command": {"verb": "get", "resource": "deployment", "namespace": "<namespace>", "args": ["email-service"], "flags": [{"name": "-n", "value": "<namespace>"}]}, "original_command": "kubectl get deployment -n <namespace> email-service"}}

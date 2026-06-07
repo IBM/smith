@@ -1,0 +1,1 @@
+{"input": {"command": {"verb": "get", "resource": "networkpolicies", "namespace": "otel-demo", "args": [], "flags": [{"name": "-n", "value": "otel-demo"}, {"name": "--field-selector", "value": "metadata.name=shipping"}]}, "original_command": "kubectl get networkpolicies -n otel-demo --field-selector=metadata.name=shipping"}}
