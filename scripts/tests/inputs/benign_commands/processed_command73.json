@@ -1,1 +1,0 @@
-{"input": {"command": {"verb": "get", "resource": "pods", "namespace": "chaos-mesh", "args": [], "flags": [{"name": "-n", "value": "chaos-mesh"}]}, "original_command": "kubectl get pods -n chaos-mesh"}}

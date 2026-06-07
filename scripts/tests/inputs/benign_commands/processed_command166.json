@@ -1,1 +1,0 @@
-{"input": {"command": {"verb": "get", "resource": "endpoints", "namespace": "default", "args": ["frontend-proxy"], "flags": [{"name": "-n", "value": "default"}]}, "original_command": "kubectl get endpoints frontend-proxy -n default"}}

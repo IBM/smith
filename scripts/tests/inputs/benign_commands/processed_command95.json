@@ -1,1 +1,0 @@
-{"input": {"command": {"verb": "get", "resource": "deployment", "namespace": "checkout-service", "args": ["checkout"], "flags": [{"name": "-o", "value": "yaml"}, {"name": "-n", "value": "checkout-service"}]}, "original_command": "kubectl get deployment checkout -o yaml -n checkout-service"}}

@@ -1,1 +1,0 @@
-{"input": {"command": {"verb": "get", "resource": "pods", "namespace": "default", "args": [], "flags": [{"name": "-n", "value": "default"}, {"name": "-o", "value": "jsonpath={.items[?(@.metadata.labels.app==\"frontend\")].metadata.name}"}]}, "original_command": "kubectl get pods -n default -o jsonpath='{.items[?(@.metadata.labels.app==\"frontend\")].metadata.name}'"}}

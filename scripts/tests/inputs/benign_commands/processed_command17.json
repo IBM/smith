@@ -1,1 +1,0 @@
-{"input": {"command": {"verb": "logs", "resource": null, "namespace": "otel-demo", "args": ["cart-5d9d8f8986-v9jkm"], "flags": [{"name": "-n", "value": "otel-demo"}]}, "original_command": "kubectl logs cart-5d9d8f8986-v9jkm -n otel-demo"}}

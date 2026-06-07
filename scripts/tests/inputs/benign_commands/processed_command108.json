@@ -1,1 +1,0 @@
-{"input": {"command": {"verb": "get", "resource": "svc", "namespace": "default", "args": ["shipping-quote"], "flags": [{"name": "-n", "value": "default"}, {"name": "-o", "value": "yaml"}]}, "original_command": "kubectl get svc shipping-quote -n default -o yaml"}}

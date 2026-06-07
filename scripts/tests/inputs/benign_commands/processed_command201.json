@@ -1,1 +1,0 @@
-{"input": {"command": {"verb": "get", "resource": "endpoints", "namespace": "tracing", "args": [], "flags": [{"name": "-n", "value": "tracing"}]}, "original_command": "kubectl get endpoints -n tracing"}}

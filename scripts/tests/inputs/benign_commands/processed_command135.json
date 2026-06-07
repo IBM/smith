@@ -1,1 +1,0 @@
-{"input": {"command": {"verb": "describe", "resource": "pods", "namespace": "clickhouse", "args": [], "flags": [{"name": "-n", "value": "clickhouse"}]}, "original_command": "kubectl describe pods -n clickhouse"}}

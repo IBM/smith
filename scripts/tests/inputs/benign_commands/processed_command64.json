@@ -1,1 +1,0 @@
-{"input": {"command": {"verb": "get", "resource": "services", "namespace": "test-namespace", "args": [], "flags": [{"name": "-n", "value": "test-namespace"}]}, "original_command": "kubectl get services -n test-namespace"}}
