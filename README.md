@@ -212,18 +212,6 @@ smith --flag regal_suggestion # get regal suggestions
 smith --flag duplication_suggestion # get both LLM and graph generated duplication removal suggestions
 ```
 
-### Policy Visualization (Beta)
-
-Visualize the policy's rule dependency graph:
-
-```bash
-cd scripts/visualization
-python parse_graph_to_json.py
-python -m http.server 8000
-```
-
-Then open http://localhost:8000/graph.html in your browser.
-
 ## Project Structure
 
 ```
