@@ -483,7 +483,7 @@ def generate_html(grouped, flagged_cases, validation_metrics):
 if __name__ == "__main__":
     from dotenv import load_dotenv
     load_dotenv()
-    base_url = os.getenv("BASE_URL", os.getenv("BASE_SKILL_URL", ""))
+    base_url = os.getenv("BASE_URL", "")
     build_visualization(
         base_url + "references/test_cases.json",
         base_url + "references/decomp_attack_file.json",

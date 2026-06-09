@@ -283,7 +283,9 @@ def extract_rule_calls(module, G):
             index_to_count[str(index)]=0
         else:
             index_to_count[str(index)]=index_to_count[str(index)]+1
-        G.add_node(process_node_name(rule_name), type=head.get("value").get("type"), index=get_index(rule_name))
+        head_value = head.get("value")
+        node_type = head_value.get("type") if head_value else None
+        G.add_node(process_node_name(rule_name), type=node_type, index=get_index(rule_name))
         found_refs = head.get("ref")
         body=r.get("body") or []
         G=merge_with_body(rule_name, str(index)+'.'+str(index_to_count[str(index)]), body, found_refs, G)
