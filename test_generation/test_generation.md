@@ -4,11 +4,12 @@ To generate the test cases, run `smith --flag test_generation`.
 
 All test generation results are stored in the `./references/test_cases` folder.
 
-## Test Case Translation
+**Next step: suggestion to users** 
 
-To translate the test cases for OPA policy testing, run `smith --flag test_case_translation`.
+To prepare test cases for OPA policy testing, you can ask smith to translate test cases. This translates the generated test cases into the OPA input format.
 
-It tranlates and then overwrites test cases in the `./references/test_cases` folder.
+Additionally, you can evaluate the generated test cases to generate an evaluation repost. 
+
 
 ## Test Case Evaluation
 
@@ -22,3 +23,8 @@ This performs three steps:
 The final output is the report at `./references/test_case_report.html`.
 
 
+## Test Case Translation
+
+To translate the test cases for OPA policy testing, run `smith --flag test_case_translation`.
+
+It tranlates and then overwrites test cases in the `./references/test_cases` folder.
