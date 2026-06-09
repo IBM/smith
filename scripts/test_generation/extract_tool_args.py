@@ -18,6 +18,20 @@ def run_extract_tool_args(test_case_path, agent_url):
     miscalled_cases = []
     total_processed = 0
 
+    generated_cases_path = os.path.join(test_case_path, "malicious", "generated_cases")
+    for label in labels:
+        generated_label_path = os.path.join(generated_cases_path, label)
+        os.makedirs(generated_label_path, exist_ok=True)
+        label_path = os.path.join(test_case_path, label, "*")
+        files = sorted(glob.glob(label_path))
+        for file_path in files:
+            with open(file_path, "r") as f:
+                test_case = json.load(f)
+            if test_case["input"].get("name", "").lower() == "other":
+                dest = os.path.join(generated_label_path, os.path.basename(file_path))
+                os.rename(file_path, dest)
+                # print(f"  [OTHER] Moved {file_path} -> {dest}")
+
     for label in labels:
         label_path = os.path.join(test_case_path, label, "*")
         files = sorted(glob.glob(label_path))
