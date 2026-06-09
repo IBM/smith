@@ -18,9 +18,9 @@ from contextlib import asynccontextmanager
 
 # Load .env.  change to ollama models
 load_dotenv()
-api_key = os.getenv("OPENAI_API_KEY", None)
-api_url = os.getenv("OPENAI_BASE_URL", None)
-model = os.getenv("MODEL", None)
+api_key = os.getenv("RITS_API_KEY", None)
+api_url = os.getenv("RITS_BASE_URL", None)
+model = os.getenv("RITS_MODEL", None)
 if api_key is None or api_url is None:
     raise ValueError("OPENAI_API_KEY or OPENAI_API_BASE_URL url not defined in environment. Create a .env file")
 
@@ -141,40 +141,55 @@ tool_map_cache: Dict[str, str] = {}
 tools_json_cache: List[Dict[str, Any]] = []
 
 
+DEFAULT_USER_PROFILE = {
+    "user_role": "employee",
+    "user_department": "sales",
+    "user_name": "Bob",
+}
+
+
+def build_input_messages(question: str, user_profile: Dict[str, Any] = None, history: List[Dict[str, str]] = None) -> List[Dict[str, Any]]:
+    user_profile = user_profile or DEFAULT_USER_PROFILE
+    history = history or []
+    return [
+        {
+            "role": "system",
+            "content": (
+                "You are a professional HR. Use tools to answer user's questions."
+                + "\nThe current user's profile: "
+                + str(user_profile)
+                + "\nRULES: Focus on the current task. Memory is only for reference."
+                + "\nIMPORTANT: If a tool returns a denial message (starting with 🚫), simply relay that exact message without any explanation, elaboration, or additional context about policies, limits, or reasons."
+                + "\n" + str(history)
+            ),
+        },
+        {"role": "user", "content": "Current task/question: " + question},
+    ]
+
+
 class ChatRequest(BaseModel):
     question: str
     user_profile: Optional[Dict[str, Any]] = None
-    history: Optional[List[Dict[str, str]]] = None  
+    history: Optional[List[Dict[str, str]]] = None
 
 
 class ChatResponse(BaseModel):
     answer: str
 
+
+class ExtractToolCallRequest(BaseModel):
+    question: str
+    user_profile: Optional[Dict[str, Any]] = None
+
+
+class ExtractToolCallResponse(BaseModel):
+    tool_name: str
+    arguments: Dict[str, Any]
+
+
 @app.post("/chat", response_model=ChatResponse)
 async def chat_endpoint(req: ChatRequest):
-    user_profile = req.user_profile or {
-        "user_role": "employee",
-        "user_department": "sales",
-        "user_name": "Bob",
-    }
-
-    history = req.history or []
-
-    input_messages = [
-                {
-                    "role": "system",
-                    "content": (
-                        "You are a professional HR. Use tools to answer user's questions."
-                        + "\nThe current user's profile: "
-                        + str(user_profile)
-                        + "\nRULES: Focus on the current task. Memory is only for reference."
-                        + "\nIMPORTANT: If a tool returns a denial message (starting with 🚫), simply relay that exact message without any explanation, elaboration, or additional context about policies, limits, or reasons."
-                        + "\n" + str(history)
-                    ),
-                },
-                {"role": "user", "content": "Current task/question: " + req.question},
-            ]
-
+    input_messages = build_input_messages(req.question, req.user_profile, req.history)
 
     answer = await chat(
         input_messages=input_messages,
@@ -183,4 +198,24 @@ async def chat_endpoint(req: ChatRequest):
         connection_manager=connection_manager,
     )
     return ChatResponse(answer=answer)
+
+
+@app.post("/extract_tool_call", response_model=ExtractToolCallResponse)
+async def extract_tool_call_endpoint(req: ExtractToolCallRequest):
+    input_messages = build_input_messages(req.question, req.user_profile)
+
+    result = client.chat.completions.create(
+        model=model,
+        messages=input_messages,
+        tools=tools_json_cache,
+    )
+
+    if result.choices[0].finish_reason == "tool_calls":
+        tool_call = result.choices[0].message.tool_calls[0]
+        return ExtractToolCallResponse(
+            tool_name=tool_call.function.name,
+            arguments=json.loads(tool_call.function.arguments),
+        )
+
+    return ExtractToolCallResponse(tool_name="other", arguments={})
 

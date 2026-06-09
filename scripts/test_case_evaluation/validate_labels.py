@@ -305,7 +305,7 @@ def run_validation(
 
 
 if __name__ == "__main__":
-    base_url = os.getenv("BASE_SKILL_URL", os.getenv("BASE_URL", ""))
+    base_url = os.getenv("BASE_URL", "")
 
     test_cases_file = base_url + os.getenv("CASE_FILE", "references/test_cases.json")
     classified_promptfoo_file = base_url + os.getenv("CLASSIFIED_PROMPTFOO_FILE", "references/decomp_attack_file_promptfoo_classified.json")

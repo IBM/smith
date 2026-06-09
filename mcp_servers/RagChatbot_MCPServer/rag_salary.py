@@ -10,9 +10,9 @@ import os
 # Load environment variables
 load_dotenv()
 # Init components
-api_key = os.getenv("OPENAI_API_KEY", None)
-api_url = os.getenv("OPENAI_BASE_URL", None)
-model = os.getenv("MODEL", None)
+api_key = os.getenv("RITS_API_KEY", None)
+api_url = os.getenv("RITS_BASE_URL", None)
+model = os.getenv("RITS_MODEL", None)
 
 embeddings = HuggingFaceEmbeddings(model_name='BAAI/bge-small-en-v1.5')
 vector_store = InMemoryVectorStore(embeddings)

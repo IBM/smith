@@ -17,6 +17,10 @@ from test_generation.attack_promptfoo import create_promptfoo_cases
 from test_case_evaluation.classify_guidance import classify_promptfoo_cases
 from test_case_evaluation.validate_labels import run_validation
 from test_case_evaluation.visualization.build_report import build_visualization
+from policy_generation.extract_tools import extract_tools
+from test_generation.extract_extensions import run_extract_extensions
+from test_generation.extract_tool_args import run_extract_tool_args
+import asyncio
 
 
 load_dotenv()
@@ -53,9 +57,7 @@ class BlueAgent:
 
         self.modified_policy_deduplicate=self.user_output_dir+os.getenv("MODIFIED_POLICY_DEDUPLICATE")
         self.graph_suggestion_path= self.user_output_dir+os.getenv("GRAPH_SUGGESTION_PATH")
-        # shutil.copy(self.user_input_dir+os.getenv("POLICY_PATH"), self.policy_path)
-        self.G=init_graph(self.opa_ast_path, self.policy_dir, self.graph_path)
-        
+
     def get_regal_feedback(self):
         print("collecting regal feedbacks")
         return create_regal_suggestion(self.policy_path, self.regal_suggestion_path)
@@ -76,22 +78,28 @@ class BlueAgent:
 
 def generate_test(base_url, system_variables, api_key, openai_base_url, model, temp, top_p, guidance_file, output_file_decompose, output_file_attack, output_file_variables, output_file_attack_csv, test_case_template_file, output_file_ready_cases, output_file_grey_guidances, output_file_attack_promptfoo, test_generation_path, output_file_flatten, output_file_cases, output_promptfoo, case_generation_batch_size, batch_processing=False, batch_size=10, flatten_flag=False):
     flatten_flag=True
-    # decompose_guidance(api_key, system_variables, guidance_file, openai_base_url, model, temp, top_p, output_file_decompose, output_file_flatten, flatten_flag, batch_processing, batch_size)
-    # grey_extraction(api_key, system_variables, openai_base_url, model, temp, top_p, output_file_decompose, output_file_grey_guidances, batch_processing, batch_size)
-    # variable_extraction(api_key, system_variables, openai_base_url, model, temp, top_p, output_file_decompose, output_file_variables, batch_processing, batch_size)
-    # case_generation(api_key, system_variables, openai_base_url, model, temp, top_p, output_file_variables, output_file_cases, batch_processing, batch_size=case_generation_batch_size)
-    # attack(output_file_cases, output_file_attack, output_file_attack_csv, test_generation_path)
-    # create_promptfoo_cases(base_url, output_promptfoo, output_file_attack_promptfoo, test_generation_path)
+    decompose_guidance(api_key, system_variables, guidance_file, openai_base_url, model, temp, top_p, output_file_decompose, output_file_flatten, flatten_flag, batch_processing, batch_size)
+    grey_extraction(api_key, system_variables, openai_base_url, model, temp, top_p, output_file_decompose, output_file_grey_guidances, batch_processing, batch_size)
+    variable_extraction(api_key, system_variables, openai_base_url, model, temp, top_p, output_file_decompose, output_file_variables, batch_processing, batch_size)
+    case_generation(api_key, system_variables, openai_base_url, model, temp, top_p, output_file_variables, output_file_cases, batch_processing, batch_size=case_generation_batch_size)
+    attack(output_file_cases, output_file_attack, output_file_attack_csv, test_generation_path)
+    create_promptfoo_cases(base_url, output_promptfoo, output_file_attack_promptfoo, test_generation_path)
     translate_case(output_file_cases, test_case_template_file, output_file_ready_cases, output_file_attack, output_file_attack_promptfoo)
     return ''
 
 def main():
+
+    # model settings
     api_key = os.getenv("OPENAI_API_KEY")
     openai_base_url = os.getenv("OPENAI_BASE_URL")
-    base_url=os.getenv("BASE_URL")
     model = os.getenv("MODEL_SONNET")
     temp=float(os.getenv("TEMP"))
     top_p=float(os.getenv("TOP_P"))
+    
+    # project settings
+    base_url=os.getenv("BASE_URL")
+
+    # test case generation settings
     guidance_file=base_url+os.getenv("GUIDANCE_FILE")
     output_file_decompose=base_url+os.getenv("DECOMP_FILE")
     output_file_attack_csv=base_url+os.getenv("TEST_GENERATION_PATH")+os.getenv("ATTACK_FILE_CSV")
@@ -105,15 +113,31 @@ def main():
     output_promptfoo=base_url+os.getenv("PROMPTFOO_OUTPUT_FILE")
     output_file_attack_promptfoo=base_url+os.getenv("ATTACK_FILE_PROMPT")
     test_generation_path=base_url+os.getenv("TEST_GENERATION_PATH")
+    test_case_path = base_url + os.getenv("TEST_CASE_PATH", "references/test_cases/")
     system_variables={}
+    with open(system_var_file, encoding="utf-8") as f:
+        system_variables = json.load(f)
     output_file_flatten=base_url+os.getenv("FLATTEN_FILE")
     batch_processing=os.getenv("BATCH_PROCESSING", "false").lower() == "true"
     batch_size=int(os.getenv("BATCH_SIZE", "10"))
     case_generation_batch_size=int(os.getenv("CASE_GENERATION_BATCH_SIZE", "5"))
     
-    with open(system_var_file, encoding="utf-8") as f:
-        system_variables = json.load(f)
+    # test case eveluation settings
+    tier2_high = float(os.getenv("TIER2_HIGH_THRESHOLD", "0.70"))
+    tier2_low = float(os.getenv("TIER2_LOW_THRESHOLD", "0.35"))
+    max_llm = os.getenv("MAX_LLM_CALLS", None)
+    output_file_classified = base_url + os.getenv("CLASSIFIED_PROMPTFOO_FILE", "references/decomp_attack_file_promptfoo_classified.json")
+    top_n = int(os.getenv("CLASSIFY_TOP_N", "3"))
 
+    # target agent settings
+    transport = os.getenv("MCP_TRANSPORT", "sse")
+    mcp_url = os.getenv("MCP_URL", "http://localhost:8000/sse")
+    mcp_command = os.getenv("MCP_COMMAND", "python")
+    mcp_args = os.getenv("MCP_ARGS", "").split() if os.getenv("MCP_ARGS") else []
+    mcp_cwd = base_url + os.getenv("MCP_CWD") if os.getenv("MCP_CWD") else None
+    target_agent_path=os.getenv("TARGET_AGENT_PATH")
+    agent_url = os.getenv("AGENT_URL", "http://localhost:9000")
+    
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--flag', help='what advices you want to generate?')
@@ -133,18 +157,35 @@ def main():
         results=agent.get_red_feedback()
     if args.flag=="test_generation":
         generate_test(base_url, system_variables, api_key, openai_base_url, model, temp, top_p, guidance_file, output_file_decompose, output_file_attack, output_file_variables, output_file_attack_csv, test_case_template_file, output_file_ready_cases, output_file_grey_guidances, output_file_attack_promptfoo, test_generation_path, output_file_flatten, output_file_cases, output_promptfoo, case_generation_batch_size, batch_processing, batch_size)
+    if args.flag=="get_mcp_parameter":
+        target_agent_path = base_url + target_agent_path
+        output_file = os.path.join(target_agent_path, "smith", "tool_definitions.json")
+        result = asyncio.run(extract_tools(
+            transport=transport,
+            url=mcp_url,
+            command=mcp_command,
+            cmd_args=mcp_args,
+            cwd=mcp_cwd,
+        ))
+        os.makedirs(os.path.dirname(output_file), exist_ok=True)
+        with open(output_file, "w") as f:
+            json.dump(result, f, indent=2)
+        print(f"Extracted {len(result['tools'])} tools to {output_file}")
+        for tool in result["tools"]:
+            param_names = [p["name"] for p in tool["parameters"]]
+            print(f"  - {tool['name']} ({', '.join(param_names)})")
+    
+    if args.flag=="test_case_translation":
+        target_agent_path = base_url + target_agent_path
+        run_extract_tool_args(test_case_path, agent_url)
+
     if args.flag=="test_case_evaluation":
-        output_file_classified = base_url + os.getenv("CLASSIFIED_PROMPTFOO_FILE", "references/decomp_attack_file_promptfoo_classified.json")
-        top_n = int(os.getenv("CLASSIFY_TOP_N", "3"))
         # Step 1: Classify promptfoo cases to match them to guidance
         classify_promptfoo_cases(api_key, openai_base_url, model, temp, top_p,
                                   output_file_decompose, output_file_attack_promptfoo,
                                   output_file_classified, top_n=top_n)
         # Step 2: Validate labels (Tier 1 rules + Tier 2 NLI + Tier 3 LLM)
         validation_output = base_url + "references/label_validation_results.json"
-        tier2_high = float(os.getenv("TIER2_HIGH_THRESHOLD", "0.70"))
-        tier2_low = float(os.getenv("TIER2_LOW_THRESHOLD", "0.35"))
-        max_llm = os.getenv("MAX_LLM_CALLS", None)
         max_llm_calls = int(max_llm) if max_llm else None
 
         run_validation(

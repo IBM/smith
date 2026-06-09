@@ -10,6 +10,7 @@ def translate_case(output_file_cases, test_case_template_file, output_file_ready
     test_cases_translated["allow"]=[]
     test_cases_translated["disallow"]=[]
     test_cases_translated["malicious"]=[]
+    test_cases_translated["promptfoo_malicious"]=[]
 
     with open(output_file_cases, 'r') as f:
         test_cases=json.load(f)
@@ -47,7 +48,7 @@ def merge_with_ares(test_cases, output_file_attack):
             if len(test_cluster["attack_conditions"][attack_kind])>0:
                 for attack_case in test_cluster["attack_conditions"][attack_kind]:
                     formatted_test_case["user_input"]=attack_case
-                    test_cases.append(formatted_test_case)
+                    test_cases.append(dict(formatted_test_case))
 
     return test_cases
 
@@ -58,7 +59,7 @@ def merge_with_promptfoo(test_cases, output_file_attack_promptfoo):
         formatted_test_case={}
         formatted_test_case["action"]="Promptfoo"
         formatted_test_case["system_variables"]=test_cluster["system_variables"]
-        formatted_test_case["label"]="malicious"
+        formatted_test_case["label"]="promptfoo_malicious"
         formatted_test_case["user_input"]=test_cluster["user_input"]
         test_cases.append(formatted_test_case)
     return test_cases
@@ -73,6 +74,7 @@ def test_case_field_mapping(test_cases_translated, output_file_ready_cases):
             #     test_cases[test_case_index]["extensions"]["subject"]["permissions"].extend(["read:view_team_compensation", "export:file", "read:export_compensation_data", "write:email_compensation_report"])
             test_case_template_final={}
             test_case_template_final["input"]=test_cases[test_case_index]
+            os.makedirs(output_file_ready_cases+condition, exist_ok=True)
             with open(output_file_ready_cases+condition+"/test_case"+str(test_case_index)+".json", 'w') as f:
                 json.dump(test_case_template_final, f, indent=4)
     print("test case generation finished.")

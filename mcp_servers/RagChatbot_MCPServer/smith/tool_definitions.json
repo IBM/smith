@@ -1,0 +1,582 @@
+{
+  "tools": [
+    {
+      "name": "create_ticket",
+      "description": "\n       Create an inquiry ticket for user.\n\n       Parameters:\n           ticket_content (str): The drafted ticket content for user\n\n       Returns:\n           str: Confirmation of creating a ticket, and summary of ticket.\n    ",
+      "parameters": [
+        {
+          "name": "ticket_content",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "input_schema": {
+        "properties": {
+          "ticket_content": {
+            "title": "Ticket Content",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ticket_content"
+        ],
+        "title": "create_ticketArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "submit_ticket",
+      "description": "\n       Submit an inquiry ticket for user.\n\n       Parameters:\n           ticket_content (str): The ticket content use want to submit\n\n       Returns:\n           str: Confirmation of submission, and summary of ticket.\n    ",
+      "parameters": [
+        {
+          "name": "ticket_content",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "input_schema": {
+        "properties": {
+          "ticket_content": {
+            "title": "Ticket Content",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ticket_content"
+        ],
+        "title": "submit_ticketArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "send_email",
+      "description": "\n       Draft and send a general-purpose email that does NOT contain compensation, salary, payroll, or pay-related content. Use this for meeting notes, project updates, schedules etc. For compensation/salary-related emails, use email_compensation_report instead.\n\n       Parameters:\n           recipient_email (str): The recipient email address\n           subject (str): The email subject\n           body (str): The email body\n           email_content (str): The email content\n           attached_file (str): Attached file name in this email\n\n       Returns:\n           str: Confirmation of sending and email content. You should always present the email content to user.\n    ",
+      "parameters": [
+        {
+          "name": "recipient_email",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "subject",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "body",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "email_content",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "attached_file",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "input_schema": {
+        "properties": {
+          "recipient_email": {
+            "title": "Recipient Email",
+            "type": "string"
+          },
+          "subject": {
+            "title": "Subject",
+            "type": "string"
+          },
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "email_content": {
+            "title": "Email Content",
+            "type": "string"
+          },
+          "attached_file": {
+            "title": "Attached File",
+            "type": "string"
+          }
+        },
+        "required": [
+          "recipient_email",
+          "subject",
+          "body",
+          "email_content",
+          "attached_file"
+        ],
+        "title": "send_emailArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "export_content_as_file",
+      "description": "\n       Export data/content to a file\n\n       Parameters:\n           data (str): The data that user want to export\n           file_name (str): The file name user want to use\n\n       Returns:\n           str: if the data was successfully exported, and a summary of data content\n       ",
+      "parameters": [
+        {
+          "name": "data",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "file_name",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "input_schema": {
+        "properties": {
+          "data": {
+            "title": "Data",
+            "type": "string"
+          },
+          "file_name": {
+            "title": "File Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "file_name"
+        ],
+        "title": "export_content_as_fileArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "ask_for_workpolicy",
+      "description": "\n       Query and answer questions from a preloaded PDF document that includes working policy and regulation information.\n       Default: The PDF file is already loaded and indexed \u2014 no need to upload anything.\n\n       Parameters:\n           question (str): The question asked by the user.\n\n       Returns:\n           str: The answer generated using retrieved context from the PDF.\n       ",
+      "parameters": [
+        {
+          "name": "question",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "input_schema": {
+        "properties": {
+          "question": {
+            "title": "Question",
+            "type": "string"
+          }
+        },
+        "required": [
+          "question"
+        ],
+        "title": "ask_for_workpolicyArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "get_w2_form",
+      "description": "\n       Request to get my w2 form\n    ",
+      "parameters": [],
+      "input_schema": {
+        "properties": {},
+        "title": "get_w2_formArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "return_product",
+      "description": "\n       Request to make a return of a product\n\n       Parameters:\n           amount (str): Money will be refunded from this return\n           product_name (str): The name of the product the user wants to return\n\n       Returns:\n           str: Confirmation of return submission. You need to include product name in the response.\n    ",
+      "parameters": [
+        {
+          "name": "amount",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "product_name",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "input_schema": {
+        "properties": {
+          "amount": {
+            "title": "Amount",
+            "type": "integer"
+          },
+          "product_name": {
+            "title": "Product Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "amount",
+          "product_name"
+        ],
+        "title": "return_productArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "view_team_compensation",
+      "description": "\n    View and display team compensation/salary data on screen. Use this tool when the user wants to look at, check, or query compensation information interactively. Do NOT use this tool for exporting or downloading data as a file \u2014 use export_compensation_data instead.\n\n    Parameters:\n        select_fields (list[str] | None): Optional list of field names to include in each employee record. If None, all fields are returned. Available fields: employee_name, title, department, level, hire_date, base_salary, bonus_target, actual_bonus_2024, performance_rating, next_review_date, ssn, personal_email, home_address, emergency_contact, bank_account. When include_benefits is True, also available: healthcare_plan, healthcare_id, stock_grant_value, benefits_value, total_compensation\n        id (str | None): Optional employee ID to filter results to a specific team member.\n        department (str): Required. The department/team to view compensation data for. Must be one of: IT, HR, Sales, Finance, Legal, Operations, Marketing.\n        time_range (str): The time period for compensation data. Defaults to \"last_quarter\". Other options include \"current_year\", \"last_year\".\n        format (str): Output format for the report. \"JSON\" (default) or \"CSV\".\n        include_benefits (bool): Whether to include benefits data (stock grants, benefits value, total compensation). Defaults to True.\n\n    Returns actual employee compensation data including:\n    - Base salaries, bonuses, stock grants\n    - Performance ratings and review dates\n    - Team composition and reporting structure\n    ",
+      "parameters": [
+        {
+          "name": "department",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "select_fields",
+          "type": "any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "id",
+          "type": "any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "time_range",
+          "type": "string",
+          "required": false,
+          "default": "last_quarter"
+        },
+        {
+          "name": "format",
+          "type": "string",
+          "required": false,
+          "default": "JSON"
+        },
+        {
+          "name": "include_benefits",
+          "type": "boolean",
+          "required": false,
+          "default": true
+        }
+      ],
+      "input_schema": {
+        "properties": {
+          "department": {
+            "title": "Department",
+            "type": "string"
+          },
+          "select_fields": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Select Fields"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Id"
+          },
+          "time_range": {
+            "default": "last_quarter",
+            "title": "Time Range",
+            "type": "string"
+          },
+          "format": {
+            "default": "JSON",
+            "title": "Format",
+            "type": "string"
+          },
+          "include_benefits": {
+            "default": true,
+            "title": "Include Benefits",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "department"
+        ],
+        "title": "view_team_compensationArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "export_compensation_data",
+      "description": "\n    Export or download team compensation data as a file (CSV, PDF, or JSON) for business analysis. Use this tool ONLY when the user wants to export, download, save, or generate a file with compensation data. For viewing/querying compensation data interactively on screen, use view_team_compensation instead.\n\n    Parameters:\n        select_fields (list[str] | None): Optional list of field names to include in each employee record. If None, all fields are returned. Available fields: employee_id, name, title, level, current_salary, total_comp_2024, performance_rating. When export_type is \"detailed\", also available: salary_history, bonus_history.\n        id (str | None): Optional employee ID to filter results to a specific team member.\n        format (str): Output format for the export. \"CSV\" (default), \"PDF\", or \"JSON\".\n        time_range (str): The time period for compensation data. Defaults to \"last_quarter\".\n        export_type (str): Level of detail in the export. \"aggregated\" (default) for summary data, or \"detailed\" for historical salary and bonus breakdowns.\n        business_justification (str): Reason for the export request. Defaults to empty string.\n        external_sharing (bool): Whether the exported data will be shared externally. Defaults to False.\n\n    Generates detailed compensation exports with:\n    - Historical salary progression\n    - Performance correlation analysis\n    - Budget planning data\n    ",
+      "parameters": [
+        {
+          "name": "select_fields",
+          "type": "any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "id",
+          "type": "any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "format",
+          "type": "string",
+          "required": false,
+          "default": "CSV"
+        },
+        {
+          "name": "time_range",
+          "type": "string",
+          "required": false,
+          "default": "last_quarter"
+        },
+        {
+          "name": "export_type",
+          "type": "string",
+          "required": false,
+          "default": "aggregated"
+        },
+        {
+          "name": "business_justification",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "name": "external_sharing",
+          "type": "boolean",
+          "required": false,
+          "default": false
+        }
+      ],
+      "input_schema": {
+        "properties": {
+          "select_fields": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Select Fields"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Id"
+          },
+          "format": {
+            "default": "CSV",
+            "title": "Format",
+            "type": "string"
+          },
+          "time_range": {
+            "default": "last_quarter",
+            "title": "Time Range",
+            "type": "string"
+          },
+          "export_type": {
+            "default": "aggregated",
+            "title": "Export Type",
+            "type": "string"
+          },
+          "business_justification": {
+            "default": "",
+            "title": "Business Justification",
+            "type": "string"
+          },
+          "external_sharing": {
+            "default": false,
+            "title": "External Sharing",
+            "type": "boolean"
+          }
+        },
+        "title": "export_compensation_dataArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "email_compensation_report",
+      "description": "\n    Email compensation, salary, payroll, bonus, or pay-related reports to a recipient. Use this tool ONLY when the email content involves compensation or salary data. For general-purpose emails (meeting notes, project updates, schedules), use send_email instead.\n\n    Parameters:\n        destination (str): The recipient's email address. Domain is extracted for policy validation.\n        report_data (str): The compensation report content to send.\n        external_sharing (bool): Whether the report is being shared to an external recipient. Defaults to False.\n        encryption_required (bool): Whether the email should be encrypted. Defaults to True.\n    ",
+      "parameters": [
+        {
+          "name": "destination",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "report_data",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "external_sharing",
+          "type": "boolean",
+          "required": false,
+          "default": false
+        },
+        {
+          "name": "encryption_required",
+          "type": "boolean",
+          "required": false,
+          "default": true
+        }
+      ],
+      "input_schema": {
+        "properties": {
+          "destination": {
+            "title": "Destination",
+            "type": "string"
+          },
+          "report_data": {
+            "title": "Report Data",
+            "type": "string"
+          },
+          "external_sharing": {
+            "default": false,
+            "title": "External Sharing",
+            "type": "boolean"
+          },
+          "encryption_required": {
+            "default": true,
+            "title": "Encryption Required",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "destination",
+          "report_data"
+        ],
+        "title": "email_compensation_reportArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "purchase",
+      "description": "\n    Process purchase requests with realistic vendor catalog and approval workflows\n\n    Parameters:\n        amount (int): The purchase amount in dollars.\n        product_name (str): The name of the product to purchase. Matched against the vendor catalog.\n        category (str | None): Optional product category (e.g. \"office_supplies\", \"software\"). Auto-detected from catalog if not provided.\n        justification (str | None): Optional business justification for the purchase request.\n    ",
+      "parameters": [
+        {
+          "name": "amount",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "product_name",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "category",
+          "type": "any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "justification",
+          "type": "any",
+          "required": false,
+          "default": null
+        }
+      ],
+      "input_schema": {
+        "properties": {
+          "amount": {
+            "title": "Amount",
+            "type": "integer"
+          },
+          "product_name": {
+            "title": "Product Name",
+            "type": "string"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Category"
+          },
+          "justification": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Justification"
+          }
+        },
+        "required": [
+          "amount",
+          "product_name"
+        ],
+        "title": "purchaseArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "set_user_role",
+      "description": "\n       Set the current user role for policy enforcement\n       \n       Parameters:\n           user_role (str): The role to set (user, manager)\n           \n       Returns:\n           str: Confirmation of role change\n    ",
+      "parameters": [
+        {
+          "name": "user_role",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "input_schema": {
+        "properties": {
+          "user_role": {
+            "title": "User Role",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_role"
+        ],
+        "title": "set_user_roleArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "debug_user_context",
+      "description": "\n       Debug tool to check current user context\n       \n       Returns:\n           str: Current user context information\n    ",
+      "parameters": [],
+      "input_schema": {
+        "properties": {},
+        "title": "debug_user_contextArguments",
+        "type": "object"
+      }
+    }
+  ],
+  "source": "http://localhost:8000/sse",
+  "transport": "sse"
+}
