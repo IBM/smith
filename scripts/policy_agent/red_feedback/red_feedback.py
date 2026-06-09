@@ -65,7 +65,7 @@ def read_files(file_path, command_dict):
             command_dict[command]=line
     return commands, command_dict
 
-def cluster_commands(cluster_results, test_path):
+def cluster_commands(cluster_results, test_path, eps=0.3, min_samples=2):
     commands_fp=[]
     commands_fn=[]
     command_dict={}
@@ -75,14 +75,14 @@ def cluster_commands(cluster_results, test_path):
     commands_fn, command_dict=read_files(test_path+'fn.txt', command_dict)
     if len(commands_fn)<1:
         print("no false negatives found...")
-            
+
     model = SentenceTransformer("all-MiniLM-L6-v2")
     clusters=[]
     cluster_dict={}
 
     if len(commands_fp)>0:
         embeddings = model.encode(commands_fp)
-        clustering = DBSCAN(eps=0.3, min_samples=2, metric='cosine')
+        clustering = DBSCAN(eps=eps, min_samples=min_samples, metric='cosine')
         labels = clustering.fit_predict(embeddings)
         clusters.append("Benign commands that should be allowed: ")
         for command, label in zip(commands_fp, labels):
@@ -101,7 +101,7 @@ def cluster_commands(cluster_results, test_path):
     if len(commands_fn)>0:
         cluster_dict={}
         embeddings = model.encode(commands_fn)
-        clustering = DBSCAN(eps=0.3, min_samples=2, metric='cosine')
+        clustering = DBSCAN(eps=eps, min_samples=min_samples, metric='cosine')
         labels = clustering.fit_predict(embeddings)
         clusters.append("Malicious commands that should not get allowed: ")
         for command, label in zip(commands_fn, labels):

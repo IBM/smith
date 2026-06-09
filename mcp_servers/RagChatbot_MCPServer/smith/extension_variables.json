@@ -1,0 +1,4 @@
+{
+    "extension_variables": [],
+    "note": "All required context variables are already defined in system_vars.json (roles, teams, id, approval) and tool arguments"
+}

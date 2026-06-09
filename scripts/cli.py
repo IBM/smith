@@ -17,6 +17,10 @@ from test_generation.attack_promptfoo import create_promptfoo_cases
 from test_case_evaluation.classify_guidance import classify_promptfoo_cases
 from test_case_evaluation.validate_labels import run_validation
 from test_case_evaluation.visualization.build_report import build_visualization
+from policy_generation.extract_tools import extract_tools
+from test_generation.extract_extensions import run_extract_extensions
+from test_generation.extract_tool_args import run_extract_tool_args
+import asyncio
 
 
 load_dotenv()
@@ -76,12 +80,12 @@ class BlueAgent:
 
 def generate_test(base_url, system_variables, api_key, openai_base_url, model, temp, top_p, guidance_file, output_file_decompose, output_file_attack, output_file_variables, output_file_attack_csv, test_case_template_file, output_file_ready_cases, output_file_grey_guidances, output_file_attack_promptfoo, test_generation_path, output_file_flatten, output_file_cases, output_promptfoo, case_generation_batch_size, batch_processing=False, batch_size=10, flatten_flag=False):
     flatten_flag=True
-    # decompose_guidance(api_key, system_variables, guidance_file, openai_base_url, model, temp, top_p, output_file_decompose, output_file_flatten, flatten_flag, batch_processing, batch_size)
-    # grey_extraction(api_key, system_variables, openai_base_url, model, temp, top_p, output_file_decompose, output_file_grey_guidances, batch_processing, batch_size)
-    # variable_extraction(api_key, system_variables, openai_base_url, model, temp, top_p, output_file_decompose, output_file_variables, batch_processing, batch_size)
-    # case_generation(api_key, system_variables, openai_base_url, model, temp, top_p, output_file_variables, output_file_cases, batch_processing, batch_size=case_generation_batch_size)
-    # attack(output_file_cases, output_file_attack, output_file_attack_csv, test_generation_path)
-    # create_promptfoo_cases(base_url, output_promptfoo, output_file_attack_promptfoo, test_generation_path)
+    decompose_guidance(api_key, system_variables, guidance_file, openai_base_url, model, temp, top_p, output_file_decompose, output_file_flatten, flatten_flag, batch_processing, batch_size)
+    grey_extraction(api_key, system_variables, openai_base_url, model, temp, top_p, output_file_decompose, output_file_grey_guidances, batch_processing, batch_size)
+    variable_extraction(api_key, system_variables, openai_base_url, model, temp, top_p, output_file_decompose, output_file_variables, batch_processing, batch_size)
+    case_generation(api_key, system_variables, openai_base_url, model, temp, top_p, output_file_variables, output_file_cases, batch_processing, batch_size=case_generation_batch_size)
+    attack(output_file_cases, output_file_attack, output_file_attack_csv, test_generation_path)
+    create_promptfoo_cases(base_url, output_promptfoo, output_file_attack_promptfoo, test_generation_path)
     translate_case(output_file_cases, test_case_template_file, output_file_ready_cases, output_file_attack, output_file_attack_promptfoo)
     return ''
 
@@ -133,6 +137,37 @@ def main():
         results=agent.get_red_feedback()
     if args.flag=="test_generation":
         generate_test(base_url, system_variables, api_key, openai_base_url, model, temp, top_p, guidance_file, output_file_decompose, output_file_attack, output_file_variables, output_file_attack_csv, test_case_template_file, output_file_ready_cases, output_file_grey_guidances, output_file_attack_promptfoo, test_generation_path, output_file_flatten, output_file_cases, output_promptfoo, case_generation_batch_size, batch_processing, batch_size)
+    if args.flag=="get_mcp_parameter":
+        target_agent_path = base_url + os.getenv("TARGET_AGENT_PATH")
+        transport = os.getenv("MCP_TRANSPORT", "sse")
+        mcp_url = os.getenv("MCP_URL", "http://localhost:8000/sse")
+        mcp_command = os.getenv("MCP_COMMAND", "python")
+        mcp_args = os.getenv("MCP_ARGS", "").split() if os.getenv("MCP_ARGS") else []
+        mcp_cwd = base_url + os.getenv("MCP_CWD") if os.getenv("MCP_CWD") else None
+        output_file = os.path.join(target_agent_path, "smith", "tool_definitions.json")
+        result = asyncio.run(extract_tools(
+            transport=transport,
+            url=mcp_url,
+            command=mcp_command,
+            cmd_args=mcp_args,
+            cwd=mcp_cwd,
+        ))
+        os.makedirs(os.path.dirname(output_file), exist_ok=True)
+        with open(output_file, "w") as f:
+            json.dump(result, f, indent=2)
+        print(f"Extracted {len(result['tools'])} tools to {output_file}")
+        for tool in result["tools"]:
+            param_names = [p["name"] for p in tool["parameters"]]
+            print(f"  - {tool['name']} ({', '.join(param_names)})")
+    
+    if args.flag=="test_case_translation":
+        target_agent_path = base_url + os.getenv("TARGET_AGENT_PATH")
+        extension_vars_file = os.path.join(target_agent_path, "smith", "extension_variables.json")
+        test_case_path = base_url + os.getenv("TEST_CASE_PATH", "references/test_cases/")
+        agent_url = os.getenv("AGENT_URL", "http://localhost:9000")
+        run_extract_extensions(api_key, openai_base_url, model, temp, top_p, test_case_path, extension_vars_file)
+        run_extract_tool_args(test_case_path, agent_url)
+
     if args.flag=="test_case_evaluation":
         output_file_classified = base_url + os.getenv("CLASSIFIED_PROMPTFOO_FILE", "references/decomp_attack_file_promptfoo_classified.json")
         top_n = int(os.getenv("CLASSIFY_TOP_N", "3"))
