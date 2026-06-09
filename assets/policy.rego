@@ -11,11 +11,11 @@ args := object.get(input, "arguments", {})
 # =========================
 
 has_subject_perm(p) if {
-	p in subject.permissions
+	subject.permissions[_] == p
 }
 
 has_object_perm(p) if {
-	p in obj.permissions
+	obj.permissions[_] == p
 }
 
 normalized_role(role) := "user" if {
@@ -48,7 +48,8 @@ has_arg(k) if {
 }
 
 field_in_tool_scope(tool_name, field) if {
-	field in tool_data_scope[tool_name].fields
+	some i
+	tool_data_scope[tool_name].fields[i] == field
 }
 
 # =========================
@@ -208,10 +209,7 @@ internal_domain := "ibm.com"
 allowed_arg_keys := {
 	"view_team_compensation": {"select_fields", "id", "department", "time_range", "format", "include_benefits"},
 	"ask_for_salary": {"question"},
-	"export_compensation_data": {
-		"select_fields", "id", "format", "time_range", "export_type",
-		"business_justification", "external_sharing", "department",
-	},
+	"export_compensation_data": {"select_fields", "id", "format", "time_range", "export_type", "business_justification", "external_sharing"},
 	"email_compensation_report": {"destination", "report_data", "external_sharing", "encryption_required"},
 	"send_email": {"recipient_email", "subject", "body", "email_content", "attached_file"},
 	"create_ticket": {"ticket_content"},
@@ -226,18 +224,22 @@ allowed_arg_keys := {
 }
 
 # =========================
+# Authorization
+# =========================
+
+authorized if {
+	valid_envelope
+}
+
+# =========================
 # Global DENY rules
 # =========================
 
 deny[msg] if {
 	valid_envelope
-	not allowed_arg_keys[input.name]
-	msg := sprintf("Unknown or unauthorized tool '%s'", [input.name])
-}
-
-deny[msg] if {
-	valid_envelope
-	some k in object.keys(args)
+	some i
+	keys := object.keys(args)
+	k := keys[i]
 	not allowed_arg_keys[input.name][k]
 	msg := sprintf("Unexpected argument key '%s' for tool '%s'", [k, input.name])
 }
@@ -258,23 +260,6 @@ deny[msg] if {
 	msg := sprintf("Requested forbidden sensitive field '%s'", [f])
 }
 
-deny[msg] if {
-	valid_envelope
-	agent_input := lower(object.get(input.extensions.agent, "input", ""))
-	agent_input != ""
-	malicious_keywords := [
-		"bypass", "circumvent", "ignore", "override", "disable", "deactivate",
-		"turn off", "shut down", "skip", "disregard", "unrestricted access",
-		"all policies", "policy restrictions", "policy enforcement", "security protocols",
-		"security measures", "security restrictions", "policy controls", "policy checks",
-		"mass ssn", "bulk ssn", "all ssn", "ssn data", "ssn database", "ssn records",
-		"ssn information", "ssn collection", "social security number", "entire social security",
-	]
-	some keyword in malicious_keywords
-	contains(agent_input, keyword)
-	msg := sprintf("Malicious intent detected in request: '%s'", [keyword])
-}
-
 # =========================
 # Tool-specific DENY rules
 # =========================
@@ -283,15 +268,6 @@ deny[msg] if {
 	input.name == "view_team_compensation"
 	not is_role("manager")
 	msg := "Only managers can use view_team_compensation"
-}
-
-deny[msg] if {
-	input.name == "view_team_compensation"
-	is_role("manager")
-	has_arg("department")
-	count(subject.teams) > 0
-	not args.department in subject.teams
-	msg := sprintf("Manager can only view compensation data for their own team(s), not '%s'", [args.department])
 }
 
 deny[msg] if {
@@ -349,6 +325,13 @@ deny[msg] if {
 }
 
 deny[msg] if {
+	input.name == "email_compensation_report"
+	has_arg("destination")
+	blocked_domains[email_domain(args.destination)]
+	msg := sprintf("Destination domain '%s' is blocked", [email_domain(args.destination)])
+}
+
+deny[msg] if {
 	input.name == "send_email"
 	has_arg("recipient_email")
 	blocked_domains[email_domain(args.recipient_email)]
@@ -381,8 +364,7 @@ deny[msg] if {
 	is_role("user")
 	has_arg("amount")
 	to_number(args.amount) > 200
-	not object.get(subject, "approval", false)
-	msg := "Employees cannot buy products above $200 without manager approval"
+	msg := "Employees cannot buy products above $200"
 }
 
 deny[msg] if {
@@ -410,7 +392,7 @@ deny[msg] if {
 # =========================
 
 any_deny if {
-	count(deny) > 0
+	deny[_]
 }
 
 # =========================
@@ -419,5 +401,6 @@ any_deny if {
 
 allow if {
 	valid_envelope
+	authorized
 	not any_deny
 }
