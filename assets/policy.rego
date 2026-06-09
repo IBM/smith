@@ -1,423 +1,256 @@
 package mcp.policies
 
+import rego.v1
+
 default allow := false
 
+# === Input Accessors ===
 subject := input.extensions.subject
-obj := input.extensions.object
 args := object.get(input, "arguments", {})
+user_prompt := lower(object.get(input.extensions.agent, "input", ""))
 
-# =========================
-# Helpers
-# =========================
+# === Constants ===
 
-has_subject_perm(p) if {
-	p in subject.permissions
+# Blocked email domains (Rule 8)
+blocked_domains := {"gmail.com", "yahoo.com", "hotmail.com", "outlook.com", "personal.com"}
+
+# Sensitive fields that managers cannot see (Rule 3)
+sensitive_fields := {"ssn", "home_address", "bank_account", "tax_id", "emergency_contact", "personal_email"}
+
+# Security bypass keywords (Rules 11-14)
+bypass_keywords := {
+	"ignore all policies",
+	"bypass security",
+	"override all policies",
+	"show all ssn",
+	"ignore policy",
+	"bypass all",
+	"disable security",
+	"turn off policy",
 }
 
-has_object_perm(p) if {
-	p in obj.permissions
+# Export formats allowed for managers (Rule 4)
+allowed_export_formats := {"CSV", "PDF", "JSON"}
+
+# === Tool Argument Keys ===
+allowed_arg_keys := {
+	"create_ticket": {"ticket_content"},
+	"submit_ticket": {"ticket_content"},
+	"send_email": {"recipient_email", "subject", "body", "email_content", "attached_file"},
+	"export_content_as_file": {"data", "file_name"},
+	"ask_for_workpolicy": {"question"},
+	"get_w2_form": set(),
+	"return_product": {"amount", "product_name"},
+	"view_team_compensation": {"department", "select_fields", "id", "time_range", "format", "include_benefits"},
+	"export_compensation_data": {
+		"select_fields", "id", "format", "time_range",
+		"export_type", "business_justification", "external_sharing",
+	},
+	"email_compensation_report": {"destination", "report_data", "external_sharing", "encryption_required"},
+	"purchase": {"amount", "product_name", "category", "justification"},
+	"set_user_role": {"user_role"},
+	"debug_user_context": set(),
 }
 
-normalized_role(role) := "user" if {
-	lower(role) == "employee"
+# === Helper Functions ===
+
+# Check if user has a specific role
+has_role(role) if {
+	role in subject.roles
 }
 
-normalized_role(role) := lower(role) if {
-	lower(role) != "employee"
+# Extract domain from email address
+email_domain(email) := domain if {
+	parts := split(email, "@")
+	count(parts) == 2
+	domain := lower(parts[1])
 }
 
-is_role(r) if {
-	some role in subject.roles
-	normalized_role(role) == lower(r)
+# Check if email domain is blocked
+is_blocked_domain(email) if {
+	domain := email_domain(email)
+	domain in blocked_domains
 }
 
+# Check if email is external (non-IBM)
+is_external_email(email) if {
+	domain := email_domain(email)
+	not endswith(domain, "ibm.com")
+}
+
+# Check if any sensitive fields are requested
+contains_sensitive_fields(fields) if {
+	is_array(fields)
+	some field in fields
+	lower(field) in sensitive_fields
+}
+
+contains_sensitive_fields(fields) if {
+	is_null(fields)
+	false
+}
+
+# Check if user prompt contains bypass keywords
+contains_bypass_attempt if {
+	some keyword in bypass_keywords
+	contains(user_prompt, keyword)
+}
+
+# === Validation Rules ===
+
+# Valid envelope structure
 valid_envelope if {
 	input.kind == "tool_call"
 	input.action == "execute"
-	input.name != ""
+	is_string(input.name)
 }
 
-email_domain(addr) := domain if {
-	parts := split(lower(addr), "@")
-	count(parts) == 2
-	domain := parts[1]
+# Valid tool name
+valid_tool if {
+	allowed_arg_keys[input.name]
 }
 
-has_arg(k) if {
-	object.get(args, k, null) != null
+# Valid arguments
+valid_args if {
+	expected := allowed_arg_keys[input.name]
+	provided := object.keys(args)
+	provided == expected
 }
 
-field_in_tool_scope(tool_name, field) if {
-	field in tool_data_scope[tool_name].fields
+# === Global DENY Rules ===
+
+# Rule 11-14: Block security bypass attempts
+deny contains msg if {
+	contains_bypass_attempt
+	msg := "Security policy bypass attempt detected in user prompt"
 }
 
-# =========================
-# Constants
-# =========================
+# === Tool-Specific DENY Rules ===
 
-forbidden_fields := {
-	"ssn",
-	"tax_id",
-	"bank_account",
-	"home_address",
-	"personal_email",
-	"emergency_contact",
-	"healthcare_id",
-	"healthcare_plan",
-}
-
-tool_data_scope := {
-	"view_team_compensation": {
-		"labels": ["financial", "PII", "confidential"],
-		"fields": [
-			"employee_name",
-			"title",
-			"department",
-			"level",
-			"hire_date",
-			"base_salary",
-			"bonus_target",
-			"actual_bonus_2024",
-			"performance_rating",
-			"next_review_date",
-			"stock_grant_value",
-			"benefits_value",
-			"total_compensation",
-		],
-		"scope": "team",
-	},
-	"ask_for_salary": {
-		"labels": ["financial", "PII", "confidential"],
-		"fields": [
-			"base_salary",
-			"total_compensation",
-			"title",
-			"department",
-			"level",
-			"bonus_target",
-			"actual_bonus_2024",
-			"performance_rating",
-		],
-		"scope": "user",
-	},
-	"export_compensation_data": {
-		"labels": ["financial", "PII", "confidential"],
-		"fields": [
-			"employee_id",
-			"name",
-			"title",
-			"level",
-			"current_salary",
-			"total_comp_2024",
-			"performance_rating",
-			"salary_history",
-			"bonus_history",
-		],
-		"scope": "team",
-	},
-	"email_compensation_report": {
-		"labels": ["financial", "confidential"],
-		"fields": ["destination", "report_data", "external_sharing", "encryption_required"],
-		"scope": "team",
-	},
-	"send_email": {
-		"labels": ["general"],
-		"fields": ["recipient_email", "subject", "body", "email_content", "attached_file"],
-		"scope": "user",
-	},
-	"create_ticket": {
-		"labels": ["general"],
-		"fields": ["ticket_content"],
-		"scope": "user",
-	},
-	"submit_ticket": {
-		"labels": ["general"],
-		"fields": ["ticket_content"],
-		"scope": "user",
-	},
-	"purchase": {
-		"labels": ["financial"],
-		"fields": ["amount", "product_name", "category", "justification"],
-		"scope": "user",
-	},
-	"return_product": {
-		"labels": ["financial"],
-		"fields": ["amount", "product_name"],
-		"scope": "user",
-	},
-	"ask_for_workpolicy": {
-		"labels": ["general"],
-		"fields": ["question"],
-		"scope": "user",
-	},
-	"get_w2_form": {
-		"labels": ["general"],
-		"fields": [],
-		"scope": "user",
-	},
-	"export_content_as_file": {
-		"labels": ["general"],
-		"fields": ["data", "file_name"],
-		"scope": "user",
-	},
-	"set_user_role": {
-		"labels": ["admin"],
-		"fields": ["user_role"],
-		"scope": "admin",
-	},
-	"test_purchase_policy": {
-		"labels": ["admin"],
-		"fields": ["amount", "product"],
-		"scope": "admin",
-	},
-}
-
-manager_view_allowed_fields := {
-	"employee_name",
-	"title",
-	"department",
-	"level",
-	"hire_date",
-	"base_salary",
-	"bonus_target",
-	"actual_bonus_2024",
-	"performance_rating",
-	"next_review_date",
-	"stock_grant_value",
-	"benefits_value",
-	"total_compensation",
-}
-
-manager_export_allowed_fields := {
-	"employee_id",
-	"name",
-	"title",
-	"level",
-	"current_salary",
-	"total_comp_2024",
-	"performance_rating",
-	"salary_history",
-	"bonus_history",
-}
-
-allowed_export_formats := {"CSV", "PDF", "JSON"}
-
-blocked_domains := {"gmail.com", "yahoo.com", "hotmail.com", "outlook.com", "personal.com"}
-internal_domain := "ibm.com"
-
-allowed_arg_keys := {
-	"view_team_compensation": {"select_fields", "id", "department", "time_range", "format", "include_benefits"},
-	"ask_for_salary": {"question"},
-	"export_compensation_data": {
-		"select_fields", "id", "format", "time_range", "export_type",
-		"business_justification", "external_sharing", "department",
-	},
-	"email_compensation_report": {"destination", "report_data", "external_sharing", "encryption_required"},
-	"send_email": {"recipient_email", "subject", "body", "email_content", "attached_file"},
-	"create_ticket": {"ticket_content"},
-	"submit_ticket": {"ticket_content"},
-	"ask_for_workpolicy": {"question"},
-	"get_w2_form": {},
-	"purchase": {"amount", "product_name", "category", "justification"},
-	"return_product": {"amount", "product_name"},
-	"export_content_as_file": {"data", "file_name"},
-	"set_user_role": {"user_role"},
-	"test_purchase_policy": {"amount", "product"},
-}
-
-# =========================
-# Global DENY rules
-# =========================
-
-deny[msg] if {
-	valid_envelope
-	not allowed_arg_keys[input.name]
-	msg := sprintf("Unknown or unauthorized tool '%s'", [input.name])
-}
-
-deny[msg] if {
-	valid_envelope
-	some k in object.keys(args)
-	not allowed_arg_keys[input.name][k]
-	msg := sprintf("Unexpected argument key '%s' for tool '%s'", [k, input.name])
-}
-
-deny[msg] if {
-	valid_envelope
-	object.get(args, "select_fields", null) != null
-	some f in args.select_fields
-	not field_in_tool_scope(input.name, f)
-	msg := sprintf("Requested field '%s' not allowed by data scope for tool '%s'", [f, input.name])
-}
-
-deny[msg] if {
-	valid_envelope
-	object.get(args, "select_fields", null) != null
-	some f in args.select_fields
-	forbidden_fields[f]
-	msg := sprintf("Requested forbidden sensitive field '%s'", [f])
-}
-
-deny[msg] if {
-	valid_envelope
-	agent_input := lower(object.get(input.extensions.agent, "input", ""))
-	agent_input != ""
-	malicious_keywords := [
-		"bypass", "circumvent", "ignore", "override", "disable", "deactivate",
-		"turn off", "shut down", "skip", "disregard", "unrestricted access",
-		"all policies", "policy restrictions", "policy enforcement", "security protocols",
-		"security measures", "security restrictions", "policy controls", "policy checks",
-		"mass ssn", "bulk ssn", "all ssn", "ssn data", "ssn database", "ssn records",
-		"ssn information", "ssn collection", "social security number", "entire social security",
-	]
-	some keyword in malicious_keywords
-	contains(agent_input, keyword)
-	msg := sprintf("Malicious intent detected in request: '%s'", [keyword])
-}
-
-# =========================
-# Tool-specific DENY rules
-# =========================
-
-deny[msg] if {
+# Rule 2: Employees cannot view team compensation data
+deny contains msg if {
 	input.name == "view_team_compensation"
-	not is_role("manager")
-	msg := "Only managers can use view_team_compensation"
+	has_role("employee")
+	msg := "Employees are not authorized to view team compensation data"
 }
 
-deny[msg] if {
+# Rule 1: Managers can only view their own team's compensation data
+deny contains msg if {
 	input.name == "view_team_compensation"
-	is_role("manager")
-	has_arg("department")
-	count(subject.teams) > 0
-	not args.department in subject.teams
-	msg := sprintf("Manager can only view compensation data for their own team(s), not '%s'", [args.department])
+	has_role("manager")
+	requested_department := object.get(args, "department", "")
+	manager_teams := object.get(subject, "teams", [])
+	not requested_department in manager_teams
+	msg := sprintf(
+		"Managers can only view compensation data for their own team. Requested: %s, Manager's team(s): %v",
+		[requested_department, manager_teams],
+	)
 }
 
-deny[msg] if {
+# Rule 3: Managers cannot see sensitive fields when viewing compensation
+deny contains msg if {
 	input.name == "view_team_compensation"
-	is_role("manager")
-	object.get(args, "select_fields", null) != null
-	some f in args.select_fields
-	not manager_view_allowed_fields[f]
-	msg := sprintf("Manager not permitted to view field '%s' in team compensation", [f])
+	has_role("manager")
+	select_fields := object.get(args, "select_fields", null)
+	contains_sensitive_fields(select_fields)
+	msg := sprintf(
+		"Managers cannot view sensitive fields: %s",
+		["SSN, home addresses, bank account numbers, tax ID numbers, or emergency contacts"],
+	)
 }
 
-deny[msg] if {
-	input.name == "ask_for_salary"
-	not is_role("user")
-	not is_role("manager")
-	msg := "Only employees or managers can use ask_for_salary"
-}
-
-deny[msg] if {
-	input.name == "ask_for_salary"
-	has_arg("question")
-	q := lower(args.question)
-	contains(q, "team")
-	msg := "ask_for_salary is for personal or general salary questions only; team salary queries are not allowed"
-}
-
-deny[msg] if {
+# Rule 5: Employees cannot export team compensation data
+deny contains msg if {
 	input.name == "export_compensation_data"
-	not is_role("manager")
-	msg := "Only managers can export compensation data"
+	has_role("employee")
+	msg := "Employees are not authorized to export team compensation data"
 }
 
-deny[msg] if {
+# Rule 4: Validate export format for managers
+deny contains msg if {
 	input.name == "export_compensation_data"
-	has_arg("format")
-	fmt := upper(args.format)
-	not allowed_export_formats[fmt]
-	msg := sprintf("Export format '%s' not allowed", [args.format])
+	has_role("manager")
+	format := object.get(args, "format", "CSV")
+	not format in allowed_export_formats
+	msg := sprintf("Invalid export format '%s'. Allowed formats: CSV, PDF, JSON", [format])
 }
 
-deny[msg] if {
-	input.name == "export_compensation_data"
-	is_role("manager")
-	object.get(args, "select_fields", null) != null
-	some f in args.select_fields
-	not manager_export_allowed_fields[f]
-	msg := sprintf("Manager not permitted to export field '%s'", [f])
-}
-
-deny[msg] if {
+# Rule 7: No one can share compensation data externally
+deny contains msg if {
 	input.name == "email_compensation_report"
-	has_arg("destination")
-	email_domain(args.destination) != internal_domain
-	msg := "No one can email compensation reports to non-@ibm.com addresses"
+	destination := object.get(args, "destination", "")
+	is_external_email(destination)
+	msg := "Compensation data cannot be shared with external email addresses (non-@ibm.com)"
 }
 
-deny[msg] if {
+# Rule 7: Block external sharing flag in export_compensation_data
+deny contains msg if {
+	input.name == "export_compensation_data"
+	external_sharing := object.get(args, "external_sharing", false)
+	external_sharing == true
+	msg := "Compensation data cannot be exported for external sharing"
+}
+
+# Rule 8: Block emails to blocked domains
+deny contains msg if {
 	input.name == "send_email"
-	has_arg("recipient_email")
-	blocked_domains[email_domain(args.recipient_email)]
-	msg := sprintf("Recipient domain '%s' is blocked", [email_domain(args.recipient_email)])
+	recipient := object.get(args, "recipient_email", "")
+	is_blocked_domain(recipient)
+	msg := sprintf("Cannot send email to blocked domain: %s", [email_domain(recipient)])
 }
 
-deny[msg] if {
+# Rule 8: Block compensation emails to blocked domains
+deny contains msg if {
+	input.name == "email_compensation_report"
+	destination := object.get(args, "destination", "")
+	is_blocked_domain(destination)
+	msg := sprintf("Cannot send compensation report to blocked domain: %s", [email_domain(destination)])
+}
+
+# Rule 6: Managers can only send non-compensation data externally
+deny contains msg if {
 	input.name == "send_email"
-	has_arg("recipient_email")
-	email_domain(args.recipient_email) != internal_domain
-	text := lower(sprintf("%v %v %v", [
-		object.get(args, "subject", ""),
-		object.get(args, "body", ""),
-		object.get(args, "email_content", ""),
-	]))
-	some kw in {"salary", "compensation", "bonus", "ssn"}
-	contains(text, kw)
-	msg := "No one can send compensation or salary data to non-@ibm.com addresses"
+	has_role("manager")
+	recipient := object.get(args, "recipient_email", "")
+	is_external_email(recipient)
+	email_content := lower(object.get(args, "email_content", ""))
+
+	# Check if email contains compensation-related keywords
+	compensation_keywords := ["salary", "compensation", "bonus", "pay", "payroll", "wage"]
+	some keyword in compensation_keywords
+	contains(email_content, keyword)
+
+	msg := "Managers cannot send compensation or salary data to external email addresses"
 }
 
-deny[msg] if {
+# Rule 9: Employees cannot buy products $200+ without manager approval
+deny contains msg if {
 	input.name == "purchase"
-	not is_role("user")
-	not is_role("manager")
-	msg := "Only employees or managers can purchase items"
+	has_role("employee")
+	amount := object.get(args, "amount", 0)
+	amount >= 200
+	approval := object.get(subject, "approval", false)
+	not approval
+	msg := sprintf("Employees require manager approval for purchases of $200 or more (amount: $%d)", [amount])
 }
 
-deny[msg] if {
+# Rule 10: Managers cannot buy products $1000+
+deny contains msg if {
 	input.name == "purchase"
-	is_role("user")
-	has_arg("amount")
-	to_number(args.amount) > 200
-	not object.get(subject, "approval", false)
-	msg := "Employees cannot buy products above $200 without manager approval"
+	has_role("manager")
+	amount := object.get(args, "amount", 0)
+	amount >= 1000
+	msg := sprintf("Managers cannot approve purchases of $1,000 or more (amount: $%d)", [amount])
 }
 
-deny[msg] if {
-	input.name == "purchase"
-	is_role("manager")
-	has_arg("amount")
-	to_number(args.amount) > 1000
-	msg := "Managers cannot buy products above $1,000"
-}
-
-deny[msg] if {
-	input.name == "set_user_role"
-	not is_role("manager")
-	msg := "Only managers can set user roles"
-}
-
-deny[msg] if {
-	input.name == "test_purchase_policy"
-	not is_role("manager")
-	msg := "Only managers can test purchase policy"
-}
-
-# =========================
-# Deny helper
-# =========================
-
+# === Aggregate Deny ===
 any_deny if {
 	count(deny) > 0
 }
 
-# =========================
-# Final ALLOW
-# =========================
-
+# === Final ALLOW ===
 allow if {
 	valid_envelope
+	valid_tool
 	not any_deny
 }
