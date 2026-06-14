@@ -17,19 +17,30 @@ SYSTEM_PROMPT_BASE = "You are a research assistant that helps users discover aca
 
 
 class ChatRequest(BaseModel):
-    message: str
-    system_variables: Optional[Dict[str, str]] = None
+    question: str
+    user_profile: Optional[Dict[str, Any]] = None
 
 
 class ChatResponse(BaseModel):
     response: str
 
 
+class ExtractToolCallRequest(BaseModel):
+    question: str
+    user_profile: Optional[Dict[str, Any]] = None
+
+
+class ExtractToolCallResponse(BaseModel):
+    tool_name: str
+    arguments: Dict[str, Any]
+
+
 agent = None
 mcp_client = None
+llm_with_tools = None
 
 
-def build_system_prompt(system_variables: Optional[Dict[str, str]] = None) -> str:
+def build_system_prompt(system_variables: Optional[Dict[str, Any]] = None) -> str:
     prompt = SYSTEM_PROMPT_BASE
 
     if system_variables:
@@ -44,7 +55,7 @@ def build_system_prompt(system_variables: Optional[Dict[str, str]] = None) -> st
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global agent, mcp_client
+    global agent, mcp_client, llm_with_tools
 
     async with MultiServerMCPClient(
         {
@@ -57,13 +68,13 @@ async def lifespan(app: FastAPI):
     ) as mcp_client:
         tools = mcp_client.get_tools()
 
-        api_key = os.getenv("OPENAI_API_KEY", None)
-        api_url = os.getenv("OPENAI_BASE_URL", None)
-        model = os.getenv("MODEL", None)
+        api_key = os.getenv("RITS_API_KEY", None)
+        api_url = os.getenv("RITS_BASE_URL", None)
+        model = os.getenv("RITS_MODEL", None)
 
-        if api_key is None or api_url is None:
+        if api_key is None or api_url is None or model is None:
             raise ValueError(
-                "OPENAI_API_KEY or OPENAI_BASE_URL not defined in environment. Create a .env file."
+                "RITS_API_KEY, RITS_BASE_URL, or RITS_MODEL not defined in environment. Create a .env file."
             )
 
         llm = ChatOpenAI(
@@ -78,6 +89,9 @@ async def lifespan(app: FastAPI):
             tools=tools,
         )
 
+        # Bind the tools to the model for single-shot, non-executing tool extraction.
+        llm_with_tools = llm.bind_tools(tools)
+
         yield
 
 
@@ -86,19 +100,43 @@ app = FastAPI(lifespan=lifespan)
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat(req: ChatRequest):
-    system_prompt = build_system_prompt(req.system_variables)
+    system_prompt = build_system_prompt(req.user_profile)
 
     result = await agent.ainvoke(
         {
             "messages": [
                 ("system", system_prompt),
-                ("user", req.message),
+                ("user", req.question),
             ]
         }
     )
 
     final_message = result["messages"][-1].content
     return ChatResponse(response=final_message)
+
+
+@app.post("/extract_tool_call", response_model=ExtractToolCallResponse)
+async def extract_tool_call(req: ExtractToolCallRequest):
+    system_prompt = build_system_prompt(req.user_profile)
+
+    # Single non-executing model call: we only want the intended tool and its
+    # parameter values, so we do NOT run the tool (no WikiCFP request is made).
+    result = await llm_with_tools.ainvoke(
+        [
+            ("system", system_prompt),
+            ("user", req.question),
+        ]
+    )
+
+    if result.tool_calls:
+        tool_call = result.tool_calls[0]
+        return ExtractToolCallResponse(
+            tool_name=tool_call["name"],
+            arguments=tool_call.get("args", {}),
+        )
+
+    # No tool was called.
+    return ExtractToolCallResponse(tool_name="other", arguments={})
 
 
 @app.get("/health")
