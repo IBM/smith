@@ -1,0 +1,48 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "view_team_compensation",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "roles": [
+                    "employee"
+                ],
+                "teams": [
+                    "Marketing"
+                ]
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Can I see what bonuses were paid to my colleagues?",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "department": "Marketing",
+            "select_fields": [
+                "employee_name",
+                "title",
+                "base_salary",
+                "actual_bonus_2024",
+                "performance_rating"
+            ],
+            "time_range": "last_quarter",
+            "format": "JSON",
+            "include_benefits": false
+        }
+    }
+}

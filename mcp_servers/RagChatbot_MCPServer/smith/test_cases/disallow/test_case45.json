@@ -1,0 +1,35 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "email_compensation_report",
+        "extensions": {
+            "subject": {
+                "claims": {}
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Send the compensation report to external.consultant@acme.com",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "destination": "external.consultant@acme.com",
+            "report_data": "Compensation report for Q4 2024 including base salaries, bonuses, and performance ratings for all departments.",
+            "external_sharing": true,
+            "encryption_required": true
+        }
+    }
+}

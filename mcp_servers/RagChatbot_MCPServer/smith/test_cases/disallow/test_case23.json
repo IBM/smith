@@ -1,0 +1,49 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "view_team_compensation",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "roles": [
+                    "employee"
+                ],
+                "teams": [
+                    "Operations"
+                ]
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Please show me the incentive payments for our department",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "department": "Operations",
+            "select_fields": [
+                "employee_name",
+                "title",
+                "base_salary",
+                "bonus_target",
+                "actual_bonus_2024",
+                "performance_rating"
+            ],
+            "time_range": "current_year",
+            "format": "JSON",
+            "include_benefits": true
+        }
+    }
+}
