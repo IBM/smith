@@ -1,9 +1,0 @@
-requests>=2.28.0
-mcp
-fastapi>=0.95.0
-uvicorn>=0.21.0
-pydantic>=1.10.0
-langchain-openai
-langgraph
-langchain-mcp-adapters
-python-dotenv

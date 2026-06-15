@@ -156,14 +156,14 @@ If all guidance rules can be fully enforced with existing system variables and t
 
 Run:
 ```bash
-python scripts/policy_generation/validate_policy.py \
-    --policy <TARGET_AGENT_PATH>/smith/policy_generated.rego
+smith --flag policy_validation \
+    --policy_path <TARGET_AGENT_PATH>/smith/policy_generated.rego
 ```
 
-If validation fails, fix errors and re-run. Use `--fix` to auto-format:
+If validation fails, fix errors and re-run. Use `policy_validation_fix` to auto-format:
 ```bash
-python scripts/policy_generation/validate_policy.py \
-    --policy <TARGET_AGENT_PATH>/smith/policy_generated.rego --fix
+smith --flag policy_validation_fix \
+    --policy_path <TARGET_AGENT_PATH>/smith/policy_generated.rego
 ```
 
 ---
