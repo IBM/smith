@@ -18,6 +18,7 @@ from test_case_evaluation.classify_guidance import classify_promptfoo_cases
 from test_case_evaluation.validate_labels import run_validation
 from test_case_evaluation.visualization.build_report import build_visualization
 from policy_generation.extract_tools import extract_tools
+from policy_generation.validate_policy import validate_policy, fix_and_validate_policy
 from test_generation.extract_extensions import run_extract_extensions
 from test_generation.extract_tool_args import run_extract_tool_args
 import asyncio
@@ -138,6 +139,7 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--flag', help='what advices you want to generate?')
+    parser.add_argument('--policy_path', help='path to the .rego policy file (for policy_validation/policy_validation_fix)')
     args = parser.parse_args()
     agent=BlueAgent()
     
@@ -234,6 +236,20 @@ def main():
             report_output,
         )
         print(f"\nFinal report: {report_output}")
+
+    if args.flag == "policy_validation":
+        if not args.policy_path:
+            print("ERROR: --policy_path is required for policy_validation")
+            exit(1)
+        if not validate_policy(args.policy_path):
+            exit(1)
+
+    if args.flag == "policy_validation_fix":
+        if not args.policy_path:
+            print("ERROR: --policy_path is required for policy_validation_fix")
+            exit(1)
+        if not fix_and_validate_policy(args.policy_path):
+            exit(1)
 
 
 if __name__ == "__main__":
