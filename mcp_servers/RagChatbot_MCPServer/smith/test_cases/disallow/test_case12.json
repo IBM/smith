@@ -1,0 +1,48 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "view_team_compensation",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "roles": [
+                    "manager"
+                ],
+                "teams": [
+                    "Legal"
+                ]
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "I want to see the department information for Sales team members",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "department": "Sales",
+            "select_fields": [
+                "employee_name",
+                "title",
+                "department",
+                "level",
+                "hire_date"
+            ],
+            "time_range": "current_year",
+            "format": "JSON",
+            "include_benefits": false
+        }
+    }
+}

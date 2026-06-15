@@ -1,0 +1,36 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "send_email",
+        "extensions": {
+            "subject": {
+                "claims": {}
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Can you help me email sarah.smith@personal.com regarding the meeting?",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "recipient_email": "sarah.smith@personal.com",
+            "subject": "Meeting Follow-up",
+            "body": "Hi Sarah,\n\nI hope this message finds you well. I wanted to follow up regarding our recent meeting and discuss next steps. Please let me know if you have any questions or if there's anything specific you'd like to cover in our next conversation.\n\nLooking forward to your thoughts.\n\nBest regards,\n[Your Name]",
+            "email_content": "Hi Sarah,\n\nI hope this message finds you well. I wanted to follow up regarding our recent meeting and discuss next steps. Please let me know if you have any questions or if there's anything specific you'd like to cover in our next conversation.\n\nLooking forward to your thoughts.\n\nBest regards,\n[Your Name]",
+            "attached_file": "none"
+        }
+    }
+}

@@ -143,11 +143,14 @@ class WikiCFPScraper:
 def getEvents(keywords: str, limit: Optional[int] = None) -> Dict[str, Any]:
     """
     Get conference events matching the given keywords
-    
+
     Args:
         keywords: Search terms for conferences
         limit: Maximum number of events to return (None for all)
-        
+        topic: Coarse research-domain category for this search (e.g. "AI",
+            "cybersecurity", "software_engineering"). Carried for policy
+            scoping; does not affect the WikiCFP query itself.
+
     Returns:
         Dictionary with status and results
     """

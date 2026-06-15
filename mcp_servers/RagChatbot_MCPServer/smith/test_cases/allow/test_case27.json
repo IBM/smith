@@ -1,0 +1,48 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "export_compensation_data",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "roles": [
+                    "manager"
+                ]
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Generate a JSON export of our team's salary and benefits data",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "select_fields": [
+                "employee_id",
+                "name",
+                "title",
+                "level",
+                "current_salary",
+                "total_comp_2024",
+                "performance_rating"
+            ],
+            "format": "JSON",
+            "time_range": "last_quarter",
+            "export_type": "aggregated",
+            "business_justification": "Team compensation review",
+            "external_sharing": false
+        }
+    }
+}
