@@ -1,0 +1,36 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "send_email",
+        "extensions": {
+            "subject": {
+                "claims": {}
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Send an email to john.doe@gmail.com about the meeting",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "recipient_email": "john.doe@gmail.com",
+            "subject": "Meeting Update",
+            "body": "Hi John, just wanted to confirm our meeting details.",
+            "email_content": "Hi John,\n\nJust wanted to confirm our meeting details. Let me know if you need to reschedule.\n\nBest regards,\n[Your Name]",
+            "attached_file": "none"
+        }
+    }
+}
