@@ -50,12 +50,9 @@ class BlueAgent:
 
         self.regal_suggestion_path=self.user_output_dir+os.getenv("REGAL_SUGGESTION_PATH")
         self.regal_result_output=self.user_output_dir+os.getenv("REGAL_RESULT_OUTPUT")
-        self.modified_policy_regal=self.user_output_dir+os.getenv("MODIFIED_POLICY_REGAL")
         self.test_dir=self.base_url+"scripts/"
         self.test_path=self.test_dir+os.getenv("TEST_PATH")
         self.test_results_path=self.test_path+os.getenv("TEST_RESULT_PATH")
-
-        self.modified_policy_deduplicate=self.user_output_dir+os.getenv("MODIFIED_POLICY_DEDUPLICATE")
         self.graph_suggestion_path= self.user_output_dir+os.getenv("GRAPH_SUGGESTION_PATH")
 
     def get_regal_feedback(self):
@@ -156,7 +153,32 @@ def main():
     if args.flag=="red_suggestion":
         results=agent.get_red_feedback()
     if args.flag=="test_generation":
-        generate_test(base_url, system_variables, api_key, openai_base_url, model, temp, top_p, guidance_file, output_file_decompose, output_file_attack, output_file_variables, output_file_attack_csv, test_case_template_file, output_file_ready_cases, output_file_grey_guidances, output_file_attack_promptfoo, test_generation_path, output_file_flatten, output_file_cases, output_promptfoo, case_generation_batch_size, batch_processing, batch_size)
+        generate_test(
+            base_url, 
+            system_variables, 
+            api_key, 
+            openai_base_url, 
+            model, 
+            temp, 
+            top_p, 
+            guidance_file, 
+            output_file_decompose, 
+            output_file_attack, 
+            output_file_variables, 
+            output_file_attack_csv, 
+            test_case_template_file, 
+            output_file_ready_cases, 
+            output_file_grey_guidances, 
+            output_file_attack_promptfoo, 
+            test_generation_path, 
+            output_file_flatten, 
+            output_file_cases, 
+            output_promptfoo, 
+            case_generation_batch_size, 
+            batch_processing, 
+            batch_size
+            )
+
     if args.flag=="get_mcp_parameter":
         target_agent_path = base_url + target_agent_path
         output_file = os.path.join(target_agent_path, "smith", "tool_definitions.json")

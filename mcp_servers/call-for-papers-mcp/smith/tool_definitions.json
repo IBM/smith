@@ -1,0 +1,51 @@
+{
+  "tools": [
+    {
+      "name": "get_events",
+      "description": "Search for conferences matching specific keywords.\n\n    Args:\n        keywords: Free-text search terms passed to WikiCFP (e.g. \"deep learning\", \"NLP\").\n        topic: The research-domain category this search belongs to. Must be\n            EXACTLY one of these three approved values (verbatim, including\n            capitalization): \"Artificial intelligence\", \"Cybersecurity and\n            privacy\", \"Software engineering\". Used for policy-level topic\n            scoping against the agent's approved topics.\n        limit: Maximum number of events to return.\n    ",
+      "parameters": [
+        {
+          "name": "keywords",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "topic",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "limit",
+          "type": "integer",
+          "required": false,
+          "default": 10
+        }
+      ],
+      "input_schema": {
+        "properties": {
+          "keywords": {
+            "title": "Keywords",
+            "type": "string"
+          },
+          "topic": {
+            "title": "Topic",
+            "type": "string"
+          },
+          "limit": {
+            "default": 10,
+            "title": "Limit",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "keywords",
+          "topic"
+        ],
+        "title": "get_eventsArguments",
+        "type": "object"
+      }
+    }
+  ],
+  "source": "python server.py",
+  "transport": "stdio"
+}
