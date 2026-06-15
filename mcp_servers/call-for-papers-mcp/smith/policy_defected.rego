@@ -91,45 +91,12 @@ deny[msg] if {
 	msg := sprintf("Topic contains disallowed keyword '%s'", [keyword])
 }
 
-# Deny if keywords contain disallowed terms
-deny[msg] if {
-	input.name == "get_events"
-	keywords := lower(object.get(args, "keywords", ""))
-	keyword := disallowed_keywords[_]
-	contains(keywords, lower(keyword))
-	msg := sprintf("Keywords contain disallowed term '%s'", [keyword])
-}
-
 # Deny if limit exceeds absolute maximum
 deny[msg] if {
 	input.name == "get_events"
 	limit := object.get(args, "limit", 10)
 	limit > absolute_max_limit
 	msg := sprintf("Limit %d exceeds absolute maximum of %d", [limit, absolute_max_limit])
-}
-
-# Deny if limit exceeds role-specific maximum
-deny[msg] if {
-	input.name == "get_events"
-	limit := object.get(args, "limit", 10)
-	user_roles := object.get(subject, "user_role", [])
-	role := user_roles[_]
-	role in allowed_roles
-	max_for_role := max_limit_by_role[role]
-	limit > max_for_role
-	msg := sprintf("Limit %d exceeds maximum of %d for role '%s'", [limit, max_for_role, role])
-}
-
-# Deny if PhD student searches outside their declared research area
-deny[msg] if {
-	input.name == "get_events"
-	user_roles := object.get(subject, "user_role", [])
-	"phd_student" in user_roles
-	not "faculty" in user_roles
-	topic := object.get(args, "topic", "")
-	research_areas := object.get(subject, "research_area", [])
-	count({a | a := research_areas[_]; a == topic}) == 0
-	msg := sprintf("PhD students must search within their declared research area. Topic '%s' not in: %v", [topic, research_areas])
 }
 
 # === Collect All Denials ===
