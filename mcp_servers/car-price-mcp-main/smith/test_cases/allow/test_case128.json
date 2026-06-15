@@ -1,0 +1,36 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "search_car_price",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "user_name": "Bob",
+                "user_role": [
+                    "analyst"
+                ]
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "I want to check Mercedes-Benz pricing data",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "brand_name": "Mercedes-Benz"
+        }
+    }
+}
