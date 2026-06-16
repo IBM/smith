@@ -81,20 +81,32 @@ Edit `.env` and fill in your values:
 
 | Variable | Description |
 |----------|-------------|
-| `BASE_URL` | Absolute path to your skill folder |
+| `BASE_URL` | Absolute path to your skill folder, e.g., your path/.bob/skills/smith/ |
 | `OPENAI_API_KEY` | API key for your LLM provider |
 | `OPENAI_BASE_URL` | Base URL for LLM API endpoint |
-| `MODEL_SONNET` | Model for test generation (e.g., `GCP/claude-4-sonnet`) |
-| `AGENT_URL` | URL of the target agent server's endpoint (e.g., `http://localhost:9000`) |
-| `MCP_URL` | MCP server URL (for SSE transport), default is `http://localhost:8000/sse` |
+| `MODEL_SONNET` | Model for test generation (e.g., `GCP/claude-4-sonnet` by default) |
+| `AGENT_URL` | URL of the target agent server's endpoint (e.g., `http://localhost:9000` by default) |
+| `MCP_URL` | MCP server URL (only for SSE transport), default is `http://localhost:8000/sse` |
 | `MCP_TRANSPORT` | MCP transport type (`sse` or `stdio`) |
-| `TARGET_AGENT_PATH` | Relative path to the target MCP server directory |
-| `GUIDANCE_FILE` | Path to the policy guidance file for the target agent |
+| `TARGET_AGENT_PATH` | Relative path to the target MCP server directory, e.g., `mcp_servers/RagChatbot_MCPServer/` for HR agent |
+| `GUIDANCE_FILE` | Path to the policy guidance file for the target agent, e.g., `mcp_servers/RagChatbot_MCPServer/smith/guidance.txt` for HR agent |
 
 
 ### Deployment
 
 Place the entire `smith` folder under the `skills/` or `plugin/` directory of your code agent.
+
+#### Instructions for using HR agent example
+1. Ask smith to generate an initial policy for the targeted agent
+2. Generate the test cases, translate and evaluate the test cases: can be replaced with the following CLI commands:
+```bash
+smith --flag test_generation
+smith --flag test_case_evaluation # could be skipped
+smith --flag test_case_translation
+```
+3. Ask smith to test existing policy. If smith identifies failed test cases, ask it to improve the existing policy.
+
+
 
 ## How It Works
 
@@ -102,7 +114,7 @@ Smith operates as an agent skill with a CLI backend. The AI agent reads instruct
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────┐
-│                                  Smith                                    │
+│                                  Smith                                   │
 │                                                                          │
 │  SKILL.md ──→ Orchestration ──→ smith CLI                                │
 │                                    │                                     │
@@ -142,6 +154,7 @@ The policy only references data available from tool arguments and system variabl
 The agent follows `test_generation/test_generation.md` to generate test cases through a multi-stage pipeline:
 
 ```bash
+# CLI commands used for test case generation
 smith --flag test_generation
 ```
 
@@ -157,6 +170,7 @@ All results are stored in `./references/test_cases/`.
 ### Test Case Evaluation
 
 ```bash
+# CLI commands used for test case evaluation
 smith --flag test_case_evaluation
 ```
 
@@ -181,6 +195,7 @@ python build_report.py
 ### Test Case Translation
 
 ```bash
+# CLI commands used for test case translation
 smith --flag test_case_translation
 ```
 
@@ -194,6 +209,7 @@ Calls the agent's `/extract_tool_call` endpoint to extract tool names and argume
 Evaluate the current policy against all test cases and report pass/fail with coverage metrics.
 
 ```bash
+# CLI commands used in policy testing
 smith --flag policy_testing
 ```
 
@@ -202,8 +218,8 @@ smith --flag policy_testing
 Iterative improvement workflow:
 
 1. **Red Feedback** — Cluster failed malicious inputs and patch policy rules, following `opa_policy/policy_patch/policy_patch.md`
-2. **Regal Formatting** — Lint and format policy with [Regal](https://github.com/StyraInc/regal). It follows `opa_policy/policy_duplication/policy_duplication.md`
-3. **Duplication Removal** — Detect and remove redundant rules via graph analysis, LLM review, and voting.
+2. **Regal Formatting** — Lint and format policy with [Regal](https://github.com/StyraInc/regal). It follows `opa_policy/policy_regal/policy_regal.md`
+3. **Duplication Removal** — Detect and remove redundant rules via graph analysis, LLM review, and voting. It follows `opa_policy/policy_duplication/policy_duplication.md`
 
 ```bash
 # CLI commands used in the refinment loop
