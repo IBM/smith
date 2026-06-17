@@ -5,23 +5,39 @@ import httpx
 from openai import OpenAI
 from dotenv import load_dotenv
 import sys
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../.."))
 load_dotenv()
 
+
 def group_guidance_by_tool(guidancies, system_variables):
-    new_guidance={}
+    new_guidance = {}
     for guidance in guidancies:
-        tool_name=guidance["action"]
-        guidance_text=guidance["guidance"]
+        tool_name = guidance["action"]
+        guidance_text = guidance["guidance"]
         if tool_name not in new_guidance.keys():
-            new_guidance[tool_name]={}
-            new_guidance[tool_name]["guidance_list"]=[]
-        new_guidance[tool_name]["action"]=tool_name
-        new_guidance[tool_name]["action_description"]=system_variables["action_description"][tool_name]
+            new_guidance[tool_name] = {}
+            new_guidance[tool_name]["guidance_list"] = []
+        new_guidance[tool_name]["action"] = tool_name
+        new_guidance[tool_name]["action_description"] = system_variables[
+            "action_description"
+        ][tool_name]
         new_guidance[tool_name]["guidance_list"].append(guidance_text)
     return new_guidance
 
-def grey_extraction(api_key, system_variables, openai_base_url, model, temp, top_p, output_file_decompose, output_file_grey_guidances, batch_processing=False, batch_size=10):
+
+def grey_extraction(
+    api_key,
+    system_variables,
+    openai_base_url,
+    model,
+    temp,
+    top_p,
+    output_file_decompose,
+    output_file_grey_guidances,
+    batch_processing=False,
+    batch_size=10,
+):
 
     system_instruction = """
 
@@ -57,11 +73,11 @@ Output format example:
 ]
 
 """
-    guidances={}
-    with open(output_file_decompose, 'r') as f:
-        guidances=json.load(f)
-    #group guidances by action type, give action name and description
-    guidances=group_guidance_by_tool(guidances, system_variables)
+    guidances = {}
+    with open(output_file_decompose, "r") as f:
+        guidances = json.load(f)
+    # group guidances by action type, give action name and description
+    guidances = group_guidance_by_tool(guidances, system_variables)
 
     http_client = httpx.Client(verify=False, timeout=300.0)
     client = OpenAI(api_key=api_key, base_url=openai_base_url, http_client=http_client)
@@ -72,10 +88,12 @@ Output format example:
         all_results = []
         total_batches = (len(guidance_items) + batch_size - 1) // batch_size
         for i in range(0, len(guidance_items), batch_size):
-            batch_items = guidance_items[i:i + batch_size]
+            batch_items = guidance_items[i : i + batch_size]
             batch_dict = dict(batch_items)
             batch_num = i // batch_size + 1
-            print(f"Sending batch {batch_num}/{total_batches} ({len(batch_items)} items) for grey space identification...")
+            print(
+                f"Sending batch {batch_num}/{total_batches} ({len(batch_items)} items) for grey space identification..."
+            )
 
             user_instruction = f"""
 System variable list: {system_variables}
@@ -86,10 +104,10 @@ Guidance items: {str(batch_dict)}
                 model=model,
                 messages=[
                     {"role": "system", "content": system_instruction},
-                    {"role": "user", "content": user_instruction}
+                    {"role": "user", "content": user_instruction},
                 ],
                 temperature=temp,
-                top_p=top_p
+                top_p=top_p,
             )
 
             llm_output = response.choices[0].message.content.strip()
@@ -106,7 +124,7 @@ Guidance items: {str(batch_dict)}
                 print(f"Error parsing LLM output for batch {batch_num}:", e)
                 print("Raw output will be skipped for this batch")
 
-        with open(output_file_grey_guidances, 'w') as f:
+        with open(output_file_grey_guidances, "w") as f:
             json.dump(all_results, f, indent=4)
 
     else:
@@ -120,10 +138,10 @@ Guidance items: {str(guidances)}
             model=model,
             messages=[
                 {"role": "system", "content": system_instruction},
-                {"role": "user", "content": user_instruction}
+                {"role": "user", "content": user_instruction},
             ],
             temperature=temp,
-            top_p=top_p
+            top_p=top_p,
         )
 
         llm_output = response.choices[0].message.content.strip()
@@ -134,7 +152,7 @@ Guidance items: {str(guidances)}
             llm_output = match.group(1).strip()
         try:
             issues_list = json.loads(llm_output)
-            with open(output_file_grey_guidances, 'w') as f:
+            with open(output_file_grey_guidances, "w") as f:
                 json.dump(issues_list, f, indent=4)
 
         except json.JSONDecodeError as e:

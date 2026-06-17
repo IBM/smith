@@ -8,7 +8,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 
 def load_guidances(guidance_file):
-    with open(guidance_file, 'r') as f:
+    with open(guidance_file, "r") as f:
         guidances = json.load(f)
     return guidances
 
@@ -24,20 +24,27 @@ def get_top_n_candidates(case_embedding, guidance_embeddings, guidances, top_n=3
     top_indices = np.argsort(similarities)[::-1][:top_n]
     candidates = []
     for idx in top_indices:
-        candidates.append({
-            "guidance": guidances[idx]["guidance"],
-            "action": guidances[idx]["action"],
-            "similarity": float(similarities[idx])
-        })
+        candidates.append(
+            {
+                "guidance": guidances[idx]["guidance"],
+                "action": guidances[idx]["action"],
+                "similarity": float(similarities[idx]),
+            }
+        )
     return candidates
 
 
-def llm_pick_guidance(api_key, openai_base_url, model, temp, top_p, user_input, candidates):
+def llm_pick_guidance(
+    api_key, openai_base_url, model, temp, top_p, user_input, candidates
+):
     http_client = httpx.Client(verify=False, timeout=300.0)
     client = OpenAI(api_key=api_key, base_url=openai_base_url, http_client=http_client)
 
     candidate_text = "\n".join(
-        [f"{i+1}. [Action: {c['action']}] {c['guidance']}" for i, c in enumerate(candidates)]
+        [
+            f"{i+1}. [Action: {c['action']}] {c['guidance']}"
+            for i, c in enumerate(candidates)
+        ]
     )
 
     system_prompt = """You are a test case classifier for a security policy evaluation system. Your job is to determine which policy guidance item a given test case is designed to test or violate.
@@ -62,10 +69,10 @@ Which guidance item is this user input most relevant to?"""
         model=model,
         messages=[
             {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt}
+            {"role": "user", "content": user_prompt},
         ],
         temperature=temp,
-        top_p=top_p
+        top_p=top_p,
     )
 
     llm_output = response.choices[0].message.content.strip()
@@ -80,13 +87,22 @@ Which guidance item is this user input most relevant to?"""
         return {"pick": 0, "reason": "failed to parse LLM response"}
 
 
-def classify_promptfoo_cases(api_key, openai_base_url, model, temp, top_p,
-                              guidance_file, promptfoo_cases_file, output_file,
-                              top_n=3, embedding_model="all-MiniLM-L6-v2"):
+def classify_promptfoo_cases(
+    api_key,
+    openai_base_url,
+    model,
+    temp,
+    top_p,
+    guidance_file,
+    promptfoo_cases_file,
+    output_file,
+    top_n=3,
+    embedding_model="all-MiniLM-L6-v2",
+):
     guidances = load_guidances(guidance_file)
     print(f"Loaded {len(guidances)} guidance items")
 
-    with open(promptfoo_cases_file, 'r') as f:
+    with open(promptfoo_cases_file, "r") as f:
         cases = json.load(f)
     print(f"Loaded {len(cases)} promptfoo cases to classify")
 
@@ -95,35 +111,40 @@ def classify_promptfoo_cases(api_key, openai_base_url, model, temp, top_p,
     guidance_embeddings = embed_texts(guidance_texts, embedding_model)
 
     print("Embedding test case inputs...")
-    case_inputs = [case['user_input'] for case in cases]
+    case_inputs = [case["user_input"] for case in cases]
     case_embeddings = embed_texts(case_inputs, embedding_model)
 
     print(f"Classifying cases (top-{top_n} -> LLM pick)...")
     for i, case in enumerate(cases):
-        candidates = get_top_n_candidates(case_embeddings[i], guidance_embeddings, guidances, top_n)
-        llm_result = llm_pick_guidance(api_key, openai_base_url, model, temp, top_p,
-                                       case['user_input'], candidates)
+        candidates = get_top_n_candidates(
+            case_embeddings[i], guidance_embeddings, guidances, top_n
+        )
+        llm_result = llm_pick_guidance(
+            api_key, openai_base_url, model, temp, top_p, case["user_input"], candidates
+        )
 
         pick = llm_result.get("pick", 0)
         if pick > 0 and pick <= len(candidates):
             chosen = candidates[pick - 1]
-            case['guidance'] = chosen['guidance']
-            case['action'] = chosen['action']
-            case['confidence'] = chosen['similarity']
+            case["guidance"] = chosen["guidance"]
+            case["action"] = chosen["action"]
+            case["confidence"] = chosen["similarity"]
         else:
-            case['guidance'] = "general_safety"
-            case['action'] = "general_safety"
-            case['confidence'] = 0.0
+            case["guidance"] = "general_safety"
+            case["action"] = "general_safety"
+            case["confidence"] = 0.0
 
-        case['top_candidates'] = candidates
-        case['llm_reason'] = llm_result.get("reason", "")
+        case["top_candidates"] = candidates
+        case["llm_reason"] = llm_result.get("reason", "")
 
         if (i + 1) % 10 == 0:
             print(f"  Classified {i+1}/{len(cases)} cases")
 
-    with open(output_file, 'w') as f:
+    with open(output_file, "w") as f:
         json.dump(cases, f, indent=4)
 
-    classified_count = sum(1 for c in cases if c['guidance'] is not None)
-    print(f"Done. {classified_count}/{len(cases)} cases classified. Output: {output_file}")
+    classified_count = sum(1 for c in cases if c["guidance"] is not None)
+    print(
+        f"Done. {classified_count}/{len(cases)} cases classified. Output: {output_file}"
+    )
     return cases

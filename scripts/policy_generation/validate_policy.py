@@ -16,7 +16,9 @@ def check_opa_installed():
     """Check if opa binary is available."""
     if shutil.which("opa") is None:
         print("ERROR: 'opa' binary not found in PATH.")
-        print("Install OPA: https://www.openpolicyagent.org/docs/latest/#1-download-opa")
+        print(
+            "Install OPA: https://www.openpolicyagent.org/docs/latest/#1-download-opa"
+        )
         return False
     return True
 
@@ -25,8 +27,7 @@ def run_opa_fmt(policy_path: str) -> tuple:
     """Run opa fmt to check syntax and format the policy."""
     try:
         result = subprocess.run(
-            ["opa", "fmt", policy_path],
-            capture_output=True, text=True, timeout=30
+            ["opa", "fmt", policy_path], capture_output=True, text=True, timeout=30
         )
         if result.returncode != 0:
             return False, f"opa fmt failed:\n{result.stderr}"
@@ -49,7 +50,9 @@ def run_opa_fmt_write(policy_path: str) -> tuple:
     try:
         result = subprocess.run(
             ["opa", "fmt", "-w", policy_path],
-            capture_output=True, text=True, timeout=30
+            capture_output=True,
+            text=True,
+            timeout=30,
         )
         if result.returncode != 0:
             return False, f"opa fmt -w failed:\n{result.stderr}"
@@ -64,8 +67,7 @@ def run_opa_check(policy_path: str) -> tuple:
     """Run opa check to validate the policy."""
     try:
         result = subprocess.run(
-            ["opa", "check", policy_path],
-            capture_output=True, text=True, timeout=30
+            ["opa", "check", policy_path], capture_output=True, text=True, timeout=30
         )
         if result.returncode != 0:
             return False, f"opa check failed:\n{result.stderr}"
@@ -81,7 +83,9 @@ def run_opa_eval_smoke(policy_path: str) -> tuple:
     try:
         result = subprocess.run(
             ["opa", "eval", "-d", policy_path, "data.mcp.policies.allow"],
-            capture_output=True, text=True, timeout=30
+            capture_output=True,
+            text=True,
+            timeout=30,
         )
         if result.returncode != 0:
             return False, f"opa eval smoke test failed:\n{result.stderr}"
@@ -169,7 +173,9 @@ def fix_and_validate_policy(policy_path: str) -> bool:
 def main():
     parser = argparse.ArgumentParser(description="Validate OPA policy")
     parser.add_argument("--policy", required=True, help="Path to the .rego policy file")
-    parser.add_argument("--fix", action="store_true", help="Auto-format the policy with opa fmt -w")
+    parser.add_argument(
+        "--fix", action="store_true", help="Auto-format the policy with opa fmt -w"
+    )
     args = parser.parse_args()
 
     if args.fix:

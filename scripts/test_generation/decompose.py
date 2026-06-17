@@ -1,28 +1,36 @@
-from hmac import new
 import os
 import json
 import re
-from pathlib import Path
-import csv
-from typing import Any
 import httpx
 from openai import OpenAI
 from dotenv import load_dotenv
 import sys
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../.."))
 load_dotenv()
 
+
 def remove_empty_line(str_list):
-    new_str_list=[]
+    new_str_list = []
     for strr in str_list:
-        if len(strr)!=0:
+        if len(strr) != 0:
             new_str_list.append(strr)
     return new_str_list
 
-def flatten_guidance(api_key, guidance_file, system_variables, openai_base_url, model, temp, top_p, output_file_flatten):
-    guidances=''
-    with open(guidance_file, 'r') as f:
-        guidances=f.read()
+
+def flatten_guidance(
+    api_key,
+    guidance_file,
+    system_variables,
+    openai_base_url,
+    model,
+    temp,
+    top_p,
+    output_file_flatten,
+):
+    guidances = ""
+    with open(guidance_file, "r") as f:
+        guidances = f.read()
 
     system_instruction = """
     You are a Guidance Flattening Agent.
@@ -60,25 +68,48 @@ def flatten_guidance(api_key, guidance_file, system_variables, openai_base_url, 
         model=model,
         messages=[
             {"role": "system", "content": system_instruction},
-            {"role": "user", "content": user_instruction}
+            {"role": "user", "content": user_instruction},
         ],
         temperature=temp,
-        top_p=top_p
+        top_p=top_p,
     )
 
     llm_output = response.choices[0].message.content.strip()
-    print("flatten results saved to "+output_file_flatten)
-    with open(output_file_flatten, 'w') as f:
+    print("flatten results saved to " + output_file_flatten)
+    with open(output_file_flatten, "w") as f:
         f.write(str(llm_output))
     return llm_output
 
-def decompose_guidance(api_key, system_variables, guidance_file, openai_base_url, model, temp, top_p, output_file_decompose, output_file_flatten, flatten_flag=True, batch_processing=False, batch_size=10):
-    guidances_str=''
+
+def decompose_guidance(
+    api_key,
+    system_variables,
+    guidance_file,
+    openai_base_url,
+    model,
+    temp,
+    top_p,
+    output_file_decompose,
+    output_file_flatten,
+    flatten_flag=True,
+    batch_processing=False,
+    batch_size=10,
+):
+    guidances_str = ""
     if flatten_flag:
-        guidances_str=flatten_guidance(api_key, guidance_file, system_variables, openai_base_url, model, temp, top_p, output_file_flatten)
+        guidances_str = flatten_guidance(
+            api_key,
+            guidance_file,
+            system_variables,
+            openai_base_url,
+            model,
+            temp,
+            top_p,
+            output_file_flatten,
+        )
     else:
-        with open(guidance_file, 'r') as f:
-            guidances_str=str(f.read())
+        with open(guidance_file, "r") as f:
+            guidances_str = str(f.read())
 
     system_instruction = """
     You are a policy decision decomposition agent.
@@ -133,9 +164,11 @@ def decompose_guidance(api_key, system_variables, guidance_file, openai_base_url
         all_results = []
         total_batches = (len(guidance_lines) + batch_size - 1) // batch_size
         for i in range(0, len(guidance_lines), batch_size):
-            batch_lines = guidance_lines[i:i + batch_size]
+            batch_lines = guidance_lines[i : i + batch_size]
             batch_num = i // batch_size + 1
-            print(f"Sending batch {batch_num}/{total_batches} ({len(batch_lines)} items) for decomposition...")
+            print(
+                f"Sending batch {batch_num}/{total_batches} ({len(batch_lines)} items) for decomposition..."
+            )
 
             batch_guidances = "\n".join(batch_lines)
             user_instruction = f"""
@@ -147,10 +180,10 @@ def decompose_guidance(api_key, system_variables, guidance_file, openai_base_url
                 model=model,
                 messages=[
                     {"role": "system", "content": system_instruction},
-                    {"role": "user", "content": user_instruction}
+                    {"role": "user", "content": user_instruction},
                 ],
                 temperature=temp,
-                top_p=top_p
+                top_p=top_p,
             )
 
             llm_output = response.choices[0].message.content.strip()
@@ -163,17 +196,25 @@ def decompose_guidance(api_key, system_variables, guidance_file, openai_base_url
                     batch_results = [batch_results]
                 for j in range(len(batch_results)):
                     result = {}
-                    result['guidance'] = batch_lines[j] if j < len(batch_lines) else batch_results[j].get("guidance", "")
-                    result['action'] = batch_results[j]["action"]
-                    result["common_constraints"] = batch_results[j]["common_constraints"]
+                    result["guidance"] = (
+                        batch_lines[j]
+                        if j < len(batch_lines)
+                        else batch_results[j].get("guidance", "")
+                    )
+                    result["action"] = batch_results[j]["action"]
+                    result["common_constraints"] = batch_results[j][
+                        "common_constraints"
+                    ]
                     result["allow_conditions"] = batch_results[j]["allow_conditions"]
-                    result["disallow_conditions"] = batch_results[j]["disallow_conditions"]
+                    result["disallow_conditions"] = batch_results[j][
+                        "disallow_conditions"
+                    ]
                     all_results.append(result)
             except json.JSONDecodeError as e:
                 print(f"Error parsing LLM output for batch {batch_num}:", e)
                 print("Raw output will be skipped for this batch")
 
-        with open(output_file_decompose, 'w') as f:
+        with open(output_file_decompose, "w") as f:
             json.dump(all_results, f, indent=4)
         return all_results
 
@@ -188,10 +229,10 @@ def decompose_guidance(api_key, system_variables, guidance_file, openai_base_url
             model=model,
             messages=[
                 {"role": "system", "content": system_instruction},
-                {"role": "user", "content": user_instruction}
+                {"role": "user", "content": user_instruction},
             ],
             temperature=temp,
-            top_p=top_p
+            top_p=top_p,
         )
 
         llm_output = response.choices[0].message.content.strip()
@@ -201,17 +242,21 @@ def decompose_guidance(api_key, system_variables, guidance_file, openai_base_url
             llm_output = match.group(1).strip()
         try:
             issues_list = json.loads(llm_output)
-            guidances=remove_empty_line(guidances_str.split("\n"))
+            guidances = remove_empty_line(guidances_str.split("\n"))
             for i in range(len(issues_list)):
-                guidance=guidances[i]
-                guidances[i]={}
-                guidances[i]['guidance']=guidance
-                guidances[i]['action']=issues_list[i]["action"]
-                guidances[i]["common_constraints"]=issues_list[i]["common_constraints"]
-                guidances[i]["allow_conditions"]=issues_list[i]["allow_conditions"]
-                guidances[i]["disallow_conditions"]=issues_list[i]["disallow_conditions"]
+                guidance = guidances[i]
+                guidances[i] = {}
+                guidances[i]["guidance"] = guidance
+                guidances[i]["action"] = issues_list[i]["action"]
+                guidances[i]["common_constraints"] = issues_list[i][
+                    "common_constraints"
+                ]
+                guidances[i]["allow_conditions"] = issues_list[i]["allow_conditions"]
+                guidances[i]["disallow_conditions"] = issues_list[i][
+                    "disallow_conditions"
+                ]
 
-            with open(output_file_decompose, 'w') as f:
+            with open(output_file_decompose, "w") as f:
                 json.dump(guidances, f, indent=4)
 
         except json.JSONDecodeError as e:
@@ -225,20 +270,32 @@ if __name__ == "__main__":
     api_key = os.getenv("OPENAI_API_KEY")
     openai_base_url = os.getenv("OPENAI_BASE_URL")
     model = os.getenv("MODEL_SONNET")
-    temp=float(os.getenv("TEMP"))
-    top_p=float(os.getenv("TOP_P"))
-    guidance_file=os.getenv("GUIDANCE_FILE")
-    output_file_decompose=os.getenv("DECOMP_FILE")
-    output_file_flatten=os.getenv("FLATTEN_FILE")
-    output_file_decompose_csv=os.getenv("DECOMP_FILE_CSV")
-    batch_processing=os.getenv("BATCH_PROCESSING", "false").lower() == "true"
-    batch_size=int(os.getenv("BATCH_SIZE", "10"))
-    system_variables={
-    "action_list": ["salary_query", "purchase", "ticket_submit", "other Q&A"],
-    "user_role": "manager",
-    "user_department": "sales",
-    "user_name": "Bob"
+    temp = float(os.getenv("TEMP"))
+    top_p = float(os.getenv("TOP_P"))
+    guidance_file = os.getenv("GUIDANCE_FILE")
+    output_file_decompose = os.getenv("DECOMP_FILE")
+    output_file_flatten = os.getenv("FLATTEN_FILE")
+    output_file_decompose_csv = os.getenv("DECOMP_FILE_CSV")
+    batch_processing = os.getenv("BATCH_PROCESSING", "false").lower() == "true"
+    batch_size = int(os.getenv("BATCH_SIZE", "10"))
+    system_variables = {
+        "action_list": ["salary_query", "purchase", "ticket_submit", "other Q&A"],
+        "user_role": "manager",
+        "user_department": "sales",
+        "user_name": "Bob",
     }
-    result=decompose_guidance(api_key, system_variables, guidance_file, openai_base_url, model, temp, top_p, output_file_decompose, output_file_flatten, batch_processing=batch_processing, batch_size=batch_size)
+    result = decompose_guidance(
+        api_key,
+        system_variables,
+        guidance_file,
+        openai_base_url,
+        model,
+        temp,
+        top_p,
+        output_file_decompose,
+        output_file_flatten,
+        batch_processing=batch_processing,
+        batch_size=batch_size,
+    )
 
     # print(type(result))

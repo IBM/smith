@@ -2,7 +2,6 @@ import json
 import re
 import httpx
 from dataclasses import dataclass
-from typing import Optional
 from openai import OpenAI
 
 
@@ -60,15 +59,26 @@ Is the assigned label correct? What should the label be?"""
 
 
 class LLMJudge:
-    def __init__(self, api_key: str, openai_base_url: str, model: str, temp: float = 0.2, top_p: float = 0.9):
+    def __init__(
+        self,
+        api_key: str,
+        openai_base_url: str,
+        model: str,
+        temp: float = 0.2,
+        top_p: float = 0.9,
+    ):
         http_client = httpx.Client(verify=False, timeout=300.0)
-        self.client = OpenAI(api_key=api_key, base_url=openai_base_url, http_client=http_client)
+        self.client = OpenAI(
+            api_key=api_key, base_url=openai_base_url, http_client=http_client
+        )
         self.model = model
         self.temp = temp
         self.top_p = top_p
         self.call_count = 0
 
-    def evaluate(self, user_input: str, guidance: str, action: str, assigned_label: str) -> Tier3Result:
+    def evaluate(
+        self, user_input: str, guidance: str, action: str, assigned_label: str
+    ) -> Tier3Result:
         user_prompt = USER_PROMPT_TEMPLATE.format(
             guidance=guidance,
             action=action,
@@ -80,7 +90,7 @@ class LLMJudge:
             model=self.model,
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": user_prompt}
+                {"role": "user", "content": user_prompt},
             ],
             temperature=self.temp,
             top_p=self.top_p,

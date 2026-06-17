@@ -12,7 +12,10 @@ from mcpgateway.plugins.framework import (
     ToolPreInvokePayload,
 )
 
-from kubectlcmdprocessor.plugin import CONTEXT_KEY_POLICY_CONTEXT, CONTEXT_KEY_KUBECTL_CMD
+from kubectlcmdprocessor.plugin import (
+    CONTEXT_KEY_POLICY_CONTEXT,
+    CONTEXT_KEY_KUBECTL_CMD,
+)
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -28,11 +31,15 @@ def plugin_manager():
 async def test_tool_pre_hook(plugin_manager: PluginManager):
     """Test tool pre hook across all registered plugins."""
     # Customize payload for testing
-    payload = ToolPreInvokePayload(name="kubectl_tool", args={"arg0": "kubectl get pods"})
+    payload = ToolPreInvokePayload(
+        name="kubectl_tool", args={"arg0": "kubectl get pods"}
+    )
     global_context = GlobalContext(request_id="1")
     result, ctx = await plugin_manager.tool_pre_invoke(payload, global_context)
     context = next(iter(ctx.values()))
-    cmd = context.global_context.state[CONTEXT_KEY_POLICY_CONTEXT][CONTEXT_KEY_KUBECTL_CMD]
+    cmd = context.global_context.state[CONTEXT_KEY_POLICY_CONTEXT][
+        CONTEXT_KEY_KUBECTL_CMD
+    ]
     assert cmd["command"]["verb"] == "get"
     assert cmd["command"]["resource"] == "pods"
     assert cmd["command"]["namespace"] is None

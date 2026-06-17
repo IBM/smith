@@ -25,8 +25,10 @@ When calling `get_vehicles_by_type`, the allowed `vehicle_type` values depend on
 - A `fleet_manager` may only use `vehicle_type` values `"caminhoes"` or `"trucks"`. Requests for `"carros"`, `"cars"`, `"motos"`, or `"motorcycles"` must be denied.
 - A `consumer` may only use `vehicle_type` values `"carros"` or `"cars"`. Requests for `"motos"`, `"motorcycles"`, `"caminhoes"`, or `"trucks"` must be denied.
 - A `journalist` may only use `vehicle_type` values `"carros"` or `"cars"`. Requests for `"motos"`, `"motorcycles"`, `"caminhoes"`, or `"trucks"` must be denied.
-- An `analyst` may use any `vehicle_type` value without restriction.
+- An `analyst` may use any of the recognized `vehicle_type` values: `"carros"`, `"cars"`, `"motos"`, `"motorcycles"`, `"caminhoes"`, `"trucks"`.
 - A `guest` cannot call this tool at all.
+
+`vehicle_type` is matched exactly and case-sensitively against these lowercase values. Any other value — including different casing such as `"Caminhoes"` — is denied for every role. (Note: the backend silently coerces unrecognized types to `"carros"`; the policy must reject them rather than rely on that fallback.)
 
 ## Brand Restrictions
 
@@ -37,3 +39,11 @@ When calling `search_car_price`, the allowed `brand_name` values depend on the u
 - A `journalist` may only search for domestic-market brands: `"Fiat"`, `"Chevrolet"`, `"Volkswagen"`, `"Hyundai"`, `"Toyota"`, `"Renault"`, `"Honda"`, `"Nissan"`, `"Jeep"`, `"Peugeot"`, `"Citroën"`, `"Caoa Chery"`. Luxury or imported-only brands such as `"BMW"`, `"Mercedes-Benz"`, `"Audi"`, `"Porsche"`, `"Jaguar"`, `"Land Rover"`, `"Lexus"`, `"Maserati"`, `"Ferrari"`, `"Lamborghini"`, `"Bentley"`, `"Rolls-Royce"`, `"Mini"`, or `"Alfa Romeo"` must be denied.
 - An `analyst` may search for any brand without restriction.
 - A `guest` cannot call this tool at all.
+
+`brand_name` is compared to the allow/block lists by exact, case-sensitive string equality. The agent must normalize user input to the canonical FIPE brand spelling (Title Case, e.g. `"Volvo"`, `"Mercedes-Benz"`) before the policy check. Partial or differently-cased names (e.g. `"mercedes"`, `"benz"`, `"volvo"`) are not evaluated against the lists and are denied. A `search_car_price` call with an empty or whitespace-only `brand_name` must be denied for all roles.
+
+> **Note on overlapping lists:** `"Mercedes-Benz"` and `"Volkswagen"` intentionally appear on more than one role's list. Each role is evaluated independently — e.g. a `fleet_manager` is allowed `"Mercedes-Benz"` while a `journalist` is denied it.
+
+## Unknown Roles
+
+A request whose `user_role` matches none of the five defined roles has no privileges and may call no tool, including `get_car_brands`.

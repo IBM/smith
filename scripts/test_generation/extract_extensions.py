@@ -55,7 +55,15 @@ Respond ONLY with a JSON object mapping the full path to the extracted value:
 """
 
 
-def extract_extensions_for_case(client, model: str, user_input: str, extension_vars: list, existing_subject: dict, temp: float, top_p: float) -> dict:
+def extract_extensions_for_case(
+    client,
+    model: str,
+    user_input: str,
+    extension_vars: list,
+    existing_subject: dict,
+    temp: float,
+    top_p: float,
+) -> dict:
     """Use LLM to extract extension values for one test case."""
     prompt = build_prompt(user_input, extension_vars, existing_subject)
     if prompt is None:
@@ -65,8 +73,11 @@ def extract_extensions_for_case(client, model: str, user_input: str, extension_v
         response = client.chat.completions.create(
             model=model,
             messages=[
-                {"role": "system", "content": "You extract contextual variable values from user prompts. Respond with valid JSON only."},
-                {"role": "user", "content": prompt}
+                {
+                    "role": "system",
+                    "content": "You extract contextual variable values from user prompts. Respond with valid JSON only.",
+                },
+                {"role": "user", "content": prompt},
             ],
             temperature=temp,
             top_p=top_p,
@@ -102,12 +113,16 @@ def apply_extensions_to_case(test_case: dict, extracted: dict) -> dict:
     return test_case
 
 
-def run_extract_extensions(api_key, openai_base_url, model, temp, top_p, test_path, extension_vars_file):
+def run_extract_extensions(
+    api_key, openai_base_url, model, temp, top_p, test_path, extension_vars_file
+):
     """Main function to extract extensions for all test cases."""
     client = OpenAI(api_key=api_key, base_url=openai_base_url)
 
     if not os.path.exists(extension_vars_file):
-        print(f"No extension_variables.json found at {extension_vars_file}, skipping extension extraction.")
+        print(
+            f"No extension_variables.json found at {extension_vars_file}, skipping extension extraction."
+        )
         return
 
     with open(extension_vars_file, "r") as f:
@@ -142,7 +157,9 @@ def run_extract_extensions(api_key, openai_base_url, model, temp, top_p, test_pa
             user_input = test_case["input"]["extensions"]["agent"]["input"]
             existing_subject = test_case["input"]["extensions"].get("subject", {})
 
-            extracted = extract_extensions_for_case(client, model, user_input, extension_vars, existing_subject, temp, top_p)
+            extracted = extract_extensions_for_case(
+                client, model, user_input, extension_vars, existing_subject, temp, top_p
+            )
             total_processed += 1
 
             if extracted and any(v is not None for v in extracted.values()):
@@ -151,4 +168,6 @@ def run_extract_extensions(api_key, openai_base_url, model, temp, top_p, test_pa
                 with open(file_path, "w") as f:
                     json.dump(test_case, f, indent=4)
 
-    print(f"\nDone. Processed: {total_processed}, Enriched with extensions: {total_enriched}")
+    print(
+        f"\nDone. Processed: {total_processed}, Enriched with extensions: {total_enriched}"
+    )
