@@ -9,7 +9,7 @@ This skill is responsible for planning skills to create policies, generating and
 # Policy Creation
 
 ## Create OPA policy
-If the user asks for creating an OPA policy: you should strictly follow instructions in `./opa_policy/policy_creation/opa_policy_creation_mcp.md` in the skill directory to create the policy without asking any additional questions.
+If the user asks for creating an OPA policy: you should strictly follow instructions in `./opa_policy/policy_creation/opa_policy_creation.md` in the skill directory to create the policy without asking any additional questions.
 
 # Policy Testing
 

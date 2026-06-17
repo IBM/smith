@@ -1,16 +1,27 @@
 import os
 import json
 import re
-from pathlib import Path
-import csv
 import httpx
 from openai import OpenAI
 from dotenv import load_dotenv
 import sys
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../.."))
 load_dotenv()
 
-def variable_extraction(api_key, system_variables, openai_base_url, model, temp, top_p, output_file_decompose, output_file_variables, batch_processing=False, batch_size=10):
+
+def variable_extraction(
+    api_key,
+    system_variables,
+    openai_base_url,
+    model,
+    temp,
+    top_p,
+    output_file_decompose,
+    output_file_variables,
+    batch_processing=False,
+    batch_size=10,
+):
 
     system_instruction = """
     You are a policy variable extraction agent.
@@ -53,9 +64,9 @@ def variable_extraction(api_key, system_variables, openai_base_url, model, temp,
     ]
 
     """
-    guidances={}
-    with open(output_file_decompose, 'r') as f:
-        guidances=json.load(f)
+    guidances = {}
+    with open(output_file_decompose, "r") as f:
+        guidances = json.load(f)
     # print(system_variables)
     del system_variables["action_list"]
     del system_variables["action_description"]
@@ -67,9 +78,11 @@ def variable_extraction(api_key, system_variables, openai_base_url, model, temp,
         all_results = []
         total_batches = (len(guidances) + batch_size - 1) // batch_size
         for i in range(0, len(guidances), batch_size):
-            batch = guidances[i:i + batch_size]
+            batch = guidances[i : i + batch_size]
             batch_num = i // batch_size + 1
-            print(f"Sending batch {batch_num}/{total_batches} ({len(batch)} items) for variable extraction...")
+            print(
+                f"Sending batch {batch_num}/{total_batches} ({len(batch)} items) for variable extraction..."
+            )
 
             user_instruction = f"""
     System variable list: {system_variables}
@@ -80,10 +93,10 @@ def variable_extraction(api_key, system_variables, openai_base_url, model, temp,
                 model=model,
                 messages=[
                     {"role": "system", "content": system_instruction},
-                    {"role": "user", "content": user_instruction}
+                    {"role": "user", "content": user_instruction},
                 ],
                 temperature=temp,
-                top_p=top_p
+                top_p=top_p,
             )
 
             llm_output = response.choices[0].message.content.strip()
@@ -102,7 +115,7 @@ def variable_extraction(api_key, system_variables, openai_base_url, model, temp,
                 print(f"Error parsing LLM output for batch {batch_num}:", e)
                 print("Raw output will be skipped for this batch")
 
-        with open(output_file_variables, 'w') as f:
+        with open(output_file_variables, "w") as f:
             json.dump(all_results, f, indent=4)
         return all_results
 
@@ -117,10 +130,10 @@ def variable_extraction(api_key, system_variables, openai_base_url, model, temp,
             model=model,
             messages=[
                 {"role": "system", "content": system_instruction},
-                {"role": "user", "content": user_instruction}
+                {"role": "user", "content": user_instruction},
             ],
             temperature=temp,
-            top_p=top_p
+            top_p=top_p,
         )
 
         llm_output = response.choices[0].message.content.strip()
@@ -132,9 +145,9 @@ def variable_extraction(api_key, system_variables, openai_base_url, model, temp,
         try:
             issues_list = json.loads(llm_output)
             for i in range(len(issues_list)):
-                guidances[i]["system_variables"]=issues_list[i]["system_variables"]
-                guidances[i]["prompt_variables"]=issues_list[i]["prompt_variables"]
-            with open(output_file_variables, 'w') as f:
+                guidances[i]["system_variables"] = issues_list[i]["system_variables"]
+                guidances[i]["prompt_variables"] = issues_list[i]["prompt_variables"]
+            with open(output_file_variables, "w") as f:
                 json.dump(guidances, f, indent=4)
 
         except json.JSONDecodeError as e:

@@ -85,7 +85,13 @@ def tool_to_dict(tool) -> dict:
     }
 
 
-async def extract_tools(transport: str = "sse", url: str = None, command: str = None, cmd_args: list = None, cwd: str = None) -> dict:
+async def extract_tools(
+    transport: str = "sse",
+    url: str = None,
+    command: str = None,
+    cmd_args: list = None,
+    cwd: str = None,
+) -> dict:
     """Fetch tools from MCP server and return structured result."""
     if transport == "sse":
         tools = await fetch_tools_sse(url)
@@ -101,22 +107,43 @@ async def extract_tools(transport: str = "sse", url: str = None, command: str = 
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Extract MCP tool definitions from a server")
-    parser.add_argument("--transport", default="sse", choices=["sse", "stdio"], help="Transport type")
-    parser.add_argument("--url", default="http://localhost:8000/sse", help="MCP server SSE endpoint URL (for sse transport)")
-    parser.add_argument("--command", default="python", help="Command to launch MCP server (for stdio transport)")
-    parser.add_argument("--args", nargs="*", default=[], help="Arguments for the server command (for stdio transport)")
-    parser.add_argument("--cwd", default=None, help="Working directory for stdio server")
+    parser = argparse.ArgumentParser(
+        description="Extract MCP tool definitions from a server"
+    )
+    parser.add_argument(
+        "--transport", default="sse", choices=["sse", "stdio"], help="Transport type"
+    )
+    parser.add_argument(
+        "--url",
+        default="http://localhost:8000/sse",
+        help="MCP server SSE endpoint URL (for sse transport)",
+    )
+    parser.add_argument(
+        "--command",
+        default="python",
+        help="Command to launch MCP server (for stdio transport)",
+    )
+    parser.add_argument(
+        "--args",
+        nargs="*",
+        default=[],
+        help="Arguments for the server command (for stdio transport)",
+    )
+    parser.add_argument(
+        "--cwd", default=None, help="Working directory for stdio server"
+    )
     parser.add_argument("--output", required=True, help="Output JSON file path")
     args = parser.parse_args()
 
-    result = asyncio.run(extract_tools(
-        transport=args.transport,
-        url=args.url,
-        command=args.command,
-        cmd_args=args.args,
-        cwd=args.cwd,
-    ))
+    result = asyncio.run(
+        extract_tools(
+            transport=args.transport,
+            url=args.url,
+            command=args.command,
+            cmd_args=args.args,
+            cwd=args.cwd,
+        )
+    )
 
     output_path = Path(args.output)
     output_path.parent.mkdir(parents=True, exist_ok=True)

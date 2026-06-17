@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "smith"
+version = "0.1.0"
+description = "Automated policy lifecycle management for AI agents (OPA/Rego)."
+requires-python = ">=3.11"
+license = { text = "Apache-2.0" }
+# Runtime dependencies are declared in ../requirements.txt. Install them with:
+#   pip install -r ../requirements.txt
+# They are intentionally not duplicated here to keep a single source of truth.
+
+[project.scripts]
+smith = "cli:main"
+
+[tool.setuptools]
+# Flat layout: `cli.py` is a top-level module and the pipeline packages live
+# alongside it under scripts/. `scripts/` itself is the import root.
+py-modules = ["cli"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = [
+    "policy_agent*",
+    "policy_generation*",
+    "test_generation*",
+    "test_case_evaluation*",
+    "tests*",
+]
+# The vendored ARES tree is a separate upstream project, not part of Smith.
+exclude = ["test_generation.ares*"]
+
+[tool.ruff]
+# Don't lint or format the vendored ARES red-teaming tree.
+extend-exclude = ["test_generation/ares"]
+
+[tool.black]
+extend-exclude = "test_generation/ares"

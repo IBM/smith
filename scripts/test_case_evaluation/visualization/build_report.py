@@ -3,19 +3,25 @@ import os
 from collections import defaultdict
 
 
-def build_visualization(test_cases_file, attack_file, promptfoo_classified_file, validation_results_file, output_html):
-    with open(test_cases_file, 'r') as f:
+def build_visualization(
+    test_cases_file,
+    attack_file,
+    promptfoo_classified_file,
+    validation_results_file,
+    output_html,
+):
+    with open(test_cases_file, "r") as f:
         test_cases = json.load(f)
-    with open(attack_file, 'r') as f:
+    with open(attack_file, "r") as f:
         attack_cases = json.load(f)
-    with open(promptfoo_classified_file, 'r') as f:
+    with open(promptfoo_classified_file, "r") as f:
         promptfoo_cases = json.load(f)
 
     # Load validation results for confidence scores
     validation_map = {}
     flagged_cases = []
     if os.path.exists(validation_results_file):
-        with open(validation_results_file, 'r') as f:
+        with open(validation_results_file, "r") as f:
             validation_data = json.load(f)
         for r in validation_data.get("results", []):
             key = (r["source"], r["case_index"])
@@ -25,9 +31,15 @@ def build_visualization(test_cases_file, attack_file, promptfoo_classified_file,
                 if r["source"] == "generated" and r["case_index"] < len(test_cases):
                     r["user_input"] = test_cases[r["case_index"]].get("user_input", "")
                     r["condition"] = test_cases[r["case_index"]].get("condition", "")
-                elif r["source"] == "promptfoo" and r["case_index"] < len(promptfoo_cases):
-                    r["user_input"] = promptfoo_cases[r["case_index"]].get("user_input", "")
-                    r["condition"] = promptfoo_cases[r["case_index"]].get("llm_reason", "")
+                elif r["source"] == "promptfoo" and r["case_index"] < len(
+                    promptfoo_cases
+                ):
+                    r["user_input"] = promptfoo_cases[r["case_index"]].get(
+                        "user_input", ""
+                    )
+                    r["condition"] = promptfoo_cases[r["case_index"]].get(
+                        "llm_reason", ""
+                    )
                 else:
                     r["user_input"] = ""
                     r["condition"] = ""
@@ -38,66 +50,68 @@ def build_visualization(test_cases_file, attack_file, promptfoo_classified_file,
 
     # Tag sources and attach confidence
     for i, c in enumerate(test_cases):
-        c['source'] = 'generated'
-        c['_idx'] = i
+        c["source"] = "generated"
+        c["_idx"] = i
         v = validation_map.get(("generated", i))
         if v:
-            c['validation_confidence'] = v['confidence']
-            c['validation_verdict'] = v['verdict']
-            c['validation_predicted'] = v['predicted_label']
-            c['validation_tier'] = v['evaluation_tier']
-            c['validation_reason'] = v.get('reason', '')
+            c["validation_confidence"] = v["confidence"]
+            c["validation_verdict"] = v["verdict"]
+            c["validation_predicted"] = v["predicted_label"]
+            c["validation_tier"] = v["evaluation_tier"]
+            c["validation_reason"] = v.get("reason", "")
         else:
-            c['validation_confidence'] = None
-            c['validation_verdict'] = None
+            c["validation_confidence"] = None
+            c["validation_verdict"] = None
 
     for i, c in enumerate(promptfoo_cases):
-        c['source'] = 'promptfoo'
-        c['_idx'] = i
-        c['condition'] = c.get('llm_reason', '')
+        c["source"] = "promptfoo"
+        c["_idx"] = i
+        c["condition"] = c.get("llm_reason", "")
         v = validation_map.get(("promptfoo", i))
         if v:
-            c['validation_confidence'] = v['confidence']
-            c['validation_verdict'] = v['verdict']
-            c['validation_predicted'] = v['predicted_label']
-            c['validation_tier'] = v['evaluation_tier']
-            c['validation_reason'] = v.get('reason', '')
+            c["validation_confidence"] = v["confidence"]
+            c["validation_verdict"] = v["verdict"]
+            c["validation_predicted"] = v["predicted_label"]
+            c["validation_tier"] = v["evaluation_tier"]
+            c["validation_reason"] = v.get("reason", "")
         else:
-            c['validation_confidence'] = None
-            c['validation_verdict'] = None
+            c["validation_confidence"] = None
+            c["validation_verdict"] = None
 
     # Unpack ARES
     ares_expanded = []
     for c in attack_cases:
-        if c['label'] != 'disallow':
+        if c["label"] != "disallow":
             continue
-        attack_conditions = c.get('attack_conditions', {})
+        attack_conditions = c.get("attack_conditions", {})
         for attack_type, prompts in attack_conditions.items():
             for prompt in prompts:
-                ares_expanded.append({
-                    'source': 'ares',
-                    'label': 'disallow',
-                    'action': c.get('action', ''),
-                    'guidance': c.get('guidance', ''),
-                    'condition': c.get('condition', ''),
-                    'user_input': prompt,
-                    'attack_type': attack_type,
-                    'validation_confidence': None,
-                    'validation_verdict': None,
-                })
+                ares_expanded.append(
+                    {
+                        "source": "ares",
+                        "label": "disallow",
+                        "action": c.get("action", ""),
+                        "guidance": c.get("guidance", ""),
+                        "condition": c.get("condition", ""),
+                        "user_input": prompt,
+                        "attack_type": attack_type,
+                        "validation_confidence": None,
+                        "validation_verdict": None,
+                    }
+                )
 
     all_cases = test_cases + ares_expanded + promptfoo_cases
 
     # Group by guidance -> condition
     grouped = defaultdict(lambda: defaultdict(list))
     for c in all_cases:
-        guidance_key = c.get('guidance') or 'general_safety'
-        condition_key = c.get('condition') or 'uncategorized'
+        guidance_key = c.get("guidance") or "general_safety"
+        condition_key = c.get("condition") or "uncategorized"
         grouped[guidance_key][condition_key].append(c)
 
     # Build HTML
     html = generate_html(grouped, flagged_cases, validation_metrics)
-    with open(output_html, 'w') as f:
+    with open(output_html, "w") as f:
         f.write(html)
 
     total = len(all_cases)
@@ -110,51 +124,63 @@ def build_visualization(test_cases_file, attack_file, promptfoo_classified_file,
 
 def generate_html(grouped, flagged_cases, validation_metrics):
     source_colors = {
-        'generated': '#3b82f6',
-        'ares': '#ef4444',
-        'promptfoo': '#f59e0b',
+        "generated": "#3b82f6",
+        "ares": "#ef4444",
+        "promptfoo": "#f59e0b",
     }
     label_colors = {
-        'allow': '#10b981',
-        'disallow': '#ef4444',
+        "allow": "#10b981",
+        "disallow": "#ef4444",
     }
     verdict_colors = {
-        'correct': '#10b981',
-        'incorrect': '#ef4444',
-        'uncertain': '#f59e0b',
+        "correct": "#10b981",
+        "incorrect": "#ef4444",
+        "uncertain": "#f59e0b",
     }
 
     # === Build main test cases section ===
     cards_html = ""
     card_idx = 0
-    for guidance, conditions in sorted(grouped.items(), key=lambda x: -sum(len(v) for v in x[1].values())):
+    for guidance, conditions in sorted(
+        grouped.items(), key=lambda x: -sum(len(v) for v in x[1].values())
+    ):
         all_cases_in_guidance = [c for cases in conditions.values() for c in cases]
         source_counts = defaultdict(int)
         label_counts = defaultdict(int)
         for c in all_cases_in_guidance:
-            source_counts[c['source']] += 1
-            label_counts[c['label']] += 1
+            source_counts[c["source"]] += 1
+            label_counts[c["label"]] += 1
 
         badges = ""
         for src, count in source_counts.items():
-            color = source_colors.get(src, '#6b7280')
-            badges += f'<span class="badge" style="background:{color}">{src}: {count}</span>'
+            color = source_colors.get(src, "#6b7280")
+            badges += (
+                f'<span class="badge" style="background:{color}">{src}: {count}</span>'
+            )
         for lbl, count in label_counts.items():
-            color = label_colors.get(lbl, '#6b7280')
-            badges += f'<span class="badge" style="background:{color}">{lbl}: {count}</span>'
+            color = label_colors.get(lbl, "#6b7280")
+            badges += (
+                f'<span class="badge" style="background:{color}">{lbl}: {count}</span>'
+            )
 
         condition_tabs = ""
         condition_bodies = ""
-        for cond_idx, (condition, cases) in enumerate(sorted(conditions.items(), key=lambda x: -len(x[1]))):
+        for cond_idx, (condition, cases) in enumerate(
+            sorted(conditions.items(), key=lambda x: -len(x[1]))
+        ):
             active_class = "active" if cond_idx == 0 else ""
             display = "block" if cond_idx == 0 else "none"
-            cond_escaped = condition.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
-            cond_short = cond_escaped[:60] + ('...' if len(condition) > 60 else '')
+            cond_escaped = (
+                condition.replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+            )
+            cond_short = cond_escaped[:60] + ("..." if len(condition) > 60 else "")
 
-            case_labels = set(c['label'] for c in cases)
-            if case_labels == {'allow'}:
+            case_labels = set(c["label"] for c in cases)
+            if case_labels == {"allow"}:
                 cond_color_class = "cond-allow"
-            elif case_labels == {'disallow'}:
+            elif case_labels == {"disallow"}:
                 cond_color_class = "cond-disallow"
             else:
                 cond_color_class = "cond-mixed"
@@ -163,23 +189,31 @@ def generate_html(grouped, flagged_cases, validation_metrics):
 
             rows = ""
             for c in cases:
-                src_color = source_colors.get(c['source'], '#6b7280')
-                lbl_color = label_colors.get(c['label'], '#6b7280')
-                action = c.get('action', 'N/A')
-                attack_type = c.get('attack_type', '')
-                user_input = c['user_input'][:150] + ('...' if len(c['user_input']) > 150 else '')
-                user_input_escaped = user_input.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+                src_color = source_colors.get(c["source"], "#6b7280")
+                lbl_color = label_colors.get(c["label"], "#6b7280")
+                action = c.get("action", "N/A")
+                attack_type = c.get("attack_type", "")
+                user_input = c["user_input"][:150] + (
+                    "..." if len(c["user_input"]) > 150 else ""
+                )
+                user_input_escaped = (
+                    user_input.replace("&", "&amp;")
+                    .replace("<", "&lt;")
+                    .replace(">", "&gt;")
+                )
 
                 # Confidence and verdict
-                conf = c.get('validation_confidence')
-                verdict = c.get('validation_verdict')
+                conf = c.get("validation_confidence")
+                verdict = c.get("validation_verdict")
                 if conf is not None:
                     conf_str = f"{conf:.2f}"
-                    v_color = verdict_colors.get(verdict, '#6b7280')
+                    v_color = verdict_colors.get(verdict, "#6b7280")
                     verdict_badge = f'<span class="badge-sm" style="background:{v_color}">{verdict}</span>'
                 else:
-                    conf_str = '-'
-                    verdict_badge = '<span class="badge-sm" style="background:#6b7280">N/A</span>'
+                    conf_str = "-"
+                    verdict_badge = (
+                        '<span class="badge-sm" style="background:#6b7280">N/A</span>'
+                    )
 
                 rows += f"""<tr>
                     <td><span class="badge-sm" style="background:{src_color}">{c['source']}</span></td>
@@ -210,7 +244,9 @@ def generate_html(grouped, flagged_cases, validation_metrics):
                 </table>
             </div>"""
 
-        guidance_escaped = guidance.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+        guidance_escaped = (
+            guidance.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+        )
         cards_html += f"""
         <div class="card" id="card{card_idx}">
             <div class="card-header" onclick="this.parentElement.classList.toggle('expanded')">
@@ -239,18 +275,41 @@ def generate_html(grouped, flagged_cases, validation_metrics):
     if flagged_cases:
         flagged_rows = ""
         for r in flagged_cases:
-            src_color = source_colors.get(r['source'], '#6b7280')
-            assigned_color = label_colors.get(r['assigned_label'], '#6b7280')
-            predicted_color = label_colors.get(r['predicted_label'], '#6b7280')
+            src_color = source_colors.get(r["source"], "#6b7280")
+            assigned_color = label_colors.get(r["assigned_label"], "#6b7280")
+            predicted_color = label_colors.get(r["predicted_label"], "#6b7280")
             tier_badge = f'<span class="badge-sm" style="background:#6366f1">{r["evaluation_tier"]}</span>'
-            reason_escaped = r.get('reason', '').replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
-            guidance_short = (r.get('guidance', '')[:100] + '...') if len(r.get('guidance', '')) > 100 else r.get('guidance', '')
-            guidance_escaped = guidance_short.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
-            user_input = r.get('user_input', '')
-            user_input_short = (user_input[:200] + '...') if len(user_input) > 200 else user_input
-            user_input_escaped = user_input_short.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
-            condition = r.get('condition', '')
-            condition_escaped = condition.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+            reason_escaped = (
+                r.get("reason", "")
+                .replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+            )
+            guidance_short = (
+                (r.get("guidance", "")[:100] + "...")
+                if len(r.get("guidance", "")) > 100
+                else r.get("guidance", "")
+            )
+            guidance_escaped = (
+                guidance_short.replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+            )
+            user_input = r.get("user_input", "")
+            user_input_short = (
+                (user_input[:200] + "...") if len(user_input) > 200 else user_input
+            )
+            user_input_escaped = (
+                user_input_short.replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+            )
+            condition = r.get("condition", "")
+            condition_escaped = (
+                condition.replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+            )
 
             flagged_rows += f"""<tr>
                 <td><span class="badge-sm" style="background:{src_color}">{r['source']}</span></td>
@@ -289,13 +348,15 @@ def generate_html(grouped, flagged_cases, validation_metrics):
         </div>"""
 
     # === Summary stats ===
-    all_flat = [c for conds in grouped.values() for cases in conds.values() for c in cases]
+    all_flat = [
+        c for conds in grouped.values() for cases in conds.values() for c in cases
+    ]
     total = len(all_flat)
-    total_generated = sum(1 for c in all_flat if c['source'] == 'generated')
-    total_ares = sum(1 for c in all_flat if c['source'] == 'ares')
-    total_promptfoo = sum(1 for c in all_flat if c['source'] == 'promptfoo')
-    total_allow = sum(1 for c in all_flat if c['label'] == 'allow')
-    total_disallow = sum(1 for c in all_flat if c['label'] == 'disallow')
+    total_generated = sum(1 for c in all_flat if c["source"] == "generated")
+    total_ares = sum(1 for c in all_flat if c["source"] == "ares")
+    total_promptfoo = sum(1 for c in all_flat if c["source"] == "promptfoo")
+    total_allow = sum(1 for c in all_flat if c["label"] == "allow")
+    total_disallow = sum(1 for c in all_flat if c["label"] == "disallow")
 
     # Validation summary
     overall = validation_metrics.get("overall", {})
@@ -482,6 +543,7 @@ def generate_html(grouped, flagged_cases, validation_metrics):
 
 if __name__ == "__main__":
     from dotenv import load_dotenv
+
     load_dotenv()
     base_url = os.getenv("BASE_URL", "")
     build_visualization(
@@ -489,5 +551,5 @@ if __name__ == "__main__":
         base_url + "references/decomp_attack_file.json",
         base_url + "references/decomp_attack_file_promptfoo_classified.json",
         base_url + "references/label_validation_results.json",
-        base_url + "references/test_case_report.html"
+        base_url + "references/test_case_report.html",
     )

@@ -12,23 +12,23 @@ A university Computer Science department has deployed this MCP server as part of
 
 ## What the Agent May Do
 
-- Only "faculty" and "phd_student" can use the get_event tool. "guest" can not use this tool. 
-- Call `get_events` with a `topic` that within one of the department's three approved research areas: Artificial intelligence, Cybersecurity and privacy, Software engineering
-- Call `get_events` with a `limit` value between 1 and 15, within the cap allowed for the requesting user's role.
+- Only `faculty` and `phd_student` may use the `get_events` tool. A `guest` cannot use this tool.
+- Call `get_events` with a `topic` that is exactly one of the department's three approved research areas: Artificial intelligence, Cybersecurity and privacy, Software engineering.
+- Call `get_events` with an integer `limit` between 1 and the cap allowed for the requesting user's role.
  **Faculty** may set `limit` up to 15 per request.
  **PhD students** may set `limit` up to 10 per request.
 
 ## What the Agent Must Not Do
 
 - Search for conferences outside the three approved research areas.
-- Set the `limit` above the cap for the requesting user's role, or above the absolute maximum of 15 per request. 
-- Perform more than 5 searches in a single conversation session.
+- Set the `limit` below 1, above the cap for the requesting user's role, or above the absolute maximum of 15 per request.
+- Perform more than 5 `get_events` searches in a single conversation session. (Enforceable only when the agent supplies the running per-session search count as a system variable — see `queries_this_session` in `system_vars.json`. With a static value this rule cannot be enforced by a stateless policy.)
 
 ## Tool-Use Rules
 
 ### `get_events`
 
-**Disallowed keyword values:**
+**Disallowed `keywords` values** (the following must not appear, case-insensitively, in the `keywords` parameter):
 - `"bioinformatics"`, `"genomics"`, `"clinical trials"`, `"drug discovery"`
 - `"quantum physics"`, `"materials science"`, `"renewable energy"`
 - `"economics"`, `"finance"`, `"marketing"`, `"supply chain"`
@@ -39,5 +39,7 @@ A university Computer Science department has deployed this MCP server as part of
 
 PhD students are scoped more tightly than faculty. A PhD student's searches must stay within their own research area, rather than ranging across all three department-approved areas.
 
-- A PhD student may only search with a `topic` within their declared dissertation research area.
+- A PhD student may call `get_events` only when `topic` equals the student's own `dissertation_area` (a per-user system variable, one of the three approved areas).
 - Faculty may search across all three approved areas and are not subject to this narrowing.
+
+> **Data requirement:** this rule needs a per-user `dissertation_area` field in `system_vars.json`. It cannot be evaluated against the shared `research_area` list, which contains all three areas — checking `topic` membership in that list would let a PhD student search any approved area, silently defeating the narrowing.

@@ -7,15 +7,20 @@ from openai import OpenAI
 from dotenv import load_dotenv
 
 import sys
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../.."))
 
-from policy_agent.policy_analysis.model_output_schema.schema import PolicyIssue, PolicyAnalysisReport
+from policy_agent.policy_analysis.model_output_schema.schema import (
+    PolicyIssue,
+    PolicyAnalysisReport,
+)
 
 load_dotenv()
 
 
-
-def detect_redundant_rules(api_key, output_dir, openai_base_url, policy_path, model, temp, top_p):
+def detect_redundant_rules(
+    api_key, output_dir, openai_base_url, policy_path, model, temp, top_p
+):
     """
     Detect redundant or subsumed rules in an OPA Rego policy using the LLM.
     Saves structured JSON and Markdown reports.
@@ -80,11 +85,11 @@ Output only JSON. Do NOT include explanations, Markdown, or extra text.
         model=model,
         messages=[
             {"role": "system", "content": system_instruction},
-            {"role": "user", "content": rego_policy}
+            {"role": "user", "content": rego_policy},
         ],
         max_tokens=30000,
         temperature=temp,
-        top_p=top_p
+        top_p=top_p,
     )
 
     llm_output = response.choices[0].message.content.strip()

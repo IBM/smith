@@ -15,7 +15,7 @@ Smith is a skill (plugin) for AI code agents that manages the full lifecycle of 
 - **Refine** policies automatically through iterative feedback loops (patches for failed test cases, linting etc)
 
 ```
-Guidance Description (NLP) + Agent Description → Enforceble Policy Creation → Test Generation → Policy Testing ⇄ Policy Refinement
+Guidance Description (NLP) + Agent Description → Enforceable Policy Creation → Test Generation → Policy Testing ⇄ Policy Refinement
 ```
 
 ## What Smith Needs from You
@@ -36,22 +36,27 @@ Guidance Description (NLP) + Agent Description → Enforceble Policy Creation �
 - [ARES](https://github.com/IBM/ares) (red-teaming framework)
 - [Promptfoo](https://www.promptfoo.dev/)(red-teaming framework) 
 
-```
-# Python enviroment preparation
+**1. Python environment**
+
+```bash
 python -m venv .venv
 source .venv/bin/activate
+```
 
-# Ares installation and setups (default config file: ares/example_config/qwen-owasp-llm-01.yaml)
+**2. ARES** (red-teaming framework). Installs into `scripts/test_generation/ares/` with its own `.venv`, which is the layout the test-generation pipeline expects (`scripts/test_generation/attack.py` invokes `ares/.venv/bin/ares` with config `example_configs/qwen-owasp-llm-01.yaml`).
 
+```bash
 cd scripts/test_generation
 curl https://raw.githubusercontent.com/IBM/ares/refs/heads/main/install.sh | bash
 ares install-plugin ares-autodan
 ares install-plugin ares-human-jailbreak
 ares install-plugin ares-garak
 cd ../..
+```
 
-## Promptfoo installation (config file: PROMPTFOO_CONFIG_FILE in .env)
+**3. Promptfoo** (red-teaming framework). The config file is set via `PROMPTFOO_CONFIG_FILE` in `.env`.
 
+```bash
 npm install -g promptfoo
 ```
 
@@ -77,24 +82,54 @@ This installs the `smith` CLI command.
 cp .env_template .env
 ```
 
-Edit `.env` and fill in your values:
+Fill in **every** placeholder value in `.env` before running Smith. The most important variables:
 
 | Variable | Description |
 |----------|-------------|
-| `BASE_URL` | Absolute path to your skill folder, e.g., your path/.bob/skills/smith/ |
+| `BASE_URL` | Absolute path to your skill folder, **with a trailing slash**, e.g. `/path/.bob/skills/smith/` |
 | `OPENAI_API_KEY` | API key for your LLM provider |
 | `OPENAI_BASE_URL` | Base URL for LLM API endpoint |
-| `MODEL_SONNET` | Model for test generation (e.g., `GCP/claude-4-sonnet` by default) |
-| `AGENT_URL` | URL of the target agent server's endpoint (e.g., `http://localhost:9000` by default) |
-| `MCP_URL` | MCP server URL (only for SSE transport), default is `http://localhost:8000/sse` |
-| `MCP_TRANSPORT` | MCP transport type (`sse` or `stdio`) |
-| `TARGET_AGENT_PATH` | Relative path to the target MCP server directory, e.g., `mcp_servers/RagChatbot_MCPServer/` for HR agent |
-| `GUIDANCE_FILE` | Path to the policy guidance file for the target agent, e.g., `mcp_servers/RagChatbot_MCPServer/smith/guidance.txt` for HR agent |
+| `MODEL_SONNET` | Model used across the pipelines (e.g., `GCP/claude-4-sonnet` by default) |
+| `AGENT_URL` | URL of the target agent server (must expose `/chat` and `/extract_tool_call`); default `http://localhost:9000` |
+| `MCP_TRANSPORT` | MCP transport type: `sse` or `stdio` |
+| `MCP_URL` | MCP server URL (SSE transport only); default `http://localhost:8000/sse` |
+| `MCP_COMMAND` / `MCP_ARGS` / `MCP_CWD` | MCP launch command, args, and working dir (**stdio transport only** — see the commented examples in `.env_template`) |
+| `TARGET_AGENT_PATH` | Relative path to the target MCP server directory, e.g., `mcp_servers/RagChatbot_MCPServer/` for the HR agent |
+| `GUIDANCE_FILE` | Path to the policy guidance file, e.g., `mcp_servers/RagChatbot_MCPServer/smith/guidance.txt` |
+| `SYSTEM_VAR_FILE` | Path to the system-variables JSON (e.g., `mcp_servers/<agent>/smith/system_vars.json`). **Required** — test generation fails without it |
+| `PROMPTFOO_CONFIG_FILE` / `PROMPTFOO_OUTPUT_FILE` | Promptfoo red-team config and generated output paths |
+
+See `.env_template` for the full list, including model sampling (`TEMP`, `TOP_P`), test-case evaluation thresholds, and refinement/clustering parameters.
 
 
 ### Deployment
 
 Place the entire `smith` folder under the `skills/` or `plugin/` directory of your code agent.
+
+### Start the target agent and MCP server
+
+Smith talks to a **running** target agent (for `/chat` and `/extract_tool_call`) and to its MCP server (to extract tool definitions). Start both before running any `smith` flag.
+
+Each example under `mcp_servers/<agent>/` ships its own `agent.py` (a FastAPI app exposing `/chat` and `/extract_tool_call`), `server.py` (the MCP server), and a `requirements.txt`. Using `call-for-papers-mcp` as a concrete example:
+
+```bash
+cd mcp_servers/call-for-papers-mcp
+pip install -r requirements.txt
+
+# Start the agent server on the port AGENT_URL points to (default 9000).
+uvicorn agent:app --port 9000
+```
+
+This example's agent **spawns its MCP server itself over stdio** (`agent.py` launches `python server.py`), so you do not start the MCP server separately. Match `.env` accordingly:
+
+```
+MCP_TRANSPORT=stdio
+MCP_COMMAND=python
+MCP_ARGS=server.py
+MCP_CWD=mcp_servers/call-for-papers-mcp
+```
+
+For an SSE-based MCP server instead, set `MCP_TRANSPORT=sse` and `MCP_URL=http://localhost:8000/sse`, and start that server on its own. Check each example's own `README.md` for specifics.
 
 #### Instructions for using HR agent example
 1. Ask smith to generate an initial policy for the targeted agent
