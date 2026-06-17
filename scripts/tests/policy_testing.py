@@ -3,12 +3,14 @@ import os
 from dotenv import load_dotenv
 
 load_dotenv()
+
+
 def run_policy_evaluation():
     """
     Run all policy tests using the Makefile in the project root.
     Saves outputs in the feedback directory under tmp.
     """
-    base_url=os.getenv("BASE_URL")+"scripts/"
+    base_url = os.getenv("BASE_URL") + "scripts/"
     if not base_url:
         raise ValueError("BASE_URL not provided")
 
@@ -23,15 +25,17 @@ def run_policy_evaluation():
 
     # Run tests using Makefile
     try:
-        results=subprocess.run(["make", "test"], cwd=project_root, check=True)
+        results = subprocess.run(["make", "test"], cwd=project_root, check=True)
         print("Policy evaluation tests completed successfully.")
     except subprocess.CalledProcessError:
-        print("Policy evaluation tests failed. Check test outputs under 'tests/' for details.")
-    content=''
+        print(
+            "Policy evaluation tests failed. Check test outputs under 'tests/' for details."
+        )
+    content = ""
 
-    test_path=base_url+os.getenv("TEST_PATH")
-    test_results_path=test_path+os.getenv("TEST_RESULT_PATH")
-    with open(test_results_path, 'r') as file:
+    test_path = base_url + os.getenv("TEST_PATH")
+    test_results_path = test_path + os.getenv("TEST_RESULT_PATH")
+    with open(test_results_path, "r") as file:
         content = str(file.read())
     return content
 

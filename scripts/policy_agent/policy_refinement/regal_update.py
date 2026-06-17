@@ -4,25 +4,31 @@ from dotenv import load_dotenv
 from openai import OpenAI
 import httpx
 from policy_agent.policy_analysis.regal.regal_finder import create_regal_suggestion
+
 load_dotenv()
 
-def regal_update(api_key, openai_base_url, policy_dir, policy_path, regal_suggestion_path, MODEL, regal_result_output, modified_policy_regal, temp, top_p):
+
+def regal_update(
+    api_key,
+    openai_base_url,
+    policy_dir,
+    policy_path,
+    regal_suggestion_path,
+    MODEL,
+    regal_result_output,
+    modified_policy_regal,
+    temp,
+    top_p,
+):
 
     create_regal_suggestion(policy_dir, regal_suggestion_path)
-    
-    http_client = httpx.Client(
-        verify=False,    
-        timeout=300.0      
-    )
 
-    client = OpenAI(
-        api_key=api_key,
-        base_url=openai_base_url,
-        http_client=http_client 
-    )
-    
-    regal_feedback=''
-    rego_policy=''
+    http_client = httpx.Client(verify=False, timeout=300.0)
+
+    client = OpenAI(api_key=api_key, base_url=openai_base_url, http_client=http_client)
+
+    regal_feedback = ""
+    rego_policy = ""
     if not os.path.exists(policy_path):
         raise FileNotFoundError(f"Missing {policy_path}")
 
@@ -78,13 +84,11 @@ def regal_update(api_key, openai_base_url, policy_dir, policy_path, regal_sugges
             {"role": "user", "content": user_prompt},
         ],
         max_tokens=30000,
-        temperature=temp, 
-        top_p=top_p
+        temperature=temp,
+        top_p=top_p,
     )
 
-
     assistant_output = response.choices[0].message.content
-
 
     with open(regal_result_output, "w", encoding="utf-8") as f:
         f.write(assistant_output)
@@ -100,7 +104,6 @@ def regal_update(api_key, openai_base_url, policy_dir, policy_path, regal_sugges
             return match2.group(match.lastindex).strip()
 
         return None
-
 
     rego_block = extract_rego_block(assistant_output)
 

@@ -4,8 +4,16 @@ from openai import OpenAI
 
 load_dotenv()
 
-def cycle_detection(api_key, openai_base_url, policy_path, model, feedback_dir,
-                    temperature=0.2, top_p=0.9):
+
+def cycle_detection(
+    api_key,
+    openai_base_url,
+    policy_path,
+    model,
+    feedback_dir,
+    temperature=0.2,
+    top_p=0.9,
+):
     """
     Analyze an OPA Rego policy for:
     1. Cyclic rule dependencies.
@@ -51,10 +59,10 @@ def cycle_detection(api_key, openai_base_url, policy_path, model, feedback_dir,
         model=model,
         messages=[
             {"role": "system", "content": system_instruction},
-            {"role": "user", "content": rego_policy}
+            {"role": "user", "content": rego_policy},
         ],
         temperature=temperature,
-        top_p=top_p
+        top_p=top_p,
     )
 
     feedback = response.choices[0].message.content

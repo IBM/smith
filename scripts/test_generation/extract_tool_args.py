@@ -67,15 +67,19 @@ def run_extract_tool_args(test_case_path, agent_url):
                 with open(file_path, "w") as f:
                     json.dump(test_case, f, indent=4)
             elif tool_name != assigned_tool:
-                miscalled_cases.append({
-                    "file_path": file_path,
-                    "label": label,
-                    "assigned_tool": assigned_tool,
-                    "actual_tool": tool_name,
-                    "agent_input": prompt,
-                    "actual_args": tool_args,
-                })
-                print(f"  [MISMATCH] {file_path}: assigned={assigned_tool}, actual={tool_name}, removing test case")
+                miscalled_cases.append(
+                    {
+                        "file_path": file_path,
+                        "label": label,
+                        "assigned_tool": assigned_tool,
+                        "actual_tool": tool_name,
+                        "agent_input": prompt,
+                        "actual_args": tool_args,
+                    }
+                )
+                print(
+                    f"  [MISMATCH] {file_path}: assigned={assigned_tool}, actual={tool_name}, removing test case"
+                )
                 os.remove(file_path)
             else:
                 test_case["input"]["arguments"] = tool_args
@@ -86,5 +90,7 @@ def run_extract_tool_args(test_case_path, agent_url):
     with open(miscalled_output, "w") as f:
         json.dump(miscalled_cases, f, indent=4)
 
-    print(f"\nDone. Processed: {total_processed}, Mismatches removed: {len(miscalled_cases)}")
+    print(
+        f"\nDone. Processed: {total_processed}, Mismatches removed: {len(miscalled_cases)}"
+    )
     print(f"Saved miscalled cases to: {miscalled_output}")

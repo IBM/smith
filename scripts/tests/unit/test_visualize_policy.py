@@ -11,7 +11,7 @@ from visualization.visualize_policy import (
     DecisionNode,
     RegoParser,
     MermaidGenerator,
-    main
+    main,
 )
 
 
@@ -24,7 +24,7 @@ class TestRegoRule:
             name="test_rule",
             conditions=["condition1", "condition2"],
             outcome="allow",
-            rule_type="allow"
+            rule_type="allow",
         )
         assert rule.name == "test_rule"
         assert rule.conditions == ["condition1", "condition2"]
@@ -42,7 +42,7 @@ class TestDecisionNode:
             label="Test Node",
             node_type="condition",
             conditions=["test condition"],
-            children=[]
+            children=[],
         )
         assert node.id == "A"
         assert node.label == "Test Node"
@@ -74,10 +74,10 @@ class TestRegoParser:
     def test_extract_sets(self):
         """Test _extract_sets method"""
         parser = RegoParser()
-        content = '''
+        content = """
         safe_verbs := {"get", "list", "watch"}
         dangerous_verbs := {"delete", "create"}
-        '''
+        """
         parser._extract_sets(content)
 
         assert "safe_verbs" in parser.sets
@@ -88,19 +88,19 @@ class TestRegoParser:
     def test_parse_conditions(self):
         """Test _parse_conditions method"""
         parser = RegoParser()
-        condition_block = '''
+        condition_block = """
         input.command.verb == "get"
         input.command.resource == "pods"
         # This is a comment
 
         input.namespace == "default"
-        '''
+        """
 
         conditions = parser._parse_conditions(condition_block)
         expected = [
             'input.command.verb == "get"',
             'input.command.resource == "pods"',
-            'input.namespace == "default"'
+            'input.namespace == "default"',
         ]
         assert conditions == expected
 
@@ -113,11 +113,11 @@ class TestRegoParser:
     def test_parse_conditions_with_comments(self):
         """Test _parse_conditions ignores comments"""
         parser = RegoParser()
-        condition_block = '''
+        condition_block = """
         # This is a comment
         input.command.verb == "get"
         # Another comment
-        '''
+        """
 
         conditions = parser._parse_conditions(condition_block)
         assert conditions == ['input.command.verb == "get"']
@@ -125,12 +125,12 @@ class TestRegoParser:
     def test_extract_rules_allow(self):
         """Test _extract_rules for allow rules"""
         parser = RegoParser()
-        content = '''
+        content = """
         allow if {
             input.command.verb == "get"
             input.command.resource == "pods"
         }
-        '''
+        """
         parser._extract_rules(content)
 
         assert len(parser.rules) == 1
@@ -142,12 +142,12 @@ class TestRegoParser:
     def test_extract_rules_requires_approval(self):
         """Test _extract_rules for requires_approval rules"""
         parser = RegoParser()
-        content = '''
+        content = """
         requires_approval if {
             input.command.verb == "delete"
             input.command.resource == "pods"
         }
-        '''
+        """
         parser._extract_rules(content)
 
         assert len(parser.rules) == 1
@@ -158,7 +158,7 @@ class TestRegoParser:
     def test_extract_rules_default_deny(self):
         """Test _extract_rules for default deny rules"""
         parser = RegoParser()
-        content = 'default deny := true'
+        content = "default deny := true"
         parser._extract_rules(content)
 
         assert len(parser.rules) == 1
@@ -169,7 +169,7 @@ class TestRegoParser:
     def test_extract_rules_classification_rules(self):
         """Test _extract_rules for classification rules"""
         parser = RegoParser()
-        content = '''
+        content = """
         is_safe_operation if {
             input.command.verb in safe_verbs
         }
@@ -181,7 +181,7 @@ class TestRegoParser:
         is_forbidden_operation if {
             input.command.verb in forbidden_verbs
         }
-        '''
+        """
         parser._extract_rules(content)
 
         assert len(parser.rules) == 3
@@ -193,7 +193,7 @@ class TestRegoParser:
     def test_parse_file_with_temp_file(self):
         """Test parse_file method with a temporary file"""
         parser = RegoParser()
-        content = '''
+        content = """
         # Test policy file
         safe_verbs := {"get", "list"}
 
@@ -202,9 +202,9 @@ class TestRegoParser:
         }
 
         default deny := true
-        '''
+        """
 
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.rego', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".rego", delete=False) as f:
             f.write(content)
             temp_file = f.name
 
@@ -218,14 +218,14 @@ class TestRegoParser:
     def test_parse_file_removes_comments(self):
         """Test that parse_file removes comments properly"""
         parser = RegoParser()
-        content = '''
+        content = """
         # This is a comment
         allow if {
             input.command.verb == "get"  # inline comment
         }
-        '''
+        """
 
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.rego', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".rego", delete=False) as f:
             f.write(content)
             temp_file = f.name
 
@@ -252,7 +252,7 @@ class TestMermaidGenerator:
         rules = [
             RegoRule("rule1", ["condition1"], "safe", "safe"),
             RegoRule("rule2", ["condition2"], "restricted", "restricted"),
-            RegoRule("rule3", ["condition3"], "safe", "safe")
+            RegoRule("rule3", ["condition3"], "safe", "safe"),
         ]
 
         safe_conditions = generator._get_conditions_for_type(rules, "safe")
@@ -261,7 +261,9 @@ class TestMermaidGenerator:
         restricted_conditions = generator._get_conditions_for_type(rules, "restricted")
         assert restricted_conditions == ["condition2"]
 
-        nonexistent_conditions = generator._get_conditions_for_type(rules, "nonexistent")
+        nonexistent_conditions = generator._get_conditions_for_type(
+            rules, "nonexistent"
+        )
         assert nonexistent_conditions == []
 
     def test_extract_key_conditions(self):
@@ -272,11 +274,17 @@ class TestMermaidGenerator:
             "input.command.resource == 'pods'",
             "input.namespace == 'default'",
             "verb in safe_verbs",
-            "forbidden_check == true"
+            "forbidden_check == true",
         ]
 
         key_conditions = generator._extract_key_conditions(conditions)
-        expected = ["verb check", "resource check", "namespace check", "safe verbs", "forbidden check"]
+        expected = [
+            "verb check",
+            "resource check",
+            "namespace check",
+            "safe verbs",
+            "forbidden check",
+        ]
         assert key_conditions == expected
 
     def test_get_edge_label(self):
@@ -290,7 +298,9 @@ class TestMermaidGenerator:
 
         # Test restricted command edge
         restricted_child = DecisionNode("C", "requires approval", "outcome", [], [])
-        assert generator._get_edge_label(parent, restricted_child) == "Restricted Command"
+        assert (
+            generator._get_edge_label(parent, restricted_child) == "Restricted Command"
+        )
 
         # Test forbidden command edge
         forbidden_child = DecisionNode("D", "forbidden operation", "outcome", [], [])
@@ -309,8 +319,18 @@ class TestMermaidGenerator:
         generator = MermaidGenerator()
         rules = [
             RegoRule("safe_rule", ["input.command.verb in safe_verbs"], "safe", "safe"),
-            RegoRule("restricted_rule", ["input.command.verb == 'delete'"], "restricted", "restricted"),
-            RegoRule("forbidden_rule", ["input.command.verb in forbidden_verbs"], "forbidden", "forbidden")
+            RegoRule(
+                "restricted_rule",
+                ["input.command.verb == 'delete'"],
+                "restricted",
+                "restricted",
+            ),
+            RegoRule(
+                "forbidden_rule",
+                ["input.command.verb in forbidden_verbs"],
+                "forbidden",
+                "forbidden",
+            ),
         ]
 
         root = generator._build_decision_tree(rules)
@@ -341,7 +361,12 @@ class TestMermaidGenerator:
         generator = MermaidGenerator()
         rules = [
             RegoRule("safe_rule", ["input.command.verb in safe_verbs"], "safe", "safe"),
-            RegoRule("restricted_rule", ["input.command.verb == 'delete'"], "restricted", "restricted")
+            RegoRule(
+                "restricted_rule",
+                ["input.command.verb == 'delete'"],
+                "restricted",
+                "restricted",
+            ),
         ]
 
         diagram = generator.generate_diagram(rules)
@@ -374,15 +399,15 @@ class TestMermaidGenerator:
 class TestMainFunction:
     """Test main function and CLI functionality"""
 
-    @patch('sys.argv', ['visualize_policy.py', '--policy-file', 'test.rego'])
-    @patch('visualization.visualize_policy.Path.exists')
-    @patch('builtins.open', new_callable=mock_open, read_data='allow if { true }')
-    @patch('visualization.visualize_policy.Path.mkdir')
+    @patch("sys.argv", ["visualize_policy.py", "--policy-file", "test.rego"])
+    @patch("visualization.visualize_policy.Path.exists")
+    @patch("builtins.open", new_callable=mock_open, read_data="allow if { true }")
+    @patch("visualization.visualize_policy.Path.mkdir")
     def test_main_basic_execution(self, mock_mkdir, mock_file, mock_exists):
         """Test main function basic execution"""
         mock_exists.return_value = True
 
-        with patch('builtins.print') as mock_print:
+        with patch("builtins.print") as mock_print:
             # Main function should complete normally without raising SystemExit
             try:
                 main()
@@ -391,18 +416,18 @@ class TestMainFunction:
                 pass
             # Test passes if no exception is raised or SystemExit with code 0
 
-    @patch('sys.argv', ['visualize_policy.py', '--policy-file', 'nonexistent.rego'])
-    @patch('visualization.visualize_policy.Path.exists')
+    @patch("sys.argv", ["visualize_policy.py", "--policy-file", "nonexistent.rego"])
+    @patch("visualization.visualize_policy.Path.exists")
     def test_main_file_not_found(self, mock_exists):
         """Test main function with non-existent policy file"""
         mock_exists.return_value = False
 
         with pytest.raises(SystemExit) as exc_info:
-            with patch('builtins.print'):
+            with patch("builtins.print"):
                 main()
         assert exc_info.value.code == 1
 
-    @patch('sys.argv', ['visualize_policy.py', '--help'])
+    @patch("sys.argv", ["visualize_policy.py", "--help"])
     def test_main_help_option(self):
         """Test main function with help option"""
         with pytest.raises(SystemExit) as exc_info:
@@ -410,15 +435,18 @@ class TestMainFunction:
         # Help should exit with code 0
         assert exc_info.value.code == 0
 
-    @patch('sys.argv', ['visualize_policy.py', '--policy-file', 'test.rego', '--format', 'mermaid'])
-    @patch('visualization.visualize_policy.Path.exists')
-    @patch('builtins.open', new_callable=mock_open, read_data='allow if { true }')
-    @patch('visualization.visualize_policy.Path.mkdir')
+    @patch(
+        "sys.argv",
+        ["visualize_policy.py", "--policy-file", "test.rego", "--format", "mermaid"],
+    )
+    @patch("visualization.visualize_policy.Path.exists")
+    @patch("builtins.open", new_callable=mock_open, read_data="allow if { true }")
+    @patch("visualization.visualize_policy.Path.mkdir")
     def test_main_mermaid_format(self, mock_mkdir, mock_file, mock_exists):
         """Test main function with mermaid format output"""
         mock_exists.return_value = True
 
-        with patch('builtins.print'):
+        with patch("builtins.print"):
             # Main function should complete normally
             try:
                 main()
@@ -426,15 +454,17 @@ class TestMainFunction:
                 # If it does exit, that's also acceptable
                 pass
 
-    @patch('sys.argv', ['visualize_policy.py', '--policy-file', 'test.rego', '--verbose'])
-    @patch('visualization.visualize_policy.Path.exists')
-    @patch('builtins.open', new_callable=mock_open, read_data='allow if { true }')
-    @patch('visualization.visualize_policy.Path.mkdir')
+    @patch(
+        "sys.argv", ["visualize_policy.py", "--policy-file", "test.rego", "--verbose"]
+    )
+    @patch("visualization.visualize_policy.Path.exists")
+    @patch("builtins.open", new_callable=mock_open, read_data="allow if { true }")
+    @patch("visualization.visualize_policy.Path.mkdir")
     def test_main_verbose_mode(self, mock_mkdir, mock_file, mock_exists):
         """Test main function with verbose output"""
         mock_exists.return_value = True
 
-        with patch('builtins.print') as mock_print:
+        with patch("builtins.print") as mock_print:
             # Main function should complete normally
             try:
                 main()

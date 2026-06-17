@@ -59,12 +59,14 @@ def find_rule_blocks(policy_text: str):
                     break
             else:
                 end = i
-            rule_blocks.append({
-                "rule_name": rule_name,
-                "start": start,
-                "end": end,
-                "body": "\n".join(lines[start:end + 1])
-            })
+            rule_blocks.append(
+                {
+                    "rule_name": rule_name,
+                    "start": start,
+                    "end": end,
+                    "body": "\n".join(lines[start : end + 1]),
+                }
+            )
             i = end
         i += 1
     return rule_blocks
@@ -101,7 +103,9 @@ def remove_redundant_rules(policy_text: str, target_rule_names):
     return "\n".join(cleaned_lines)
 
 
-def refactor_policy_with_feedback(policy_path, output_dir, graph_path, graph_suggestion_path, output_path):
+def refactor_policy_with_feedback(
+    policy_path, output_dir, graph_path, graph_suggestion_path, output_path
+):
     write_graph_suggestion(graph_path, graph_suggestion_path)
 
     policy_text = load_file(policy_path)
@@ -111,7 +115,6 @@ def refactor_policy_with_feedback(policy_path, output_dir, graph_path, graph_sug
         "cycle-detection": Path(output_dir) / "linting_feedback_cycle-detection.json",
         "deadrules": Path(output_dir) / "linting_feedback_deadrules.json",
     }
-
 
     rules_by_file = {}
     for name, feedback_file in feedback_files.items():
@@ -132,7 +135,9 @@ def refactor_policy_with_feedback(policy_path, output_dir, graph_path, graph_sug
         print(f"   - {name}: {sorted(rules)}")
 
     print(f"\nNodes from graph: {sorted(graph_nodes)}")
-    print(f"Rules eligible for removal (deadrules ∩ graph nodes): {sorted(removable_rules)}")
+    print(
+        f"Rules eligible for removal (deadrules ∩ graph nodes): {sorted(removable_rules)}"
+    )
 
     if not removable_rules:
         print("No rules found that exist in both 'deadrules' feedback and graph nodes.")
@@ -164,7 +169,11 @@ if __name__ == "__main__":
     policy_path = Path(os.getenv("POLICY_PATH"))
     output_dir = os.path.join(base_url, copy_save_dir, "tmp", "feedback")
 
-    graph_path = Path(os.path.join(base_url, "src", "policy_agent", "reduce_improve", "graph_redundancy.txt"))
+    graph_path = Path(
+        os.path.join(
+            base_url, "src", "policy_agent", "reduce_improve", "graph_redundancy.txt"
+        )
+    )
     output_path = Path(os.path.join(base_url, "policies", "policy.rego"))
 
     refactor_policy_with_feedback(policy_path, output_dir, graph_path, output_path)
