@@ -28,7 +28,10 @@ def test_basic_resource_operations(parser):
     assert result["command"]["verb"] == "get"
     assert result["command"]["resource"] == "pods"
     assert result["command"]["namespace"] == "sre-sandbox"
-    assert any(flag["name"] == "-n" and flag["value"] == "sre-sandbox" for flag in result["command"]["flags"])
+    assert any(
+        flag["name"] == "-n" and flag["value"] == "sre-sandbox"
+        for flag in result["command"]["flags"]
+    )
 
     # Test describe with namespace=value format
     result = parser.parse("kubectl describe pod my-pod --namespace=production")
@@ -50,7 +53,9 @@ def test_file_based_operations(parser):
 
     result = parser.parse("kubectl apply -f deployment.yaml")
     assert result["command"]["verb"] == "apply"
-    assert result["command"]["resource"] is None  # -f now takes deployment.yaml as value
+    assert (
+        result["command"]["resource"] is None
+    )  # -f now takes deployment.yaml as value
     flags = {flag["name"]: flag["value"] for flag in result["command"]["flags"]}
     assert flags["-f"] == "deployment.yaml"
 
@@ -74,7 +79,9 @@ def test_complex_operations_with_multiple_flags(parser):
     result = parser.parse("kubectl logs my-pod -c container-name --follow --tail=100")
     assert result["command"]["verb"] == "logs"
     assert result["command"]["resource"] is None
-    assert result["command"]["args"] == ["my-pod"]  # container-name is now -c flag's value
+    assert result["command"]["args"] == [
+        "my-pod"
+    ]  # container-name is now -c flag's value
     flags = {flag["name"]: flag["value"] for flag in result["command"]["flags"]}
     assert flags["-c"] == "container-name"  # -c now takes container-name as value
     assert flags["--follow"] is None
@@ -103,13 +110,17 @@ def test_complex_operations_with_multiple_flags(parser):
 def test_quoted_arguments(parser):
     """Test handling of quoted arguments with spaces."""
 
-    result = parser.parse('kubectl create secret generic my-secret --from-literal=key="value with spaces"')
+    result = parser.parse(
+        'kubectl create secret generic my-secret --from-literal=key="value with spaces"'
+    )
     assert result["command"]["verb"] == "create"
     assert result["command"]["resource"] == "secret"
     assert "generic" in result["command"]["args"]
     assert "my-secret" in result["command"]["args"]
     flags = {flag["name"]: flag["value"] for flag in result["command"]["flags"]}
-    assert flags["--from-literal"] == "key=value with spaces"  # Quotes are removed by tokenizer
+    assert (
+        flags["--from-literal"] == "key=value with spaces"
+    )  # Quotes are removed by tokenizer
 
 
 def test_subcommands(parser):
@@ -170,7 +181,9 @@ def test_creation_commands(parser):
     assert flags["--tcp"] == "80:8080"
 
     # Test configmap creation
-    result = parser.parse("kubectl create configmap my-config --from-file=config.properties")
+    result = parser.parse(
+        "kubectl create configmap my-config --from-file=config.properties"
+    )
     assert result["command"]["verb"] == "create"
     assert result["command"]["resource"] == "configmap"
     assert "my-config" in result["command"]["args"]
@@ -215,7 +228,9 @@ def test_advanced_operations(parser):
     """Test advanced operations like patch, scale, autoscale."""
 
     # Test patch with JSON
-    result = parser.parse('kubectl patch deployment nginx -p \'{"spec":{"replicas":5}}\'')
+    result = parser.parse(
+        'kubectl patch deployment nginx -p \'{"spec":{"replicas":5}}\''
+    )
     assert result["command"]["verb"] == "patch"
     assert result["command"]["resource"] == "deployment"
     assert "nginx" in result["command"]["args"]
@@ -231,7 +246,9 @@ def test_advanced_operations(parser):
     assert flags["--replicas"] == "10"
 
     # Test autoscale
-    result = parser.parse("kubectl autoscale deployment nginx --min=2 --max=10 --cpu-percent=80")
+    result = parser.parse(
+        "kubectl autoscale deployment nginx --min=2 --max=10 --cpu-percent=80"
+    )
     assert result["command"]["verb"] == "autoscale"
     assert result["command"]["resource"] == "deployment"
     assert "nginx" in result["command"]["args"]
@@ -241,7 +258,9 @@ def test_advanced_operations(parser):
     assert flags["--cpu-percent"] == "80"
 
     # Test wait
-    result = parser.parse("kubectl wait --for=condition=Ready pod/my-pod --timeout=300s")
+    result = parser.parse(
+        "kubectl wait --for=condition=Ready pod/my-pod --timeout=300s"
+    )
     assert result["command"]["verb"] == "wait"
     assert result["command"]["resource"] == "pod/my-pod"
     flags = {flag["name"]: flag["value"] for flag in result["command"]["flags"]}
@@ -286,7 +305,9 @@ def test_commands_without_kubectl_prefix(parser):
     # Test apply with kustomize
     result = parser.parse("apply -k ./kustomize-dir")
     assert result["command"]["verb"] == "apply"
-    assert result["command"]["resource"] is None  # -k now takes ./kustomize-dir as value
+    assert (
+        result["command"]["resource"] is None
+    )  # -k now takes ./kustomize-dir as value
     flags = {flag["name"]: flag["value"] for flag in result["command"]["flags"]}
     assert flags["-k"] == "./kustomize-dir"
 
@@ -368,20 +389,30 @@ def test_tokenizer_with_quotes(parser):
     """Test tokenizer handles quoted strings correctly."""
 
     # Test single quotes
-    result = parser.parse("kubectl create secret generic test --from-literal='key=value with spaces'")
+    result = parser.parse(
+        "kubectl create secret generic test --from-literal='key=value with spaces'"
+    )
     flags = {flag["name"]: flag["value"] for flag in result["command"]["flags"]}
     assert flags["--from-literal"] == "key=value with spaces"
 
     # Test double quotes
-    result = parser.parse('kubectl create secret generic test --from-literal="key=value with spaces"')
+    result = parser.parse(
+        'kubectl create secret generic test --from-literal="key=value with spaces"'
+    )
     flags = {flag["name"]: flag["value"] for flag in result["command"]["flags"]}
     assert flags["--from-literal"] == "key=value with spaces"
 
     # Test nested quotes in JSON
-    result = parser.parse('kubectl patch pod test -p \'{"metadata":{"labels":{"app":"test"}}}\'')
+    result = parser.parse(
+        'kubectl patch pod test -p \'{"metadata":{"labels":{"app":"test"}}}\''
+    )
     flags = {flag["name"]: flag["value"] for flag in result["command"]["flags"]}
-    assert flags["-p"] == '{"metadata":{"labels":{"app":"test"}}}'  # -p now takes JSON as value
-    assert result["command"]["args"] == ["test"]  # test is the pod name, JSON is now -p flag's value
+    assert (
+        flags["-p"] == '{"metadata":{"labels":{"app":"test"}}}'
+    )  # -p now takes JSON as value
+    assert result["command"]["args"] == [
+        "test"
+    ]  # test is the pod name, JSON is now -p flag's value
 
 
 @patch("builtins.print")
@@ -405,7 +436,9 @@ def test_main_function(mock_print):
     result_lines = [line for line in print_calls if line.startswith("Parsed: ")]
 
     # Should have at least some command and result lines
-    assert len(command_lines) > 0, f"No command lines found in output. All calls: {print_calls[:5]}..."
+    assert (
+        len(command_lines) > 0
+    ), f"No command lines found in output. All calls: {print_calls[:5]}..."
     assert len(result_lines) > 0, "No result lines found in output"
 
     # Verify some expected commands are processed
@@ -441,7 +474,15 @@ def test_empty_tokens_after_tokenization(parser):
     # This should have non-empty string but tokenize to empty list
     # For example, a string with only empty quotes
     result = parser.parse('kubectl ""')
-    expected = {"command": {"verb": None, "resource": None, "namespace": None, "args": [], "flags": []}}
+    expected = {
+        "command": {
+            "verb": None,
+            "resource": None,
+            "namespace": None,
+            "args": [],
+            "flags": [],
+        }
+    }
     assert result == expected
 
 
@@ -452,7 +493,9 @@ def test_namespace_flag_without_value(parser):
 
     assert result["command"]["verb"] == "get"
     assert result["command"]["resource"] == "pods"
-    assert result["command"]["namespace"] is None  # Should be None since no value provided
+    assert (
+        result["command"]["namespace"] is None
+    )  # Should be None since no value provided
     assert len(result["command"]["flags"]) == 1
     assert result["command"]["flags"][0]["name"] == "-n"
     assert result["command"]["flags"][0]["value"] is None
@@ -488,7 +531,9 @@ def test_unquoted_selector_parsing(parser):
     """Test parsing of unquoted selector expressions."""
 
     # Test the original problem cases
-    result = parser.parse("kubectl get pods -n otel-demo -l service in (email,checkout)")
+    result = parser.parse(
+        "kubectl get pods -n otel-demo -l service in (email,checkout)"
+    )
     assert result["command"]["verb"] == "get"
     assert result["command"]["resource"] == "pods"
     assert result["command"]["namespace"] == "otel-demo"
@@ -496,7 +541,9 @@ def test_unquoted_selector_parsing(parser):
     assert flags["-l"] == "service in (email,checkout)"
     assert len(result["command"]["args"]) == 0  # No leftover args
 
-    result = parser.parse("kubectl get deployments -n otel-demo -o jsonpath='...' --selector=service in (ad,cart,payment)")
+    result = parser.parse(
+        "kubectl get deployments -n otel-demo -o jsonpath='...' --selector=service in (ad,cart,payment)"
+    )
     assert result["command"]["verb"] == "get"
     assert result["command"]["resource"] == "deployments"
     assert result["command"]["namespace"] == "otel-demo"
@@ -595,7 +642,9 @@ def test_field_selector_compatibility(parser):
     """Test that field selectors still work correctly."""
 
     # Field selector should use existing logic (not the special selector logic)
-    result = parser.parse("kubectl get services --all-namespaces --field-selector metadata.namespace!=default")
+    result = parser.parse(
+        "kubectl get services --all-namespaces --field-selector metadata.namespace!=default"
+    )
     flags = {flag["name"]: flag["value"] for flag in result["command"]["flags"]}
     assert flags["--field-selector"] == "metadata.namespace!=default"
     assert flags["--all-namespaces"] is None
@@ -613,7 +662,9 @@ def test_selector_with_mixed_flags(parser):
     assert flags["-o"] == "wide"
 
     # Multiple complex flags including selector
-    result = parser.parse("kubectl get deployments --all-namespaces --selector=tier in (frontend,backend) --sort-by=.metadata.name")
+    result = parser.parse(
+        "kubectl get deployments --all-namespaces --selector=tier in (frontend,backend) --sort-by=.metadata.name"
+    )
     flags = {flag["name"]: flag["value"] for flag in result["command"]["flags"]}
     assert flags["--all-namespaces"] is None
     assert flags["--selector"] == "tier in (frontend,backend)"
@@ -639,7 +690,9 @@ def test_selector_coverage_edge_cases(parser):
     # This case: "app" followed by "nginx" (not an operator, not a flag)
     result = parser.parse("kubectl get pods -l app nginx -o yaml")
     flags = {flag["name"]: flag["value"] for flag in result["command"]["flags"]}
-    assert flags["-l"] == "app"  # Should stop at "app" because next token "nginx" is not an operator
+    assert (
+        flags["-l"] == "app"
+    )  # Should stop at "app" because next token "nginx" is not an operator
     assert flags["-o"] == "yaml"
     assert "nginx" in result["command"]["args"]  # nginx becomes an argument
 
@@ -660,7 +713,9 @@ def test_selector_comprehensive_scenarios(parser):
     assert flags["-l"] == "service in (email,checkout)"
 
     # Test equals format with complex selector
-    result = parser.parse("kubectl get deployments --selector=service in (ad,cart,payment)")
+    result = parser.parse(
+        "kubectl get deployments --selector=service in (ad,cart,payment)"
+    )
     flags = {flag["name"]: flag["value"] for flag in result["command"]["flags"]}
     assert flags["--selector"] == "service in (ad,cart,payment)"
 
@@ -693,7 +748,12 @@ def test_parser_script_execution():
     """Test that parser.py script can be executed directly."""
     try:
         # Run the parser.py script as a module
-        result = subprocess.run([sys.executable, "-m", "kubectlcmdprocessor.parser"], capture_output=True, text=True, timeout=30)
+        result = subprocess.run(
+            [sys.executable, "-m", "kubectlcmdprocessor.parser"],
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
 
         # Check that the script ran successfully (exit code 0)
         assert result.returncode == 0

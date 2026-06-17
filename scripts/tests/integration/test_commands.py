@@ -12,7 +12,10 @@ from mcpgateway.plugins.framework import (
     ToolPreInvokePayload,
 )
 
-from kubectlcmdprocessor.plugin import CONTEXT_KEY_POLICY_CONTEXT, CONTEXT_KEY_KUBECTL_CMD
+from kubectlcmdprocessor.plugin import (
+    CONTEXT_KEY_POLICY_CONTEXT,
+    CONTEXT_KEY_KUBECTL_CMD,
+)
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -22,7 +25,7 @@ def plugin_manager():
     asyncio.run(plugin_manager.initialize())
     yield plugin_manager
     asyncio.run(plugin_manager.shutdown())
-    
+
 
 @pytest.mark.asyncio
 async def test_tool_pre_hook_commands(plugin_manager: PluginManager):
@@ -34,5 +37,7 @@ async def test_tool_pre_hook_commands(plugin_manager: PluginManager):
             global_context = GlobalContext(request_id="1")
             result, ctx = await plugin_manager.tool_pre_invoke(payload, global_context)
             context = next(iter(ctx.values()))
-            cmd = context.global_context.state[CONTEXT_KEY_POLICY_CONTEXT][CONTEXT_KEY_KUBECTL_CMD]            
-            assert result.continue_processing == (expected=="allow")
+            cmd = context.global_context.state[CONTEXT_KEY_POLICY_CONTEXT][
+                CONTEXT_KEY_KUBECTL_CMD
+            ]
+            assert result.continue_processing == (expected == "allow")

@@ -5,10 +5,23 @@ import httpx
 from openai import OpenAI
 from dotenv import load_dotenv
 import sys
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../.."))
 load_dotenv()
 
-def case_generation(api_key, system_variables, openai_base_url, model, temp, top_p, output_file_variables, output_file_cases, batch_processing=False, batch_size=10):
+
+def case_generation(
+    api_key,
+    system_variables,
+    openai_base_url,
+    model,
+    temp,
+    top_p,
+    output_file_variables,
+    output_file_cases,
+    batch_processing=False,
+    batch_size=10,
+):
 
     system_instruction = """
 You are a test case generation agent for an HR agent.
@@ -82,9 +95,9 @@ Output example:
 ]
 
 """
-    guidances={}
-    with open(output_file_variables, 'r') as f:
-        guidances=json.load(f)
+    guidances = {}
+    with open(output_file_variables, "r") as f:
+        guidances = json.load(f)
 
     # Initialize OpenAI client
     http_client = httpx.Client(verify=False, timeout=300.0)
@@ -94,9 +107,11 @@ Output example:
         all_results = []
         total_batches = (len(guidances) + batch_size - 1) // batch_size
         for i in range(0, len(guidances), batch_size):
-            batch = guidances[i:i + batch_size]
+            batch = guidances[i : i + batch_size]
             batch_num = i // batch_size + 1
-            print(f"Sending batch {batch_num}/{total_batches} ({len(batch)} items) for test case generation...")
+            print(
+                f"Sending batch {batch_num}/{total_batches} ({len(batch)} items) for test case generation..."
+            )
             user_instruction = f"""
 System variable candidates: {str(system_variables)}
 Guidance items: {str(batch)}
@@ -105,10 +120,10 @@ Guidance items: {str(batch)}
                 model=model,
                 messages=[
                     {"role": "system", "content": system_instruction},
-                    {"role": "user", "content": user_instruction}
+                    {"role": "user", "content": user_instruction},
                 ],
                 temperature=temp,
-                top_p=top_p
+                top_p=top_p,
             )
             llm_output = response.choices[0].message.content.strip()
             match = re.search(r"```json\s*(.*?)```", llm_output, re.DOTALL)
@@ -124,7 +139,7 @@ Guidance items: {str(batch)}
                 print(f"Error parsing LLM output for batch {batch_num}:", e)
                 print("Raw output will be skipped for this batch")
 
-        with open(output_file_cases, 'w') as f:
+        with open(output_file_cases, "w") as f:
             json.dump(all_results, f, indent=4)
     else:
         user_instruction = f"""
@@ -136,10 +151,10 @@ Guidance items: {str(guidances)}
             model=model,
             messages=[
                 {"role": "system", "content": system_instruction},
-                {"role": "user", "content": user_instruction}
+                {"role": "user", "content": user_instruction},
             ],
             temperature=temp,
-            top_p=top_p
+            top_p=top_p,
         )
 
         llm_output = response.choices[0].message.content.strip()
@@ -148,12 +163,12 @@ Guidance items: {str(guidances)}
             llm_output = match.group(1).strip()
         try:
             issues_list = json.loads(llm_output)
-            with open(output_file_cases, 'w') as f:
+            with open(output_file_cases, "w") as f:
                 json.dump(issues_list, f, indent=4)
         except json.JSONDecodeError as e:
             print("Error parsing LLM output:", e)
             print("Please fix the format manually")
-            with open(output_file_cases, 'w') as f:
+            with open(output_file_cases, "w") as f:
                 f.write(llm_output)
 
     return guidances

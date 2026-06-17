@@ -1,11 +1,57 @@
+# ---- Python ----
 __pycache__/
+*.py[cod]
+*.egg-info/
 smith.egg-info/
-*.pyc
-policy_generation/
-venv*
-.venv*
+build/
+dist/
+.eggs/
+
+# ---- Virtual environments ----
+venv*/
+.venv*/
+env/
+
+# ---- Secrets / local config ----
 .env
-scripts/test_generation/ares/assets/*generate*.json
+.env.local
+*.env
+!.env_template
+
+# ---- Editor / OS ----
+.DS_Store
+.idea/
+.vscode/
+.claude/
+
+# ---- Logs ----
 *.log
-scripts/tests/integration/*txt
+
+# ---- Node / Promptfoo ----
+node_modules/
+
+# ---- Generated: test cases & generation pipeline (references/) ----
+# Keep tracked inputs (e.g. references/test_case_template.json); ignore generated artifacts.
 references/test_cases/
+references/decomp_file.json
+references/decomp_flatten_file.json
+references/vars_file.json
+references/grey_guidance.json
+references/test_cases.json
+references/decomp_attack_file.json
+references/decomp_attack_file_promptfoo.json
+references/decomp_attack_file_promptfoo_classified.json
+references/label_validation_results.json
+references/test_case_report.html
+
+# ---- Generated: OPA intermediate results (assets/opa/outputs/) ----
+assets/opa/outputs/
+
+# ---- Generated: ARES red-teaming artifacts ----
+scripts/test_generation/ares/assets/*generate*.json
+
+# ---- Generated: policy testing scorecard output ----
+scripts/tests/integration/*.txt
+
+# ---- Misc ----
+.sketchpad

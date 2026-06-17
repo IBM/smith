@@ -1,16 +1,25 @@
 import os
 from dotenv import load_dotenv
-from openai import OpenAI
-import subprocess 
+import subprocess
+
 load_dotenv()
 
 
 def create_regal_suggestion(policy_path, regal_suggestion_path):
-    subprocess.run(["regal lint "+policy_path+" | sed 's/\x1B\[[0-9;]*[a-zA-Z]//g' > "+regal_suggestion_path], shell=True)
-    content=''
-    with open(regal_suggestion_path, 'r') as file:
+    subprocess.run(
+        [
+            "regal lint "
+            + policy_path
+            + " | sed 's/\x1b\[[0-9;]*[a-zA-Z]//g' > "
+            + regal_suggestion_path
+        ],
+        shell=True,
+    )
+    content = ""
+    with open(regal_suggestion_path, "r") as file:
         content = str(file.read())
     return content
+
 
 if __name__ == "__main__":
     policy_dir = os.getenv("POLICY_DIR")

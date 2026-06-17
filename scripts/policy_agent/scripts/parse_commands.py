@@ -26,6 +26,16 @@ if __name__ == "__main__":
     for i, command in enumerate(commands, 1):
         print(f"{i}. {command}")
         with open(f"tests/unlabeled_command{i}.json", "w") as f:
-            f.write(json.dumps({"input": {**parser.parse(command), **{"original_command": command}}}, indent=2))
+            f.write(
+                json.dumps(
+                    {
+                        "input": {
+                            **parser.parse(command),
+                            **{"original_command": command},
+                        }
+                    },
+                    indent=2,
+                )
+            )
 
     print(f"\nTotal commands: {len(commands)}")

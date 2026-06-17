@@ -7,8 +7,16 @@ SPDX-License-Identifier: Apache-2.0
 import pytest
 from unittest.mock import Mock
 
-from kubectlcmdprocessor.plugin import KubectlCmdProcessor, CONTEXT_KEY_POLICY_CONTEXT, CONTEXT_KEY_KUBECTL_CMD
-from mcpgateway.plugins.framework import PluginConfig, PluginContext, ToolPreInvokePayload
+from kubectlcmdprocessor.plugin import (
+    KubectlCmdProcessor,
+    CONTEXT_KEY_POLICY_CONTEXT,
+    CONTEXT_KEY_KUBECTL_CMD,
+)
+from mcpgateway.plugins.framework import (
+    PluginConfig,
+    PluginContext,
+    ToolPreInvokePayload,
+)
 
 
 @pytest.fixture
@@ -63,7 +71,9 @@ async def test_tool_pre_invoke_empty_dict_args(plugin, mock_context):
 @pytest.mark.asyncio
 async def test_tool_pre_invoke_with_args(plugin, mock_context):
     """Test tool_pre_invoke with valid args."""
-    payload = ToolPreInvokePayload(name="test_tool", args={"command": "kubectl get pods"})
+    payload = ToolPreInvokePayload(
+        name="test_tool", args={"command": "kubectl get pods"}
+    )
     result = await plugin.tool_pre_invoke(payload, mock_context)
     assert result.continue_processing is True
     assert CONTEXT_KEY_POLICY_CONTEXT in mock_context.global_context.state
@@ -114,7 +124,9 @@ async def test_process_args_kubectl_parser_integration(plugin, mock_context):
 @pytest.mark.asyncio
 async def test_process_args_with_complex_kubectl_command(plugin, mock_context):
     """Test processing complex kubectl command."""
-    args = {"command": "kubectl apply -f deployment.yaml --namespace=production --dry-run=client"}
+    args = {
+        "command": "kubectl apply -f deployment.yaml --namespace=production --dry-run=client"
+    }
     await plugin.process_args_in_state(args, mock_context)
 
     policy_context = mock_context.global_context.state[CONTEXT_KEY_POLICY_CONTEXT]
@@ -125,7 +137,9 @@ async def test_process_args_with_complex_kubectl_command(plugin, mock_context):
     command_data = kubectl_cmd["command"]
     assert "flags" in command_data
     # Check for namespace flag in the flags list
-    namespace_flag = next((flag for flag in command_data["flags"] if flag["name"] == "--namespace"), None)
+    namespace_flag = next(
+        (flag for flag in command_data["flags"] if flag["name"] == "--namespace"), None
+    )
     assert namespace_flag is not None
     assert namespace_flag["value"] == "production"
 

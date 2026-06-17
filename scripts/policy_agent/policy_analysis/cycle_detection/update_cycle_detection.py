@@ -8,13 +8,20 @@ from dotenv import load_dotenv
 
 # Add src folder to sys.path so imports work from test/
 import sys
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../.."))
 
-from policy_agent.policy_analysis.model_output_schema.schema import PolicyIssue, PolicyAnalysisReport
+from policy_agent.policy_analysis.model_output_schema.schema import (
+    PolicyIssue,
+    PolicyAnalysisReport,
+)
 
 load_dotenv()
 
-def cycle_detection(api_key, output_dir, openai_base_url, policy_path, model, temp, top_p):
+
+def cycle_detection(
+    api_key, output_dir, openai_base_url, policy_path, model, temp, top_p
+):
     """
     Detect cyclic rule dependencies in an OPA Rego policy using the LLM.
     Saves structured JSON and Markdown reports.
@@ -24,7 +31,6 @@ def cycle_detection(api_key, output_dir, openai_base_url, policy_path, model, te
         raise FileNotFoundError(f"Policy file not found: {policy_path}")
     with open(policy_path, "r", encoding="utf-8") as f:
         rego_policy = f.read()
-
 
     schema_json_str = json.dumps(PolicyIssue.model_json_schema(), indent=2)
 
@@ -61,7 +67,6 @@ def cycle_detection(api_key, output_dir, openai_base_url, policy_path, model, te
     Output only JSON. Do NOT include explanations, Markdown, or extra text.
     """
 
-
     # Initialize OpenAI client
     http_client = httpx.Client(verify=False, timeout=300.0)
     client = OpenAI(api_key=api_key, base_url=openai_base_url, http_client=http_client)
@@ -71,10 +76,10 @@ def cycle_detection(api_key, output_dir, openai_base_url, policy_path, model, te
         model=model,
         messages=[
             {"role": "system", "content": system_instruction},
-            {"role": "user", "content": rego_policy}
+            {"role": "user", "content": rego_policy},
         ],
         temperature=temp,
-        top_p=top_p
+        top_p=top_p,
     )
 
     llm_output = response.choices[0].message.content.strip()

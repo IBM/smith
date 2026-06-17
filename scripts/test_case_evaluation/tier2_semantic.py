@@ -1,6 +1,6 @@
 import numpy as np
 from dataclasses import dataclass
-from typing import List, Dict, Any, Optional
+from typing import List, Dict
 from sentence_transformers import SentenceTransformer, CrossEncoder
 from sklearn.metrics.pairwise import cosine_similarity
 
@@ -15,7 +15,11 @@ class Tier2Result:
 
 
 class Tier2Evaluator:
-    def __init__(self, embedding_model="all-MiniLM-L6-v2", nli_model="cross-encoder/nli-deberta-v3-base"):
+    def __init__(
+        self,
+        embedding_model="all-MiniLM-L6-v2",
+        nli_model="cross-encoder/nli-deberta-v3-base",
+    ):
         print("Loading embedding model...")
         self.embed_model = SentenceTransformer(embedding_model)
         print("Loading NLI model...")
@@ -24,20 +28,30 @@ class Tier2Evaluator:
     def _embed(self, texts: List[str]) -> np.ndarray:
         return self.embed_model.encode(texts, show_progress_bar=False)
 
-    def _nli_predict(self, premise_hypothesis_pairs: List[List[str]]) -> List[Dict[str, float]]:
+    def _nli_predict(
+        self, premise_hypothesis_pairs: List[List[str]]
+    ) -> List[Dict[str, float]]:
         if not premise_hypothesis_pairs:
             return []
         scores = self.nli_model.predict(premise_hypothesis_pairs, apply_softmax=True)
         results = []
         for score_row in scores:
-            results.append({
-                "contradiction": float(score_row[0]),
-                "entailment": float(score_row[1]),
-                "neutral": float(score_row[2]),
-            })
+            results.append(
+                {
+                    "contradiction": float(score_row[0]),
+                    "entailment": float(score_row[1]),
+                    "neutral": float(score_row[2]),
+                }
+            )
         return results
 
-    def evaluate_generated(self, user_inputs: List[str], conditions: List[str], guidances: List[str], assigned_labels: List[str]) -> List[Tier2Result]:
+    def evaluate_generated(
+        self,
+        user_inputs: List[str],
+        conditions: List[str],
+        guidances: List[str],
+        assigned_labels: List[str],
+    ) -> List[Tier2Result]:
         """Evaluate generated cases using condition-based NLI.
 
         For generated cases, we check: does user_input entail its stated condition?
@@ -48,7 +62,9 @@ class Tier2Evaluator:
         guidance_embeddings = self._embed(guidances)
         embed_sims = []
         for i in range(len(user_inputs)):
-            sim = cosine_similarity([input_embeddings[i]], [guidance_embeddings[i]])[0][0]
+            sim = cosine_similarity([input_embeddings[i]], [guidance_embeddings[i]])[0][
+                0
+            ]
             embed_sims.append(float(sim))
 
         # NLI: does user_input match its condition?
@@ -74,7 +90,9 @@ class Tier2Evaluator:
                 reason = f"User input entails condition '{conditions[i][:50]}' (ent={entailment:.3f})"
             elif contradiction > 0.5:
                 # Condition doesn't match input — predict opposite label
-                predicted_label = "disallow" if assigned_labels[i] == "allow" else "allow"
+                predicted_label = (
+                    "disallow" if assigned_labels[i] == "allow" else "allow"
+                )
                 confidence = 0.30 * max(embed_sims[i], 0) + 0.70 * contradiction
                 reason = f"User input contradicts condition '{conditions[i][:50]}' (contra={contradiction:.3f})"
             else:
@@ -89,17 +107,21 @@ class Tier2Evaluator:
                 "neutral": neutral,
             }
 
-            results.append(Tier2Result(
-                predicted_label=predicted_label,
-                confidence=confidence,
-                reason=reason,
-                nli_scores=nli_scores,
-                embedding_similarity=embed_sims[i],
-            ))
+            results.append(
+                Tier2Result(
+                    predicted_label=predicted_label,
+                    confidence=confidence,
+                    reason=reason,
+                    nli_scores=nli_scores,
+                    embedding_similarity=embed_sims[i],
+                )
+            )
 
         return results
 
-    def evaluate_promptfoo(self, user_inputs: List[str], guidances: List[str], assigned_labels: List[str]) -> List[Tier2Result]:
+    def evaluate_promptfoo(
+        self, user_inputs: List[str], guidances: List[str], assigned_labels: List[str]
+    ) -> List[Tier2Result]:
         """Evaluate promptfoo cases using guidance-based NLI.
 
         Promptfoo cases are all malicious/disallow. Check if user_input clearly
@@ -109,7 +131,9 @@ class Tier2Evaluator:
         guidance_embeddings = self._embed(guidances)
         embed_sims = []
         for i in range(len(user_inputs)):
-            sim = cosine_similarity([input_embeddings[i]], [guidance_embeddings[i]])[0][0]
+            sim = cosine_similarity([input_embeddings[i]], [guidance_embeddings[i]])[0][
+                0
+            ]
             embed_sims.append(float(sim))
 
         # NLI: does user_input contradict the guidance?
@@ -157,12 +181,14 @@ class Tier2Evaluator:
                 "neutral": neutral,
             }
 
-            results.append(Tier2Result(
-                predicted_label=predicted_label,
-                confidence=confidence,
-                reason=reason,
-                nli_scores=nli_scores,
-                embedding_similarity=embed_sims[i],
-            ))
+            results.append(
+                Tier2Result(
+                    predicted_label=predicted_label,
+                    confidence=confidence,
+                    reason=reason,
+                    nli_scores=nli_scores,
+                    embedding_similarity=embed_sims[i],
+                )
+            )
 
         return results
