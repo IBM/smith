@@ -623,20 +623,6 @@ def set_user_role(user_role: str) -> str:
     
     return f"User role set to: {user_role}"
 
-@mcp.tool()
-@policy_check("debug_user_context")
-def debug_user_context() -> str:
-    """
-       Debug tool to check current user context
-       
-       Returns:
-           str: Current user context information
-    """
-    context = get_current_user_context()
-    return f"Current user context: {context}"
-
-# ===== HELPER FUNCTIONS =====
-
 def project_record(record, select_fields):
     """Return only requested fields if select_fields is provided; otherwise return full record."""
     if not select_fields:

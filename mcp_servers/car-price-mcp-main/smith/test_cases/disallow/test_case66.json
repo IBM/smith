@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "What's the pricing for Lexus models in the current market?",
+                "input": "Please look up Audi vehicle pricing",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +30,7 @@
             }
         },
         "arguments": {
-            "brand_name": "Lexus"
+            "brand_name": "Audi"
         }
     }
 }

@@ -4,8 +4,6 @@ import json
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
-
 
 def run_attack(base_skill_url, test_generation_path, output_promptfoo):
     promptfoo_config = str(os.getenv("PROMPTFOO_CONFIG_FILE"))
@@ -37,7 +35,12 @@ def read_test_cases(output_file_attack_promptfoo, output_promptfoo):
         test_case_dict = {}
         test_case_dict["label"] = "malicious_promptfoo"
         test_case_dict["user_input"] = case["vars"]["prompt"]
-        test_case_dict["system_variables"] = {}
+        system_variables = {}
+        for key, value in case["vars"].items():
+            if key == "prompt":
+                continue
+            system_variables[key] = value
+        test_case_dict["system_variables"] = system_variables
         test_cases.append(test_case_dict)
     with open(output_file_attack_promptfoo, "w") as f:
         json.dump(test_cases, f, indent=4)

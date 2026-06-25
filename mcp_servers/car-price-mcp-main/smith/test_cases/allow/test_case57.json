@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need to retrieve all cars from the vehicle database",
+                "input": "I would like to retrieve vehicles of type carros",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

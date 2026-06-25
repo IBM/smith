@@ -8,9 +8,7 @@
                 "claims": {},
                 "user_name": "Bob",
                 "user_role": [
-                    "faculty",
-                    "phd_student",
-                    "guest"
+                    "phd_student"
                 ],
                 "user_id": "bob@university.edu",
                 "department": [
@@ -18,7 +16,8 @@
                     "electrical_engineering",
                     "multidisciplinary"
                 ],
-                "queries_per_session": 1,
+                "queries_this_session": 1,
+                "dissertation_area": "Artificial intelligence",
                 "research_area": [
                     "Artificial intelligence",
                     "Cybersecurity and privacy",
@@ -33,7 +32,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please get events with hackathon as keyword.",
+                "input": "Search for events on cybersecurity topics",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -44,9 +43,9 @@
             }
         },
         "arguments": {
-            "keywords": "hackathon",
-            "topic": "Software engineering",
-            "limit": 10
+            "keywords": "cybersecurity",
+            "topic": "Cybersecurity and privacy",
+            "limit": 20
         }
     }
 }

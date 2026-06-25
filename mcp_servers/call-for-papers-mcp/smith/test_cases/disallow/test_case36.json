@@ -18,7 +18,8 @@
                     "electrical_engineering",
                     "multidisciplinary"
                 ],
-                "queries_per_session": 1,
+                "queries_this_session": 1,
+                "dissertation_area": "Artificial intelligence",
                 "research_area": [
                     "Artificial intelligence",
                     "Cybersecurity and privacy",
@@ -33,7 +34,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Show me events that include quantum physics in their keywords.",
+                "input": "Can you find events on renewable energy?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -44,7 +45,7 @@
             }
         },
         "arguments": {
-            "keywords": "quantum physics",
+            "keywords": "renewable energy",
             "topic": "Artificial intelligence",
             "limit": 10
         }

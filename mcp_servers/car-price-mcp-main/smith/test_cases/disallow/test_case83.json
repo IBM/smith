@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Could you look up pricing information for Mini vehicles?",
+                "input": "I need to search for Audi car prices",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +30,7 @@
             }
         },
         "arguments": {
-            "brand_name": "Mini"
+            "brand_name": "Audi"
         }
     }
 }

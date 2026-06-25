@@ -14,7 +14,8 @@
                 "department": [
                     "computer_science"
                 ],
-                "queries_per_session": 1,
+                "queries_this_session": 1,
+                "dissertation_area": "Artificial intelligence",
                 "research_area": [
                     "Artificial intelligence"
                 ]
@@ -27,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need to check upcoming events",
+                "input": "Can you get me the upcoming events?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -38,9 +39,9 @@
             }
         },
         "arguments": {
-            "keywords": "Artificial intelligence",
+            "keywords": "artificial intelligence conference workshop",
             "topic": "Artificial intelligence",
-            "limit": 5
+            "limit": 10
         }
     }
 }

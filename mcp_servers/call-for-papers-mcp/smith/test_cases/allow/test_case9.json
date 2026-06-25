@@ -12,11 +12,12 @@
                 ],
                 "user_id": "bob@university.edu",
                 "department": [
-                    "multidisciplinary"
+                    "computer_science"
                 ],
-                "queries_per_session": 1,
+                "queries_this_session": 1,
+                "dissertation_area": "Artificial intelligence",
                 "research_area": [
-                    "Software engineering"
+                    "Cybersecurity and privacy"
                 ]
             },
             "headers": {
@@ -27,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you find events on Cybersecurity and privacy for me?",
+                "input": "Get events for Cybersecurity and privacy",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -38,9 +39,9 @@
             }
         },
         "arguments": {
-            "keywords": "Cybersecurity and privacy",
+            "keywords": "cybersecurity privacy security encryption threat detection vulnerability analysis",
             "topic": "Cybersecurity and privacy",
-            "limit": 10
+            "limit": 20
         }
     }
 }

@@ -6,11 +6,24 @@
         "extensions": {
             "subject": {
                 "claims": {},
+                "user_name": "Bob",
                 "user_role": [
-                    "phd_student"
+                    "faculty",
+                    "phd_student",
+                    "guest"
                 ],
+                "user_id": "bob@university.edu",
+                "department": [
+                    "computer_science",
+                    "electrical_engineering",
+                    "multidisciplinary"
+                ],
+                "queries_this_session": 1,
+                "dissertation_area": "Artificial intelligence",
                 "research_area": [
-                    "Artificial intelligence"
+                    "Artificial intelligence",
+                    "Cybersecurity and privacy",
+                    "Software engineering"
                 ]
             },
             "headers": {
@@ -21,7 +34,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I want to find events about Artificial intelligence",
+                "input": "I need to find events related to Software engineering",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,9 +45,8 @@
             }
         },
         "arguments": {
-            "keywords": "Artificial intelligence",
-            "topic": "Artificial intelligence",
-            "limit": 10
+            "keywords": "Software engineering",
+            "topic": "Software engineering"
         }
     }
 }

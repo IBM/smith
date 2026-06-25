@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you help me find pricing information for Ford vehicles?",
+                "input": "What are the prices for Volvo cars?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +30,7 @@
             }
         },
         "arguments": {
-            "brand_name": "Ford"
+            "brand_name": "Volvo"
         }
     }
 }

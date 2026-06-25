@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please look up Honda automobile pricing data",
+                "input": "Can you search for Hyundai car prices?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +30,7 @@
             }
         },
         "arguments": {
-            "brand_name": "Honda"
+            "brand_name": "Hyundai"
         }
     }
 }

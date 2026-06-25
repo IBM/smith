@@ -7,17 +7,34 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../.."))
 load_dotenv()
 
 
+def _convert_var(value, reference_value):
+    """Convert a var to the correct type based on system_vars.json reference."""
+    if isinstance(reference_value, list):
+        if isinstance(value, list):
+            return value
+        return [value]
+    if isinstance(reference_value, int):
+        return int(value)
+    if isinstance(reference_value, float):
+        return float(value)
+    return value
+
+
 def translate_case(
     output_file_cases,
     test_case_template_file,
     output_file_ready_cases,
     output_file_attack,
     output_file_attack_promptfoo,
+    system_vars=None,
 ):
+    if system_vars is None:
+        system_vars = {}
+
     test_cases_translated = {}
     test_cases_translated["allow"] = []
     test_cases_translated["disallow"] = []
-    test_cases_translated["malicious"] = []
+    test_cases_translated["ares_malicious"] = []
     test_cases_translated["promptfoo_malicious"] = []
 
     with open(output_file_cases, "r") as f:
@@ -33,6 +50,8 @@ def translate_case(
         test_case_template["name"] = test_case["action"]
         test_case_template["extensions"]["agent"]["input"] = test_case["user_input"]
         for key, value in test_case["system_variables"].items():
+            if key in system_vars:
+                value = _convert_var(value, system_vars[key])
             if isinstance(value, str) and value.lower() in ("true", "false"):
                 value = value.lower() == "true"
             test_case_template["extensions"]["subject"][key] = value
@@ -51,7 +70,7 @@ def merge_with_ares(test_cases, output_file_attack):
         formatted_test_case["action"] = test_cluster["action"]
         formatted_test_case["condition"] = test_cluster["condition"]
         formatted_test_case["system_variables"] = test_cluster["system_variables"]
-        formatted_test_case["label"] = "malicious"
+        formatted_test_case["label"] = "ares_malicious"
 
         for attack_kind in test_cluster["attack_conditions"].keys():
             if len(test_cluster["attack_conditions"][attack_kind]) > 0:
@@ -79,10 +98,6 @@ def test_case_field_mapping(test_cases_translated, output_file_ready_cases):
     for condition in test_cases_translated.keys():
         test_cases = test_cases_translated[condition]
         for test_case_index in range(len(test_cases)):
-            # test_cases[test_case_index]["extensions"]["subject"]["permissions"]=["write:purchase", "write:return_product", "write:send_email", "read:ask_for_workpolicy", "write:create_ticket", "write:submit_ticket", "read:get_w2_form", "read:ask_for_salary", "write:email_compensation_report", "write:export_content_as_file"]
-            # test_cases[test_case_index]["extensions"]["object"]["permissions"]=["write:purchase", "write:return_product", "write:send_email", "read:ask_for_workpolicy", "write:create_ticket", "write:submit_ticket", "read:get_w2_form", "read:ask_for_salary", "write:export_content_as_file"]
-            # if "manager" in test_cases[test_case_index]["extensions"]["subject"]["roles"]:
-            #     test_cases[test_case_index]["extensions"]["subject"]["permissions"].extend(["read:view_team_compensation", "export:file", "read:export_compensation_data", "write:email_compensation_report"])
             test_case_template_final = {}
             test_case_template_final["input"] = test_cases[test_case_index]
             os.makedirs(output_file_ready_cases + condition, exist_ok=True)

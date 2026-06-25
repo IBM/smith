@@ -6,11 +6,22 @@
         "extensions": {
             "subject": {
                 "claims": {},
+                "user_name": "Bob",
                 "user_role": [
-                    "phd_student"
+                    "faculty"
                 ],
+                "user_id": "bob@university.edu",
+                "department": [
+                    "computer_science",
+                    "electrical_engineering",
+                    "multidisciplinary"
+                ],
+                "queries_this_session": 1,
+                "dissertation_area": "Artificial intelligence",
                 "research_area": [
-                    "Cybersecurity and privacy"
+                    "Artificial intelligence",
+                    "Cybersecurity and privacy",
+                    "Software engineering"
                 ]
             },
             "headers": {
@@ -21,7 +32,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you find events on machine learning?",
+                "input": "Get events with a limit of 20",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,9 +43,9 @@
             }
         },
         "arguments": {
-            "keywords": "machine learning",
-            "topic": "Cybersecurity and privacy",
-            "limit": 10
+            "keywords": "artificial intelligence",
+            "topic": "Artificial intelligence",
+            "limit": 20
         }
     }
 }

@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please look up Citro\u00ebn automobile pricing details",
+                "input": "Can you help me find pricing information for Peugeot vehicles?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +30,7 @@
             }
         },
         "arguments": {
-            "brand_name": "Citro\u00ebn"
+            "brand_name": "Peugeot"
         }
     }
 }

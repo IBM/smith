@@ -8,7 +8,7 @@
                 "claims": {},
                 "user_name": "Bob",
                 "user_role": [
-                    "journalist"
+                    "fleet_manager"
                 ]
             },
             "headers": {
@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you find pricing information for Mercedes-Benz vehicles?",
+                "input": "I need to search for BMW vehicle prices",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +30,7 @@
             }
         },
         "arguments": {
-            "brand_name": "Mercedes-Benz"
+            "brand_name": "BMW"
         }
     }
 }

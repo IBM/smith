@@ -8,7 +8,7 @@
                 "claims": {},
                 "user_name": "Bob",
                 "user_role": [
-                    "journalist"
+                    "consumer"
                 ]
             },
             "headers": {
@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I'm looking for Hyundai vehicle price information for my report",
+                "input": "I want to search for Toyota car prices",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +30,7 @@
             }
         },
         "arguments": {
-            "brand_name": "Hyundai"
+            "brand_name": "Toyota"
         }
     }
 }

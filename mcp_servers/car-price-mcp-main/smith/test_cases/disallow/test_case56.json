@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you find pricing information for Porsche vehicles?",
+                "input": "Please search for Tesla vehicle costs",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +30,7 @@
             }
         },
         "arguments": {
-            "brand_name": "Porsche"
+            "brand_name": "Tesla"
         }
     }
 }

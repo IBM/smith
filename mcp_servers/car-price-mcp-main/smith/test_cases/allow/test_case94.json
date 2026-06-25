@@ -8,7 +8,7 @@
                 "claims": {},
                 "user_name": "Bob",
                 "user_role": [
-                    "journalist"
+                    "fleet_manager"
                 ]
             },
             "headers": {
@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please look up Chevrolet car price data",
+                "input": "Can you find Ford car pricing for me?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +30,7 @@
             }
         },
         "arguments": {
-            "brand_name": "Chevrolet"
+            "brand_name": "Ford"
         }
     }
 }

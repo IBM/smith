@@ -30,6 +30,8 @@ smith --flag policy_testing         # run policy against all test cases (needs O
 smith --flag red_suggestion         # cluster failed cases (refinement)
 smith --flag regal_suggestion       # Regal lint/format suggestions (refinement)
 smith --flag duplication_suggestion # LLM + graph redundancy suggestions (refinement)
+smith --flag cross_validate         # LLM cross-check failed cases → references/cross_validate_report.json
+smith --flag apply_cross_validate   # apply approved label corrections from cross_validate report
 smith --flag policy_validation --policy_path <file.rego>      # validate a rego file
 smith --flag policy_validation_fix --policy_path <file.rego>  # validate and auto-fix
 

@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please list the vehicle brands available",
+                "input": "Please list the car brands available",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

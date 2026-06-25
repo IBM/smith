@@ -8,13 +8,14 @@
                 "claims": {},
                 "user_name": "Bob",
                 "user_role": [
-                    "faculty"
+                    "phd_student"
                 ],
                 "user_id": "bob@university.edu",
                 "department": [
                     "multidisciplinary"
                 ],
-                "queries_per_session": 1,
+                "queries_this_session": 1,
+                "dissertation_area": "Artificial intelligence",
                 "research_area": [
                     "Software engineering"
                 ]
@@ -27,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you show me AI-related events?",
+                "input": "Show me the event calendar please.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -38,9 +39,9 @@
             }
         },
         "arguments": {
-            "keywords": "AI",
+            "keywords": "conference",
             "topic": "Artificial intelligence",
-            "limit": 10
+            "limit": 20
         }
     }
 }

@@ -6,8 +6,22 @@
         "extensions": {
             "subject": {
                 "claims": {},
+                "user_name": "Bob",
                 "user_role": [
-                    "faculty"
+                    "phd_student"
+                ],
+                "user_id": "bob@university.edu",
+                "department": [
+                    "computer_science",
+                    "electrical_engineering",
+                    "multidisciplinary"
+                ],
+                "queries_this_session": 1,
+                "dissertation_area": "Artificial intelligence",
+                "research_area": [
+                    "Artificial intelligence",
+                    "Cybersecurity and privacy",
+                    "Software engineering"
                 ]
             },
             "headers": {
@@ -18,7 +32,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please show me 5 events",
+                "input": "Get events with a limit of 8",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -29,9 +43,9 @@
             }
         },
         "arguments": {
-            "keywords": "",
+            "keywords": "machine learning",
             "topic": "Artificial intelligence",
-            "limit": 5
+            "limit": 8
         }
     }
 }

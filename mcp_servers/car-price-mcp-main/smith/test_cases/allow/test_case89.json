@@ -8,7 +8,7 @@
                 "claims": {},
                 "user_name": "Bob",
                 "user_role": [
-                    "journalist"
+                    "fleet_manager"
                 ]
             },
             "headers": {
@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need to search for Fiat car prices",
+                "input": "Please look up DAF car prices for me",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +30,7 @@
             }
         },
         "arguments": {
-            "brand_name": "Fiat"
+            "brand_name": "DAF"
         }
     }
 }

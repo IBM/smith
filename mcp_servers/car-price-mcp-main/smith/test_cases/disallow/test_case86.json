@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you find pricing data for Alfa Romeo vehicles?",
+                "input": "I want to look up Porsche car pricing",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +30,7 @@
             }
         },
         "arguments": {
-            "brand_name": "Alfa Romeo"
+            "brand_name": "Porsche"
         }
     }
 }

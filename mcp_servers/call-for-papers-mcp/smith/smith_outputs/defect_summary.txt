@@ -1,0 +1,59 @@
+Defect Summary for policy_defect.rego
+======================================
+
+Policy Location: mcp_servers/call-for-papers-mcp/smith/policy_defect.rego
+
+Intentional Defects Introduced:
+--------------------------------
+
+1. MISSING RULE - Rule 3 (Limit validation)
+   Location: Line 100-105 in original (removed)
+   Description: Removed the rule that checks if limit is at least 1
+   Impact: Requests with limit < 1 will now incorrectly pass validation
+   Expected Behavior: Should deny requests with limit values of 0 or negative numbers
+
+2. DUPLICATION - Duplicate role-specific limit check
+   Location: Lines 108-114 and 130-136
+   Description: Rule 4 and the "Additional check for role-specific limits" are duplicates
+   Impact: Same validation logic appears twice with different messages
+   Expected Behavior: Should have only one rule checking role-specific limits
+
+3. LINTING ISSUE - Inconsistent indentation
+   Location: Line 134
+   Description: Mixed spaces and tabs in indentation before "limit > cap"
+   Impact: Inconsistent code formatting
+   Expected Behavior: Should use consistent indentation throughout
+
+4. DEAD CODE - Isolated rule that never triggers
+   Location: Lines 139-144
+   Description: Rule checking for "nonexistent_tool" with unused variable
+   Impact: This rule will never match any real input
+   Expected Behavior: Should be removed as dead code
+
+Summary of Expected Test Results:
+----------------------------------
+When testing with this defective policy:
+- Allow cases: Some will incorrectly PASS (false negatives)
+  * Requests with limit=0 or negative limits will pass when they should fail
+- Deny cases: Should still correctly FAIL (true negatives)
+  * Most deny rules are intact and will work correctly
+
+Refinement Workflow Testing:
+-----------------------------
+This defective policy is designed to test the complete refinement workflow:
+1. Policy Testing - Will identify failed test cases
+2. Policy Patching - Should fix the missing rules (defects 1 & 2)
+3. Regal Formatting - Should fix formatting issues (defect 6)
+4. Deduplication - Should remove duplicate rule (defect 3)
+5. Dead Code Detection - Should identify unreachable rule (defect 5)
+6. Linting - Should flag unused variable (defect 4)
+
+Instructions for Testing:
+-------------------------
+To test the refinement workflow:
+1. Copy this defective policy to ./assets/policy.rego:
+   cp mcp_servers/call-for-papers-mcp/smith/policy_defect.rego ./assets/policy.rego
+
+2. Run policy testing to identify issues
+
+3. Follow the policy enhancement workflow to fix all defects

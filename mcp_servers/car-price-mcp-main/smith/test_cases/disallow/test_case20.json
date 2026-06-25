@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please show me all the motos available",
+                "input": "Please get all the motos for me",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

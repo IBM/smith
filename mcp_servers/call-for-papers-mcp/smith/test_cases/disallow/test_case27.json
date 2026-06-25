@@ -1,0 +1,53 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "get_events",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "user_name": "Bob",
+                "user_role": [
+                    "faculty",
+                    "phd_student",
+                    "guest"
+                ],
+                "user_id": "bob@university.edu",
+                "department": [
+                    "computer_science",
+                    "electrical_engineering",
+                    "multidisciplinary"
+                ],
+                "queries_this_session": 1,
+                "dissertation_area": "Artificial intelligence",
+                "research_area": [
+                    "Artificial intelligence",
+                    "Cybersecurity and privacy",
+                    "Software engineering"
+                ]
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Please find events about drug discovery",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "keywords": "drug discovery",
+            "topic": "Artificial intelligence",
+            "limit": 20
+        }
+    }
+}

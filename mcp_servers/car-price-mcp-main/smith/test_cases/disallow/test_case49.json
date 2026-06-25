@@ -2,13 +2,17 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "search_car_price",
+        "name": "get_vehicles_by_type",
         "extensions": {
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
                 "user_role": [
-                    "journalist"
+                    "fleet_manager",
+                    "consumer",
+                    "journalist",
+                    "analyst",
+                    "guest"
                 ]
             },
             "headers": {
@@ -19,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need to search for Mercedes-Benz car prices",
+                "input": "Show me vehicles with type VaNs",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +34,7 @@
             }
         },
         "arguments": {
-            "brand_name": "Mercedes-Benz"
+            "vehicle_type": "VaNs"
         }
     }
 }

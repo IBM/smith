@@ -27,6 +27,18 @@ Guidance Description (NLP) + Agent Description → Enforceable Policy Creation �
 3. **System variable file** — A JSON file listing the system variables available in your agent (e.g., roles, teams, claims)
 4. **Keep both your agent server and MCP server running** during Smith's operation
 
+## Deployment
+
+Place the entire `smith` folder under the `skills/` or `plugin/` directory of your code agents (claude code, bob, aider etc). The coding agent can automatically recognize smith as an openskill. 
+
+For more details of how to use skills in different coding agents, you can refer to the following links:
+
+If you are using bob: https://bob.ibm.com/docs/ide/features/skills
+
+If you are using Claude: https://code.claude.com/docs/en/skills
+
+If you are using Aider Desk: https://aiderdesk.hotovo.com/docs/features/skills
+
 ## Install
 
 ### Prerequisites
@@ -43,23 +55,31 @@ python -m venv .venv
 source .venv/bin/activate
 ```
 
-**2. ARES** (red-teaming framework). Installs into `scripts/test_generation/ares/` with its own `.venv`, which is the layout the test-generation pipeline expects (`scripts/test_generation/attack.py` invokes `ares/.venv/bin/ares` with config `example_configs/qwen-owasp-llm-01.yaml`).
+**2. ARES** (red-teaming framework). Installs into `scripts/test_generation/ares/` with its own `.venv`, which is the layout the test-generation pipeline expects (`scripts/test_generation/attack.py` invokes `ares/.venv/bin/ares`):
 
 ```bash
-cd scripts/test_generation
+cd scripts/test_generation/ares
+python -m venv .venv
+source .venv/bin/activate
 curl https://raw.githubusercontent.com/IBM/ares/refs/heads/main/install.sh | bash
 ares install-plugin ares-autodan
 ares install-plugin ares-human-jailbreak
 ares install-plugin ares-garak
-cd ../..
+deactivate
+# Setup ares configuration
+cp ../ares_config/qwen-owasp-llm-01.yaml ./example_configs 
+cp ../ares_config/human_jailbreaks.json ./assets
+export ARES_HOME=/absolute/path/to/smith/scripts/test_generation/ares
+# Switch to the original python enviroment
+cd ../../..
+source .venv/bin/activate
 ```
 
-**3. Promptfoo** (red-teaming framework). The config file is set via `PROMPTFOO_CONFIG_FILE` in `.env`.
+**3. Promptfoo** (red-teaming framework). 
 
 ```bash
 npm install -g promptfoo
 ```
-
 
 ### Python Dependencies
 
@@ -79,6 +99,7 @@ This installs the `smith` CLI command.
 ### Configuration
 
 ```bash
+cd ..
 cp .env_template .env
 ```
 
@@ -91,6 +112,9 @@ Fill in **every** placeholder value in `.env` before running Smith. The most imp
 | `OPENAI_BASE_URL` | Base URL for LLM API endpoint |
 | `MODEL_SONNET` | Model used across the pipelines (e.g., `GCP/claude-4-sonnet` by default) |
 | `AGENT_URL` | URL of the target agent server (must expose `/chat` and `/extract_tool_call`); default `http://localhost:9000` |
+| `RITS_MODEL` | Model name for the target agent's LLM (e.g., `qwen3.5:latest` for Ollama, or a RITS model name) |
+| `RITS_BASE_URL` | Base URL for the agent's LLM API (e.g., `http://localhost:11434/v1` for Ollama) |
+| `RITS_API_KEY` | API key for the agent's LLM (use `ollama` for local Ollama) |
 | `MCP_TRANSPORT` | MCP transport type: `sse` or `stdio` |
 | `MCP_URL` | MCP server URL (SSE transport only); default `http://localhost:8000/sse` |
 | `MCP_COMMAND` / `MCP_ARGS` / `MCP_CWD` | MCP launch command, args, and working dir (**stdio transport only** — see the commented examples in `.env_template`) |
@@ -98,15 +122,13 @@ Fill in **every** placeholder value in `.env` before running Smith. The most imp
 | `GUIDANCE_FILE` | Path to the policy guidance file, e.g., `mcp_servers/RagChatbot_MCPServer/smith/guidance.txt` |
 | `SYSTEM_VAR_FILE` | Path to the system-variables JSON (e.g., `mcp_servers/<agent>/smith/system_vars.json`). **Required** — test generation fails without it |
 | `PROMPTFOO_CONFIG_FILE` / `PROMPTFOO_OUTPUT_FILE` | Promptfoo red-team config and generated output paths |
+| `ARES_HOME` | Absolute path to the ARES installation directory (e.g., `/path/to/smith/scripts/test_generation/ares`). Smith uses this to locate `ares/.venv/bin/ares` |
 
 See `.env_template` for the full list, including model sampling (`TEMP`, `TOP_P`), test-case evaluation thresholds, and refinement/clustering parameters.
 
-
-### Deployment
-
-Place the entire `smith` folder under the `skills/` or `plugin/` directory of your code agent.
-
 ### Start the target agent and MCP server
+
+Detailed instructions for each agent example can be found in the `mcp_servers/<agent>/README.md`.
 
 Smith talks to a **running** target agent (for `/chat` and `/extract_tool_call`) and to its MCP server (to extract tool definitions). Start both before running any `smith` flag.
 
@@ -130,18 +152,6 @@ MCP_CWD=mcp_servers/call-for-papers-mcp
 ```
 
 For an SSE-based MCP server instead, set `MCP_TRANSPORT=sse` and `MCP_URL=http://localhost:8000/sse`, and start that server on its own. Check each example's own `README.md` for specifics.
-
-#### Instructions for using HR agent example
-1. Ask smith to generate an initial policy for the targeted agent
-2. Generate the test cases, translate and evaluate the test cases: can be replaced with the following CLI commands:
-```bash
-smith --flag test_generation
-smith --flag test_case_evaluation # could be skipped
-smith --flag test_case_translation
-```
-3. Ask smith to test existing policy. If smith identifies failed test cases, ask it to improve the existing policy.
-
-
 
 ## How It Works
 
@@ -248,6 +258,20 @@ Evaluate the current policy against all test cases and report pass/fail with cov
 smith --flag policy_testing
 ```
 
+### Cross-Validation
+
+Two cross-validation workflows handle different failure scenarios after policy testing:
+
+**Policy Cross-Validation** — When policy testing returns 0 test cases evaluated or 100% failure, the policy likely has structural issues (input path mismatches or OPA syntax bugs). The agent follows `opa_policy/policy_cross_validation/policy_cross_validation.md` to diagnose and fix these issues before proceeding to refinement.
+
+**Test Case Cross-Validation** — When policy testing produces mixed pass/fail results, some failures may be caused by mislabeled test cases rather than policy bugs. This workflow uses an LLM to check each failed case against the guidance and suggests corrections (move to correct folder or remove).
+
+```bash
+smith --flag cross_validate          # generate report of mislabeled cases
+smith --flag apply_cross_validate    # apply approved corrections
+```
+
+
 ### Policy Refinement
 
 Iterative improvement workflow:
@@ -273,6 +297,8 @@ smith/
 ├── mcp_servers/             # Agent examples
 ├── opa_policy/              # Skills related to OPA policy
 │   ├── policy_creation/     # OPA policy creation workflow
+│   ├── policy_cross_validation/ # Fix structural/syntax issues (0 cases or 100% fail)
+│   ├── policy_defect/       # Introduce intentional defects for testing (only for testing purpose, it is not part of Smith main skill)
 │   ├── policy_patch/        # OPA policy patching workflow
 │   ├── policy_regal/        # Regal formatting workflow
 │   └── policy_duplication/  # Deduplication workflow

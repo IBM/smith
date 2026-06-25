@@ -6,11 +6,18 @@
         "extensions": {
             "subject": {
                 "claims": {},
+                "user_name": "Bob",
                 "user_role": [
-                    "phd_student"
+                    "guest"
                 ],
+                "user_id": "bob@university.edu",
+                "department": [
+                    "multidisciplinary"
+                ],
+                "queries_this_session": 1,
+                "dissertation_area": "Artificial intelligence",
                 "research_area": [
-                    "Artificial intelligence"
+                    "Software engineering"
                 ]
             },
             "headers": {
@@ -21,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need events about quantum computing",
+                "input": "Please retrieve the event schedule for me.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,9 +39,9 @@
             }
         },
         "arguments": {
-            "keywords": "quantum computing",
-            "topic": "Artificial intelligence",
-            "limit": 10
+            "keywords": "Software engineering Artificial intelligence",
+            "topic": "Software engineering",
+            "limit": 15
         }
     }
 }

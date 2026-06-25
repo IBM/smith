@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need information about all car brands for my article",
+                "input": "I'm writing an article and need information about car brands",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

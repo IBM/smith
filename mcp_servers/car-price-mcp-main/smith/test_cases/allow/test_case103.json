@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Could you search for Toyota vehicle pricing?",
+                "input": "Can you search for Fiat car prices?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +30,7 @@
             }
         },
         "arguments": {
-            "brand_name": "Toyota"
+            "brand_name": "Fiat"
         }
     }
 }

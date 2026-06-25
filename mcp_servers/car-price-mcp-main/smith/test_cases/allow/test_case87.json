@@ -8,7 +8,7 @@
                 "claims": {},
                 "user_name": "Bob",
                 "user_role": [
-                    "consumer"
+                    "fleet_manager"
                 ]
             },
             "headers": {
@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please look up BMW automobile prices",
+                "input": "I need to search for DAF vehicle prices",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +30,7 @@
             }
         },
         "arguments": {
-            "brand_name": "BMW"
+            "brand_name": "DAF"
         }
     }
 }

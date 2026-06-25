@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please get me all the motorcycles from the fleet",
+                "input": "Can you retrieve motorcycles from the fleet?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

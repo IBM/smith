@@ -5,25 +5,7 @@
         "name": "get_events",
         "extensions": {
             "subject": {
-                "claims": {},
-                "user_name": "Bob",
-                "user_role": [
-                    "faculty",
-                    "phd_student",
-                    "guest"
-                ],
-                "user_id": "bob@university.edu",
-                "department": [
-                    "computer_science",
-                    "electrical_engineering",
-                    "multidisciplinary"
-                ],
-                "queries_per_session": 1,
-                "research_area": [
-                    "Artificial intelligence",
-                    "Cybersecurity and privacy",
-                    "Software engineering"
-                ]
+                "claims": {}
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -33,7 +15,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Search for conferences using bioinformatics as keyword",
+                "input": "I need events about human genomics research.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -44,9 +26,9 @@
             }
         },
         "arguments": {
-            "keywords": "bioinformatics",
+            "keywords": "human genomics",
             "topic": "Artificial intelligence",
-            "limit": 10
+            "limit": 20
         }
     }
 }
