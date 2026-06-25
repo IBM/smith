@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please look up pricing details for Jeep models",
+                "input": "Can you help me find Honda vehicle pricing data?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +30,7 @@
             }
         },
         "arguments": {
-            "brand_name": "Jeep"
+            "brand_name": "Honda"
         }
     }
 }

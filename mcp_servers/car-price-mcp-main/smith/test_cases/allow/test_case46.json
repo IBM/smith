@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you get me vehicles of type carros?",
+                "input": "Show me vehicles of type carros",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

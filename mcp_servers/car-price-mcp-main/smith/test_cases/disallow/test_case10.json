@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you fetch vehicles with type cars?",
+                "input": "Get vehicles by type cars",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +30,7 @@
             }
         },
         "arguments": {
-            "vehicle_type": "cars"
+            "vehicle_type": "carros"
         }
     }
 }

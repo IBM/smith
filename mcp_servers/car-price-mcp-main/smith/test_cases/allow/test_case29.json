@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I require manufacturer information for statistical purposes",
+                "input": "Can you give me a comprehensive list of car brands?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

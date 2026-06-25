@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please retrieve vehicles of type motorcycles for my article",
+                "input": "Please retrieve motorcycle data from the vehicle database",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

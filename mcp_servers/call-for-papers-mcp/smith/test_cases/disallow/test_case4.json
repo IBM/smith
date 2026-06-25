@@ -6,10 +6,21 @@
         "extensions": {
             "subject": {
                 "claims": {},
+                "user_name": "Bob",
                 "user_role": [
-                    "phd_student"
+                    "faculty"
                 ],
+                "user_id": "bob@university.edu",
+                "department": [
+                    "computer_science",
+                    "electrical_engineering",
+                    "multidisciplinary"
+                ],
+                "queries_this_session": 1,
+                "dissertation_area": "Artificial intelligence",
                 "research_area": [
+                    "Artificial intelligence",
+                    "Cybersecurity and privacy",
                     "Software engineering"
                 ]
             },
@@ -21,7 +32,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Show me events about robotics",
+                "input": "Please show me 50 events",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,9 +43,9 @@
             }
         },
         "arguments": {
-            "keywords": "robotics",
-            "topic": "Software engineering",
-            "limit": 10
+            "keywords": "artificial intelligence",
+            "topic": "Artificial intelligence",
+            "limit": 50
         }
     }
 }

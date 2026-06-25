@@ -1,9 +1,0 @@
-False denials (should move to disallow/ or fix the test case):
-- references/test_cases/allow/test_case21.json
-- references/test_cases/allow/test_case23.json
-
-False allows (should move to allow/):
-- references/test_cases/disallow/test_case4.json
-- references/test_cases/disallow/test_case3.json
-- references/test_cases/disallow/test_case2.json
-- references/test_cases/disallow/test_case13.json

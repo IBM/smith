@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please retrieve caminhoes from the vehicle database",
+                "input": "Please retrieve vehicles of type caminhoes",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

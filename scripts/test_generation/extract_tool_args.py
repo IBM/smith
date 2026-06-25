@@ -18,10 +18,12 @@ def run_extract_tool_args(test_case_path, agent_url):
     miscalled_cases = []
     total_processed = 0
 
-    generated_cases_path = os.path.join(test_case_path, "malicious", "generated_cases")
+    generated_cases_path = os.path.join(test_case_path, "wrong_cases", "mcp_unrelated")
+    misclassified_path = os.path.join(test_case_path, "wrong_cases", "misclassified")
     for label in labels:
         generated_label_path = os.path.join(generated_cases_path, label)
         os.makedirs(generated_label_path, exist_ok=True)
+        os.makedirs(os.path.join(misclassified_path, label), exist_ok=True)
         label_path = os.path.join(test_case_path, label, "*")
         files = sorted(glob.glob(label_path))
         for file_path in files:
@@ -78,9 +80,10 @@ def run_extract_tool_args(test_case_path, agent_url):
                     }
                 )
                 print(
-                    f"  [MISMATCH] {file_path}: assigned={assigned_tool}, actual={tool_name}, removing test case"
+                    f"  [MISMATCH] {file_path}: assigned={assigned_tool}, actual={tool_name}, moving to misclassified"
                 )
-                os.remove(file_path)
+                dest = os.path.join(misclassified_path, label, os.path.basename(file_path))
+                os.rename(file_path, dest)
             else:
                 test_case["input"]["arguments"] = tool_args
                 with open(file_path, "w") as f:

@@ -1,0 +1,65 @@
+Defective Policy Summary
+========================
+
+Policy Location: mcp_servers/car-price-mcp-main/smith/policy_defect.rego
+
+Intentional Defects Introduced:
+--------------------------------
+
+1. MISSING RULE - Fleet Manager Brand Restrictions (Line ~122)
+   - Removed: deny rule that restricts fleet_manager to only truck-relevant brands
+   - Impact: Fleet managers can now search ANY brand (should only allow: Scania, Volvo, Mercedes-Benz, MAN, DAF, Iveco, Ford, Volkswagen)
+   - Expected Failures: Test cases where fleet_manager searches non-truck brands (e.g., Honda, Toyota) will now PASS when they should FAIL
+
+2. MISSING RULE - Consumer Vehicle Type Restrictions (Line ~157)
+   - Removed: deny rule that restricts consumer to only carros/cars vehicle types
+   - Impact: Consumers can now request ANY vehicle type (should only allow: carros, cars)
+   - Expected Failures: Test cases where consumer requests caminhoes, motos, motorcycles, or trucks will now PASS when they should FAIL
+
+3. DUPLICATION - Journalist Vehicle Type Rule (Lines 165-173)
+   - Duplicated: The journalist vehicle type restriction rule appears twice with identical logic
+   - Impact: Redundant code that should be detected by deduplication checks
+   - Expected Detection: Policy deduplication workflow should identify and remove this duplicate
+
+4. LINTING ISSUE - Unused Variable (Line 188)
+   - Added: unused_var := "this_is_never_used" in fleet_manager vehicle type rule
+   - Impact: Code quality issue that should be detected by linting tools
+   - Expected Detection: Regal or other linting tools should flag this unused variable
+
+5. DEAD CODE - Impossible Condition (Lines 196-204)
+   - Added: Rule for analyst vehicle type that can never trigger
+   - Reason: Analysts have access to ALL vehicle types, so the condition "not vehicle_type in analyst_vehicle_types" is always false
+   - Impact: Unreachable code that wastes evaluation cycles
+   - Expected Detection: Dead code analysis should identify this rule as never triggering
+
+6. FORMATTING ISSUES
+   - Impact: Policy has formatting differences that opa fmt would rewrite
+   - Expected Detection: Regal formatting checks should identify style inconsistencies
+
+Expected Test Results:
+----------------------
+When testing with this defective policy:
+- Allow cases: Some will incorrectly PASS (false negatives)
+- Disallow cases: Some will incorrectly FAIL (false positives)
+- Overall accuracy: Should drop from 100% to approximately 85-90%
+
+Refinement Workflow Testing:
+-----------------------------
+This defective policy is designed to test the complete refinement workflow:
+1. Policy Testing - Will identify failed test cases
+2. Policy Patching - Should fix the missing rules (defects 1 & 2)
+3. Regal Formatting - Should fix formatting issues (defect 6)
+4. Deduplication - Should remove duplicate rule (defect 3)
+5. Dead Code Detection - Should identify unreachable rule (defect 5)
+6. Linting - Should flag unused variable (defect 4)
+
+Usage Instructions:
+-------------------
+To test the refinement workflow:
+1. Copy this defective policy to ./assets/policy.rego:
+   cp mcp_servers/car-price-mcp-main/smith/policy_defect.rego ./assets/policy.rego
+
+2. Run policy testing to see failures:
+   smith --flag policy_testing
+
+3. Follow the policy enhancement workflow to fix all defects

@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I want to see all trucks in our vehicle inventory",
+                "input": "I want to see all trucks in our fleet",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

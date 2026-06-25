@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need to search for Iveco vehicle prices",
+                "input": "I want to check pricing information for Scania brand",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +30,7 @@
             }
         },
         "arguments": {
-            "brand_name": "Iveco"
+            "brand_name": "Scania"
         }
     }
 }

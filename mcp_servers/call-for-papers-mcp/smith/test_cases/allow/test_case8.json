@@ -12,11 +12,12 @@
                 ],
                 "user_id": "bob@university.edu",
                 "department": [
-                    "electrical_engineering"
+                    "multidisciplinary"
                 ],
-                "queries_per_session": 1,
+                "queries_this_session": 1,
+                "dissertation_area": "Artificial intelligence",
                 "research_area": [
-                    "Artificial intelligence"
+                    "Software engineering"
                 ]
             },
             "headers": {
@@ -27,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Show me events about cybersecurity and privacy topics",
+                "input": "I need events on the topic of Artificial intelligence",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -38,8 +39,8 @@
             }
         },
         "arguments": {
-            "keywords": "cybersecurity and privacy",
-            "topic": "Cybersecurity and privacy",
+            "keywords": "artificial intelligence",
+            "topic": "Artificial intelligence",
             "limit": 10
         }
     }

@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Show me the price information for Volkswagen cars",
+                "input": "Search car prices for MAN brand",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +30,7 @@
             }
         },
         "arguments": {
-            "brand_name": "Volkswagen"
+            "brand_name": "MAN"
         }
     }
 }

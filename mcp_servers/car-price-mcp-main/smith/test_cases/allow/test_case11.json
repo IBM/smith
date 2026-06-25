@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Could you show me the different car brands I can choose from?",
+                "input": "Could you tell me which car brands are in your database?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

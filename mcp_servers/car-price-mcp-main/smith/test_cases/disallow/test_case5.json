@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please retrieve automobiles sorted by their type",
+                "input": "Can you retrieve automobiles grouped by type?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

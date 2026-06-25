@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please retrieve motos from our inventory system",
+                "input": "Please get vehicles with vehicle_type set to motos",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

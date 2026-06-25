@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you provide automotive brand data for market research?",
+                "input": "Please provide automotive manufacturer data for my research",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

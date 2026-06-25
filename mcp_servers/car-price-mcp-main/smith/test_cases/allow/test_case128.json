@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I want to check Mercedes-Benz pricing data",
+                "input": "Please search for Mercedes-Benz car prices",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

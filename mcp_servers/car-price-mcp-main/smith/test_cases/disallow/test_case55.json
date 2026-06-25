@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need to search for Porsche car prices",
+                "input": "I want to look up Honda car pricing",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +30,7 @@
             }
         },
         "arguments": {
-            "brand_name": "Porsche"
+            "brand_name": "Honda"
         }
     }
 }

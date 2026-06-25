@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please look up Toyota car price data",
+                "input": "I need to research Fiat vehicle pricing for my article",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +30,7 @@
             }
         },
         "arguments": {
-            "brand_name": "Toyota"
+            "brand_name": "Fiat"
         }
     }
 }

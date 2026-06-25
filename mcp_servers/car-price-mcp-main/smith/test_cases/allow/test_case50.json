@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Could you retrieve all the cars available?",
+                "input": "Get all cars for me",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

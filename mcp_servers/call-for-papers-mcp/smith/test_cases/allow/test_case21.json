@@ -7,7 +7,7 @@
             "subject": {
                 "claims": {},
                 "user_role": [
-                    "phd_student"
+                    "faculty"
                 ]
             },
             "headers": {
@@ -18,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Get me 3 events",
+                "input": "Can you get me 5 upcoming events?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -29,9 +29,9 @@
             }
         },
         "arguments": {
-            "keywords": "AI",
+            "keywords": "conference",
             "topic": "Artificial intelligence",
-            "limit": 3
+            "limit": 5
         }
     }
 }

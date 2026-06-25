@@ -5,25 +5,7 @@
         "name": "get_events",
         "extensions": {
             "subject": {
-                "claims": {},
-                "user_name": "Bob",
-                "user_role": [
-                    "faculty",
-                    "phd_student",
-                    "guest"
-                ],
-                "user_id": "bob@university.edu",
-                "department": [
-                    "computer_science",
-                    "electrical_engineering",
-                    "multidisciplinary"
-                ],
-                "queries_per_session": 1,
-                "research_area": [
-                    "Artificial intelligence",
-                    "Cybersecurity and privacy",
-                    "Software engineering"
-                ]
+                "claims": {}
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -33,7 +15,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Find events with keywords bioinformatics",
+                "input": "Search for events on genomics and DNA sequencing.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -44,9 +26,8 @@
             }
         },
         "arguments": {
-            "keywords": "bioinformatics",
-            "topic": "Artificial intelligence",
-            "limit": 10
+            "keywords": "genomics DNA sequencing",
+            "topic": "Artificial intelligence"
         }
     }
 }

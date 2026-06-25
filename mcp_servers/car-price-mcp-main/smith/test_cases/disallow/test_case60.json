@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "What are the current market prices for Jaguar cars?",
+                "input": "Please find Mazda car costs",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +30,7 @@
             }
         },
         "arguments": {
-            "brand_name": "Jaguar"
+            "brand_name": "Mazda"
         }
     }
 }

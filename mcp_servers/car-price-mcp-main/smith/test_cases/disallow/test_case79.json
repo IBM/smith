@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need to search for Rolls-Royce car prices",
+                "input": "I need to search for BMW car prices",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +30,7 @@
             }
         },
         "arguments": {
-            "brand_name": "Rolls-Royce"
+            "brand_name": "BMW"
         }
     }
 }

@@ -1,30 +1,31 @@
 ## Test Case Generation
 
-To generate the test cases, run `smith --flag test_generation`.
+To generate test cases, run:
 
-All test generation results are stored in the `./references/test_cases` folder.
+```bash
+smith --flag test_generation
+```
 
-**Next step: suggestion to users** 
-
-To prepare test cases for OPA policy testing, you can ask smith to translate test cases. This translates the generated test cases into the OPA input format.
-
-Additionally, you can evaluate the generated test cases to generate an evaluation repost. 
-
-
-## Test Case Evaluation
-
-To evaluate the quality of generated test cases, run `smith --flag test_case_evaluation`.
-
-This performs three steps:
-1. Classify promptfoo cases to match them to specific guidance rules
-2. Validate all test case labels using a hybrid approach (Tier 1 rule-based detection + Tier 2 NLI semantic check + Tier 3 LLM judge for flagged cases)
-3. Generate an HTML report
-
-The final output is the report at `./references/test_case_report.html`.
-
+All results are stored in `./references/test_cases/`.
 
 ## Test Case Translation
 
-To translate the test cases for OPA policy testing, run `smith --flag test_case_translation`.
+After generation, translate the test cases into OPA input format:
 
-It tranlates and then overwrites test cases in the `./references/test_cases` folder.
+```bash
+smith --flag test_case_translation
+```
+
+This translates and overwrites test cases in `./references/test_cases/`.
+
+## Test Case Evaluation (Optional)
+
+Ask the user: "Would you like to evaluate the quality of the generated test cases? This produces an HTML report but does not affect policy testing. You can skip this step."
+
+If the user wants to evaluate, run:
+
+```bash
+smith --flag test_case_evaluation
+```
+
+This generates an HTML report at `./references/test_case_report.html`.

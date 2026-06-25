@@ -57,7 +57,7 @@ def build_system_prompt(system_variables: Optional[Dict[str, Any]] = None) -> st
 async def lifespan(app: FastAPI):
     global agent, mcp_client, llm_with_tools
 
-    async with MultiServerMCPClient(
+    mcp_client = MultiServerMCPClient(
         {
             "call-for-papers-mcp": {
                 "transport": "stdio",
@@ -65,34 +65,27 @@ async def lifespan(app: FastAPI):
                 "args": ["server.py"],
             }
         }
-    ) as mcp_client:
-        tools = mcp_client.get_tools()
+    )
+    tools = await mcp_client.get_tools()
 
-        api_key = os.getenv("RITS_API_KEY", None)
-        api_url = os.getenv("RITS_BASE_URL", None)
-        model = os.getenv("RITS_MODEL", None)
+    api_key = os.getenv("RITS_API_KEY", "ollama")
+    api_url = os.getenv("RITS_BASE_URL", "http://localhost:11434/v1")
+    model = os.getenv("RITS_MODEL", "qwen3.5:latest")
 
-        if api_key is None or api_url is None or model is None:
-            raise ValueError(
-                "RITS_API_KEY, RITS_BASE_URL, or RITS_MODEL not defined in environment. Create a .env file."
-            )
+    llm = ChatOpenAI(
+        model=model,
+        api_key=api_key,
+        base_url=api_url,
+    )
 
-        llm = ChatOpenAI(
-            model=model,
-            api_key=api_key,
-            base_url=api_url,
-            default_headers={"RITS_API_KEY": api_key},
-        )
+    agent = create_react_agent(
+        model=llm,
+        tools=tools,
+    )
 
-        agent = create_react_agent(
-            model=llm,
-            tools=tools,
-        )
+    llm_with_tools = llm.bind_tools(tools)
 
-        # Bind the tools to the model for single-shot, non-executing tool extraction.
-        llm_with_tools = llm.bind_tools(tools)
-
-        yield
+    yield
 
 
 app = FastAPI(lifespan=lifespan)

@@ -26,6 +26,8 @@ from test_case_evaluation.validate_labels import run_validation
 from test_case_evaluation.visualization.build_report import build_visualization
 from policy_generation.extract_tools import extract_tools
 from policy_generation.validate_policy import validate_policy, fix_and_validate_policy
+from test_case_evaluation.cross_validate import cross_validate_failed_cases
+from test_case_evaluation.apply_cross_validate import apply_cross_validate_results
 from test_generation.extract_tool_args import run_extract_tool_args
 
 load_dotenv()
@@ -197,6 +199,7 @@ def generate_test(
         output_file_ready_cases,
         output_file_attack,
         output_file_attack_promptfoo,
+        system_variables,
     )
     return ""
 
@@ -382,6 +385,51 @@ def main():
             sys.exit(1)
         if not fix_and_validate_policy(args.policy_path):
             sys.exit(1)
+
+    if args.flag == "cross_validate":
+        print("Running policy testing first to identify failed cases...")
+        agent.policy_checking_results()
+        test_dir = base_url + "scripts/"
+        test_path_local = test_dir + os.getenv("TEST_PATH", "tests/integration/")
+        failures_file = test_path_local + os.getenv("TEST_FAILURES_PATH", "score_test_failures.txt")
+        cross_validate_output = base_url + os.getenv("CROSS_VALIDATE_OUTPUT", "references/cross_validate_report.json")
+        cross_validate_failed_cases(
+            failures_file=failures_file,
+            guidance_file=guidance_file,
+            system_var_file=system_var_file,
+            output_file=cross_validate_output,
+            api_key=api_key,
+            openai_base_url=openai_base_url,
+            model=model,
+            temp=temp,
+            top_p=top_p,
+        )
+
+    if args.flag == "apply_cross_validate":
+        cross_validate_output = base_url + os.getenv("CROSS_VALIDATE_OUTPUT", "references/cross_validate_report.json")
+        apply_cross_validate_results(
+            report_file=cross_validate_output,
+            test_case_base_path=base_url + os.getenv("TEST_CASE_PATH", "references/test_cases/"),
+        )
+
+    allowed_flags = [
+        "policy_testing",
+        "regal_suggestion",
+        "duplication_suggestion",
+        "red_suggestion",
+        "test_generation",
+        "get_mcp_parameter",
+        "test_case_translation",
+        "test_case_evaluation",
+        "policy_validation",
+        "policy_validation_fix",
+        "cross_validate",
+        "apply_cross_validate",
+    ]
+    if args.flag and args.flag not in allowed_flags:
+        print(f"ERROR: '{args.flag}' is not a valid flag.")
+        print(f"Allowed flags: {', '.join(allowed_flags)}")
+        sys.exit(1)
 
 
 if __name__ == "__main__":

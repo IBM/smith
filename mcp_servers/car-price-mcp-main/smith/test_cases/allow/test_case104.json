@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I'm researching Renault car prices for my article",
+                "input": "I need Chevrolet pricing data for my story",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +30,7 @@
             }
         },
         "arguments": {
-            "brand_name": "Renault"
+            "brand_name": "Chevrolet"
         }
     }
 }

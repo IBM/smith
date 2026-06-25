@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you show me cars organized by vehicle category?",
+                "input": "Show me cars organized by vehicle category",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

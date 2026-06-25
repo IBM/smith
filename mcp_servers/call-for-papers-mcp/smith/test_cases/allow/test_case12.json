@@ -6,8 +6,24 @@
         "extensions": {
             "subject": {
                 "claims": {},
+                "user_name": "Bob",
                 "user_role": [
-                    "faculty"
+                    "faculty",
+                    "phd_student",
+                    "guest"
+                ],
+                "user_id": "bob@university.edu",
+                "department": [
+                    "computer_science",
+                    "electrical_engineering",
+                    "multidisciplinary"
+                ],
+                "queries_this_session": 1,
+                "dissertation_area": "Artificial intelligence",
+                "research_area": [
+                    "Artificial intelligence",
+                    "Cybersecurity and privacy",
+                    "Software engineering"
                 ]
             },
             "headers": {
@@ -18,7 +34,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please retrieve events for the topic of Software engineering",
+                "input": "Please get events for Software engineering",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -29,9 +45,8 @@
             }
         },
         "arguments": {
-            "keywords": "",
-            "topic": "Software engineering",
-            "limit": 10
+            "keywords": "software engineering",
+            "topic": "Software engineering"
         }
     }
 }

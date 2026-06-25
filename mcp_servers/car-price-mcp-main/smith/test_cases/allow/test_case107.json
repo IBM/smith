@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need to search for Honda car prices",
+                "input": "Can you search for Volkswagen car prices?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +30,7 @@
             }
         },
         "arguments": {
-            "brand_name": "Honda"
+            "brand_name": "Volkswagen"
         }
     }
 }
