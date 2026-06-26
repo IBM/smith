@@ -1,7 +1,12 @@
+<div align="center">
+  <img alt="Smith logo" src="https://github.com/IBM/smith/blob/main/docs/figures/smith_logo.png?raw=true" height="120">
+</div>
+
 # Smith — Automated Policy Lifecycle Management for AI Agents
+
+[![CI](https://github.com/IBM/smith/actions/workflows/ci.yml/badge.svg)](https://github.com/IBM/smith/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
-[![Docs](https://img.shields.io/badge/docs-README-green.svg)](https://github.ibm.com/security-foundation-models/smith/blob/hl/skill/README.md) 
 
 An open skill for AI code agents that automates OPA policy creation, test generation, testing, and iterative refinement.
 
@@ -9,10 +14,10 @@ An open skill for AI code agents that automates OPA policy creation, test genera
 
 Smith is a skill (plugin) for AI code agents that manages the full lifecycle of [Open Policy Agent (OPA)](https://www.openpolicyagent.org/) policies (more types of policies will be supported). It enables agents to:
 
-- **Create** OPA policies from natural language guidance and agent description. 
-- **Generate** both synthetic legitimate and adversarial test cases using LLM-based fuzzing and existing red-teaming tools
-- **Test** policies against generated and custom test suites
-- **Refine** policies automatically through iterative feedback loops (patches for failed test cases, linting etc)
+- **Create** OPA policies from natural language guidance and an agent description.
+- **Generate** both synthetic legitimate and adversarial test cases using LLM-based fuzzing and existing red-teaming tools.
+- **Test** policies against generated and custom test suites.
+- **Refine** policies automatically through iterative feedback loops (patches for failed test cases, linting, etc.).
 
 ```
 Guidance Description (NLP) + Agent Description → Enforceable Policy Creation → Test Generation → Policy Testing ⇄ Policy Refinement
@@ -29,7 +34,7 @@ Guidance Description (NLP) + Agent Description → Enforceable Policy Creation �
 
 ## Deployment
 
-Place the entire `smith` folder under the `skills/` or `plugin/` directory of your code agents (claude code, bob, aider etc). The coding agent can automatically recognize smith as an openskill. 
+Place the entire `smith` folder under the `skills/` or `plugin/` directory of your code agent (Claude Code, Bob, Aider, etc.). The coding agent automatically recognizes Smith as an open skill.
 
 For more details of how to use skills in different coding agents, you can refer to the following links:
 
@@ -46,7 +51,7 @@ If you are using Aider Desk: https://aiderdesk.hotovo.com/docs/features/skills
 - Python 3.11+
 - [Regal](https://github.com/StyraInc/regal#getting-started) (OPA linter)
 - [ARES](https://github.com/IBM/ares) (red-teaming framework)
-- [Promptfoo](https://www.promptfoo.dev/)(red-teaming framework) 
+- [Promptfoo](https://www.promptfoo.dev/) (red-teaming framework)
 
 **1. Python environment**
 
@@ -67,15 +72,15 @@ ares install-plugin ares-human-jailbreak
 ares install-plugin ares-garak
 deactivate
 # Setup ares configuration
-cp ../ares_config/qwen-owasp-llm-01.yaml ./example_configs 
+cp ../ares_config/qwen-owasp-llm-01.yaml ./example_configs
 cp ../ares_config/human_jailbreaks.json ./assets
 export ARES_HOME=/absolute/path/to/smith/scripts/test_generation/ares
-# Switch to the original python enviroment
+# Switch back to the original Python environment
 cd ../../..
 source .venv/bin/activate
 ```
 
-**3. Promptfoo** (red-teaming framework). 
+**3. Promptfoo** (red-teaming framework).
 
 ```bash
 npm install -g promptfoo
@@ -281,7 +286,7 @@ Iterative improvement workflow:
 3. **Duplication Removal** — Detect and remove redundant rules via graph analysis, LLM review, and voting. It follows `opa_policy/policy_duplication/policy_duplication.md`
 
 ```bash
-# CLI commands used in the refinment loop
+# CLI commands used in the refinement loop
 smith --flag red_suggestion # clustering failed test cases
 smith --flag regal_suggestion # get regal suggestions
 smith --flag duplication_suggestion # get both LLM and graph generated duplication removal suggestions
@@ -310,7 +315,7 @@ smith/
 │   ├── test_generation/     # Test case generation and translation pipeline
 │   ├── test_case_evaluation/ # Label validation and report generation
 │   ├── tests/               # Policy testing and validation
-│   └── utils/               # Utility functions and helpers
+│   └── tools/               # Repo tooling (e.g. license headers)
 ├── test_generation/         # Test generation skill markdown file
 ├── .env_template            # Environment template
 ├── SKILL.md                 # Main agent skill instructions
@@ -320,8 +325,21 @@ smith/
 
 ## Contributing
 
-Contributions are welcome. Open an issue or submit a pull request.
+Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for the
+development workflow, coding standards, source-file license headers, and the
+Developer Certificate of Origin (DCO) sign-off requirement. A green `make ci`
+locally means a green pipeline.
+
+## Security
+
+Please report security vulnerabilities privately — see [SECURITY.md](SECURITY.md).
+Do not open public issues for security reports.
+
+## Code of Conduct
+
+This project follows the [Contributor Covenant](CODE_OF_CONDUCT.md). By
+participating, you are expected to uphold it.
 
 ## License
 
-Apache 2.0
+Smith is licensed under the [Apache License 2.0](LICENSE).

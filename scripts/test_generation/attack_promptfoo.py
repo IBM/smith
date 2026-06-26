@@ -1,15 +1,17 @@
+# Copyright 2026 Smith authors
+# SPDX-License-Identifier: Apache-2.0
+
 import subprocess
 import yaml
 import json
 import os
-from dotenv import load_dotenv
 
 
 def run_attack(base_skill_url, test_generation_path, output_promptfoo):
     promptfoo_config = str(os.getenv("PROMPTFOO_CONFIG_FILE"))
     promptfoo_config = base_skill_url + promptfoo_config
     try:
-        result = subprocess.run(
+        subprocess.run(
             [
                 "promptfoo",
                 "redteam",

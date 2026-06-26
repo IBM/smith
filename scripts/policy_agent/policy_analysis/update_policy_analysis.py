@@ -1,3 +1,6 @@
+# Copyright 2026 Smith authors
+# SPDX-License-Identifier: Apache-2.0
+
 from policy_agent.policy_analysis.duplication.update_duplication import (
     detect_redundant_rules,
 )

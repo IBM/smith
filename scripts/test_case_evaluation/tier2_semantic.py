@@ -1,3 +1,6 @@
+# Copyright 2026 Smith authors
+# SPDX-License-Identifier: Apache-2.0
+
 import numpy as np
 from dataclasses import dataclass
 from typing import List, Dict

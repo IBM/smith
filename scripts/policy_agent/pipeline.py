@@ -1,14 +1,17 @@
+# Copyright 2026 Smith authors
+# SPDX-License-Identifier: Apache-2.0
+
 from scripts.parse_ast_to_graph import init_graph
 from red_feedback.red_feedback import cluster_commands
 from policy_analysis.update_policy_analysis import update_policy_analysis_feedback
 from policy_evaluation.run_policy_evaluation import run_policy_evaluation
+import argparse
 import os
 from reduce_improve.detect_redundancy import write_graph_suggestion
 from policy_analysis.regal.regal_finder import create_regal_suggestion
 from dotenv import load_dotenv
 
 load_dotenv()
-import argparse
 
 
 class BlueAgent:

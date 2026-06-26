@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+# Copyright 2026 Smith authors
+# SPDX-License-Identifier: Apache-2.0
+
 """Tests for registered plugins."""
 
 # Third-Party

@@ -22,7 +22,9 @@ env/
 .DS_Store
 .idea/
 .vscode/
-.claude/
+# Ignore local Claude Code state, but track the committed agent guidance file.
+.claude/*
+!.claude/CLAUDE.md
 
 # ---- Logs ----
 *.log

@@ -1,8 +1,6 @@
-"""Tests for kubectlcmdprocessor/plugin.py
-
-Copyright 2025
-SPDX-License-Identifier: Apache-2.0
-"""
+# Copyright 2026 Smith authors
+# SPDX-License-Identifier: Apache-2.0
+"""Tests for kubectlcmdprocessor/plugin.py"""
 
 import pytest
 from unittest.mock import Mock

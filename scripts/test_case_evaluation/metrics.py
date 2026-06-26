@@ -1,3 +1,6 @@
+# Copyright 2026 Smith authors
+# SPDX-License-Identifier: Apache-2.0
+
 from collections import defaultdict
 from typing import List, Dict, Any
 

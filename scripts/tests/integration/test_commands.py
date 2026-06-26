@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+# Copyright 2026 Smith authors
+# SPDX-License-Identifier: Apache-2.0
+
 """Tests for registered plugins."""
 
 # Third-Party
@@ -31,8 +34,8 @@ def plugin_manager():
 async def test_tool_pre_hook_commands(plugin_manager: PluginManager):
     """Test tool pre hook across all registered plugins for a list of commands."""
     with open("./tests/inputs/commands", "r") as f:
-        for l in f.readlines():
-            expected, cmd = l.split(",", 1)
+        for line in f.readlines():
+            expected, cmd = line.split(",", 1)
             payload = ToolPreInvokePayload(name="kubectl_tool", args={"arg0": cmd})
             global_context = GlobalContext(request_id="1")
             result, ctx = await plugin_manager.tool_pre_invoke(payload, global_context)

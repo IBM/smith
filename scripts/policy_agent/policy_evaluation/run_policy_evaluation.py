@@ -1,3 +1,6 @@
+# Copyright 2026 Smith authors
+# SPDX-License-Identifier: Apache-2.0
+
 import subprocess
 import os
 from dotenv import load_dotenv
@@ -23,7 +26,7 @@ def run_policy_evaluation(base_url, test_result_path):
 
     # Run tests using Makefile
     try:
-        results = subprocess.run(
+        subprocess.run(
             ["make", "test"], cwd=project_root, check=True, stdout=subprocess.DEVNULL
         )
         print("Policy evaluation tests completed successfully.")

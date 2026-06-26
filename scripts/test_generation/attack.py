@@ -1,3 +1,6 @@
+# Copyright 2026 Smith authors
+# SPDX-License-Identifier: Apache-2.0
+
 import subprocess
 import json
 import os
@@ -23,7 +26,7 @@ def attack(
     try:
         with open("ares.log", "w") as f:
             # result=subprocess.run([test_generation_path+"ares/.venv/bin/python", "test.py"], cwd=test_generation_path+"ares/test_script/", stdout=f, stderr=subprocess.STDOUT, check=True)
-            result = subprocess.run(
+            subprocess.run(
                 [
                     test_generation_path + "ares/.venv/bin/" + "ares",
                     "evaluate",

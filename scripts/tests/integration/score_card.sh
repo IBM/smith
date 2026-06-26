@@ -1,4 +1,6 @@
 #!/bin/bash
+# Copyright 2026 Smith authors
+# SPDX-License-Identifier: Apache-2.0
 
 CDIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 

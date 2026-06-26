@@ -22,6 +22,7 @@ Prerequisites: Ollama running locally with the model pulled, and the MCP server 
 
 ```bash
 ollama pull qwen3.5
+pip install -r requirements.txt
 ```
 
 Start the MCP server (in a separate terminal):

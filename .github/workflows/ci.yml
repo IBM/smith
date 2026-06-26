@@ -1,0 +1,102 @@
+# Copyright 2026 Smith authors
+# SPDX-License-Identifier: Apache-2.0
+# ===============================================================
+# CI — lint, license headers, policy lint, build smoke, and audit.
+# Targets mirror the Makefile so a green `make ci` locally means a
+# green pipeline.
+# ===============================================================
+
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    types: [opened, synchronize, ready_for_review]
+    branches: ["main"]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Lint (ruff + black)
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install ruff + black
+        run: python -m pip install ruff black
+      - name: make lint
+        run: make lint
+
+  license:
+    name: License headers
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: make license-check
+        run: make license-check
+
+  rego-lint:
+    name: Rego lint (Regal)
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Regal
+        run: |
+          curl -fsSL -o regal https://github.com/StyraInc/regal/releases/latest/download/regal_Linux_x86_64
+          chmod +x regal
+          sudo mv regal /usr/local/bin/regal
+      - name: make lint-policy
+        run: make lint-policy
+
+  build:
+    name: Build + CLI smoke
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install Smith and dependencies
+        run: make install
+      - name: CLI smoke test
+        run: smith --help
+
+  audit:
+    name: Dependency audit (advisory)
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Advisory only: surfaces known CVEs in dependencies without blocking the
+    # pipeline. Triage findings in a follow-up.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: pip-audit
+        run: |
+          python -m pip install pip-audit
+          pip-audit -r requirements.txt

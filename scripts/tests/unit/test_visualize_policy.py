@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright 2026 Smith authors
+# SPDX-License-Identifier: Apache-2.0
+
 """Unit tests for visualization/visualize_policy.py"""
 
 import pytest
@@ -407,7 +410,7 @@ class TestMainFunction:
         """Test main function basic execution"""
         mock_exists.return_value = True
 
-        with patch("builtins.print") as mock_print:
+        with patch("builtins.print"):
             # Main function should complete normally without raising SystemExit
             try:
                 main()
@@ -464,7 +467,7 @@ class TestMainFunction:
         """Test main function with verbose output"""
         mock_exists.return_value = True
 
-        with patch("builtins.print") as mock_print:
+        with patch("builtins.print"):
             # Main function should complete normally
             try:
                 main()
