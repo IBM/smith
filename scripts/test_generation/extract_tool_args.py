@@ -1,3 +1,6 @@
+# Copyright 2026 Smith authors
+# SPDX-License-Identifier: Apache-2.0
+
 """
 Process test cases by calling the agent's /extract_tool_call endpoint
 to extract tool name and arguments for each test case.
@@ -82,7 +85,9 @@ def run_extract_tool_args(test_case_path, agent_url):
                 print(
                     f"  [MISMATCH] {file_path}: assigned={assigned_tool}, actual={tool_name}, moving to misclassified"
                 )
-                dest = os.path.join(misclassified_path, label, os.path.basename(file_path))
+                dest = os.path.join(
+                    misclassified_path, label, os.path.basename(file_path)
+                )
                 os.rename(file_path, dest)
             else:
                 test_case["input"]["arguments"] = tool_args

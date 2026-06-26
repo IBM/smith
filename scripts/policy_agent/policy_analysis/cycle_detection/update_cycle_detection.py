@@ -1,3 +1,6 @@
+# Copyright 2026 Smith authors
+# SPDX-License-Identifier: Apache-2.0
+
 import os
 import json
 import re
@@ -31,8 +34,6 @@ def cycle_detection(
         raise FileNotFoundError(f"Policy file not found: {policy_path}")
     with open(policy_path, "r", encoding="utf-8") as f:
         rego_policy = f.read()
-
-    schema_json_str = json.dumps(PolicyIssue.model_json_schema(), indent=2)
 
     system_instruction = """
     You are a code linting assistant specialized in analyzing Open Policy Agent (OPA) Rego policies.

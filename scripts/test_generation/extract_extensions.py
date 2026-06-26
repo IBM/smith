@@ -1,3 +1,6 @@
+# Copyright 2026 Smith authors
+# SPDX-License-Identifier: Apache-2.0
+
 """
 Extract extension variable values from test case prompts using LLM.
 

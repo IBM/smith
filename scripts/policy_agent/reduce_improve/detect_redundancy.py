@@ -1,3 +1,6 @@
+# Copyright 2026 Smith authors
+# SPDX-License-Identifier: Apache-2.0
+
 import networkx as nx
 from typing import List, Union, Set, Iterable, Optional, Hashable, Tuple
 
@@ -173,7 +176,7 @@ def expand_all_edgepaths_with_cycles(
             else:
                 cycles_G.add_edge(u, v, key=k, label=lab)
 
-    def dfs(G, paths, acc_edges, acc_nodes):
+    def dfs(G, node, acc_edges, acc_nodes):
         nonlocal total_steps
         candidates = []
         results = []
@@ -217,9 +220,6 @@ def save_dead_route_components(G, node_name, mode):
     H_all = G.subgraph(results).copy()
     nx.drawing.nx_pydot.write_dot(H_all, "dead_route_" + mode + ".dot")
     return H_all
-
-
-import networkx as nx
 
 
 def print_subgraphs(G: nx.Graph, suggestion_path):

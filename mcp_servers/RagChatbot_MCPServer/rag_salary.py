@@ -30,7 +30,9 @@ prompt = ChatPromptTemplate.from_template(template)
 chain = prompt | model
 
 # Load and index PDF (done only once, before answering)
-pdf_path = "/Users/hailunding/Documents/submit_sre/submit/rebase/aider/sre-opa-policies/RagChatbot_MCPServer/pdfs/salary_summary.pdf"
+base_url = os.getenv("BASE_URL", None)
+pdf_path = base_url + "mcp_servers/RagChatbot_MCPServer/pdfs/salary_summary.pdf"
+
 loader = PDFPlumberLoader(pdf_path)
 documents = loader.load()
 

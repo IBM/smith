@@ -1,3 +1,6 @@
+# Copyright 2026 Smith authors
+# SPDX-License-Identifier: Apache-2.0
+
 """
 Cross-validate failed test cases against guidance to identify mislabeled cases.
 
@@ -71,17 +74,20 @@ def parse_failures(failures_file):
                 continue
 
             expected_allow = "expected_allow: true" in line
-            actual_allow = "allow: true" in line.split("test_case:")[0]
 
             path_match = re.search(r"test_case:\s*(.+?)\]", line)
             if path_match:
                 raw_path = path_match.group(1).strip()
                 resolved_path = os.path.normpath(raw_path)
-                failures.append({
-                    "path": resolved_path,
-                    "expected_label": "allow" if expected_allow else "disallow",
-                    "actual_decision": "allow" if "\"result\":true" in line else "deny",
-                })
+                failures.append(
+                    {
+                        "path": resolved_path,
+                        "expected_label": "allow" if expected_allow else "disallow",
+                        "actual_decision": (
+                            "allow" if '"result":true' in line else "deny"
+                        ),
+                    }
+                )
     return failures
 
 
@@ -127,7 +133,9 @@ def cross_validate_failed_cases(
         print("No failed test cases found. All tests passed!")
         return
 
-    print(f"Found {len(failures)} failed test cases. Cross-validating against guidance...")
+    print(
+        f"Found {len(failures)} failed test cases. Cross-validating against guidance..."
+    )
 
     with open(guidance_file, "r") as f:
         guidance = f.read()
@@ -145,7 +153,9 @@ def cross_validate_failed_cases(
     for i, failure in enumerate(failures):
         path = failure["path"]
         if not os.path.exists(path):
-            print(f"  [{i+1}/{len(failures)}] SKIP (file not found): {os.path.basename(path)}")
+            print(
+                f"  [{i+1}/{len(failures)}] SKIP (file not found): {os.path.basename(path)}"
+            )
             continue
 
         case_data = load_test_case(path)
@@ -187,54 +197,66 @@ def cross_validate_failed_cases(
             else:
                 policy_issue_count += 1
 
-            results.append({
-                "path": path,
-                "filename": os.path.basename(path),
-                "expected_label": failure["expected_label"],
-                "actual_policy_decision": failure["actual_decision"],
-                "tool_name": case_data["tool_name"],
-                "user_role": case_data["user_role"],
-                "arguments": case_data["arguments"],
-                "label_correct": label_correct,
-                "confidence": float(result.get("confidence", 0.5)),
-                "reason": result.get("reason", ""),
-                "suggested_action": result.get("suggested_action", "keep"),
-            })
+            results.append(
+                {
+                    "path": path,
+                    "filename": os.path.basename(path),
+                    "expected_label": failure["expected_label"],
+                    "actual_policy_decision": failure["actual_decision"],
+                    "tool_name": case_data["tool_name"],
+                    "user_role": case_data["user_role"],
+                    "arguments": case_data["arguments"],
+                    "label_correct": label_correct,
+                    "confidence": float(result.get("confidence", 0.5)),
+                    "reason": result.get("reason", ""),
+                    "suggested_action": result.get("suggested_action", "keep"),
+                }
+            )
 
             status = "POLICY ISSUE" if label_correct else "MISLABELED"
-            print(f"  [{i+1}/{len(failures)}] {status}: {os.path.basename(path)} — {result.get('reason', '')[:80]}")
+            print(
+                f"  [{i+1}/{len(failures)}] {status}: {os.path.basename(path)} — {result.get('reason', '')[:80]}"
+            )
 
         except (json.JSONDecodeError, KeyError, ValueError) as e:
-            results.append({
-                "path": path,
-                "filename": os.path.basename(path),
-                "expected_label": failure["expected_label"],
-                "actual_policy_decision": failure["actual_decision"],
-                "tool_name": case_data["tool_name"],
-                "user_role": case_data["user_role"],
-                "arguments": case_data["arguments"],
-                "label_correct": True,
-                "confidence": 0.5,
-                "reason": f"Failed to parse LLM response: {str(e)}",
-                "suggested_action": "keep",
-            })
-            print(f"  [{i+1}/{len(failures)}] UNCERTAIN: {os.path.basename(path)} — parse error")
+            results.append(
+                {
+                    "path": path,
+                    "filename": os.path.basename(path),
+                    "expected_label": failure["expected_label"],
+                    "actual_policy_decision": failure["actual_decision"],
+                    "tool_name": case_data["tool_name"],
+                    "user_role": case_data["user_role"],
+                    "arguments": case_data["arguments"],
+                    "label_correct": True,
+                    "confidence": 0.5,
+                    "reason": f"Failed to parse LLM response: {str(e)}",
+                    "suggested_action": "keep",
+                }
+            )
+            print(
+                f"  [{i+1}/{len(failures)}] UNCERTAIN: {os.path.basename(path)} — parse error"
+            )
 
         except Exception as e:
-            print(f"  [{i+1}/{len(failures)}] ERROR: {os.path.basename(path)} — {str(e)}")
-            results.append({
-                "path": path,
-                "filename": os.path.basename(path),
-                "expected_label": failure["expected_label"],
-                "actual_policy_decision": failure["actual_decision"],
-                "tool_name": case_data["tool_name"],
-                "user_role": case_data["user_role"],
-                "arguments": case_data["arguments"],
-                "label_correct": True,
-                "confidence": 0.0,
-                "reason": f"LLM call failed: {str(e)}",
-                "suggested_action": "keep",
-            })
+            print(
+                f"  [{i+1}/{len(failures)}] ERROR: {os.path.basename(path)} — {str(e)}"
+            )
+            results.append(
+                {
+                    "path": path,
+                    "filename": os.path.basename(path),
+                    "expected_label": failure["expected_label"],
+                    "actual_policy_decision": failure["actual_decision"],
+                    "tool_name": case_data["tool_name"],
+                    "user_role": case_data["user_role"],
+                    "arguments": case_data["arguments"],
+                    "label_correct": True,
+                    "confidence": 0.0,
+                    "reason": f"LLM call failed: {str(e)}",
+                    "suggested_action": "keep",
+                }
+            )
 
     report = {
         "summary": {
@@ -250,7 +272,7 @@ def cross_validate_failed_cases(
     with open(output_file, "w") as f:
         json.dump(report, f, indent=2)
 
-    print(f"\nCross-validation complete.")
+    print("\nCross-validation complete.")
     print(f"  Total failed: {len(failures)}")
     print(f"  Mislabeled:   {mislabeled_count}")
     print(f"  Policy issue: {policy_issue_count}")

@@ -1,4 +1,6 @@
 #!/bin/bash
+# Copyright 2026 Smith authors
+# SPDX-License-Identifier: Apache-2.0
 
 # Set default environment variables for policy detection
 export REPAIR_DIR="${REPAIR_DIR:-repair}"

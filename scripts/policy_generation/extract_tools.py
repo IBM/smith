@@ -1,3 +1,6 @@
+# Copyright 2026 Smith authors
+# SPDX-License-Identifier: Apache-2.0
+
 """
 Extract tool definitions from an MCP server via list_tools().
 

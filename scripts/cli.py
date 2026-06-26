@@ -1,3 +1,6 @@
+# Copyright 2026 Smith authors
+# SPDX-License-Identifier: Apache-2.0
+
 import argparse
 import asyncio
 import json
@@ -391,8 +394,12 @@ def main():
         agent.policy_checking_results()
         test_dir = base_url + "scripts/"
         test_path_local = test_dir + os.getenv("TEST_PATH", "tests/integration/")
-        failures_file = test_path_local + os.getenv("TEST_FAILURES_PATH", "score_test_failures.txt")
-        cross_validate_output = base_url + os.getenv("CROSS_VALIDATE_OUTPUT", "references/cross_validate_report.json")
+        failures_file = test_path_local + os.getenv(
+            "TEST_FAILURES_PATH", "score_test_failures.txt"
+        )
+        cross_validate_output = base_url + os.getenv(
+            "CROSS_VALIDATE_OUTPUT", "references/cross_validate_report.json"
+        )
         cross_validate_failed_cases(
             failures_file=failures_file,
             guidance_file=guidance_file,
@@ -406,10 +413,13 @@ def main():
         )
 
     if args.flag == "apply_cross_validate":
-        cross_validate_output = base_url + os.getenv("CROSS_VALIDATE_OUTPUT", "references/cross_validate_report.json")
+        cross_validate_output = base_url + os.getenv(
+            "CROSS_VALIDATE_OUTPUT", "references/cross_validate_report.json"
+        )
         apply_cross_validate_results(
             report_file=cross_validate_output,
-            test_case_base_path=base_url + os.getenv("TEST_CASE_PATH", "references/test_cases/"),
+            test_case_base_path=base_url
+            + os.getenv("TEST_CASE_PATH", "references/test_cases/"),
         )
 
     allowed_flags = [

@@ -1,3 +1,6 @@
+# Copyright 2026 Smith authors
+# SPDX-License-Identifier: Apache-2.0
+
 """Comprehensive tests for kubectl command parser."""
 
 import subprocess

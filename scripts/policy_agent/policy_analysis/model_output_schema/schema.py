@@ -1,3 +1,6 @@
+# Copyright 2026 Smith authors
+# SPDX-License-Identifier: Apache-2.0
+
 # model_output_schema/schema.py
 from pydantic import BaseModel
 from typing import List, Optional, Literal

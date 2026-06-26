@@ -1,3 +1,6 @@
+# Copyright 2026 Smith authors
+# SPDX-License-Identifier: Apache-2.0
+
 import sys
 
 from beeai_framework.utils.models import ModelLike, to_model_optional
