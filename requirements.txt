@@ -44,7 +44,7 @@ pytest-mock>=3.11.0
 mcp[cli]>=1.0.0
 
 # Visualization (optional)
-seaborn>=0.12.0
+seaborn>=0.13.2
 
 # Red-teaming (install separately)
 # ares - see https://github.com/IBM/ares for installation
