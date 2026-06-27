@@ -84,6 +84,10 @@ source .venv/bin/activate
 
 ```bash
 npm install -g promptfoo
+# To disable promptfoo remote connection:
+export PROMPTFOO_DISABLE_TELEMETRY=1
+export PROMPTFOO_DISABLE_REDTEAM_REMOTE_GENERATION=true
+export PROMPTFOO_DISABLE_SHARING=true
 ```
 
 ### Python Dependencies

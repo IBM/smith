@@ -2,7 +2,7 @@ from mcp.server.fastmcp import FastMCP
 from create_ticket import raw_submit_ticket, raw_create_ticket, raw_purchase, raw_return
 from rag_pipeline import raw_ask_for_workpolicy
 from rag_salary import raw_ask_for_salary
-from opa_client import policy_check, get_current_user_context, set_user_context, set_current_agent_input
+from opa_client import get_current_user_context, set_user_context, set_current_agent_input
 from data_sources.hr_database import hr_db, comp_db, purchase_db
 from datetime import datetime
 import json
@@ -15,7 +15,6 @@ mcp = FastMCP("Unified MCP Server - Complete Test Coverage")
 # ===== BASIC TOOLS FROM ORIGINAL MCP_SERVER =====
 
 @mcp.tool()
-@policy_check("create_ticket")
 def create_ticket(ticket_content: str) -> str:
     """
        Create an inquiry ticket for user.
@@ -29,7 +28,6 @@ def create_ticket(ticket_content: str) -> str:
     return raw_create_ticket(ticket_content)
 
 @mcp.tool()
-@policy_check("submit_ticket")
 def submit_ticket(ticket_content: str) -> str:
     """
        Submit an inquiry ticket for user.
@@ -43,7 +41,6 @@ def submit_ticket(ticket_content: str) -> str:
     return raw_submit_ticket(ticket_content)
 
 @mcp.tool()
-@policy_check("send_email")
 def send_email(recipient_email: str, subject: str, body: str, email_content: str, attached_file: str) -> str:
     """
        Draft and send a general-purpose email that does NOT contain compensation, salary, payroll, or pay-related content. Use this for meeting notes, project updates, schedules etc. For compensation/salary-related emails, use email_compensation_report instead.
@@ -61,7 +58,6 @@ def send_email(recipient_email: str, subject: str, body: str, email_content: str
     return "Sent an email, the email content is: "+email_content+". The attached file is "+attached_file
 
 @mcp.tool()
-@policy_check("export_content_as_file")
 def export_content_as_file(data: str, file_name: str) -> str:
     """
        Export data/content to a file
@@ -77,7 +73,6 @@ def export_content_as_file(data: str, file_name: str) -> str:
     return results
 
 @mcp.tool()
-@policy_check("ask_for_workpolicy")
 def ask_for_workpolicy(question: str) -> str:
     """
        Query and answer questions from a preloaded PDF document that includes working policy and regulation information.
@@ -92,7 +87,6 @@ def ask_for_workpolicy(question: str) -> str:
     return raw_ask_for_workpolicy(question)
 
 @mcp.tool()
-@policy_check("get_w2_form")
 def get_w2_form() -> str:
     """
        Request to get my w2 form
@@ -100,7 +94,6 @@ def get_w2_form() -> str:
     return "Sorry, I do not have access to your w2 form. You need to create a ticket and reach out to our HR team"
 
 @mcp.tool()
-@policy_check("return_product")
 def return_product(amount: int, product_name: str) -> str:
     """
        Request to make a return of a product
@@ -132,7 +125,6 @@ def return_product(amount: int, product_name: str) -> str:
 
 
 @mcp.tool()
-@policy_check("view_team_compensation")
 def view_team_compensation(
     department: str,
     select_fields: list[str] | None = None,
@@ -234,7 +226,6 @@ def view_team_compensation(
         return json.dumps(result, indent=2)
 
 @mcp.tool()
-@policy_check("export_compensation_data")
 def export_compensation_data(
     select_fields: list[str] | None = None,
     id: str | None = None,
@@ -342,7 +333,6 @@ def export_compensation_data(
         return json.dumps(export_data, indent=2)
 
 @mcp.tool()
-@policy_check("email_compensation_report")
 def email_compensation_report(
     destination: str,
     report_data: str,
@@ -511,7 +501,6 @@ The compensation report has been securely transmitted to the specified recipient
 #         """
 
 @mcp.tool()
-@policy_check("purchase")
 def purchase(amount: int, product_name: str, category: str | None = None, justification: str | None = None) -> str:
     """
     Process purchase requests with realistic vendor catalog and approval workflows
@@ -598,7 +587,6 @@ Your purchase request for {product_name} has been approved and processed.
 # Debug tool removed - admin functionality no longer supported
 
 @mcp.tool()
-@policy_check("set_user_role")
 def set_user_role(user_role: str) -> str:
     """
        Set the current user role for policy enforcement
