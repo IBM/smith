@@ -1,7 +1,8 @@
 mcp[cli]
 openai
 langchain
-langchain_community
+langchain-community
+pdfplumber
+sentence-transformers
 streamlit
-llm-guard
 requests

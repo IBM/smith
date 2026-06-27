@@ -5,7 +5,6 @@ import inspect
 from datetime import datetime
 from typing import Dict, Any, Optional, List
 from functools import wraps
-from llm_guard_config import guard
 
 logger = logging.getLogger("OPA-Client")
 logger.setLevel(logging.DEBUG)
@@ -203,72 +202,7 @@ def set_user_context(user_id: str, user_role: str = "user", **kwargs):
         **kwargs
     })
 
-def policy_check(action: str):
-    """
-    Two-stage security check:
-    1. LLMGuard handles prompt injection and input sanitization
-    2. OPA handles authorization decisions
-    """
-    def decorator(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            print(f"POLICY CHECK DECORATOR CALLED FOR: {func.__name__}")
-            logger.debug(f"Policy check decorator called for function: {func.__name__}")
-            
-            # STAGE 1: LLMGuard Input Scanning (Prompt Injection Detection)
-            user_input = extract_user_input_from_args(func, args, kwargs) or get_current_agent_input()
-            logger.debug(f"Extracted user input for {func.__name__}: {user_input[:100] if user_input else 'None'}...")
-            
-            if user_input:
-                # Set the current input for other components that might need it
-                set_current_agent_input(user_input)
-                
-                # Scan the input for security threats
-                logger.debug(f"Scanning input with LLMGuard for {func.__name__}")
-                sanitized_input, is_safe = guard.scan_incoming_prompt(user_input)
-                
-                if not is_safe:
-                    logger.warning(f"LLMGuard blocked malicious input for {func.__name__}: {user_input[:100]}...")
-                    return " Security Alert: Request blocked due to potential security threat. Please rephrase your request without attempting to bypass security controls."
-                else:
-                    logger.debug(f"LLMGuard passed input for {func.__name__}")
-            else:
-                logger.debug(f"No user input found for {func.__name__}, skipping LLMGuard scan")
-            
-            #  OPA Authorization 
-            universal_input = universal_opa_client.build_universal_input(
-                func.__name__, func, args, kwargs
-            )
-            
-            # Evaluate with OPA 
-            print(f" DEBUG: OPA Input for {func.__name__}:")
-            print(f"   Principal: {universal_input.get('extensions', {}).get('subject', {})}")
-            print(f"   Tool name: {universal_input.get('name')}")
-            print(f"   Full input: {universal_input}")
-            is_allowed, reason = universal_opa_client.evaluate_policy(universal_input)
-            
-            if not is_allowed:
-                logger.warning(f"OPA denied access to {func.__name__}: {reason}")
-                return get_universal_denial_message(func.__name__, reason)
-            
-            #  Execute Function
-            result = func(*args, **kwargs)
-            
-            #LLMGuard Output Scanning (Data Leakage Prevention)
-            if user_input and result:
-                try:
-                    sanitized_result, is_clean = guard.scan_tool_output(user_input, str(result))
-                    if not is_clean:
-                        logger.warning(f"LLMGuard sanitized output from {func.__name__}")
-                        return sanitized_result
-                except Exception as e:
-                    logger.error(f"Error in output scanning for {func.__name__}: {e}")
 
-            
-            return result
-            
-        return wrapper
-    return decorator
 
 def get_universal_denial_message(tool_name: str, reason: str) -> str:
     """Get user-friendly denial message for any tool"""
