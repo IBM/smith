@@ -9,29 +9,36 @@ import sys
 
 from dotenv import load_dotenv
 
-from policy_agent.scripts.parse_ast_to_graph import init_graph
-from policy_agent.red_feedback.red_feedback import cluster_commands
-from policy_agent.policy_analysis.update_policy_analysis import (
+from smith.policy_agent.scripts.parse_ast_to_graph import init_graph
+from smith.policy_agent.red_feedback.red_feedback import cluster_commands
+from smith.policy_agent.policy_analysis.update_policy_analysis import (
     update_policy_analysis_feedback,
 )
-from policy_agent.policy_evaluation.run_policy_evaluation import run_policy_evaluation
-from policy_agent.reduce_improve.detect_redundancy import write_graph_suggestion
-from policy_agent.policy_analysis.regal.regal_finder import create_regal_suggestion
-from test_generation.decompose import decompose_guidance
-from test_generation.variable_extraction import variable_extraction
-from test_generation.attack import attack
-from test_generation.case_generation import case_generation
-from test_generation.convert_test_case import translate_case
-from test_generation.grey_condition import grey_extraction
-from test_generation.attack_promptfoo import create_promptfoo_cases
-from test_case_evaluation.classify_guidance import classify_promptfoo_cases
-from test_case_evaluation.validate_labels import run_validation
-from test_case_evaluation.visualization.build_report import build_visualization
-from policy_generation.extract_tools import extract_tools
-from policy_generation.validate_policy import validate_policy, fix_and_validate_policy
-from test_case_evaluation.cross_validate import cross_validate_failed_cases
-from test_case_evaluation.apply_cross_validate import apply_cross_validate_results
-from test_generation.extract_tool_args import run_extract_tool_args
+from smith.policy_agent.policy_evaluation.run_policy_evaluation import (
+    run_policy_evaluation,
+)
+from smith.policy_agent.reduce_improve.detect_redundancy import write_graph_suggestion
+from smith.policy_agent.policy_analysis.regal.regal_finder import (
+    create_regal_suggestion,
+)
+from smith.test_generation.decompose import decompose_guidance
+from smith.test_generation.variable_extraction import variable_extraction
+from smith.test_generation.attack import attack
+from smith.test_generation.case_generation import case_generation
+from smith.test_generation.convert_test_case import translate_case
+from smith.test_generation.grey_condition import grey_extraction
+from smith.test_generation.attack_promptfoo import create_promptfoo_cases
+from smith.test_case_evaluation.classify_guidance import classify_promptfoo_cases
+from smith.test_case_evaluation.validate_labels import run_validation
+from smith.test_case_evaluation.visualization.build_report import build_visualization
+from smith.policy_generation.extract_tools import extract_tools
+from smith.policy_generation.validate_policy import (
+    validate_policy,
+    fix_and_validate_policy,
+)
+from smith.test_case_evaluation.cross_validate import cross_validate_failed_cases
+from smith.test_case_evaluation.apply_cross_validate import apply_cross_validate_results
+from smith.test_generation.extract_tool_args import run_extract_tool_args
 
 load_dotenv()
 

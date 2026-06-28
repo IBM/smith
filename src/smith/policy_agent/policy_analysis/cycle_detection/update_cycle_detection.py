@@ -10,11 +10,9 @@ from openai import OpenAI
 from dotenv import load_dotenv
 
 # Add src folder to sys.path so imports work from test/
-import sys
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../.."))
 
-from policy_agent.policy_analysis.model_output_schema.schema import (
+from smith.policy_agent.policy_analysis.model_output_schema.schema import (
     PolicyIssue,
     PolicyAnalysisReport,
 )

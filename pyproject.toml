@@ -1,14 +1,12 @@
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools>=64.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "smith"
-version = "0.1.0"
+version = "0.2.0.dev0"
 description = "Automated policy lifecycle management for AI agents (OPA/Rego)."
-# Note: the project README lives at the repository root, outside this package
-# directory; setuptools forbids referencing files above the project root, so the
-# long description is intentionally omitted here. See ../README.md.
+readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "Apache-2.0" }
 authors = [
@@ -33,9 +31,42 @@ classifiers = [
     "Topic :: Security",
     "Topic :: Software Development :: Quality Assurance",
 ]
-# Runtime dependencies are declared in ../requirements.txt. Install them with:
-#   pip install -r ../requirements.txt
-# They are intentionally not duplicated here to keep a single source of truth.
+dependencies = [
+    "openai>=1.0.0",
+    "python-dotenv>=1.0.0",
+    "numpy>=1.24.0",
+    "pandas>=2.0.0",
+    "pydantic>=2.0.0",
+    "PyYAML>=6.0",
+    "networkx>=3.0",
+    "pydot>=1.4.0",
+    "matplotlib>=3.7.0",
+    "seaborn>=0.12.0",
+    "nltk>=3.8.0",
+    "scikit-learn>=1.3.0",
+    "sentence-transformers>=2.2.0",
+    "typer>=0.9.0",
+    "rich>=13.0.0",
+    "termcolor>=2.0.0",
+    "httpx>=0.24.0",
+    "requests>=2.28.0",
+    "tqdm>=4.65.0",
+    "tenacity>=8.2.0",
+    "jinja2>=3.1.0",
+    "mcp[cli]>=1.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff==0.15.20",
+    "black==26.5.1",
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-mock>=3.11.0",
+    "pip-audit>=2.7.0",
+    "build>=1.2.0",
+    "twine>=5.0.0",
+]
 
 [project.urls]
 Homepage = "https://github.com/IBM/smith"
@@ -44,32 +75,26 @@ Issues = "https://github.com/IBM/smith/issues"
 Documentation = "https://github.com/IBM/smith#readme"
 
 [project.scripts]
-smith = "cli:main"
-
-[tool.setuptools]
-# Flat layout: `cli.py` is a top-level module and the pipeline packages live
-# alongside it under scripts/. `scripts/` itself is the import root.
-py-modules = ["cli"]
+smith = "smith.cli:main"
 
 [tool.setuptools.packages.find]
-where = ["."]
-include = [
-    "policy_agent*",
-    "policy_generation*",
-    "test_generation*",
-    "test_case_evaluation*",
-    "tests*",
+where = ["src"]
+
+[tool.setuptools.package-data]
+# Non-Python runtime data shipped with the package: the OPA scorecard harness
+# (shell + coverage rego) and the ARES red-teaming input configs.
+smith = [
+    "policy_testing/*.sh",
+    "policy_testing/tools/*",
+    "policy_testing/coverage/*.rego",
+    "test_generation/ares_config/*",
 ]
-# The vendored ARES tree is a separate upstream project, not part of Smith.
-exclude = ["test_generation.ares*"]
 
 [tool.ruff]
-# Don't lint or format the vendored ARES red-teaming tree.
-extend-exclude = ["test_generation/ares"]
+src = ["src"]
 
 [tool.black]
 # Pin the target so formatting is deterministic regardless of the Python
 # version Black runs under (CI uses 3.11). Without this, Black infers a target
 # from the running interpreter and may format differently across environments.
 target-version = ["py311"]
-extend-exclude = "test_generation/ares"

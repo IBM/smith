@@ -1,15 +1,12 @@
 # Copyright 2026 Smith authors
 # SPDX-License-Identifier: Apache-2.0
 
-import os
 import json
 import re
 import httpx
 from openai import OpenAI
 from dotenv import load_dotenv
-import sys
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../.."))
 load_dotenv()
 
 

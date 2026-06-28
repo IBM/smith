@@ -7,10 +7,10 @@ from typing import List, Optional
 from dataclasses import dataclass, asdict
 from dotenv import load_dotenv
 
-from test_case_evaluation.tier1_rules import evaluate_tier1
-from test_case_evaluation.tier2_semantic import Tier2Evaluator
-from test_case_evaluation.tier3_llm_judge import LLMJudge
-from test_case_evaluation.metrics import compute_metrics, print_report
+from smith.test_case_evaluation.tier1_rules import evaluate_tier1
+from smith.test_case_evaluation.tier2_semantic import Tier2Evaluator
+from smith.test_case_evaluation.tier3_llm_judge import LLMJudge
+from smith.test_case_evaluation.metrics import compute_metrics, print_report
 
 load_dotenv()
 

@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 import re
 import json
-from policy_agent.reduce_improve.detect_redundancy import write_graph_suggestion
+from smith.policy_agent.reduce_improve.detect_redundancy import write_graph_suggestion
 
 
 def load_file(path: Path) -> str:

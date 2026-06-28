@@ -1,17 +1,15 @@
 # Copyright 2026 Smith authors
 # SPDX-License-Identifier: Apache-2.0
 
-from policy_agent.policy_analysis.duplication.update_duplication import (
+from smith.policy_agent.policy_analysis.duplication.update_duplication import (
     detect_redundant_rules,
 )
-from policy_agent.policy_analysis.cycle_detection.update_cycle_detection import (
+from smith.policy_agent.policy_analysis.cycle_detection.update_cycle_detection import (
     cycle_detection,
 )
-from policy_agent.policy_analysis.dead_rules.dead_rule_finder import detect_dead_rules
-import os
-import sys
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../.."))
+from smith.policy_agent.policy_analysis.dead_rules.dead_rule_finder import (
+    detect_dead_rules,
+)
 
 
 def update_policy_analysis_feedback(
