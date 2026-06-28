@@ -4,17 +4,24 @@
 # Smith — project Makefile
 # =============================================================================
 # Targets mirror CI (.github/workflows/ci.yml) so a green `make ci` locally
-# means a green pipeline. Policy/OPA-server specifics live in scripts/Makefile.
+# means a green pipeline. Package management uses `uv`.
 
 SHELL := /bin/bash
 .SHELLFLAGS := -eu -o pipefail -c
 .DEFAULT_GOAL := help
 
 PYTHON   ?= python3
-PIP      ?= $(PYTHON) -m pip
-SCRIPTS  := scripts
+UV       ?= uv
 POLICY   := assets/policy.rego
-LICENSE_TOOL := scripts/tools/license_headers.py
+LICENSE_TOOL := src/smith/tools/license_headers.py
+
+# The OPA scorecard harness ships inside the package; in a repo/skill checkout
+# it lives under src/. `make test` runs from the skill root (BASE_URL).
+HARNESS  := src/smith/policy_testing
+
+# OPA server (policy testing)
+OPA_CONTAINER := smith-opa
+OPA_IMAGE     := openpolicyagent/opa:1.8.0-static
 
 # =============================================================================
 # Help
@@ -22,29 +29,16 @@ LICENSE_TOOL := scripts/tools/license_headers.py
 
 .PHONY: help
 help:
-	@echo "Smith — Makefile"
+	@echo "Smith — Makefile (uv-based)"
 	@echo ""
-	@echo "Setup:"
-	@echo "  install         Install Smith (editable) and Python dependencies"
-	@echo ""
-	@echo "Lint & format:"
-	@echo "  lint            CI lint gate: ruff check + black --check (read-only)"
-	@echo "  format          Apply formatting: ruff --fix + black"
-	@echo "  lint-policy     Lint assets/policy.rego with Regal (or OPA)"
-	@echo ""
-	@echo "License headers:"
-	@echo "  license         Insert missing SPDX headers in place"
-	@echo "  license-check   Verify every in-scope file carries an SPDX header"
-	@echo ""
-	@echo "Test & scan:"
-	@echo "  test            Run the policy scorecard (delegates to scripts/Makefile; needs Docker + OPA)"
-	@echo "  audit           Dependency vulnerability scan (pip-audit, advisory)"
-	@echo ""
-	@echo "Gate:"
-	@echo "  build           Build/install the package and smoke-test the CLI"
-	@echo "  ci              lint + lint-policy + license-check (the CI gate)"
-	@echo ""
-	@echo "Policy testing / OPA server targets live in scripts/Makefile."
+	@echo "Setup:           install        Create a uv venv and install Smith (editable) + [dev] extras"
+	@echo "Lint & format:   lint / format  ruff + black over src/ (lint is read-only)"
+	@echo "                 lint-policy    Lint assets/policy.rego with Regal (or OPA)"
+	@echo "License headers: license / license-check"
+	@echo "Test:            test           Policy scorecard (starts OPA in Docker, runs the harness)"
+	@echo "                 opaserver/start|stop|status"
+	@echo "Package:         package/dist, wheel, sdist, verify, publish-test, publish, clean"
+	@echo "Gate:            build (CLI smoke), audit, ci (lint + lint-policy + license-check)"
 
 # =============================================================================
 # Setup
@@ -52,22 +46,27 @@ help:
 
 .PHONY: install
 install:
-	@$(PIP) install -r requirements.txt
-	@$(PIP) install -e $(SCRIPTS)
-	@echo "✅  Smith installed. Try: smith --help"
+	@$(UV) venv
+	@$(UV) pip install -e ".[dev]"
+	@echo "✅  Smith installed (uv venv). Try: smith --help"
 
 # =============================================================================
-# Lint & format (ruff + black; config in scripts/pyproject.toml)
+# Lint & format (ruff + black; config + pins in pyproject.toml [dev])
 # =============================================================================
+
+# Pinned linters run in isolated uvx envs (matches the CI pins) so linting never
+# drags in the heavy runtime dependency tree.
+RUFF  := uvx ruff@0.15.20
+BLACK := uvx black@26.5.1
 
 .PHONY: lint
 lint:
-	@cd $(SCRIPTS) && ruff check . && black --check .
+	@$(RUFF) check src && $(BLACK) --check src
 	@echo "✅  lint passed"
 
 .PHONY: format fmt
 format fmt:
-	@cd $(SCRIPTS) && ruff check --fix . && black .
+	@$(RUFF) check --fix src && $(BLACK) src
 
 .PHONY: lint-policy
 lint-policy:
@@ -93,18 +92,69 @@ license-check:
 	@$(PYTHON) $(LICENSE_TOOL) --check
 
 # =============================================================================
-# Test & scan
+# Policy testing (OPA server + scorecard harness)
 # =============================================================================
 
+.PHONY: opaserver/start
+opaserver/start: lint-policy
+	@echo "Starting OPA server on :8181 (policy: $(POLICY))"
+	@docker run -d --name $(OPA_CONTAINER) --rm -p 8181:8181 \
+	  -v "$(CURDIR)/$(POLICY):/policy/policy.rego" $(OPA_IMAGE) \
+	  run --server /policy/policy.rego --addr=0.0.0.0:8181 >/dev/null
+
+.PHONY: opaserver/stop
+opaserver/stop:
+	@-docker stop $(OPA_CONTAINER) >/dev/null 2>&1 || true
+
+.PHONY: opaserver/status
+opaserver/status:
+	@docker ps -q --filter "name=$(OPA_CONTAINER)" --filter "status=running"
+
 .PHONY: test
-test:
-	@echo "Running the policy scorecard (requires Docker + the OPA server; see scripts/Makefile)..."
-	@$(MAKE) -C $(SCRIPTS) test
+test: opaserver/stop opaserver/start
+	@sleep 3
+	@PATH="$(CURDIR)/.venv/bin:$$PATH" SMITH_ROOT="$(CURDIR)" \
+	  bash $(HARNESS)/score_card.sh "$(CURDIR)" >/dev/null || true
+	@$(MAKE) --no-print-directory opaserver/stop
+	@cat references/scorecard/scorecard_summary.txt 2>/dev/null || true
 
 .PHONY: audit
 audit:
-	@$(PYTHON) -m pip install --quiet pip-audit
-	@pip-audit -r requirements.txt || true
+	@uvx pip-audit || true
+
+# =============================================================================
+# Package & publish (uv)
+# =============================================================================
+
+.PHONY: package dist
+package dist: clean
+	@$(UV) build
+	@echo "✅  Built sdist + wheel under dist/"
+
+.PHONY: wheel
+wheel:
+	@$(UV) build --wheel
+
+.PHONY: sdist
+sdist:
+	@$(UV) build --sdist
+
+.PHONY: verify
+verify: dist
+	@$(UV) run --with twine twine check dist/*
+
+.PHONY: publish-test
+publish-test: verify
+	@$(UV) publish --publish-url https://test.pypi.org/legacy/ dist/*
+
+.PHONY: publish
+publish: verify
+	@$(UV) publish dist/*
+
+.PHONY: clean
+clean:
+	@rm -rf dist build *.egg-info src/*.egg-info .pytest_cache .ruff_cache
+	@find . -type d -name __pycache__ -prune -exec rm -rf {} + 2>/dev/null || true
 
 # =============================================================================
 # Gate
@@ -112,8 +162,9 @@ audit:
 
 .PHONY: build
 build:
-	@$(PIP) install -e $(SCRIPTS)
-	@smith --help >/dev/null && echo "✅  CLI smoke test passed (smith --help)"
+	@test -d .venv || $(UV) venv
+	@$(UV) pip install -e .
+	@$(UV) run smith --help >/dev/null && echo "✅  CLI smoke test passed (smith --help)"
 
 .PHONY: ci
 ci: lint lint-policy license-check

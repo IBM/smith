@@ -54,19 +54,30 @@ class CoverageAnalysis:
 class PolicyCoverageAnalyzer:
     """Analyzes OPA policy test coverage"""
 
-    def __init__(self, project_root: Path = None):
+    def __init__(
+        self,
+        project_root: Path = None,
+        coverage_file: Path = None,
+        revised_policy_file: Path = None,
+        main_policy_file: Path = None,
+    ):
         self.project_root = project_root or Path.cwd()
-        self.coverage_file = (
-            self.project_root / "tests" / "integration" / "coverage.txt"
+        # Paths are passed explicitly by analyze_coverage.sh (scorecard output
+        # dir under the skill root); the project_root-relative values are only
+        # fallbacks for standalone use.
+        self.coverage_file = coverage_file or (
+            self.project_root / "references" / "scorecard" / "coverage.txt"
         )
-        self.revised_policy_file = (
+        self.revised_policy_file = revised_policy_file or (
             self.project_root
-            / "tests"
-            / "integration"
+            / "references"
+            / "scorecard"
             / "coverage"
             / "revised_policy.rego"
         )
-        self.main_policy_file = self.project_root / "policies" / "policy.rego"
+        self.main_policy_file = main_policy_file or (
+            self.project_root / "assets" / "policy.rego"
+        )
 
     def load_coverage_data(self) -> Dict:
         """Load and parse coverage data from coverage.txt"""
@@ -396,11 +407,19 @@ def main():
         default=Path.cwd(),
         help="Project root directory (default: current directory)",
     )
+    parser.add_argument("--coverage-file", type=Path, default=None)
+    parser.add_argument("--revised-policy", type=Path, default=None)
+    parser.add_argument("--main-policy", type=Path, default=None)
 
     args = parser.parse_args()
 
     try:
-        analyzer = PolicyCoverageAnalyzer(args.project_root)
+        analyzer = PolicyCoverageAnalyzer(
+            args.project_root,
+            coverage_file=args.coverage_file,
+            revised_policy_file=args.revised_policy,
+            main_policy_file=args.main_policy,
+        )
         analysis = analyzer.analyze_coverage()
         report = analyzer.generate_report(analysis, args.output_format)
         print(report)

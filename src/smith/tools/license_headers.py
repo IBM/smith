@@ -16,7 +16,7 @@ left untouched, so the tool is idempotent.
 Scope (see ``INCLUDE_*``/``EXCLUDE_DIRS`` below): Smith core only — ``scripts/``
 (excluding the vendored ARES tree), ``assets/`` (excluding generated OPA
 outputs), and root configs. Generated artifacts (``references/``,
-``assets/opa/outputs/``) and the ``mcp_servers/`` example agents (which bundle
+``assets/opa/outputs/``) and the ``examples/`` example agents (which bundle
 third-party-derived MCP server code) are excluded.
 
 Usage:
@@ -35,8 +35,9 @@ SPDX = "# SPDX-License-Identifier: Apache-2.0"
 HEADER_LINES = [COPYRIGHT, SPDX]
 SPDX_MARKER = "SPDX-License-Identifier"
 
-# Repository root, derived from this file's location: scripts/tools/ -> repo root.
-REPO_ROOT = Path(__file__).resolve().parents[2]
+# Repository root, derived from this file's location:
+# src/smith/tools/license_headers.py -> parents[3] is the repo root.
+REPO_ROOT = Path(__file__).resolve().parents[3]
 
 # File extensions that get a header (all use "#" comments).
 INCLUDE_EXTENSIONS = {".py", ".rego", ".sh", ".yaml", ".yml"}
@@ -56,13 +57,13 @@ EXCLUDE_DIRS = (
     "build",
     "dist",
     ".eggs",
-    "scripts/test_generation/ares",  # vendored ARES (separate upstream)
+    "src/smith/test_generation/ares",  # vendored ARES inputs (separate upstream)
     "references",  # generated pipeline artifacts
     "assets/opa/outputs",  # generated OPA intermediates
-    # The example agents under mcp_servers/ bundle third-party-derived MCP server
+    # The example agents under examples/ bundle third-party-derived MCP server
     # code (e.g. call-for-papers-mcp ships an upstream MIT license), so Smith does
     # not stamp its Apache header on them. Only Smith core is headered.
-    "mcp_servers",
+    "examples",
 )
 
 

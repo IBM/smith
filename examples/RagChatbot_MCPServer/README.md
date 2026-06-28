@@ -27,13 +27,13 @@ pip install -r requirements.txt
 
 Start the MCP server (in a separate terminal):
 ```bash
-cd mcp_servers/RagChatbot_MCPServer
+cd examples/RagChatbot_MCPServer
 python mcp_server.py
 ```
 
 Start the agent:
 ```bash
-cd mcp_servers/RagChatbot_MCPServer
+cd examples/RagChatbot_MCPServer
 pip install -r requirements.txt
 uvicorn fast_server:app --host 0.0.0.0 --port 9000
 ```
@@ -71,11 +71,11 @@ Default configuration (in `.env`):
 
 Make sure your `.env` points to this example:
 ```
-TARGET_AGENT_PATH=mcp_servers/RagChatbot_MCPServer/
-GUIDANCE_FILE=mcp_servers/RagChatbot_MCPServer/smith/guidance.txt
-SYSTEM_VAR_FILE=mcp_servers/RagChatbot_MCPServer/smith/system_vars.json
-PROMPTFOO_CONFIG_FILE=mcp_servers/RagChatbot_MCPServer/smith/promptfooconfig.yaml
-PROMPTFOO_OUTPUT_FILE=mcp_servers/RagChatbot_MCPServer/smith/redteam.yaml
+TARGET_AGENT_PATH=examples/RagChatbot_MCPServer/
+GUIDANCE_FILE=examples/RagChatbot_MCPServer/smith/guidance.txt
+SYSTEM_VAR_FILE=examples/RagChatbot_MCPServer/smith/system_vars.json
+PROMPTFOO_CONFIG_FILE=examples/RagChatbot_MCPServer/smith/promptfooconfig.yaml
+PROMPTFOO_OUTPUT_FILE=examples/RagChatbot_MCPServer/smith/redteam.yaml
 MCP_TRANSPORT=sse
 MCP_URL=http://localhost:8000/sse
 ```

@@ -126,9 +126,9 @@ Fill in **every** placeholder value in `.env` before running Smith. The most imp
 | `MCP_TRANSPORT` | MCP transport type: `sse` or `stdio` |
 | `MCP_URL` | MCP server URL (SSE transport only); default `http://localhost:8000/sse` |
 | `MCP_COMMAND` / `MCP_ARGS` / `MCP_CWD` | MCP launch command, args, and working dir (**stdio transport only** — see the commented examples in `.env_template`) |
-| `TARGET_AGENT_PATH` | Relative path to the target MCP server directory, e.g., `mcp_servers/RagChatbot_MCPServer/` for the HR agent |
-| `GUIDANCE_FILE` | Path to the policy guidance file, e.g., `mcp_servers/RagChatbot_MCPServer/smith/guidance.txt` |
-| `SYSTEM_VAR_FILE` | Path to the system-variables JSON (e.g., `mcp_servers/<agent>/smith/system_vars.json`). **Required** — test generation fails without it |
+| `TARGET_AGENT_PATH` | Relative path to the target MCP server directory, e.g., `examples/RagChatbot_MCPServer/` for the HR agent |
+| `GUIDANCE_FILE` | Path to the policy guidance file, e.g., `examples/RagChatbot_MCPServer/smith/guidance.txt` |
+| `SYSTEM_VAR_FILE` | Path to the system-variables JSON (e.g., `examples/<agent>/smith/system_vars.json`). **Required** — test generation fails without it |
 | `PROMPTFOO_CONFIG_FILE` / `PROMPTFOO_OUTPUT_FILE` | Promptfoo red-team config and generated output paths |
 | `ARES_HOME` | Absolute path to the ARES installation directory (e.g., `/path/to/smith/scripts/test_generation/ares`). Smith uses this to locate `ares/.venv/bin/ares` |
 
@@ -136,14 +136,14 @@ See `.env_template` for the full list, including model sampling (`TEMP`, `TOP_P`
 
 ### Start the target agent and MCP server
 
-Detailed instructions for each agent example can be found in the `mcp_servers/<agent>/README.md`.
+Detailed instructions for each agent example can be found in the `examples/<agent>/README.md`.
 
 Smith talks to a **running** target agent (for `/chat` and `/extract_tool_call`) and to its MCP server (to extract tool definitions). Start both before running any `smith` flag.
 
-Each example under `mcp_servers/<agent>/` ships its own `agent.py` (a FastAPI app exposing `/chat` and `/extract_tool_call`), `server.py` (the MCP server), and a `requirements.txt`. Using `call-for-papers-mcp` as a concrete example:
+Each example under `examples/<agent>/` ships its own `agent.py` (a FastAPI app exposing `/chat` and `/extract_tool_call`), `server.py` (the MCP server), and a `requirements.txt`. Using `call-for-papers-mcp` as a concrete example:
 
 ```bash
-cd mcp_servers/call-for-papers-mcp
+cd examples/call-for-papers-mcp
 pip install -r requirements.txt
 
 # Start the agent server on the port AGENT_URL points to (default 9000).
@@ -156,7 +156,7 @@ This example's agent **spawns its MCP server itself over stdio** (`agent.py` lau
 MCP_TRANSPORT=stdio
 MCP_COMMAND=python
 MCP_ARGS=server.py
-MCP_CWD=mcp_servers/call-for-papers-mcp
+MCP_CWD=examples/call-for-papers-mcp
 ```
 
 For an SSE-based MCP server instead, set `MCP_TRANSPORT=sse` and `MCP_URL=http://localhost:8000/sse`, and start that server on its own. Check each example's own `README.md` for specifics.
@@ -302,7 +302,7 @@ smith/
 ├── assets/                  # Policy files and OPA data
 │   ├── policy.rego          # Target policy under management
 │   └── opa/                 # OPA intermediate results (AST, graphs, backups)
-├── mcp_servers/             # Agent examples
+├── examples/             # Agent examples
 ├── opa_policy/              # Skills related to OPA policy
 │   ├── policy_creation/     # OPA policy creation workflow
 │   ├── policy_cross_validation/ # Fix structural/syntax issues (0 cases or 100% fail)

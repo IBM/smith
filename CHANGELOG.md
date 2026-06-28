@@ -30,7 +30,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - **MCP tool extraction** over SSE and stdio transports (`get_mcp_parameter`) and tool-call translation (`test_case_translation`).
 - **Rego policy validation** with optional auto-fix (`policy_validation`, `policy_validation_fix`).
 - Runtime configuration driven entirely from `.env` (see `.env_template`); target-agent selection via `TARGET_AGENT_PATH`, `GUIDANCE_FILE`, `SYSTEM_VAR_FILE`, `MCP_*`, and `AGENT_URL`.
-- Example target agents under `mcp_servers/`, each carrying its Smith inputs (`guidance.txt`, `tool_definitions.json`, `system_vars.json`).
+- Example target agents under `examples/`, each carrying its Smith inputs (`guidance.txt`, `tool_definitions.json`, `system_vars.json`).
 
 [Unreleased]: https://github.com/IBM/smith/compare/0.1.0...HEAD
 [0.1.0]: https://github.com/IBM/smith/releases/tag/0.1.0

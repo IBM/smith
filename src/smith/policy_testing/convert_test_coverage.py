@@ -12,11 +12,17 @@ base_url = os.getenv("BASE_URL")
 
 policy_dir = base_url + os.getenv("POLICY_DIR")
 policy_path = policy_dir + os.getenv("POLICY_PATH")
-test_path = base_url + "scripts/tests/integration/"
-file_path = test_path + "coverage/revised_policy.rego"
-test_file_path = test_path + "coverage/policy_test.rego"
-tn_command_path = test_path + "tn.txt"
-tp_command_path = test_path + "tp.txt"
+# Scorecard outputs live under the skill root (set by score_card.sh), never in
+# the installed package directory.
+out_dir = os.getenv("SMITH_SCORECARD_DIR") or os.path.join(
+    base_url, os.getenv("TEST_OUTPUT_DIR", "references/scorecard/")
+)
+out_dir = os.path.join(out_dir, "")  # ensure a trailing separator
+os.makedirs(os.path.join(out_dir, "coverage"), exist_ok=True)
+file_path = out_dir + "coverage/revised_policy.rego"
+test_file_path = out_dir + "coverage/policy_test.rego"
+tn_command_path = out_dir + "tn.txt"
+tp_command_path = out_dir + "tp.txt"
 
 
 def replace_quotes_in_json(obj, old_char="'", new_char='"'):

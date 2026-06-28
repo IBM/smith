@@ -4,11 +4,12 @@
 
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-
 
 OUTPUT_FORMAT="text"
 SHOW_HELP=false
+# Skill/repo root (holds assets/) and scorecard output dir (holds coverage data).
+ROOT="${SMITH_ROOT:-$PWD}"
+OUT_DIR="${SMITH_SCORECARD_DIR:-$ROOT/references/scorecard}"
 
 
 while [[ $# -gt 0 ]]; do
@@ -24,6 +25,14 @@ while [[ $# -gt 0 ]]; do
         -t|--text)
             OUTPUT_FORMAT="text"
             shift
+            ;;
+        --root)
+            ROOT="$2"
+            shift 2
+            ;;
+        --out)
+            OUT_DIR="$2"
+            shift 2
             ;;
         -h|--help)
             SHOW_HELP=true
@@ -80,9 +89,9 @@ if [[ "$OUTPUT_FORMAT" != "text" && "$OUTPUT_FORMAT" != "json" ]]; then
 fi
 
 
-COVERAGE_FILE="$PROJECT_ROOT/tests/integration/coverage.txt"
-REVISED_POLICY="$PROJECT_ROOT/tests/integration/coverage/revised_policy.rego"
-MAIN_POLICY="$PROJECT_ROOT/policies/policy.rego"
+COVERAGE_FILE="$OUT_DIR/coverage.txt"
+REVISED_POLICY="$OUT_DIR/coverage/revised_policy.rego"
+MAIN_POLICY="$ROOT/assets/policy.rego"
 
 if [[ ! -f "$COVERAGE_FILE" ]]; then
     echo "Error: Coverage file not found: $COVERAGE_FILE"
@@ -100,5 +109,10 @@ if [[ ! -f "$MAIN_POLICY" ]]; then
 fi
 
 
-cd "$PROJECT_ROOT"
-python "$SCRIPT_DIR/coverage_analyzer.py" --output-format "$OUTPUT_FORMAT" --project-root "$PROJECT_ROOT"
+cd "$ROOT"
+python "$SCRIPT_DIR/coverage_analyzer.py" \
+    --output-format "$OUTPUT_FORMAT" \
+    --project-root "$ROOT" \
+    --coverage-file "$COVERAGE_FILE" \
+    --revised-policy "$REVISED_POLICY" \
+    --main-policy "$MAIN_POLICY"

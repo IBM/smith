@@ -19,7 +19,7 @@ vector_store = InMemoryVectorStore(embeddings)
 model = ChatOpenAI(model=model)
 
 template = """
-You are a RAG chatbot assistant responsible for retrieving information from a PDF file containing working policies and regulations, and answering users’ questions.
+You are a RAG chatbot assistant responsible for retrieving information from a PDF file containing salary/compensation information, and answering users’ questions.
 Question: {question}
 Context: {context}
 Answer:
@@ -31,7 +31,8 @@ chain = prompt | model
 
 # Load and index PDF (done only once, before answering)
 base_url = os.getenv("BASE_URL", None)
-pdf_path = base_url + "mcp_servers/RagChatbot_MCPServer/pdfs/work_rules_and_regulations_2016.pdf"
+pdf_path = base_url + "examples/RagChatbot_MCPServer/pdfs/salary_summary.pdf"
+
 loader = PDFPlumberLoader(pdf_path)
 documents = loader.load()
 
@@ -45,7 +46,7 @@ chunks = text_splitter.split_documents(documents)
 vector_store.add_documents(chunks)
 
 
-def raw_ask_for_workpolicy(question: str) -> str:
+def raw_ask_for_salary(question: str) -> str:
     relevant_docs = vector_store.similarity_search(question)
     context = "\n\n".join([doc.page_content for doc in relevant_docs])
     result = chain.invoke({"question": question, "context": context})

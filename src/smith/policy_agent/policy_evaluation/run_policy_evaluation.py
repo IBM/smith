@@ -44,7 +44,7 @@ def run_policy_evaluation(base_url, test_result_path):
 if __name__ == "__main__":
     # Load environment variables
     load_dotenv()
-    base_url = os.getenv("BASE_URL") + "scripts/"
-    test_path = base_url + os.getenv("TEST_PATH")
-    test_results_path = test_path + os.getenv("TEST_RESULT_PATH")
+    base_url = os.getenv("BASE_URL")
+    out_dir = base_url + os.getenv("TEST_OUTPUT_DIR", "references/scorecard/")
+    test_results_path = out_dir + os.getenv("TEST_RESULT_PATH", "scorecard_summary.txt")
     run_policy_evaluation(base_url, test_results_path)

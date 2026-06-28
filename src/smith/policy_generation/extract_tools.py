@@ -11,13 +11,13 @@ Supports two transport modes:
 Usage (SSE - server must be running):
     python scripts/policy_generation/extract_tools.py \
         --transport sse --url http://localhost:8000/sse \
-        --output mcp_servers/RagChatbot_MCPServer/smith/tool_definitions.json
+        --output examples/RagChatbot_MCPServer/smith/tool_definitions.json
 
 Usage (stdio - launches server.py directly):
     python scripts/policy_generation/extract_tools.py \
         --transport stdio --command python --args server.py \
-        --cwd mcp_servers/call-for-papers-mcp \
-        --output mcp_servers/call-for-papers-mcp/smith/tool_definitions.json
+        --cwd examples/call-for-papers-mcp \
+        --output examples/call-for-papers-mcp/smith/tool_definitions.json
 """
 
 import json

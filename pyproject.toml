@@ -86,7 +86,6 @@ where = ["src"]
 smith = [
     "policy_testing/*.sh",
     "policy_testing/tools/*",
-    "policy_testing/coverage/*.rego",
     "test_generation/ares_config/*",
 ]
 

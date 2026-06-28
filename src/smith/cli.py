@@ -71,9 +71,15 @@ class BlueAgent:
         self.regal_result_output = self.user_output_dir + os.getenv(
             "REGAL_RESULT_OUTPUT"
         )
-        self.test_dir = self.base_url + "scripts/"
-        self.test_path = self.test_dir + os.getenv("TEST_PATH")
-        self.test_results_path = self.test_path + os.getenv("TEST_RESULT_PATH")
+        # Scorecard outputs live under the skill root, written by the packaged
+        # policy_testing harness (see src/smith/policy_testing/score_card.sh).
+        self.test_output_dir = self.base_url + os.getenv(
+            "TEST_OUTPUT_DIR", "references/scorecard/"
+        )
+        self.test_path = self.test_output_dir
+        self.test_results_path = self.test_output_dir + os.getenv(
+            "TEST_RESULT_PATH", "scorecard_summary.txt"
+        )
         self.graph_suggestion_path = self.user_output_dir + os.getenv(
             "GRAPH_SUGGESTION_PATH"
         )
@@ -114,7 +120,7 @@ class BlueAgent:
         )
 
     def policy_checking_results(self):
-        return run_policy_evaluation(self.test_dir, self.test_results_path)
+        return run_policy_evaluation(self.base_url, self.test_results_path)
 
 
 def generate_test(
@@ -410,9 +416,10 @@ def main():
     if args.flag == "cross_validate":
         print("Running policy testing first to identify failed cases...")
         agent.policy_checking_results()
-        test_dir = base_url + "scripts/"
-        test_path_local = test_dir + os.getenv("TEST_PATH", "tests/integration/")
-        failures_file = test_path_local + os.getenv(
+        test_output_dir = base_url + os.getenv(
+            "TEST_OUTPUT_DIR", "references/scorecard/"
+        )
+        failures_file = test_output_dir + os.getenv(
             "TEST_FAILURES_PATH", "score_test_failures.txt"
         )
         cross_validate_output = base_url + os.getenv(
