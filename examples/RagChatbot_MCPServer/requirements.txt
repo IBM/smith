@@ -2,6 +2,8 @@ mcp[cli]
 openai
 langchain
 langchain-community
+langchain-openai
+langchain-text-splitters
 pdfplumber
 sentence-transformers
 streamlit
