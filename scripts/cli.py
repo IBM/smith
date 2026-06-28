@@ -220,6 +220,13 @@ def main():
     )
     args = parser.parse_args()
 
+    # No flag means there's nothing to do; show help and exit cleanly rather
+    # than falling through to the env-derived path assembly below (which would
+    # raise on an unpopulated .env).
+    if not args.flag:
+        parser.print_help()
+        sys.exit(0)
+
     # model settings
     api_key = os.getenv("OPENAI_API_KEY")
     openai_base_url = os.getenv("OPENAI_BASE_URL")

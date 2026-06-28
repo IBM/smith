@@ -68,4 +68,8 @@ exclude = ["test_generation.ares*"]
 extend-exclude = ["test_generation/ares"]
 
 [tool.black]
+# Pin the target so formatting is deterministic regardless of the Python
+# version Black runs under (CI uses 3.11). Without this, Black infers a target
+# from the running interpreter and may format differently across environments.
+target-version = ["py311"]
 extend-exclude = "test_generation/ares"

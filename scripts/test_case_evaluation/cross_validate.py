@@ -18,7 +18,6 @@ import os
 import httpx
 from openai import OpenAI
 
-
 SYSTEM_PROMPT = """You are a policy test case auditor. Your job is to determine whether a failed test case is mislabeled or if the policy has a bug.
 
 You will be given:

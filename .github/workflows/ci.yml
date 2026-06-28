@@ -38,7 +38,7 @@ jobs:
         # Pinned so CI matches the versions the codebase is formatted/linted
         # against — an unpinned install pulls newer styles that flag files CI
         # should pass. Bump these deliberately alongside a reformat commit.
-        run: python -m pip install ruff==0.3.7 black==25.12.0
+        run: python -m pip install ruff==0.15.20 black==26.5.1
       - name: make lint
         run: make lint
 
