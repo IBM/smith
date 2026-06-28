@@ -25,14 +25,17 @@ The [`Makefile`](Makefile) mirrors CI — a green `make ci` locally means a gree
 pipeline:
 
 ```bash
-make install         # create a venv and install Smith + dependencies
-make lint            # ruff check + black --check (read-only)
+make install         # create a uv venv and install Smith (editable) + [dev] extras
+make lint            # ruff check + black --check over src/ (read-only)
 make format          # ruff --fix + black (apply formatting)
 make lint-policy     # Regal/OPA lint of assets/policy.rego
 make license-check   # verify every in-scope file carries the SPDX header
 make test            # policy scorecard (needs Docker + the OPA server)
-make ci              # the gate: lint + lint-policy + license-check + build smoke
+make ci              # the gate: lint + lint-policy + license-check
 ```
+
+Package management uses [`uv`](https://docs.astral.sh/uv/). Build and publish
+with `make package` / `make publish` (`uv build` / `uv publish`).
 
 Before submitting a PR, make sure `make ci` passes.
 
@@ -41,14 +44,14 @@ Before submitting a PR, make sure `make ci` passes.
 - **Python 3.11+.** Keep code compatible with 3.11 and 3.12.
 - **Formatting & linting:** [`ruff`](https://docs.astral.sh/ruff/) and
   [`black`](https://black.readthedocs.io/) (config in
-  [`scripts/pyproject.toml`](scripts/pyproject.toml)). CI runs `ruff check` and
+  [`pyproject.toml`](pyproject.toml)). CI runs `ruff check` and
   `black --check`; run `make format` to fix issues locally.
 - **Rego:** policies are linted/formatted with Regal
   ([`make lint-policy`](Makefile)). Keep rule names, namespaces, and allow/deny
   semantics consistent; add only narrowly scoped conditions rather than rewriting
   whole policies.
-- The vendored ARES tree (`scripts/test_generation/ares/`) is a separate upstream
-  project and is excluded from linting, formatting, and license headers.
+- The vendored ARES inputs (`src/smith/test_generation/ares/`) are separate
+  upstream material and are excluded from linting, formatting, and license headers.
 
 ### Source file headers
 
@@ -63,7 +66,7 @@ shell, YAML, Makefiles, Dockerfiles, and Rego (all `#`-comment formats):
 Place it after any shebang (`#!/usr/bin/env python3`, `#!/bin/bash`). Run
 `make license` to insert missing headers and `make license-check` to verify
 coverage; both are driven by
-[`scripts/tools/license_headers.py`](scripts/tools/license_headers.py).
+[`src/smith/tools/license_headers.py`](src/smith/tools/license_headers.py).
 
 ## Changelog
 

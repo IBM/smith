@@ -50,7 +50,7 @@ references/test_case_report.html
 assets/opa/outputs/
 
 # ---- Generated: ARES red-teaming artifacts ----
-scripts/test_generation/ares/assets/*generate*.json
+src/smith/test_generation/ares/assets/*generate*.json
 
 # ---- Generated: policy testing scorecard output ----
 scripts/tests/integration/*.txt

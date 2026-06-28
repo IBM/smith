@@ -23,17 +23,22 @@ def attack(
         writer.writerow(header)
         writer.writerows(attack_targets)
 
+    # ARES is an external tool (the `ares-redteamer` package) installed into its
+    # own venv. Locate it via ARES_HOME, falling back to an `ares/` dir next to
+    # the test_generation package for in-tree installs.
+    ares_home = (
+        os.getenv("ARES_HOME") or os.path.join(test_generation_path, "ares")
+    ).rstrip("/")
     try:
-        with open("ares.log", "w") as f:
-            # result=subprocess.run([test_generation_path+"ares/.venv/bin/python", "test.py"], cwd=test_generation_path+"ares/test_script/", stdout=f, stderr=subprocess.STDOUT, check=True)
-            subprocess.run(
-                [
-                    test_generation_path + "ares/.venv/bin/" + "ares",
-                    "evaluate",
-                    "example_configs/qwen-owasp-llm-01.yaml",
-                    "--generate-only",
-                ]
-            )  # , stdout=f, stderr=subprocess.STDOUT, check=True)
+        subprocess.run(
+            [
+                os.path.join(ares_home, ".venv", "bin", "ares"),
+                "evaluate",
+                "example_configs/qwen-owasp-llm-01.yaml",
+                "--generate-only",
+            ],
+            cwd=ares_home,
+        )
     except subprocess.CalledProcessError:
         print("jail break partially failed")
     print("ATTACK FINISHED........")
@@ -62,7 +67,7 @@ def attack(
     ]
     for attack_file in attack_file_list:
         attack_prompt_map[attack_file] = {}
-        file_path = test_generation_path + "ares/assets/" + attack_file + ".json"
+        file_path = os.path.join(ares_home, "assets", attack_file + ".json")
         if os.path.exists(file_path):
             with open(file_path, "r") as f:
                 attack_prompts = json.load(f)

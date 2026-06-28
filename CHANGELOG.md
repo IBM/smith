@@ -15,6 +15,26 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- Repackaged `scripts/` into an installable `smith` Python package using a `src/`
+  layout, with `pyproject.toml` at the repo root declaring runtime dependencies
+  (`[project.dependencies]`) and a `[dev]` extra. The CLI entry point is now
+  `smith = smith.cli:main`.
+- Package management and the build/publish workflow now use [uv](https://docs.astral.sh/uv/)
+  (`make install`, `make package`, `make publish`).
+- The OPA scorecard harness ships inside the package (`smith.policy_testing`) and
+  writes all generated outputs to a `BASE_URL`-relative dir (`references/scorecard/`,
+  via `TEST_OUTPUT_DIR`) instead of `scripts/tests/integration/`.
+- Renamed `mcp_servers/` to `examples/`.
+
+### Removed
+
+- Legacy code unreachable from the CLI: a kubectl/mcpgateway/beeai cluster, duplicate
+  entry points, a dead `visualization/` package, and the previous (non-functional)
+  pytest suite. Also removed stray upstream ARES repository scaffolding; ARES is the
+  external `ares-redteamer` tool, located via `ARES_HOME`.
+
 ## [0.1.0] - 2026-06-28
 
 ### Added

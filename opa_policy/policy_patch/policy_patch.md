@@ -4,7 +4,7 @@
 - Policy file: `./assets/policy.rego`
 - Backup folder: `./assets/opa/outputs`
 - Cluster results (ORDER IS AUTHORITATIVE): `./assets/opa/outputs/cluster_results.txt`
-- Failed test list: `./scripts/tests/integration/score_test_failures.txt`
+- Failed test list: `./references/scorecard/score_test_failures.txt`
 
 ### IDENTITY RULE
 - file_path is the ONLY authoritative identity of a test case.
