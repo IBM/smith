@@ -1,6 +1,6 @@
 <h1>
-  <img alt="Smith logo" src="https://github.com/IBM/smith/blob/main/docs/figures/smith_logo.png?raw=true" height="120" align="middle">
-  &nbsp;Smith
+   <img alt="Smith logo" src="https://github.com/IBM/smith/blob/main/docs/figures/smith_logo.png?raw=true" height="120" align="middle">
+   &nbsp;Smith
 </h1>
 
 <i>Automated Policy Lifecycle Management for AI Agents.</i>
