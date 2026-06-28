@@ -1,0 +1,7 @@
+# CODEOWNERS — default reviewers for changes in this repository.
+# Docs: https://docs.github.com/articles/about-code-owners
+#
+# Order matters: the last pattern that matches a path wins. The single global
+# rule below makes the listed owners default reviewers for every file.
+
+*       @araujof @dhl123
