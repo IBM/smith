@@ -65,6 +65,16 @@ Place it after any shebang (`#!/usr/bin/env python3`, `#!/bin/bash`). Run
 coverage; both are driven by
 [`scripts/tools/license_headers.py`](scripts/tools/license_headers.py).
 
+## Changelog
+
+We keep a [`CHANGELOG.md`](CHANGELOG.md) in the
+[Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format. When your change
+is user-visible — a new feature, a behavior change, a deprecation/removal, a bug
+fix, or a security fix — add an entry under the `## [Unreleased]` section in the
+appropriate group (**Added**, **Changed**, **Deprecated**, **Removed**,
+**Fixed**, **Security**). Maintainers promote the `Unreleased` entries under a new
+dated version heading when cutting a release tag.
+
 ## Legal — Developer Certificate of Origin
 
 Contributions are accepted under the [Developer Certificate of Origin (DCO) 1.1](https://developercertificate.org/).
