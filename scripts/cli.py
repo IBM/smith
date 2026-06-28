@@ -209,6 +209,17 @@ def generate_test(
 
 def main():
 
+    # Parse CLI args first so `--help` and argument errors work without a
+    # populated .env. The env-derived paths assembled below assume real
+    # values, so they must not run before argparse can short-circuit on --help.
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--flag", help="what advices you want to generate?")
+    parser.add_argument(
+        "--policy_path",
+        help="path to the .rego policy file (for policy_validation/policy_validation_fix)",
+    )
+    args = parser.parse_args()
+
     # model settings
     api_key = os.getenv("OPENAI_API_KEY")
     openai_base_url = os.getenv("OPENAI_BASE_URL")
@@ -263,13 +274,6 @@ def main():
     target_agent_path = os.getenv("TARGET_AGENT_PATH")
     agent_url = os.getenv("AGENT_URL", "http://localhost:9000")
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--flag", help="what advices you want to generate?")
-    parser.add_argument(
-        "--policy_path",
-        help="path to the .rego policy file (for policy_validation/policy_validation_fix)",
-    )
-    args = parser.parse_args()
     agent = BlueAgent()
 
     if args.flag == "policy_testing":
