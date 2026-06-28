@@ -18,8 +18,17 @@ So: high-level control flow lives in markdown guides; deterministic pipeline sta
 ```bash
 # Setup (from repo root)
 python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
+make install                   # pip install -r requirements.txt + editable scripts/ (installs the `smith` CLI)
 cp .env_template .env          # then fill in values (see Configuration below)
+
+# Dev workflow — the root Makefile mirrors CI (.github/workflows/ci.yml); `make ci` is the gate
+make lint            # ruff check + black --check (config in scripts/pyproject.toml)
+make format          # ruff --fix + black (apply fixes)
+make lint-policy     # Regal (falls back to OPA) lint of assets/policy.rego
+make license-check   # verify SPDX Apache-2.0 headers (scripts/tools/license_headers.py)
+make build           # editable install + `smith --help` smoke test
+make ci              # the gate: lint + lint-policy + license-check
+make test            # policy scorecard (delegates to scripts/Makefile; needs Docker + the OPA server)
 
 # CLI pipeline stages (run from anywhere once installed; reads paths from .env)
 smith --flag get_mcp_parameter      # auto-extract MCP tool defs -> <TARGET_AGENT_PATH>/smith/tool_definitions.json
@@ -35,7 +44,7 @@ smith --flag apply_cross_validate   # apply approved label corrections from cros
 smith --flag policy_validation --policy_path <file.rego>      # validate a rego file
 smith --flag policy_validation_fix --policy_path <file.rego>  # validate and auto-fix
 
-# Policy testing harness (scripts/Makefile — this is what policy_testing invokes)
+# Policy-testing harness (scripts/Makefile — what `smith --flag policy_testing` and root `make test` invoke)
 cd scripts
 make opaserver/start   # start OPA server on :8181 with assets/policy.rego (lints first)
 make test              # run tests/integration/score_card.sh, output scorecard + failures
@@ -51,6 +60,15 @@ make opaserver/stop
 
 - **OPA** + **Regal** (Styra linter) — required for testing and `regal_suggestion`.
 - **ARES** (IBM red-teaming) and **Promptfoo** (`npm install -g promptfoo`) — required for adversarial test generation. ARES installs under `scripts/test_generation/ares/` and needs its plugins (`ares-autodan`, `ares-human-jailbreak`, `ares-garak`).
+
+## Repo conventions
+
+- **Packaging + tool config live in `scripts/pyproject.toml`** (not at the repo root): flat layout (`cli.py` is the import root), console entry `smith = cli:main`, and `[tool.ruff]`/`[tool.black]` config. Black is pinned to `target-version = py311` so formatting is deterministic across interpreters; the vendored ARES tree is excluded from packaging and linting.
+- **CI** (`.github/workflows/ci.yml`) mirrors `make ci` and pins `ruff==0.15.20` / `black==26.5.1` — bump these deliberately alongside a reformat commit. The Rego-lint job is currently disabled in CI; still run `make lint-policy` locally.
+- **License headers:** every in-scope file (`.py`, `.rego`, `.sh`, `.yaml`, `.yml`, plus `Makefile`/`Dockerfile`) carries an Apache-2.0 SPDX header. `make license` inserts, `make license-check` verifies (`scripts/tools/license_headers.py`). Excludes `scripts/test_generation/ares/`, `mcp_servers/`, `references/`, and generated outputs.
+- **DCO sign-off** is required on every commit (`git commit -s`).
+- **Changelog:** user-facing changes get an entry under `## [Unreleased]` in `CHANGELOG.md` (Keep a Changelog); maintainers promote it to a dated version when cutting a release tag.
+- `smith --help` and a bare `smith` (no flag) work without a populated `.env` — args are parsed before any env-derived path assembly, so don't reintroduce eager `BASE_URL + os.getenv(...)` work ahead of `argparse`.
 
 ## Configuration model — important
 
