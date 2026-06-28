@@ -1,8 +1,9 @@
-<div align="center">
-  <img alt="Smith logo" src="https://github.com/IBM/smith/blob/main/docs/figures/smith_logo.png?raw=true" height="120">
-</div>
+<h1>
+  <img alt="Smith logo" src="https://github.com/IBM/smith/blob/main/docs/figures/smith_logo.png?raw=true" height="120" align="middle">
+  &nbsp;Smith
+</h1>
 
-# Smith — Automated Policy Lifecycle Management for AI Agents
+<i>Automated Policy Lifecycle Management for AI Agents.</i>
 
 [![CI](https://github.com/IBM/smith/actions/workflows/ci.yml/badge.svg)](https://github.com/IBM/smith/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
