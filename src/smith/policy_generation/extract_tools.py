@@ -9,12 +9,12 @@ Supports two transport modes:
 - stdio: launches the MCP server as a subprocess (e.g., python server.py)
 
 Usage (SSE - server must be running):
-    python scripts/policy_generation/extract_tools.py \
+    python src/smith/policy_generation/extract_tools.py \
         --transport sse --url http://localhost:8000/sse \
         --output examples/RagChatbot_MCPServer/smith/tool_definitions.json
 
 Usage (stdio - launches server.py directly):
-    python scripts/policy_generation/extract_tools.py \
+    python src/smith/policy_generation/extract_tools.py \
         --transport stdio --command python --args server.py \
         --cwd examples/call-for-papers-mcp \
         --output examples/call-for-papers-mcp/smith/tool_definitions.json

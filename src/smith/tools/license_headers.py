@@ -13,15 +13,15 @@ The header is inserted after any shebang (``#!...``) and after a leading encodin
 declaration. Files that already carry an ``SPDX-License-Identifier`` line are
 left untouched, so the tool is idempotent.
 
-Scope (see ``INCLUDE_*``/``EXCLUDE_DIRS`` below): Smith core only — ``scripts/``
+Scope (see ``INCLUDE_*``/``EXCLUDE_DIRS`` below): Smith core only — ``src/smith/``
 (excluding the vendored ARES tree), ``assets/`` (excluding generated OPA
 outputs), and root configs. Generated artifacts (``references/``,
 ``assets/opa/outputs/``) and the ``examples/`` example agents (which bundle
 third-party-derived MCP server code) are excluded.
 
 Usage:
-    python scripts/tools/license_headers.py --check   # exit 1 if any file lacks a header
-    python scripts/tools/license_headers.py --fix     # insert missing headers in place
+    python src/smith/tools/license_headers.py --check   # exit 1 if any file lacks a header
+    python src/smith/tools/license_headers.py --fix     # insert missing headers in place
 """
 
 from __future__ import annotations

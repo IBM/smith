@@ -5,7 +5,7 @@
 Validate an OPA policy file by running opa fmt and opa check.
 
 Usage:
-    python scripts/policy_generation/validate_policy.py --policy assets/policy_generated.rego
+    python src/smith/policy_generation/validate_policy.py --policy assets/policy_generated.rego
 """
 
 import argparse
