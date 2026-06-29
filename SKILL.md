@@ -4,7 +4,14 @@ description: Responsible for creating policies, generating and evaluating test c
 ---
 
 ## Overview
-This skill is responsible for creating policies, generating and evaluating test cases, testing, and automatically improving the policy. The target policy file is `./assets/policy.rego`.
+This skill is responsible for creating policies, generating and evaluating test cases, testing, and automatically improving the policy. The target policy file is `./assets/policy.rego`. 
+
+## Prerequisites
+Before running any `smith` commands, activate the project virtual environment:
+
+```bash
+source .venv/bin/activate
+```
 
 ## Create OPA Policy
 If the user asks to create an OPA policy, you should strictly follow instructions in `./opa_policy/policy_creation/opa_policy_creation.md` in the skill directory to create the policy without asking any additional questions.

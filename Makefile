@@ -46,7 +46,7 @@ help:
 
 .PHONY: install
 install:
-	@$(UV) venv
+	@test -d .venv || $(UV) venv
 	@$(UV) pip install -e ".[dev]"
 	@echo "✅  Smith installed (uv venv). Try: smith --help"
 
