@@ -9,26 +9,25 @@ Smith is an **agent skill** (plugin) that manages the full lifecycle of [OPA](ht
 Smith has two layers that must be understood together:
 
 1. **The skill layer** — `SKILL.md` plus markdown guides under `opa_policy/` and `test_generation/`. These are *instructions the agent (you) follows*, not code. When a user asks to create, test, or improve a policy, the agent reads the relevant markdown guide and orchestrates the work, often by invoking the `smith` CLI.
-2. **The CLI backend** — `scripts/cli.py` exposes a single `smith --flag <stage>` command that runs the heavy Python pipelines (decomposition, attack generation, label validation, clustering, etc.).
+2. **The CLI backend** — `src/smith/cli.py` exposes a single `smith --flag <stage>` command that runs the heavy Python pipelines (decomposition, attack generation, label validation, clustering, etc.).
 
 So: high-level control flow lives in markdown guides; deterministic pipeline stages live behind CLI flags.
 
 ## Commands
 
 ```bash
-# Setup (from repo root)
-python -m venv .venv && source .venv/bin/activate
-make install                   # pip install -r requirements.txt + editable scripts/ (installs the `smith` CLI)
+# Setup (from repo root) — package management uses uv
+make install                   # uv venv + uv pip install -e ".[dev]" (installs the `smith` CLI)
 cp .env_template .env          # then fill in values (see Configuration below)
 
 # Dev workflow — the root Makefile mirrors CI (.github/workflows/ci.yml); `make ci` is the gate
-make lint            # ruff check + black --check (config in scripts/pyproject.toml)
+make lint            # ruff check + black --check (config in pyproject.toml)
 make format          # ruff --fix + black (apply fixes)
 make lint-policy     # Regal (falls back to OPA) lint of assets/policy.rego
-make license-check   # verify SPDX Apache-2.0 headers (scripts/tools/license_headers.py)
+make license-check   # verify SPDX Apache-2.0 headers (src/smith/tools/license_headers.py)
 make build           # editable install + `smith --help` smoke test
 make ci              # the gate: lint + lint-policy + license-check
-make test            # policy scorecard (delegates to scripts/Makefile; needs Docker + the OPA server)
+make test            # policy scorecard: starts OPA in Docker + runs the packaged harness
 
 # CLI pipeline stages (run from anywhere once installed; reads paths from .env)
 smith --flag get_mcp_parameter      # auto-extract MCP tool defs -> <TARGET_AGENT_PATH>/smith/tool_definitions.json
@@ -44,28 +43,25 @@ smith --flag apply_cross_validate   # apply approved label corrections from cros
 smith --flag policy_validation --policy_path <file.rego>      # validate a rego file
 smith --flag policy_validation_fix --policy_path <file.rego>  # validate and auto-fix
 
-# Policy-testing harness (scripts/Makefile — what `smith --flag policy_testing` and root `make test` invoke)
-cd scripts
+# Policy-testing OPA server (root Makefile; the packaged harness in
+# src/smith/policy_testing/ is what `smith --flag policy_testing` and `make test` invoke)
 make opaserver/start   # start OPA server on :8181 with assets/policy.rego (lints first)
-make test              # run tests/integration/score_card.sh, output scorecard + failures
-make test/verbose      # per-test-case results
-make lint/policy       # OPA check on the rego policy
-make lint/code         # ruff + black over scripts tests visualization
-make opaserver/stop
+make opaserver/status  # show whether the OPA container is running
+make opaserver/stop    # stop the OPA server
 ```
 
-`make test` requires the OPA server to be running and curls `localhost:8181/v1/data/mcp/policies/allow` for every JSON case under `references/test_cases/{allow,disallow}/`. A case in `disallow/` is expected to return `allow: false`; `allow/` expects `true`. Results land in `scripts/tests/integration/{scorecard_summary.txt,score_test_failures.txt,tp.txt,fp.txt,tn.txt,fn.txt}`.
+`make test` requires the OPA server to be running and curls `localhost:8181/v1/data/mcp/policies/allow` for every JSON case under `references/test_cases/{allow,disallow}/`. A case in `disallow/` is expected to return `allow: false`; `allow/` expects `true`. Results land in `references/scorecard/{scorecard_summary.txt,score_test_failures.txt,tp.txt,fp.txt,tn.txt,fn.txt}`.
 
 ## External tools (install separately)
 
 - **OPA** + **Regal** (Styra linter) — required for testing and `regal_suggestion`.
-- **ARES** (IBM red-teaming) and **Promptfoo** (`npm install -g promptfoo`) — required for adversarial test generation. ARES installs under `scripts/test_generation/ares/` and needs its plugins (`ares-autodan`, `ares-human-jailbreak`, `ares-garak`).
+- **ARES** (IBM red-teaming) and **Promptfoo** (`npm install -g promptfoo`) — required for adversarial test generation. ARES installs under `src/smith/test_generation/ares/` and needs its plugins (`ares-autodan`, `ares-human-jailbreak`, `ares-garak`).
 
 ## Repo conventions
 
-- **Packaging + tool config live in `scripts/pyproject.toml`** (not at the repo root): flat layout (`cli.py` is the import root), console entry `smith = cli:main`, and `[tool.ruff]`/`[tool.black]` config. Black is pinned to `target-version = py311` so formatting is deterministic across interpreters; the vendored ARES tree is excluded from packaging and linting.
+- **Packaging + tool config live in the root `pyproject.toml`**: src layout (`src/smith/`), console entry `smith = smith.cli:main`, declared `[project.dependencies]` (+ `[dev]` extra), `[tool.setuptools.package-data]` shipping the policy_testing harness + `ares_config`, and `[tool.ruff]`/`[tool.black]` config. Black is pinned to `target-version = py311`. Package management uses **uv** (`make install`, `make package`/`make publish` → `uv build`/`uv publish`).
 - **CI** (`.github/workflows/ci.yml`) mirrors `make ci` and pins `ruff==0.15.20` / `black==26.5.1` — bump these deliberately alongside a reformat commit. The Rego-lint job is currently disabled in CI; still run `make lint-policy` locally.
-- **License headers:** every in-scope file (`.py`, `.rego`, `.sh`, `.yaml`, `.yml`, plus `Makefile`/`Dockerfile`) carries an Apache-2.0 SPDX header. `make license` inserts, `make license-check` verifies (`scripts/tools/license_headers.py`). Excludes `scripts/test_generation/ares/`, `mcp_servers/`, `references/`, and generated outputs.
+- **License headers:** every in-scope file (`.py`, `.rego`, `.sh`, `.yaml`, `.yml`, plus `Makefile`/`Dockerfile`) carries an Apache-2.0 SPDX header. `make license` inserts, `make license-check` verifies (`src/smith/tools/license_headers.py`). Excludes `src/smith/test_generation/ares/`, `examples/`, `references/`, and generated outputs.
 - **DCO sign-off** is required on every commit (`git commit -s`).
 - **Changelog:** user-facing changes get an entry under `## [Unreleased]` in `CHANGELOG.md` (Keep a Changelog); maintainers promote it to a dated version when cutting a release tag.
 - `smith --help` and a bare `smith` (no flag) work without a populated `.env` — args are parsed before any env-derived path assembly, so don't reintroduce eager `BASE_URL + os.getenv(...)` work ahead of `argparse`.
@@ -74,13 +70,13 @@ make opaserver/stop
 
 Almost every path in the codebase is **assembled from `.env` at runtime** via `os.getenv`, not hardcoded. The dominant pattern is `BASE_URL + os.getenv("SOME_PATH")`. `BASE_URL` is the absolute path to the skill folder (trailing slash). When you change where files are read/written, you are almost always editing `.env`, not Python.
 
-Target-agent selection is driven by a small set of vars: `TARGET_AGENT_PATH`, `GUIDANCE_FILE`, `SYSTEM_VAR_FILE`, `MCP_*`, and `AGENT_URL`. Pointing Smith at a different agent example (under `mcp_servers/`) means repointing these, not changing code.
+Target-agent selection is driven by a small set of vars: `TARGET_AGENT_PATH`, `GUIDANCE_FILE`, `SYSTEM_VAR_FILE`, `MCP_*`, and `AGENT_URL`. Pointing Smith at a different agent example (under `examples/`) means repointing these, not changing code.
 
 Key model vars: `MODEL_SONNET` (the LLM used across pipelines), `OPENAI_API_KEY`, `OPENAI_BASE_URL`, `TEMP`, `TOP_P`.
 
 ## Per-target-agent inputs
 
-Each target agent under `mcp_servers/<agent>/` carries its Smith inputs in a `smith/` subfolder:
+Each target agent under `examples/<agent>/` carries its Smith inputs in a `smith/` subfolder:
 - `guidance.txt` — natural-language policy rules (the source of truth).
 - `tool_definitions.json` — MCP tools + params (auto-generated by `get_mcp_parameter`); maps to `input.arguments.*` in the policy.
 - `system_vars.json` — session/system variables (roles, teams, claims); maps to `input.extensions.subject.*`.
@@ -93,7 +89,7 @@ The generated policy may **only** reference data available from tool arguments o
 - `assets/opa/` — OPA intermediate results: AST (`ast.json`), graph (`ast.dot`), backups.
 - `references/` — all generated intermediates: `decomp_file.json`, `vars_file.json`, `test_cases.json`, attack files, `label_validation_results.json`, `test_case_report.html`, and final `test_cases/{allow,disallow,malicious}/`.
 
-## scripts/ package map
+## src/smith/ package map
 
 - `policy_generation/` — MCP tool extraction (`extract_tools.py`) and rego validation (`validate_policy.py`).
 - `test_generation/` — generation pipeline stages run in order by the `test_generation` flag: `decompose` → `grey_condition` → `variable_extraction` → `case_generation` → `attack` (ARES) → `attack_promptfoo` → `convert_test_case`. Also `extract_tool_args.py` for translation.

@@ -12,7 +12,7 @@ If the scorecard shows mixed results (some pass, some fail), skip this — use `
 
 - Policy: `./assets/policy.rego`
 - Test case template: `./references/test_case_template.json`
-- Scorecard: `./scripts/tests/integration/scorecard_summary.txt`
+- Scorecard: `./references/scorecard/scorecard_summary.txt`
 
 ---
 

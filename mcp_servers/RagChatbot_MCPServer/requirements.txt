@@ -1,8 +1,0 @@
-mcp[cli]
-openai
-langchain
-langchain-community
-pdfplumber
-sentence-transformers
-streamlit
-requests

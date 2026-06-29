@@ -48,7 +48,8 @@ If you are using Aider Desk: https://aiderdesk.hotovo.com/docs/features/skills
 ### Prerequisites
 
 - Python 3.11+
-- [Regal](https://github.com/StyraInc/regal#getting-started) (OPA linter)
+- [uv](https://docs.astral.sh/uv/) (package management)
+- [OPA](https://www.openpolicyagent.org/) + [Regal](https://github.com/StyraInc/regal#getting-started) (policy testing / linting; OPA runs in Docker for the scorecard)
 - [ARES](https://github.com/IBM/ares) (red-teaming framework)
 - [Promptfoo](https://www.promptfoo.dev/) (red-teaming framework)
 
@@ -59,10 +60,10 @@ python -m venv .venv
 source .venv/bin/activate
 ```
 
-**2. ARES** (red-teaming framework). Installs into `scripts/test_generation/ares/` with its own `.venv`, which is the layout the test-generation pipeline expects (`scripts/test_generation/attack.py` invokes `ares/.venv/bin/ares`):
+**2. ARES** (red-teaming framework). Installs into `src/smith/test_generation/ares/` with its own `.venv`, which is the layout the test-generation pipeline expects (`src/smith/test_generation/attack.py` invokes `ares/.venv/bin/ares`):
 
 ```bash
-cd scripts/test_generation/ares
+cd src/smith/test_generation/ares
 python -m venv .venv
 source .venv/bin/activate
 curl https://raw.githubusercontent.com/IBM/ares/refs/heads/main/install.sh | bash
@@ -73,9 +74,9 @@ deactivate
 # Setup ares configuration
 cp ../ares_config/qwen-owasp-llm-01.yaml ./example_configs
 cp ../ares_config/human_jailbreaks.json ./assets
-export ARES_HOME=/absolute/path/to/smith/scripts/test_generation/ares
+export ARES_HOME=/absolute/path/to/smith/src/smith/test_generation/ares
 # Switch back to the original Python environment
-cd ../../..
+cd ../../../../
 source .venv/bin/activate
 ```
 
@@ -89,17 +90,18 @@ export PROMPTFOO_DISABLE_REDTEAM_REMOTE_GENERATION=true
 export PROMPTFOO_DISABLE_SHARING=true
 ```
 
-### Python Dependencies
+### Install Smith
+
+Smith uses [uv](https://docs.astral.sh/uv/) for package management. From the repo root:
 
 ```bash
-pip install -r requirements.txt
+make install        # creates a uv venv and installs Smith (editable) + dev tools
 ```
 
-### CLI Installation
+Or install directly (dependencies are declared in `pyproject.toml`):
 
 ```bash
-cd scripts
-pip install -e .
+uv pip install -e .   # or: pip install -e .
 ```
 
 This installs the `smith` CLI command.
@@ -126,24 +128,24 @@ Fill in **every** placeholder value in `.env` before running Smith. The most imp
 | `MCP_TRANSPORT` | MCP transport type: `sse` or `stdio` |
 | `MCP_URL` | MCP server URL (SSE transport only); default `http://localhost:8000/sse` |
 | `MCP_COMMAND` / `MCP_ARGS` / `MCP_CWD` | MCP launch command, args, and working dir (**stdio transport only** — see the commented examples in `.env_template`) |
-| `TARGET_AGENT_PATH` | Relative path to the target MCP server directory, e.g., `mcp_servers/RagChatbot_MCPServer/` for the HR agent |
-| `GUIDANCE_FILE` | Path to the policy guidance file, e.g., `mcp_servers/RagChatbot_MCPServer/smith/guidance.txt` |
-| `SYSTEM_VAR_FILE` | Path to the system-variables JSON (e.g., `mcp_servers/<agent>/smith/system_vars.json`). **Required** — test generation fails without it |
+| `TARGET_AGENT_PATH` | Relative path to the target MCP server directory, e.g., `examples/RagChatbot_MCPServer/` for the HR agent |
+| `GUIDANCE_FILE` | Path to the policy guidance file, e.g., `examples/RagChatbot_MCPServer/smith/guidance.txt` |
+| `SYSTEM_VAR_FILE` | Path to the system-variables JSON (e.g., `examples/<agent>/smith/system_vars.json`). **Required** — test generation fails without it |
 | `PROMPTFOO_CONFIG_FILE` / `PROMPTFOO_OUTPUT_FILE` | Promptfoo red-team config and generated output paths |
-| `ARES_HOME` | Absolute path to the ARES installation directory (e.g., `/path/to/smith/scripts/test_generation/ares`). Smith uses this to locate `ares/.venv/bin/ares` |
+| `ARES_HOME` | Absolute path to the ARES installation directory (e.g., `/path/to/smith/src/smith/test_generation/ares`). Smith uses this to locate `ares/.venv/bin/ares` |
 
 See `.env_template` for the full list, including model sampling (`TEMP`, `TOP_P`), test-case evaluation thresholds, and refinement/clustering parameters.
 
 ### Start the target agent and MCP server
 
-Detailed instructions for each agent example can be found in the `mcp_servers/<agent>/README.md`.
+Detailed instructions for each agent example can be found in the `examples/<agent>/README.md`.
 
 Smith talks to a **running** target agent (for `/chat` and `/extract_tool_call`) and to its MCP server (to extract tool definitions). Start both before running any `smith` flag.
 
-Each example under `mcp_servers/<agent>/` ships its own `agent.py` (a FastAPI app exposing `/chat` and `/extract_tool_call`), `server.py` (the MCP server), and a `requirements.txt`. Using `call-for-papers-mcp` as a concrete example:
+Each example under `examples/<agent>/` ships its own `agent.py` (a FastAPI app exposing `/chat` and `/extract_tool_call`), `server.py` (the MCP server), and a `requirements.txt`. Using `call-for-papers-mcp` as a concrete example:
 
 ```bash
-cd mcp_servers/call-for-papers-mcp
+cd examples/call-for-papers-mcp
 pip install -r requirements.txt
 
 # Start the agent server on the port AGENT_URL points to (default 9000).
@@ -156,7 +158,7 @@ This example's agent **spawns its MCP server itself over stdio** (`agent.py` lau
 MCP_TRANSPORT=stdio
 MCP_COMMAND=python
 MCP_ARGS=server.py
-MCP_CWD=mcp_servers/call-for-papers-mcp
+MCP_CWD=examples/call-for-papers-mcp
 ```
 
 For an SSE-based MCP server instead, set `MCP_TRANSPORT=sse` and `MCP_URL=http://localhost:8000/sse`, and start that server on its own. Check each example's own `README.md` for specifics.
@@ -241,7 +243,7 @@ The report groups all test cases by guidance item, with condition sub-tabs. Case
 To regenerate the HTML report standalone:
 
 ```bash
-cd scripts/test_case_evaluation/visualization
+cd src/smith/test_case_evaluation/visualization
 python build_report.py
 ```
 
@@ -302,7 +304,7 @@ smith/
 ├── assets/                  # Policy files and OPA data
 │   ├── policy.rego          # Target policy under management
 │   └── opa/                 # OPA intermediate results (AST, graphs, backups)
-├── mcp_servers/             # Agent examples
+├── examples/             # Agent examples
 ├── opa_policy/              # Skills related to OPA policy
 │   ├── policy_creation/     # OPA policy creation workflow
 │   ├── policy_cross_validation/ # Fix structural/syntax issues (0 cases or 100% fail)
@@ -310,19 +312,20 @@ smith/
 │   ├── policy_patch/        # OPA policy patching workflow
 │   ├── policy_regal/        # Regal formatting workflow
 │   └── policy_duplication/  # Deduplication workflow
-├── references/              # All intermediate results
-├── scripts/                 # Core Python packages
-│   ├── cli.py               # Main CLI entry point
+├── references/              # All intermediate results (incl. scorecard/ outputs)
+├── pyproject.toml           # Packaging, dependencies, ruff/black config
+├── src/smith/               # The `smith` Python package
+│   ├── cli.py               # Main CLI entry point (smith.cli:main)
 │   ├── policy_agent/        # OPA policy analysis and refinement
 │   ├── policy_generation/   # MCP tool extraction and policy generation
 │   ├── test_generation/     # Test case generation and translation pipeline
 │   ├── test_case_evaluation/ # Label validation and report generation
-│   ├── tests/               # Policy testing and validation
+│   ├── policy_testing/      # OPA scorecard harness (score_card.sh, coverage)
 │   └── tools/               # Repo tooling (e.g. license headers)
+├── tests/                   # Placeholder for the test suite (TODO)
 ├── test_generation/         # Test generation skill markdown file
 ├── .env_template            # Environment template
 ├── SKILL.md                 # Main agent skill instructions
-├── requirements.txt         # Python dependencies
 └── README.md
 ```
 

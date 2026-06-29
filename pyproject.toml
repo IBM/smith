@@ -1,0 +1,99 @@
+[build-system]
+requires = ["setuptools>=64.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "smith"
+version = "0.2.0.dev0"
+description = "Automated policy lifecycle management for AI agents (OPA/Rego)."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "Apache-2.0" }
+authors = [
+    { name = "Hailun Ding", email = "hailun.ding@ibm.com" },
+    { name = "Sai Sree Chukkapalli", email = "saisreelaya.chukkapalli@ibm.com" },
+    { name = "Fred Araujo", email = "frederico.araujo@ibm.com" },
+]
+maintainers = [
+    { name = "Hailun Ding", email = "hailun.ding@ibm.com" },
+    { name = "Sai Sree Chukkapalli", email = "saisreelaya.chukkapalli@ibm.com" },
+    { name = "Fred Araujo", email = "frederico.araujo@ibm.com" },
+]
+keywords = ["opa", "rego", "policy", "ai-agents", "mcp", "security", "authorization"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Security",
+    "Topic :: Software Development :: Quality Assurance",
+]
+dependencies = [
+    "openai>=1.0.0",
+    "python-dotenv>=1.0.0",
+    "numpy>=1.24.0",
+    "pandas>=2.0.0",
+    "pydantic>=2.0.0",
+    "PyYAML>=6.0",
+    "networkx>=3.0",
+    "pydot>=1.4.0",
+    "matplotlib>=3.7.0",
+    "seaborn>=0.12.0",
+    "nltk>=3.8.0",
+    "scikit-learn>=1.3.0",
+    "sentence-transformers>=2.2.0",
+    "typer>=0.9.0",
+    "rich>=13.0.0",
+    "termcolor>=2.0.0",
+    "httpx>=0.24.0",
+    "requests>=2.28.0",
+    "tqdm>=4.65.0",
+    "tenacity>=8.2.0",
+    "jinja2>=3.1.0",
+    "mcp[cli]>=1.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff==0.15.20",
+    "black==26.5.1",
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-mock>=3.11.0",
+    "pip-audit>=2.7.0",
+    "build>=1.2.0",
+    "twine>=5.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/IBM/smith"
+Repository = "https://github.com/IBM/smith"
+Issues = "https://github.com/IBM/smith/issues"
+Documentation = "https://github.com/IBM/smith#readme"
+
+[project.scripts]
+smith = "smith.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+# Non-Python runtime data shipped with the package: the OPA scorecard harness
+# (shell + coverage rego) and the ARES red-teaming input configs.
+smith = [
+    "policy_testing/*.sh",
+    "policy_testing/tools/*",
+    "test_generation/ares_config/*",
+]
+
+[tool.ruff]
+src = ["src"]
+
+[tool.black]
+# Pin the target so formatting is deterministic regardless of the Python
+# version Black runs under (CI uses 3.11). Without this, Black infers a target
+# from the running interpreter and may format differently across environments.
+target-version = ["py311"]
