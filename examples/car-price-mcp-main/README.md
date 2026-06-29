@@ -14,17 +14,23 @@ Source: https://github.com/yusaaztrk/car-price-mcp-main
 
 ## Starting the Agent
 
+> **Note:** If you have previously run another example and have existing test cases, delete the `references/test_cases` folder before proceeding:
+>
+> ```bash
+> rm -r references/test_cases
+> ```
+
 Prerequisites: Ollama running locally with the model pulled.
 
 ```bash
+cd examples/car-price-mcp-main
+pip install -r requirements.txt
 ollama pull qwen3.5
 ```
 
 Start the agent:
 
 ```bash
-cd examples/car-price-mcp-main
-pip install -r requirements.txt
 uvicorn agent:app --host 0.0.0.0 --port 9000
 ```
 

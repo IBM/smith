@@ -76,7 +76,7 @@ cp ../ares_config/qwen-owasp-llm-01.yaml ./example_configs
 cp ../ares_config/human_jailbreaks.json ./assets
 export ARES_HOME=/absolute/path/to/smith/src/smith/test_generation/ares
 # Switch back to the original Python environment
-cd ../../..
+cd ../../../../
 source .venv/bin/activate
 ```
 

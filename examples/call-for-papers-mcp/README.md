@@ -15,17 +15,23 @@ Searches WikiCFP for upcoming academic conferences matching keywords.
 
 ## Starting the Agent
 
+> **Note:** If you have previously run another example and have existing test cases, delete the `references/test_cases` folder before proceeding:
+>
+> ```bash
+> rm -r references/test_cases
+> ```
+
 Prerequisites: Ollama running locally with the model pulled.
 
 ```bash
+cd examples/call-for-papers-mcp
 ollama pull qwen3.5
+pip install -r requirements.txt
 ```
 
 Start the agent:
 
 ```bash
-cd examples/call-for-papers-mcp
-pip install -r requirements.txt
 uvicorn agent:app --host 0.0.0.0 --port 9000
 ```
 

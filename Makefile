@@ -96,7 +96,7 @@ license-check:
 # =============================================================================
 
 .PHONY: opaserver/start
-opaserver/start: lint-policy
+opaserver/start:
 	@echo "Starting OPA server on :8181 (policy: $(POLICY))"
 	@docker run -d --name $(OPA_CONTAINER) --rm -p 8181:8181 \
 	  -v "$(CURDIR)/$(POLICY):/policy/policy.rego" $(OPA_IMAGE) \
