@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "smith"
-version = "0.2.0.dev0"
+version = "0.1.1"
 description = "Automated policy lifecycle management for AI agents (OPA/Rego)."
 readme = "README.md"
 requires-python = ">=3.11"
