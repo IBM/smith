@@ -18,23 +18,27 @@ An HR chatbot agent with MCP tools for team compensation management, ticketing, 
 
 ## Starting the Agent
 
+> **Note:** If you have previously run another example and have existing test cases, delete the `references/test_cases` folder before proceeding:
+>
+> ```bash
+> rm -r references/test_cases
+> ```
+
 Prerequisites: Ollama running locally with the model pulled, and the MCP server running via SSE.
 
 ```bash
+cd examples/RagChatbot_MCPServer/
 ollama pull qwen3.5
 pip install -r requirements.txt
 ```
 
-Start the MCP server (in a separate terminal):
+Start the MCP server (in a separate terminal with the same .venv):
 ```bash
-cd examples/RagChatbot_MCPServer
 python mcp_server.py
 ```
 
 Start the agent:
 ```bash
-cd examples/RagChatbot_MCPServer
-pip install -r requirements.txt
 uvicorn fast_server:app --host 0.0.0.0 --port 9000
 ```
 

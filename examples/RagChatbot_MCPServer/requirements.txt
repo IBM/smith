@@ -8,3 +8,5 @@ pdfplumber
 sentence-transformers
 streamlit
 requests
+fastapi
+uvicorn
