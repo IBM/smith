@@ -200,21 +200,33 @@ def generate_test(
         batch_processing,
         batch_size=case_generation_batch_size,
     )
-    attack(
-        output_file_cases,
-        output_file_attack,
-        output_file_attack_csv,
-        test_generation_path,
-    )
-    create_promptfoo_cases(
-        base_url, output_promptfoo, output_file_attack_promptfoo, test_generation_path
-    )
+    attack_tools = {
+        t.strip().lower()
+        for t in os.getenv("ATTACK_TOOLS", "ares,promptfoo").split(",")
+    }
+
+    if "ares" in attack_tools:
+        attack(
+            output_file_cases,
+            output_file_attack,
+            output_file_attack_csv,
+            test_generation_path,
+        )
+
+    if "promptfoo" in attack_tools:
+        create_promptfoo_cases(
+            base_url,
+            output_promptfoo,
+            output_file_attack_promptfoo,
+            test_generation_path,
+        )
+
     translate_case(
         output_file_cases,
         test_case_template_file,
         output_file_ready_cases,
-        output_file_attack,
-        output_file_attack_promptfoo,
+        output_file_attack if "ares" in attack_tools else None,
+        output_file_attack_promptfoo if "promptfoo" in attack_tools else None,
         system_variables,
     )
     return ""

@@ -35,7 +35,6 @@ def run_extract_tool_args(test_case_path, agent_url):
             if test_case["input"].get("name", "").lower() == "other":
                 dest = os.path.join(generated_label_path, os.path.basename(file_path))
                 os.rename(file_path, dest)
-                # print(f"  [OTHER] Moved {file_path} -> {dest}")
 
     for label in labels:
         label_path = os.path.join(test_case_path, label, "*")
@@ -66,8 +65,13 @@ def run_extract_tool_args(test_case_path, agent_url):
             assigned_tool = test_case["input"]["name"]
             total_processed += 1
 
-            if assigned_tool.lower() == "promptfoo":
-                test_case["input"]["name"] = tool_name
+            if tool_name.lower() == "other":
+                dest = os.path.join(
+                    generated_cases_path, label, os.path.basename(file_path)
+                )
+                os.rename(file_path, dest)
+            elif assigned_tool.lower().startswith("promptfoo"):
+                test_case["input"]["name"] = "promptfoo_" + tool_name
                 test_case["input"]["arguments"] = tool_args
                 with open(file_path, "w") as f:
                     json.dump(test_case, f, indent=4)
