@@ -67,7 +67,9 @@ def load_generated_cases(path: str) -> List[EvalCase]:
     return cases
 
 
-def load_promptfoo_cases(classified_path: str) -> List[EvalCase]:
+def load_promptfoo_cases(classified_path) -> List[EvalCase]:
+    if not classified_path:
+        return []
     with open(classified_path, "r") as f:
         data = json.load(f)
     cases = []

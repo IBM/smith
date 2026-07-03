@@ -370,25 +370,34 @@ def main():
         run_extract_tool_args(test_case_path, agent_url)
 
     if args.flag == "test_case_evaluation":
+        attack_tools = {
+            t.strip().lower()
+            for t in os.getenv("ATTACK_TOOLS", "ares,promptfoo").split(",")
+        }
+
         # Step 1: Classify promptfoo cases to match them to guidance
-        classify_promptfoo_cases(
-            api_key,
-            openai_base_url,
-            model,
-            temp,
-            top_p,
-            output_file_decompose,
-            output_file_attack_promptfoo,
-            output_file_classified,
-            top_n=top_n,
-        )
+        if "promptfoo" in attack_tools:
+            classify_promptfoo_cases(
+                api_key,
+                openai_base_url,
+                model,
+                temp,
+                top_p,
+                output_file_decompose,
+                output_file_attack_promptfoo,
+                output_file_classified,
+                top_n=top_n,
+            )
+
         # Step 2: Validate labels (Tier 1 rules + Tier 2 NLI + Tier 3 LLM)
         validation_output = base_url + "references/label_validation_results.json"
         max_llm_calls = int(max_llm) if max_llm else None
 
         run_validation(
             test_cases_file=output_file_cases,
-            classified_promptfoo_file=output_file_classified,
+            classified_promptfoo_file=output_file_classified
+            if "promptfoo" in attack_tools
+            else None,
             output_file=validation_output,
             tier2_high_threshold=tier2_high,
             tier2_low_threshold=tier2_low,
@@ -404,8 +413,8 @@ def main():
         report_output = base_url + "references/test_case_report.html"
         build_visualization(
             output_file_cases,
-            output_file_attack,
-            output_file_classified,
+            output_file_attack if "ares" in attack_tools else None,
+            output_file_classified if "promptfoo" in attack_tools else None,
             validation_output,
             report_output,
         )
