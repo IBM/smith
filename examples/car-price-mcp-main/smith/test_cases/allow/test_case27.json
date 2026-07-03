@@ -2,7 +2,7 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "get_car_brands",
+        "name": "get_vehicles_by_type",
         "extensions": {
             "subject": {
                 "claims": {},
@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need car brand information for market analysis",
+                "input": "I would like to analyze carros vehicle data",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -29,6 +29,8 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {}
+        "arguments": {
+            "vehicle_type": "carros"
+        }
     }
 }

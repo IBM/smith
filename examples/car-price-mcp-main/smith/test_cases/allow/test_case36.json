@@ -2,13 +2,13 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "get_car_brands",
+        "name": "get_vehicles_by_type",
         "extensions": {
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
                 "user_role": [
-                    "guest"
+                    "analyst"
                 ]
             },
             "headers": {
@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I'd like to see the available car brands",
+                "input": "I want to get vehicles by type motorcycles",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -29,6 +29,8 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {}
+        "arguments": {
+            "vehicle_type": "motos"
+        }
     }
 }

@@ -2,13 +2,13 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "get_car_brands",
+        "name": "get_vehicles_by_type",
         "extensions": {
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
                 "user_role": [
-                    "consumer"
+                    "fleet_manager"
                 ]
             },
             "headers": {
@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I'm looking for a list of available car manufacturers.",
+                "input": "Please retrieve vehicles with vehicle_type set to caminhoes",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -29,6 +29,8 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {}
+        "arguments": {
+            "vehicle_type": "caminhoes"
+        }
     }
 }

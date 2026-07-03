@@ -2,13 +2,13 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "get_vehicles_by_type",
+        "name": "get_car_brands",
         "extensions": {
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
                 "user_role": [
-                    "fleet_manager"
+                    "guest"
                 ]
             },
             "headers": {
@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Show me all SUVs available in our fleet options.",
+                "input": "I'd like to see the available car brands",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -29,8 +29,6 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "vehicle_type": "carros"
-        }
+        "arguments": {}
     }
 }

@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Could you fetch vehicle data for caminhoes type?",
+                "input": "Could you fetch information about caminhoes for my report?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

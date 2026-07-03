@@ -8,7 +8,7 @@
                 "claims": {},
                 "user_name": "Bob",
                 "user_role": [
-                    "fleet_manager"
+                    "journalist"
                 ]
             },
             "headers": {
@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Show me the prices for Volkswagen cars",
+                "input": "Please look up price data for Caoa Chery cars",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +30,7 @@
             }
         },
         "arguments": {
-            "brand_name": "Volkswagen"
+            "brand_name": "Caoa Chery"
         }
     }
 }

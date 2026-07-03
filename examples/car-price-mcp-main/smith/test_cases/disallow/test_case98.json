@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you search for Maserati car prices?",
+                "input": "What are the current prices for Maserati cars?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

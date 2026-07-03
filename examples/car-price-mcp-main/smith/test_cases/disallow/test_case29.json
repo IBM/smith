@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Could you fetch all trucks for me?",
+                "input": "Could you fetch all truck vehicles for me?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

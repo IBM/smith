@@ -8,11 +8,7 @@
                 "claims": {},
                 "user_name": "Bob",
                 "user_role": [
-                    "fleet_manager",
-                    "consumer",
-                    "journalist",
-                    "analyst",
-                    "guest"
+                    "consumer"
                 ]
             },
             "headers": {
@@ -23,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need to find vehicles of type TRUCKS",
+                "input": "Show me all TRUCKS available",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

@@ -2,18 +2,12 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "search_car_price",
+        "name": "get_car_brands",
         "extensions": {
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
-                "user_role": [
-                    "fleet_manager",
-                    "consumer",
-                    "journalist",
-                    "analyst",
-                    "guest"
-                ]
+                "user_role": []
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -23,7 +17,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you look up car pricing for brand name that's just spaces",
+                "input": "I need to retrieve all available car brands",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -33,8 +27,6 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "brand_name": " "
-        }
+        "arguments": {}
     }
 }

@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you get vehicles by type trucks for me?",
+                "input": "Can you provide me with data on trucks?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +30,7 @@
             }
         },
         "arguments": {
-            "vehicle_type": "caminhoes"
+            "vehicle_type": "trucks"
         }
     }
 }

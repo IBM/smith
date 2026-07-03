@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need to get vehicles categorized by type for my story",
+                "input": "I want to get vehicles by type cars",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
