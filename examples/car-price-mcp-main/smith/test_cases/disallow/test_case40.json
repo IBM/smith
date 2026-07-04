@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you provide me with data on trucks?",
+                "input": "Can you get vehicles by type trucks for me?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

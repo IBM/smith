@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "What are the current market prices for Mini brand cars?",
+                "input": "Please find the cost of Mini cars",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

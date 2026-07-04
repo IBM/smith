@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need to get information about motorcycles from the vehicle database",
+                "input": "I need to get vehicles by type motorcycles",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

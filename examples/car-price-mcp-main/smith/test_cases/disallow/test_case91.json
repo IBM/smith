@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Could you help me find pricing for Land Rover vehicles?",
+                "input": "I want to search for Land Rover car prices",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

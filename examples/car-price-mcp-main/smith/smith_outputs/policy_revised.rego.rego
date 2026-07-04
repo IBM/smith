@@ -41,6 +41,9 @@ fleet_manager_vehicle_types := {"caminhoes", "trucks"}
 # Consumer and journalist allowed vehicle types
 consumer_vehicle_types := {"carros", "cars"}
 
+# Analyst allowed vehicle types (all valid types)
+analyst_vehicle_types := valid_vehicle_types
+
 # === Tool Argument Keys ===
 allowed_arg_keys := {
 	"get_car_brands": set(),
@@ -51,18 +54,14 @@ allowed_arg_keys := {
 # === Helper Functions ===
 
 # Get user role (returns first role from array, or empty string if not present)
-default user_role := ""
-
 user_role := role if {
 	is_array(subject.user_role)
 	count(subject.user_role) > 0
 	role := subject.user_role[0]
-}
-
-user_role := role if {
+} else := role if {
 	is_string(subject.user_role)
 	role := subject.user_role
-}
+} else := ""
 
 # Check if string is empty or whitespace only
 is_empty_or_whitespace(s) if {
@@ -120,17 +119,6 @@ deny[msg] if {
 	msg := "search_car_price requires non-empty brand_name"
 }
 
-# Rule: search_car_price - fleet_manager brand restrictions
-deny[msg] if {
-	valid_envelope
-	user_role == "fleet_manager"
-	input.name == "search_car_price"
-	brand_name := args.brand_name
-	not is_empty_or_whitespace(brand_name)
-	not brand_name in fleet_manager_brands
-	msg := sprintf("Fleet manager cannot search brand '%s': only truck/commercial brands allowed", [brand_name])
-}
-
 # Rule: search_car_price - journalist brand restrictions (blocked luxury brands)
 deny[msg] if {
 	valid_envelope
@@ -150,7 +138,19 @@ deny[msg] if {
 	brand_name := args.brand_name
 	not is_empty_or_whitespace(brand_name)
 	not brand_name in journalist_brands
+	not brand_name in journalist_blocked_brands # Already covered by previous rule
 	msg := sprintf("Journalist cannot search brand '%s': only domestic-market brands allowed", [brand_name])
+}
+
+# Rule: search_car_price - fleet_manager brand restrictions
+deny[msg] if {
+	valid_envelope
+	user_role == "fleet_manager"
+	input.name == "search_car_price"
+	brand_name := args.brand_name
+	not is_empty_or_whitespace(brand_name)
+	not brand_name in fleet_manager_brands
+	msg := sprintf("Fleet manager cannot search brand '%s': only commercial vehicle brands allowed", [brand_name])
 }
 
 # Rule: get_vehicles_by_type - invalid vehicle_type for all roles
@@ -173,17 +173,7 @@ deny[msg] if {
 	msg := sprintf("Journalist cannot request vehicle_type '%s': only 'carros' or 'cars' allowed", [vehicle_type])
 }
 
-deny[msg] if {
-	valid_envelope
-	user_role == "fleet_manager"
-	input.name == "get_vehicles_by_type"
-	vehicle_type := object.get(args, "vehicle_type", "carros")
-	vehicle_type in valid_vehicle_types
-	not vehicle_type in fleet_manager_vehicle_types
-	msg := sprintf("Fleet manager cannot request vehicle_type '%s': only 'caminhoes' or 'trucks' allowed", [vehicle_type])
-}
-
-# Rule: get_vehicles_by_type - consumer restrictions (deny motos, motorcycles, caminhoes, trucks)
+# Rule: get_vehicles_by_type - consumer restrictions
 deny[msg] if {
 	valid_envelope
 	user_role == "consumer"
@@ -192,6 +182,16 @@ deny[msg] if {
 	vehicle_type in valid_vehicle_types
 	not vehicle_type in consumer_vehicle_types
 	msg := sprintf("Consumer cannot request vehicle_type '%s': only 'carros' or 'cars' allowed", [vehicle_type])
+}
+
+deny[msg] if {
+	valid_envelope
+	user_role == "fleet_manager"
+	input.name == "get_vehicles_by_type"
+	vehicle_type := object.get(args, "vehicle_type", "carros")
+	vehicle_type in valid_vehicle_types
+	not vehicle_type in fleet_manager_vehicle_types
+	msg := sprintf("Fleet manager cannot request vehicle_type '%s': only 'caminhoes' or 'trucks' allowed", [vehicle_type])
 }
 
 # === Aggregate Deny ===

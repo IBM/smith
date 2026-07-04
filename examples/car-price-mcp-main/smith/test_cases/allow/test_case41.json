@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please show vehicles with type caminhoes",
+                "input": "Can you fetch vehicles by type caminhoes?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

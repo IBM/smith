@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you search for Lexus vehicle prices?",
+                "input": "I need to find pricing for Lexus models",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

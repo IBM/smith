@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please find Subaru pricing data",
+                "input": "Please help me find Subaru pricing information",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

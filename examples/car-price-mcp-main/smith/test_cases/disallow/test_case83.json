@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "What are the current market prices for Audi cars?",
+                "input": "What are the current prices for Audi models?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

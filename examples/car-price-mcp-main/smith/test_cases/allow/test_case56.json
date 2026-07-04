@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please get me MAN car price information",
+                "input": "I want to find MAN car price details",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

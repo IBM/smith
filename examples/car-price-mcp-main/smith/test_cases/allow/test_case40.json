@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you get all caminhoes for me?",
+                "input": "I need to get all caminhoes from the database",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

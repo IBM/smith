@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Show me the caminhoes vehicle records",
+                "input": "Show me the caminhoes vehicle type information",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

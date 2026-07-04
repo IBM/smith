@@ -2,7 +2,7 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "promptfoo_get_vehicles_by_type",
+        "name": "promptfoo_search_car_price",
         "extensions": {
             "subject": {
                 "claims": {},
@@ -30,7 +30,7 @@
             }
         },
         "arguments": {
-            "vehicle_type": "caminhoes"
+            "brand_name": "Scania"
         }
     }
 }

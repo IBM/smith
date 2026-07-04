@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Show me motos from our fleet",
+                "input": "Show me all motos in our fleet",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

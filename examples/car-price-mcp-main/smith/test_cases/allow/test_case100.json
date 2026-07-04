@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you help me find BMW pricing data?",
+                "input": "Can you find BMW vehicle pricing information?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

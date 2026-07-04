@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need to know how much Lamborghini vehicles cost",
+                "input": "I need to find pricing data for Lamborghini vehicles",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

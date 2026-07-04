@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you look up Ford truck prices?",
+                "input": "Can you look up Ford truck prices for me?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

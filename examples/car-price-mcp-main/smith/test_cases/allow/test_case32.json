@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please show me all cars in the database",
+                "input": "Please provide cars vehicle type data for analysis",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

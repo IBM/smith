@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you search for Chevrolet vehicle pricing?",
+                "input": "Can you look up Chevrolet vehicle costs?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

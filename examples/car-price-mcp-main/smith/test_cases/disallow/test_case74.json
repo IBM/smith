@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please help me find Kia pricing data",
+                "input": "Please search for Kia vehicle pricing",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

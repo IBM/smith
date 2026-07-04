@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need pricing information for Scania vehicles",
+                "input": "I need to find pricing information for Scania vehicles",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

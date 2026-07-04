@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Show me the motorcycles in the database",
+                "input": "Please retrieve motorcycles from the vehicle list",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
