@@ -106,7 +106,10 @@ def cluster_commands(cluster_results, test_path, eps=0.3, min_samples=2):
             if label not in cluster_dict.keys():
                 cluster_dict[label] = []
             cluster_dict[label].append(command)
-        for label in sorted(cluster_dict.keys()):
+        sorted_labels = sorted(k for k in cluster_dict.keys() if k != -1) + (
+            [-1] if -1 in cluster_dict else []
+        )
+        for label in sorted_labels:
             clusters.append("Cluster " + str(label) + ": ")
             countt = 0
             for cmd in cluster_dict[label]:
@@ -132,7 +135,10 @@ def cluster_commands(cluster_results, test_path, eps=0.3, min_samples=2):
             if label not in cluster_dict.keys():
                 cluster_dict[label] = []
             cluster_dict[label].append(command)
-        for label in sorted(cluster_dict.keys()):
+        sorted_labels = sorted(k for k in cluster_dict.keys() if k != -1) + (
+            [-1] if -1 in cluster_dict else []
+        )
+        for label in sorted_labels:
             countt = 0
             cluster_label = str(int(label) + base_cluster_id)
             clusters.append("Cluster " + str(cluster_label) + ": ")
