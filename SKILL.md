@@ -28,7 +28,7 @@ If the user asks to test an existing policy, you should run `smith --flag policy
 
 After reporting results, remind the user of next steps based on the outcome:
 - If all tests pass: “All tests passed. You can proceed to generate more test cases, or ask me to check for formatting/duplication issues.”
-- If 0 test cases were evaluated OR 100% of test cases fail: follow `./opa_policy/policy_cross_validation/policy_cross_validation.md` to diagnose and fix structural/syntax issues before proceeding.
+- If 0 test cases were evaluated OR 100% of test cases are rejected: follow `./opa_policy/policy_cross_validation/policy_cross_validation.md` to diagnose and fix structural/syntax issues before proceeding.
 - If tests fail (mixed pass/fail): “Some tests failed. Next steps: consider cross-validating test cases first (labels may be wrong), then ask me to improve/patch the policy.”
 
 ## Cross-Validate Failed Test Cases

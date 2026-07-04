@@ -71,7 +71,7 @@ def run_extract_tool_args(test_case_path, agent_url):
                 )
                 os.rename(file_path, dest)
             elif assigned_tool.lower().startswith("promptfoo"):
-                test_case["input"]["name"] = "promptfoo_" + tool_name
+                test_case["input"]["name"] = tool_name
                 test_case["input"]["arguments"] = tool_args
                 with open(file_path, "w") as f:
                     json.dump(test_case, f, indent=4)
