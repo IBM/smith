@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I want to check Alfa Romeo car prices",
+                "input": "I want to look up Alfa Romeo car pricing",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

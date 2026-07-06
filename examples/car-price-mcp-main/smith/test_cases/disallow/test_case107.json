@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please help me find the cost of Bentley automobiles",
+                "input": "Please look up the market value of Bentley automobiles",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

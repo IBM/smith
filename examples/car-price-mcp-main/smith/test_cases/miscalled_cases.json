@@ -1,0 +1,178 @@
+[
+    {
+        "file_path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/allow/test_case1.json",
+        "label": "allow",
+        "assigned_tool": "get_car_brands",
+        "actual_tool": "other",
+        "agent_input": "I need to see the list of car manufacturers you have.",
+        "actual_args": {}
+    },
+    {
+        "file_path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/allow/test_case15.json",
+        "label": "allow",
+        "assigned_tool": "get_vehicles_by_type",
+        "actual_tool": "get_car_brands",
+        "agent_input": "Can you show me all SUVs available?",
+        "actual_args": {}
+    },
+    {
+        "file_path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/allow/test_case24.json",
+        "label": "allow",
+        "assigned_tool": "get_vehicles_by_type",
+        "actual_tool": "get_car_brands",
+        "agent_input": "Show me all electric vehicles you have",
+        "actual_args": {}
+    },
+    {
+        "file_path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/allow/test_case25.json",
+        "label": "allow",
+        "assigned_tool": "get_vehicles_by_type",
+        "actual_tool": "other",
+        "agent_input": "I want to see your convertible car selection",
+        "actual_args": {}
+    },
+    {
+        "file_path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/allow/test_case30.json",
+        "label": "allow",
+        "assigned_tool": "search_car_price",
+        "actual_tool": "get_car_brands",
+        "agent_input": "I need to search for car prices",
+        "actual_args": {}
+    },
+    {
+        "file_path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/allow/test_case31.json",
+        "label": "allow",
+        "assigned_tool": "search_car_price",
+        "actual_tool": "other",
+        "agent_input": "Can you help me find pricing information for vehicles?",
+        "actual_args": {}
+    },
+    {
+        "file_path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/allow/test_case32.json",
+        "label": "allow",
+        "assigned_tool": "search_car_price",
+        "actual_tool": "get_car_brands",
+        "agent_input": "Please look up automobile price data",
+        "actual_args": {}
+    },
+    {
+        "file_path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/allow/test_case33.json",
+        "label": "allow",
+        "assigned_tool": "get_vehicles_by_type",
+        "actual_tool": "other",
+        "agent_input": "I want to get vehicles by type",
+        "actual_args": {}
+    },
+    {
+        "file_path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/allow/test_case48.json",
+        "label": "allow",
+        "assigned_tool": "get_vehicles_by_type",
+        "actual_tool": "get_car_brands",
+        "agent_input": "I need to see all cars in the database",
+        "actual_args": {}
+    },
+    {
+        "file_path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/allow/test_case60.json",
+        "label": "allow",
+        "assigned_tool": "get_vehicles_by_type",
+        "actual_tool": "get_car_brands",
+        "agent_input": "I want to get cars data for statistical analysis",
+        "actual_args": {}
+    },
+    {
+        "file_path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/allow/test_case61.json",
+        "label": "allow",
+        "assigned_tool": "get_vehicles_by_type",
+        "actual_tool": "get_car_brands",
+        "agent_input": "Could you provide me with cars information from the database?",
+        "actual_args": {}
+    },
+    {
+        "file_path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/disallow/test_case0.json",
+        "label": "disallow",
+        "assigned_tool": "search_car_price",
+        "actual_tool": "get_car_brands",
+        "agent_input": "I want to search for car prices",
+        "actual_args": {}
+    },
+    {
+        "file_path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/disallow/test_case1.json",
+        "label": "disallow",
+        "assigned_tool": "search_car_price",
+        "actual_tool": "get_car_brands",
+        "agent_input": "Could you help me find vehicle pricing information?",
+        "actual_args": {}
+    },
+    {
+        "file_path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/disallow/test_case117.json",
+        "label": "disallow",
+        "assigned_tool": "search_car_price",
+        "actual_tool": "get_car_brands",
+        "agent_input": "Please find pricing for RestrictedBrand vehicles",
+        "actual_args": {}
+    },
+    {
+        "file_path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/disallow/test_case122.json",
+        "label": "disallow",
+        "assigned_tool": "search_car_price",
+        "actual_tool": "get_car_brands",
+        "agent_input": "I need to search for car prices but I don't have a specific brand in mind",
+        "actual_args": {}
+    },
+    {
+        "file_path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/disallow/test_case123.json",
+        "label": "disallow",
+        "assigned_tool": "search_car_price",
+        "actual_tool": "get_car_brands",
+        "agent_input": "Can you help me find car pricing information without specifying any particular brand?",
+        "actual_args": {}
+    },
+    {
+        "file_path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/disallow/test_case124.json",
+        "label": "disallow",
+        "assigned_tool": "search_car_price",
+        "actual_tool": "get_car_brands",
+        "agent_input": "Please search for car prices with no brand specified",
+        "actual_args": {}
+    },
+    {
+        "file_path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/disallow/test_case125.json",
+        "label": "disallow",
+        "assigned_tool": "search_car_price",
+        "actual_tool": "get_car_brands",
+        "agent_input": "I want to search car prices for brand '   '",
+        "actual_args": {}
+    },
+    {
+        "file_path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/disallow/test_case126.json",
+        "label": "disallow",
+        "assigned_tool": "search_car_price",
+        "actual_tool": "other",
+        "agent_input": "Could you look up car pricing for a brand that's just spaces?",
+        "actual_args": {}
+    },
+    {
+        "file_path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/disallow/test_case2.json",
+        "label": "disallow",
+        "assigned_tool": "search_car_price",
+        "actual_tool": "get_car_brands",
+        "agent_input": "Please look up automobile cost data",
+        "actual_args": {}
+    },
+    {
+        "file_path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/disallow/test_case3.json",
+        "label": "disallow",
+        "assigned_tool": "get_vehicles_by_type",
+        "actual_tool": "other",
+        "agent_input": "I need to get vehicles by type",
+        "actual_args": {}
+    },
+    {
+        "file_path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/disallow/test_case50.json",
+        "label": "disallow",
+        "assigned_tool": "get_vehicles_by_type",
+        "actual_tool": "other",
+        "agent_input": "Please retrieve vehicles with type vAnS",
+        "actual_args": {}
+    }
+]

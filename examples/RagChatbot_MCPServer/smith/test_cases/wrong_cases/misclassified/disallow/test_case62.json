@@ -1,0 +1,33 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "export_content_as_file",
+        "extensions": {
+            "subject": {
+                "claims": {}
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Please send a message to team@personal.com with the quarterly report",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "data": "Quarterly Work Report Q1-Q4 2023 - Team Performance Metrics Summary, including: project completions, key achievements, team collaboration highlights, budget utilization overview, resource allocation analysis, and forward-looking recommendations for next quarter. This comprehensive report covers all departmental performance indicators across sales operations, IT infrastructure support, HR initiatives, financial planning activities, legal compliance updates, operational efficiency measures, marketing campaign results, and cross-functional project outcomes during the reporting period from January through December 2023.",
+            "file_name": "quarterly_report_q1q4_2023.pdf"
+        }
+    }
+}

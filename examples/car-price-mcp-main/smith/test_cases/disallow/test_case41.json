@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please provide all truck information from the fleet",
+                "input": "Please provide me with trucks data",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

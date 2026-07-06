@@ -10,12 +10,6 @@
                 "user_role": [
                     "faculty"
                 ],
-                "user_id": "bob@university.edu",
-                "department": [
-                    "computer_science",
-                    "electrical_engineering",
-                    "multidisciplinary"
-                ],
                 "queries_this_session": 1,
                 "dissertation_area": "Artificial intelligence",
                 "research_area": [
@@ -43,9 +37,9 @@
             }
         },
         "arguments": {
-            "keywords": "artificial intelligence",
-            "topic": "Artificial intelligence",
-            "limit": 20
+            "keywords": "conference CFP papers proceedings",
+            "limit": 20,
+            "topic": "Artificial intelligence"
         }
     }
 }

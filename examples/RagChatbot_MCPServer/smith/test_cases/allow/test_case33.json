@@ -1,0 +1,35 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "email_compensation_report",
+        "extensions": {
+            "subject": {
+                "claims": {}
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Please send the salary report to john.smith@ibm.com",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "destination": "john.smith@ibm.com",
+            "report_data": "Salary Report for Review Period: Current Quarter\n\nDEPARTMENT COMPENSATION SUMMARY (IT Department)\n=====================================\n\nTotal Employees in IT Team: 67\nAverage Base Salary Range: $125,000 - $388,900\nHighest Level Achieved in Q4 review cycle included salary adjustments for several individuals.\n\nKey Summary Statistics:\n- Employee Count (IT): 67 team members total with current compensation data available\n- Total Compensation Distribution across various levels and performance ratings documented per organizational policy",
+            "external_sharing": false,
+            "encryption_required": true
+        }
+    }
+}

@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please display the names of my Sales team members",
+                "input": "Please provide the list of employee names in the Sales department",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

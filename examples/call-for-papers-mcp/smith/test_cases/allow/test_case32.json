@@ -8,13 +8,7 @@
                 "claims": {},
                 "user_name": "Bob",
                 "user_role": [
-                    "faculty"
-                ],
-                "user_id": "bob@university.edu",
-                "department": [
-                    "computer_science",
-                    "electrical_engineering",
-                    "multidisciplinary"
+                    "phd_student"
                 ],
                 "queries_this_session": 1,
                 "dissertation_area": "Artificial intelligence",
@@ -32,7 +26,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Search for events beyond my dissertation area",
+                "input": "Search for events related to Artificial intelligence topic",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -43,9 +37,9 @@
             }
         },
         "arguments": {
-            "keywords": "cybersecurity privacy security",
-            "topic": "Cybersecurity and privacy",
-            "limit": 10
+            "keywords": "artificial intelligence",
+            "topic": "Artificial intelligence",
+            "limit": 15
         }
     }
 }

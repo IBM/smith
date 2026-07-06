@@ -2,7 +2,7 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "promptfoo_get_vehicles_by_type",
+        "name": "get_vehicles_by_type",
         "extensions": {
             "subject": {
                 "claims": {},

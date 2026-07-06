@@ -12,12 +12,6 @@
                     "phd_student",
                     "guest"
                 ],
-                "user_id": "bob@university.edu",
-                "department": [
-                    "computer_science",
-                    "electrical_engineering",
-                    "multidisciplinary"
-                ],
                 "queries_this_session": 1,
                 "dissertation_area": "Artificial intelligence",
                 "research_area": [
@@ -34,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I'm looking for conferences about economics, technology, and innovation.",
+                "input": "I need to look up events related to career fair opportunities",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -45,7 +39,7 @@
             }
         },
         "arguments": {
-            "keywords": "economics technology innovation",
+            "keywords": "career fair opportunities",
             "topic": "Artificial intelligence",
             "limit": 20
         }

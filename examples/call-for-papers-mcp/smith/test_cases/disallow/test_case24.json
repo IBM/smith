@@ -12,12 +12,6 @@
                     "phd_student",
                     "guest"
                 ],
-                "user_id": "bob@university.edu",
-                "department": [
-                    "computer_science",
-                    "electrical_engineering",
-                    "multidisciplinary"
-                ],
                 "queries_this_session": 1,
                 "dissertation_area": "Artificial intelligence",
                 "research_area": [
@@ -34,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you find events related to clinical trials?",
+                "input": "I need to search for conferences about genomics and bioinformatics",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -45,7 +39,7 @@
             }
         },
         "arguments": {
-            "keywords": "clinical trials",
+            "keywords": "genomics bioinformatics computational biology genetic analysis biological data science",
             "topic": "Artificial intelligence",
             "limit": 10
         }

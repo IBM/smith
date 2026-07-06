@@ -10,7 +10,7 @@
                     "manager"
                 ],
                 "teams": [
-                    "IT"
+                    "Finance"
                 ]
             },
             "headers": {
@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I want to see the hire dates for the Finance team employees",
+                "input": "I want to see the hire dates for the Marketing team employees",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,12 +32,20 @@
             }
         },
         "arguments": {
-            "department": "Finance",
+            "department": "Marketing",
             "select_fields": [
-                "employee_name",
+                "employee_id",
+                "name",
+                "title",
+                "level",
+                "current_salary",
+                "total_comp_2024",
+                "performance_rating",
                 "hire_date"
             ],
-            "format": "JSON"
+            "format": "JSON",
+            "time_range": "last_quarter",
+            "include_benefits": false
         }
     }
 }

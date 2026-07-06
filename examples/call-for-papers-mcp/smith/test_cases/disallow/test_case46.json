@@ -12,12 +12,6 @@
                     "phd_student",
                     "guest"
                 ],
-                "user_id": "bob@university.edu",
-                "department": [
-                    "computer_science",
-                    "electrical_engineering",
-                    "multidisciplinary"
-                ],
                 "queries_this_session": 1,
                 "dissertation_area": "Artificial intelligence",
                 "research_area": [
@@ -34,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I'm interested in conferences about marketing, technology, and consumer behavior.",
+                "input": "I want to find events related to hackathon competitions",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -45,9 +39,9 @@
             }
         },
         "arguments": {
-            "keywords": "marketing technology consumer behavior",
-            "topic": "Artificial intelligence",
-            "limit": 10
+            "keywords": "hackathon competitions",
+            "topic": "Software engineering",
+            "limit": 20
         }
     }
 }

@@ -2,13 +2,13 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "get_vehicles_by_type",
+        "name": "get_car_brands",
         "extensions": {
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
                 "user_role": [
-                    "consumer"
+                    "journalist"
                 ]
             },
             "headers": {
@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Could you retrieve all the cars for me?",
+                "input": "Could you provide me with a list of car manufacturers?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -29,8 +29,6 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "vehicle_type": "carros"
-        }
+        "arguments": {}
     }
 }

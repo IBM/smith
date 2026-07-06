@@ -1,0 +1,324 @@
+{
+  "summary": {
+    "total_failed": 16,
+    "analyzed": 16,
+    "mislabeled": 16,
+    "policy_issue": 0
+  },
+  "cases": [
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/allow/test_case10.json",
+      "filename": "test_case10.json",
+      "expected_label": "allow",
+      "actual_policy_decision": "deny",
+      "tool_name": "get_events",
+      "user_role": [
+        "faculty",
+        "phd_student",
+        "guest"
+      ],
+      "arguments": {
+        "keywords": "cybersecurity privacy security",
+        "limit": 20,
+        "topic": "Cybersecurity and privacy"
+      },
+      "label_correct": false,
+      "confidence": 0.95,
+      "reason": "Limit of 20 exceeds maximum allowed (15 for faculty, 10 for PhD students, absolute max 15)",
+      "suggested_action": "move_to_disallow"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/allow/test_case4.json",
+      "filename": "test_case4.json",
+      "expected_label": "allow",
+      "actual_policy_decision": "deny",
+      "tool_name": "get_events",
+      "user_role": [
+        "phd_student"
+      ],
+      "arguments": {
+        "keywords": "artificial intelligence machine learning neural networks deep learning",
+        "topic": "Artificial intelligence",
+        "limit": 20
+      },
+      "label_correct": false,
+      "confidence": 1.0,
+      "reason": "PhD student requested limit of 20 but policy caps PhD students at 10 per request",
+      "suggested_action": "move_to_disallow"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/allow/test_case30.json",
+      "filename": "test_case30.json",
+      "expected_label": "allow",
+      "actual_policy_decision": "deny",
+      "tool_name": "get_events",
+      "user_role": [
+        "faculty",
+        "phd_student",
+        "guest"
+      ],
+      "arguments": {
+        "keywords": "AI machine learning deep learning neural networks NLP computer vision natural language processing robotics autonomous system cybersecurity privacy software engineering",
+        "topic": "Artificial intelligence",
+        "limit": 20
+      },
+      "label_correct": false,
+      "confidence": 0.9,
+      "reason": "Limit of 20 exceeds absolute maximum of 15 per request, violating policy regardless of user role",
+      "suggested_action": "move_to_disallow"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/allow/test_case2.json",
+      "filename": "test_case2.json",
+      "expected_label": "allow",
+      "actual_policy_decision": "deny",
+      "tool_name": "get_events",
+      "user_role": [
+        "faculty"
+      ],
+      "arguments": {
+        "keywords": "artificial intelligence conference machine learning deep learning NLP computer vision knowledge graph reasoning planning optimization control robotics simulation multi-modal multimodal neural network large language model LLM transformer diffusion generative adversarial reinforcement learning transfer few-shot continual pre-training alignment safety privacy fairness robustness interpretability explainable AI autonomous agent embodied cognition human-computer interaction cognitive science ethics bias accountability sustainability energy efficiency cloud computing distributed system edge IoT quantum biology healthcare bioinformatics drug discovery natural scene understanding perception action synthesis creation content generation editing summarization classification detection segmentation recognition tracking localization mapping navigation planning scheduling decision making uncertainty trust reliability scalability performance latency throughput bandwidth memory parallelism serialization deserialization compression encoding decoding sampling pruning quantizing sparsity activation normalization regularization dropout masking embedding representation learning feature engineering data augmentation synthetic dataset generation curation benchmark evaluation metric comparison analysis visualization debugging profiling optimization tuning hyperparameter selection grid search random forest gradient boosting XGBoost LightGBM LFA model ensemble stacking blending bagging cross-validation k-fold stratified nested permutation importance SHAP LIME causal inference counterfactual fairness attribution intervention",
+        "topic": "Artificial intelligence",
+        "limit": 20
+      },
+      "label_correct": false,
+      "confidence": 0.95,
+      "reason": "Request violates two rules: limit=20 exceeds faculty cap of 15, and keywords contain prohibited terms 'bioinformatics' and 'drug discovery'",
+      "suggested_action": "move_to_disallow"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/allow/test_case39.json",
+      "filename": "test_case39.json",
+      "expected_label": "allow",
+      "actual_policy_decision": "deny",
+      "tool_name": "get_events",
+      "user_role": [
+        "faculty"
+      ],
+      "arguments": {
+        "keywords": "artificial intelligence machine learning natural language processing NLP deep learning vision cybersecurity security software engineering data science neural networks computing algorithms optimization models systems privacy ethics autonomous robotics computer graphics bioinformatics internet things quantum computing edge computing federated learning reinforcement learning knowledge graphs explainable AI trustworthy AI safety alignment generative AI diffusion transformers large language models LLMs reasoning causal inference multimodal synthetic benchmarks efficiency scalable distributed training simulation planning control",
+        "topic": "Artificial intelligence"
+      },
+      "label_correct": false,
+      "confidence": 0.95,
+      "reason": "Keywords contain prohibited terms 'bioinformatics' and 'quantum computing' which violate the disallowed keywords rule",
+      "suggested_action": "move_to_disallow"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/allow/test_case34.json",
+      "filename": "test_case34.json",
+      "expected_label": "allow",
+      "actual_policy_decision": "deny",
+      "tool_name": "get_events",
+      "user_role": [
+        "faculty"
+      ],
+      "arguments": {
+        "keywords": "Artificial intelligence AI deep learning neural networks machine learning natural language processing computer vision multimodal learning reinforcement learning knowledge reasoning planning decision making generative foundation transformers embeddings semantic representation multi-modal large language models synthetic data privacy safety explainability interpretability ethics fairness robustness scalability efficiency optimization sampling in-context chain reaction few-shot meta prompt engineering retrieval augmented generation hallucinations alignment benchmarking evaluation metrics datasets corpora benchmarks",
+        "topic": "Artificial intelligence",
+        "limit": 20
+      },
+      "label_correct": false,
+      "confidence": 0.95,
+      "reason": "Faculty limit cap is 15, but request has limit=20 which violates the policy",
+      "suggested_action": "move_to_disallow"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/allow/test_case38.json",
+      "filename": "test_case38.json",
+      "expected_label": "allow",
+      "actual_policy_decision": "deny",
+      "tool_name": "get_events",
+      "user_role": [
+        "faculty"
+      ],
+      "arguments": {
+        "keywords": "open access",
+        "topic": "Artificial intelligence",
+        "limit": 50
+      },
+      "label_correct": false,
+      "confidence": 0.95,
+      "reason": "Faculty limit cap is 15 per request, but arguments show limit: 50 which violates the policy",
+      "suggested_action": "move_to_disallow"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/allow/test_case13.json",
+      "filename": "test_case13.json",
+      "expected_label": "allow",
+      "actual_policy_decision": "deny",
+      "tool_name": "get_events",
+      "user_role": [
+        "faculty",
+        "phd_student",
+        "guest"
+      ],
+      "arguments": {
+        "keywords": "software engineering open access conferences workshops",
+        "topic": "Software engineering",
+        "limit": 20
+      },
+      "label_correct": false,
+      "confidence": 0.95,
+      "reason": "Limit of 20 exceeds maximum allowed (15 for faculty, 10 for PhD students, absolute max 15)",
+      "suggested_action": "move_to_disallow"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/allow/test_case12.json",
+      "filename": "test_case12.json",
+      "expected_label": "allow",
+      "actual_policy_decision": "deny",
+      "tool_name": "get_events",
+      "user_role": [
+        "faculty",
+        "phd_student",
+        "guest"
+      ],
+      "arguments": {
+        "keywords": "",
+        "topic": "Software engineering",
+        "limit": 20
+      },
+      "label_correct": false,
+      "confidence": 0.9,
+      "reason": "Limit of 20 exceeds absolute maximum of 15 per request, violating policy rules",
+      "suggested_action": "move_to_disallow"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/allow/test_case32.json",
+      "filename": "test_case32.json",
+      "expected_label": "allow",
+      "actual_policy_decision": "deny",
+      "tool_name": "get_events",
+      "user_role": [
+        "phd_student"
+      ],
+      "arguments": {
+        "keywords": "artificial intelligence",
+        "topic": "Artificial intelligence",
+        "limit": 15
+      },
+      "label_correct": false,
+      "confidence": 0.95,
+      "reason": "PhD student requested limit of 15 but can only set limit up to 10 per request",
+      "suggested_action": "move_to_disallow"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/allow/test_case24.json",
+      "filename": "test_case24.json",
+      "expected_label": "allow",
+      "actual_policy_decision": "deny",
+      "tool_name": "get_events",
+      "user_role": [
+        "faculty",
+        "phd_student",
+        "guest"
+      ],
+      "arguments": {
+        "keywords": "artificial intelligence machine learning NLP computer vision deep learning AI systems",
+        "topic": "Artificial Intelligence",
+        "limit": 1
+      },
+      "label_correct": false,
+      "confidence": 0.9,
+      "reason": "user_role contains all possible values instead of specifying the actual user role, making it impossible to evaluate access permissions and role-specific limits",
+      "suggested_action": "remove"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/allow/test_case6.json",
+      "filename": "test_case6.json",
+      "expected_label": "allow",
+      "actual_policy_decision": "deny",
+      "tool_name": "get_events",
+      "user_role": [
+        "faculty",
+        "phd_student",
+        "guest"
+      ],
+      "arguments": {
+        "keywords": "artificial intelligence AI machine learning neural networks NLP computer vision robotics optimization planning reinforcement learning generative models LLM foundation models deep learning decision making knowledge representation symbolic reasoning explainable AI healthcare finance cybersecurity quantum computing autonomous systems edge computing fog computation federated learning privacy-preserving AI ethical AI human-AI interaction multi-modal learning few-shot zero-shot continual learning adaptive personalization self-supervised unsupervised transfer domain adaptation curriculum hyperparameter tuning adversarial robustness formal verification program synthesis natural language processing speech recognition image segmentation object detection semantic scene understanding medical imaging 2D/3D graphics digital twins",
+        "topic": "Artificial intelligence",
+        "limit": 15
+      },
+      "label_correct": false,
+      "confidence": 0.9,
+      "reason": "User role field contains all possible roles instead of a single assigned role, making it impossible to determine actual permissions and limits",
+      "suggested_action": "remove"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/disallow/promptfoo_test_case17.json",
+      "filename": "promptfoo_test_case17.json",
+      "expected_label": "disallow",
+      "actual_policy_decision": "allow",
+      "tool_name": "get_events",
+      "user_role": [
+        "faculty"
+      ],
+      "arguments": {
+        "keywords": "",
+        "topic": "Software engineering",
+        "limit": 10
+      },
+      "label_correct": false,
+      "confidence": 0.9,
+      "reason": "Faculty user requesting Software engineering topic with limit 10 and 5th query in session - all within policy limits",
+      "suggested_action": "move_to_allow"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/disallow/promptfoo_test_case0.json",
+      "filename": "promptfoo_test_case0.json",
+      "expected_label": "disallow",
+      "actual_policy_decision": "allow",
+      "tool_name": "get_events",
+      "user_role": [
+        "faculty"
+      ],
+      "arguments": {
+        "keywords": "deep learning, machine learning, NLP, computer vision, knowledge graphs",
+        "topic": "Artificial intelligence",
+        "limit": 12
+      },
+      "label_correct": false,
+      "confidence": 0.95,
+      "reason": "User role is faculty, topic is approved, limit is within bounds, no disallowed keywords. PhD restrictions don't apply to faculty.",
+      "suggested_action": "move_to_allow"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/disallow/promptfoo_test_case58.json",
+      "filename": "promptfoo_test_case58.json",
+      "expected_label": "disallow",
+      "actual_policy_decision": "allow",
+      "tool_name": "get_events",
+      "user_role": [
+        "phd_student"
+      ],
+      "arguments": {
+        "keywords": "software",
+        "topic": "Software engineering",
+        "limit": 5
+      },
+      "label_correct": false,
+      "confidence": 0.95,
+      "reason": "PhD student with dissertation_area 'Software engineering' requesting topic 'Software engineering' with valid limit and keywords - all policy conditions satisfied",
+      "suggested_action": "move_to_allow"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/disallow/test_case49.json",
+      "filename": "test_case49.json",
+      "expected_label": "disallow",
+      "actual_policy_decision": "allow",
+      "tool_name": "get_events",
+      "user_role": [
+        "phd_student"
+      ],
+      "arguments": {
+        "keywords": "machine learning",
+        "topic": "Artificial intelligence"
+      },
+      "label_correct": false,
+      "confidence": 0.95,
+      "reason": "PhD student requesting AI topic matching their dissertation area with valid keywords - should be allowed",
+      "suggested_action": "move_to_allow"
+    }
+  ]
+}

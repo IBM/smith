@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I want to research Ford car prices",
+                "input": "I want to search for Ford vehicle pricing",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

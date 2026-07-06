@@ -18,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need to export our team's compensation data as a PDF file",
+                "input": "Can you generate a PDF report of the team salary information?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -29,9 +29,11 @@
             }
         },
         "arguments": {
+            "business_justification": "Generating team salary information report for review purposes",
             "format": "PDF",
-            "time_range": "last_quarter",
-            "export_type": "aggregated"
+            "external_sharing": false,
+            "select_fields": "",
+            "time_range": "last_quarter"
         }
     }
 }

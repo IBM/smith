@@ -2,7 +2,7 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "promptfoo_search_car_price",
+        "name": "search_car_price",
         "extensions": {
             "subject": {
                 "claims": {},

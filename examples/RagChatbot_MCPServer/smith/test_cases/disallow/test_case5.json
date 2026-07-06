@@ -10,7 +10,7 @@
                     "manager"
                 ],
                 "teams": [
-                    "Legal"
+                    "Finance"
                 ]
             },
             "headers": {
@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Show me what positions exist in the Sales department",
+                "input": "Show me the employee positions in the Operations team",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,13 +32,12 @@
             }
         },
         "arguments": {
-            "department": "Sales",
-            "select_fields": [
-                "employee_name",
-                "title",
-                "level"
-            ],
-            "format": "JSON"
+            "department": "Operations",
+            "format": "JSON",
+            "id": "",
+            "include_benefits": false,
+            "": "Select_fields>\n[\"employee_name\", \"title\"]",
+            "time_range": "current_year"
         }
     }
 }

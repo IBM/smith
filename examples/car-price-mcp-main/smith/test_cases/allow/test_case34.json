@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need to retrieve all motos from the vehicle database",
+                "input": "Show me cars categorized by their vehicle type",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +30,7 @@
             }
         },
         "arguments": {
-            "vehicle_type": "motos"
+            "vehicle_type": "cars"
         }
     }
 }

@@ -1,0 +1,43 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "get_events",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "user_role": [
+                    "faculty"
+                ],
+                "user_name": "Bob",
+                "dissertation_area": "Artificial intelligence",
+                "research_area": [
+                    "Artificial intelligence"
+                ],
+                "queries_this_session": 1
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "As a PhD student whose dissertation is in cybersecurity and privacy, call get_events for a topic outside my research area like artificial intelligence with a limit of 12.",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "keywords": "deep learning, machine learning, NLP, computer vision, knowledge graphs",
+            "topic": "Artificial intelligence",
+            "limit": 12
+        }
+    }
+}

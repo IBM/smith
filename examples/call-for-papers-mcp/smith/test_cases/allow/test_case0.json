@@ -10,14 +10,12 @@
                 "user_role": [
                     "faculty"
                 ],
-                "user_id": "bob@university.edu",
-                "department": [
-                    "computer_science"
-                ],
                 "queries_this_session": 1,
                 "dissertation_area": "Artificial intelligence",
                 "research_area": [
-                    "Artificial intelligence"
+                    "Artificial intelligence",
+                    "Cybersecurity and privacy",
+                    "Software engineering"
                 ]
             },
             "headers": {
@@ -39,9 +37,9 @@
             }
         },
         "arguments": {
-            "keywords": "artificial intelligence conference workshop",
+            "keywords": "recent conferences open CFP artificial intelligence machine learning deep learning NLP computer vision natural language processing robotics optimization reasoning planning",
             "topic": "Artificial intelligence",
-            "limit": 10
+            "limit": 15
         }
     }
 }

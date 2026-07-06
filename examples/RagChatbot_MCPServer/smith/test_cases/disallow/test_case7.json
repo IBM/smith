@@ -10,7 +10,7 @@
                     "manager"
                 ],
                 "teams": [
-                    "IT"
+                    "Legal"
                 ]
             },
             "headers": {
@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you show me how much people in Finance are earning?",
+                "input": "Show me the compensation information for the Marketing department",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,9 +32,7 @@
             }
         },
         "arguments": {
-            "department": "Finance",
-            "include_benefits": true,
-            "format": "JSON"
+            "department": "Marketing"
         }
     }
 }

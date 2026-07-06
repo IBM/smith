@@ -18,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I would like to extract team salary data in comma-separated values format",
+                "input": "I need to export our team's compensation data as a PDF file",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -29,9 +29,7 @@
             }
         },
         "arguments": {
-            "format": "CSV",
-            "time_range": "last_quarter",
-            "export_type": "aggregated"
+            "format": "PDF"
         }
     }
 }

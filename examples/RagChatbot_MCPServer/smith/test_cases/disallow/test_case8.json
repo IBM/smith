@@ -10,7 +10,7 @@
                     "manager"
                 ],
                 "teams": [
-                    "HR"
+                    "Operations"
                 ]
             },
             "headers": {
@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I'd like to review the compensation for Legal department employees",
+                "input": "Can I access salary details for employees in the IT team?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,12 +32,8 @@
             }
         },
         "arguments": {
-            "department": "Legal",
-            "select_fields": null,
-            "id": null,
-            "time_range": "last_quarter",
-            "format": "JSON",
-            "include_benefits": true
+            "department": "IT",
+            "format": "JSON"
         }
     }
 }

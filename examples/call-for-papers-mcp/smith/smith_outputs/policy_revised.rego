@@ -96,14 +96,15 @@ deny[msg] if {
 # Rule 2: Topic must be one of the three approved research areas
 deny[msg] if {
 	tool_name == "get_events"
-	not args.topic in approved_topics
+	topic := args.topic
+	not topic in approved_topics
 	msg := sprintf(
 		"Topic '%s' is not approved. Must be exactly one of: 'Artificial intelligence', 'Cybersecurity and privacy', 'Software engineering'.",
-		[args.topic],
+		[topic],
 	)
 }
 
-# Rule 3: PhD students must search within their dissertation area
+# Rule 3: PhD students can only request topics matching their dissertation area
 deny[msg] if {
 	tool_name == "get_events"
 	user_role == "phd_student"
@@ -111,7 +112,7 @@ deny[msg] if {
 	dissertation_area != ""
 	topic != dissertation_area
 	msg := sprintf(
-		"PhD students must search within their dissertation area. Your dissertation area is '%s' but you requested topic '%s'.",
+		"PhD student with dissertation area '%s' cannot request topic '%s'. Topic must match dissertation area.",
 		[dissertation_area, topic],
 	)
 }
@@ -139,23 +140,18 @@ deny[msg] if {
 	keywords := args.keywords
 	contains_disallowed_keyword(keywords)
 	msg := sprintf(
-		"Keywords '%s' contain disallowed terms. Prohibited keywords include: bioinformatics, genomics, clinical trials, drug discovery, quantum physics, materials science, renewable energy, economics, finance, marketing, supply chain, education, psychology, sociology, political science, trade show, career fair, startup expo, hackathon.",
+		concat("", [
+			"Keywords '%s' contain disallowed terms. ",
+			"Prohibited keywords include: bioinformatics, genomics, clinical trials, drug discovery, ",
+			"quantum physics, materials science, renewable energy, economics, finance, marketing, ",
+			"supply chain, education, psychology, sociology, political science, trade show, ",
+			"career fair, startup expo, hackathon.",
+		]),
 		[keywords],
 	)
 }
 
-# Rule 7: Agent input must not contain disallowed keywords
-deny[msg] if {
-	tool_name == "get_events"
-	agent_input := input.extensions.agent.input
-	contains_disallowed_keyword(agent_input)
-	msg := sprintf(
-		"Request input '%s' contains disallowed terms. Prohibited keywords include: bioinformatics, genomics, clinical trials, drug discovery, quantum physics, materials science, renewable energy, economics, finance, marketing, supply chain, education, psychology, sociology, political science, trade show, career fair, startup expo, hackathon.",
-		[agent_input],
-	)
-}
-
-# Rule 9: No more than 5 queries per session
+# Rule 8: No more than 5 queries per session
 deny[msg] if {
 	tool_name == "get_events"
 	queries_this_session > 5

@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please get vehicles with vehicle_type motos",
+                "input": "Please get vehicles by type motos",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

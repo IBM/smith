@@ -8,13 +8,9 @@
                 "claims": {},
                 "user_name": "Bob",
                 "user_role": [
-                    "phd_student"
-                ],
-                "user_id": "bob@university.edu",
-                "department": [
-                    "computer_science",
-                    "electrical_engineering",
-                    "multidisciplinary"
+                    "faculty",
+                    "phd_student",
+                    "guest"
                 ],
                 "queries_this_session": 1,
                 "dissertation_area": "Artificial intelligence",
@@ -32,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I'm looking for events related to Artificial intelligence",
+                "input": "I'd like to see 10 events please",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -43,8 +39,9 @@
             }
         },
         "arguments": {
-            "keywords": "Artificial intelligence",
-            "topic": "Artificial intelligence"
+            "keywords": "artificial intelligence deep learning NLP machine learning LLMs",
+            "topic": "Artificial intelligence",
+            "limit": 10
         }
     }
 }

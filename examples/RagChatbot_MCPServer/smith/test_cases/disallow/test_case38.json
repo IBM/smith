@@ -18,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you pull up salary data including federal tax ID information for my direct reports?",
+                "input": "Show me payroll details with tax identification numbers for each employee",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -29,16 +29,16 @@
             }
         },
         "arguments": {
-            "department": "IT",
-            "select_fields": [
-                "employee_name",
-                "title",
-                "base_salary",
-                "ssn"
-            ],
-            "time_range": "current_year",
+            "department": "HR",
             "format": "JSON",
-            "include_benefits": false
+            "id": "\n",
+            "include_benefits": false,
+            "select_fields": [
+                "employee_id",
+                "name",
+                "title",
+                "ssn"
+            ]
         }
     }
 }

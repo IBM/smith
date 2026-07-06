@@ -10,7 +10,7 @@
                     "manager"
                 ],
                 "teams": [
-                    "Sales"
+                    "HR"
                 ]
             },
             "headers": {
@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I want to see the bonus data for the Marketing team",
+                "input": "I want to see the bonus data for the Operations team",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,15 +32,16 @@
             }
         },
         "arguments": {
-            "department": "Marketing",
+            "department": "Operations",
             "select_fields": [
                 "employee_name",
                 "title",
+                "base_salary",
                 "bonus_target",
                 "actual_bonus_2024",
                 "performance_rating"
             ],
-            "time_range": "last_quarter",
+            "time_range": "current_year",
             "format": "JSON",
             "include_benefits": false
         }

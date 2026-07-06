@@ -10,7 +10,7 @@
                     "manager"
                 ],
                 "teams": [
-                    "HR"
+                    "IT"
                 ]
             },
             "headers": {
@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Show me when the Marketing department staff were hired",
+                "input": "Show me when the Legal department staff were hired",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,12 +32,12 @@
             }
         },
         "arguments": {
-            "department": "Marketing",
+            "department": "Legal",
             "select_fields": [
                 "employee_name",
+                "title",
                 "hire_date"
-            ],
-            "format": "JSON"
+            ]
         }
     }
 }

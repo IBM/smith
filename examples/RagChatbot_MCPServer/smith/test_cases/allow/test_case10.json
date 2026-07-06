@@ -33,13 +33,14 @@
         },
         "arguments": {
             "department": "Finance",
+            "time_range": "current_year",
             "select_fields": [
                 "employee_name",
+                "title",
+                "base_salary",
                 "actual_bonus_2024"
             ],
-            "time_range": "current_year",
-            "format": "JSON",
-            "include_benefits": false
+            "format": "JSON"
         }
     }
 }

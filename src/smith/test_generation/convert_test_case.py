@@ -50,10 +50,7 @@ def translate_case(
     for test_case in test_cases:
         with open(test_case_template_file, "r") as f:
             test_case_template = json.load(f)
-        if test_case["label"] == "promptfoo_malicious":
-            test_case_template["name"] = "promptfoo_" + test_case["action"]
-        else:
-            test_case_template["name"] = test_case["action"]
+        test_case_template["name"] = test_case["action"]
         test_case_template["extensions"]["agent"]["input"] = test_case["user_input"]
         for key, value in test_case["system_variables"].items():
             if key in system_vars:

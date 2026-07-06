@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please provide the compensation details for employees in my IT department",
+                "input": "Can you provide the compensation details for employees in my IT department?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,9 +32,7 @@
             }
         },
         "arguments": {
-            "department": "IT",
-            "include_benefits": true,
-            "format": "JSON"
+            "department": "IT"
         }
     }
 }

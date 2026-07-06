@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I want to search for Audi car costs",
+                "input": "I want to look up Audi vehicle pricing",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

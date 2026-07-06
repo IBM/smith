@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need to check the bonus amounts for my Sales team",
+                "input": "I need to review the bonus amounts for my Sales team",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,15 +32,7 @@
             }
         },
         "arguments": {
-            "department": "Sales",
-            "select_fields": [
-                "employee_name",
-                "base_salary",
-                "actual_bonus_2024"
-            ],
-            "time_range": "last_quarter",
-            "format": "JSON",
-            "include_benefits": false
+            "department": "Sales"
         }
     }
 }

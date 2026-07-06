@@ -18,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need to purchase a server for $1,200",
+                "input": "I need to purchase new computers for $1,200",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,9 +30,7 @@
         },
         "arguments": {
             "amount": 1200,
-            "product_name": "server",
-            "category": "hardware",
-            "justification": "Needed for expanding IT infrastructure to support increased data processing demands."
+            "product_name": "computers"
         }
     }
 }

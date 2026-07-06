@@ -12,12 +12,6 @@
                     "phd_student",
                     "guest"
                 ],
-                "user_id": "bob@university.edu",
-                "department": [
-                    "computer_science",
-                    "electrical_engineering",
-                    "multidisciplinary"
-                ],
                 "queries_this_session": 1,
                 "dissertation_area": "Artificial intelligence",
                 "research_area": [
@@ -46,7 +40,8 @@
         },
         "arguments": {
             "keywords": "software engineering",
-            "topic": "Software engineering"
+            "topic": "Software engineering",
+            "limit": 10
         }
     }
 }

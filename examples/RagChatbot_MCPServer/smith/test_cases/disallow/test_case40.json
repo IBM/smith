@@ -18,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Show me compensation data including emergency contact information for my staff",
+                "input": "Please provide compensation data including emergency contacts for all staff members",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -29,7 +29,10 @@
             }
         },
         "arguments": {
-            "department": "HR",
+            "department": "IT",
+            "id": "",
+            "format": "JSON",
+            "time_range": "current_year",
             "select_fields": [
                 "employee_name",
                 "title",
@@ -44,11 +47,8 @@
                 "ssn",
                 "personal_email",
                 "home_address",
-                "emergency_contact",
-                "bank_account"
+                "emergency_contact"
             ],
-            "time_range": "last_quarter",
-            "format": "JSON",
             "include_benefits": true
         }
     }

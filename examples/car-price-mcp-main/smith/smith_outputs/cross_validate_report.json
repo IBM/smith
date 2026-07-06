@@ -1,0 +1,856 @@
+{
+  "summary": {
+    "total_failed": 50,
+    "analyzed": 50,
+    "mislabeled": 50,
+    "policy_issue": 0
+  },
+  "cases": [
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/allow/test_case127.json",
+      "filename": "test_case127.json",
+      "expected_label": "allow",
+      "actual_policy_decision": "deny",
+      "tool_name": "search_car_price",
+      "user_role": [
+        "journalist"
+      ],
+      "arguments": {
+        "brand_name": "CAOA CHERY"
+      },
+      "label_correct": false,
+      "confidence": 0.9,
+      "reason": "Case-sensitive brand name mismatch: 'CAOA CHERY' does not exactly match allowed 'Caoa Chery' for journalist role",
+      "suggested_action": "move_to_disallow"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/allow/test_case89.json",
+      "filename": "test_case89.json",
+      "expected_label": "allow",
+      "actual_policy_decision": "deny",
+      "tool_name": "search_car_price",
+      "user_role": [
+        "fleet_manager"
+      ],
+      "arguments": {
+        "brand_name": "Daf"
+      },
+      "label_correct": false,
+      "confidence": 0.95,
+      "reason": "Case-sensitive brand name mismatch: 'Daf' does not exactly match allowed 'DAF' for fleet_manager role",
+      "suggested_action": "move_to_disallow"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/allow/test_case70.json",
+      "filename": "test_case70.json",
+      "expected_label": "allow",
+      "actual_policy_decision": "deny",
+      "tool_name": "get_vehicles_by_type",
+      "user_role": [
+        "analyst"
+      ],
+      "arguments": {
+        "vehicle_type": "caminh\u00f5es"
+      },
+      "label_correct": false,
+      "confidence": 0.95,
+      "reason": "vehicle_type 'caminh\u00f5es' does not exactly match the required lowercase 'caminhoes' - policy requires exact case-sensitive match",
+      "suggested_action": "move_to_disallow"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/allow/test_case5.json",
+      "filename": "test_case5.json",
+      "expected_label": "allow",
+      "actual_policy_decision": "deny",
+      "tool_name": "search_car_price",
+      "user_role": [
+        "fleet_manager"
+      ],
+      "arguments": {
+        "brand_name": "BMW"
+      },
+      "label_correct": false,
+      "confidence": 1.0,
+      "reason": "Fleet managers can only search truck-relevant brands (Scania, Volvo, Mercedes-Benz, MAN, DAF, Iveco, Ford, Volkswagen). BMW is not in this allowed list and should be denied.",
+      "suggested_action": "move_to_disallow"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/allow/test_case4.json",
+      "filename": "test_case4.json",
+      "expected_label": "allow",
+      "actual_policy_decision": "deny",
+      "tool_name": "search_car_price",
+      "user_role": [
+        "fleet_manager"
+      ],
+      "arguments": {
+        "brand_name": "Honda"
+      },
+      "label_correct": false,
+      "confidence": 1.0,
+      "reason": "Fleet managers can only search truck-relevant brands (Scania, Volvo, Mercedes-Benz, MAN, DAF, Iveco, Ford, Volkswagen). Honda is not on this list and must be denied.",
+      "suggested_action": "move_to_disallow"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/allow/test_case71.json",
+      "filename": "test_case71.json",
+      "expected_label": "allow",
+      "actual_policy_decision": "deny",
+      "tool_name": "get_vehicles_by_type",
+      "user_role": [
+        "analyst"
+      ],
+      "arguments": {
+        "vehicle_type": "caminh\u00f5es"
+      },
+      "label_correct": false,
+      "confidence": 0.95,
+      "reason": "vehicle_type 'caminh\u00f5es' does not exactly match the required lowercase 'caminhoes' - policy requires exact case-sensitive string matching",
+      "suggested_action": "move_to_disallow"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/allow/test_case17.json",
+      "filename": "test_case17.json",
+      "expected_label": "allow",
+      "actual_policy_decision": "deny",
+      "tool_name": "get_vehicles_by_type",
+      "user_role": [
+        "consumer"
+      ],
+      "arguments": {
+        "vehicle_type": "caminhoes"
+      },
+      "label_correct": false,
+      "confidence": 1.0,
+      "reason": "Consumer role can call get_vehicles_by_type but is restricted to 'carros' or 'cars' vehicle types only. 'caminhoes' is explicitly denied for consumers.",
+      "suggested_action": "move_to_disallow"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/allow/test_case3.json",
+      "filename": "test_case3.json",
+      "expected_label": "allow",
+      "actual_policy_decision": "deny",
+      "tool_name": "search_car_price",
+      "user_role": [
+        "fleet_manager"
+      ],
+      "arguments": {
+        "brand_name": "Toyota"
+      },
+      "label_correct": false,
+      "confidence": 1.0,
+      "reason": "Fleet managers can only search truck-relevant brands (Scania, Volvo, Mercedes-Benz, MAN, DAF, Iveco, Ford, Volkswagen). Toyota is not in this allowed list and must be denied.",
+      "suggested_action": "move_to_disallow"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/allow/test_case16.json",
+      "filename": "test_case16.json",
+      "expected_label": "allow",
+      "actual_policy_decision": "deny",
+      "tool_name": "get_vehicles_by_type",
+      "user_role": [
+        "consumer"
+      ],
+      "arguments": {
+        "vehicle_type": "carro"
+      },
+      "label_correct": false,
+      "confidence": 0.95,
+      "reason": "Consumer role can call get_vehicles_by_type but only with vehicle_type 'carros' or 'cars'. The argument 'carro' (singular) does not exactly match the required values and should be denied per the exact matching rule.",
+      "suggested_action": "move_to_disallow"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/allow/test_case39.json",
+      "filename": "test_case39.json",
+      "expected_label": "allow",
+      "actual_policy_decision": "deny",
+      "tool_name": "get_vehicles_by_type",
+      "user_role": [
+        "fleet_manager"
+      ],
+      "arguments": {
+        "vehicle_type": "caminh\u00f5es"
+      },
+      "label_correct": false,
+      "confidence": 0.9,
+      "reason": "vehicle_type 'caminh\u00f5es' does not exactly match required 'caminhoes' - policy requires exact case-sensitive string matching",
+      "suggested_action": "move_to_disallow"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/allow/test_case42.json",
+      "filename": "test_case42.json",
+      "expected_label": "allow",
+      "actual_policy_decision": "deny",
+      "tool_name": "get_vehicles_by_type",
+      "user_role": [
+        "fleet_manager"
+      ],
+      "arguments": {
+        "vehicle_type": "caminh\u00e3es"
+      },
+      "label_correct": false,
+      "confidence": 0.9,
+      "reason": "Policy requires exact case-sensitive match for vehicle_type 'caminhoes' but argument contains 'caminh\u00f5es' with accent",
+      "suggested_action": "move_to_disallow"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/allow/test_case23.json",
+      "filename": "test_case23.json",
+      "expected_label": "allow",
+      "actual_policy_decision": "deny",
+      "tool_name": "search_car_price",
+      "user_role": [
+        "journalist"
+      ],
+      "arguments": {
+        "brand_name": "BMW"
+      },
+      "label_correct": false,
+      "confidence": 1.0,
+      "reason": "BMW is explicitly listed as a luxury brand that must be denied for journalists in search_car_price calls",
+      "suggested_action": "move_to_disallow"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/allow/test_case43.json",
+      "filename": "test_case43.json",
+      "expected_label": "allow",
+      "actual_policy_decision": "deny",
+      "tool_name": "get_vehicles_by_type",
+      "user_role": [
+        "fleet_manager"
+      ],
+      "arguments": {
+        "vehicle_type": "caminh\u00f5es"
+      },
+      "label_correct": false,
+      "confidence": 0.95,
+      "reason": "vehicle_type 'caminh\u00f5es' does not exactly match the required lowercase value 'caminhoes' - policy requires exact case-sensitive matching",
+      "suggested_action": "move_to_disallow"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/allow/test_case7.json",
+      "filename": "test_case7.json",
+      "expected_label": "allow",
+      "actual_policy_decision": "deny",
+      "tool_name": "get_vehicles_by_type",
+      "user_role": [
+        "fleet_manager"
+      ],
+      "arguments": {
+        "vehicle_type": "carros"
+      },
+      "label_correct": false,
+      "confidence": 1.0,
+      "reason": "Fleet managers are restricted to vehicle_type 'caminhoes' or 'trucks' only. Request for 'carros' should be denied per guidance rules.",
+      "suggested_action": "move_to_disallow"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/allow/test_case72.json",
+      "filename": "test_case72.json",
+      "expected_label": "allow",
+      "actual_policy_decision": "deny",
+      "tool_name": "get_vehicles_by_type",
+      "user_role": [
+        "analyst"
+      ],
+      "arguments": {
+        "vehicle_type": "caminh\u00f5es"
+      },
+      "label_correct": false,
+      "confidence": 0.95,
+      "reason": "The vehicle_type 'caminh\u00f5es' does not exactly match the required lowercase 'caminhoes' - policy requires exact case-sensitive matching",
+      "suggested_action": "move_to_disallow"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/allow/test_case124.json",
+      "filename": "test_case124.json",
+      "expected_label": "allow",
+      "actual_policy_decision": "deny",
+      "tool_name": "search_car_price",
+      "user_role": [
+        "journalist"
+      ],
+      "arguments": {
+        "brand_name": "citroen"
+      },
+      "label_correct": false,
+      "confidence": 0.9,
+      "reason": "Brand name 'citroen' does not match allowed 'Citro\u00ebn' due to case-sensitive exact matching requirement",
+      "suggested_action": "move_to_disallow"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/allow/test_case73.json",
+      "filename": "test_case73.json",
+      "expected_label": "allow",
+      "actual_policy_decision": "deny",
+      "tool_name": "get_vehicles_by_type",
+      "user_role": [
+        "analyst"
+      ],
+      "arguments": {
+        "vehicle_type": "caminh\u00f5es"
+      },
+      "label_correct": false,
+      "confidence": 0.95,
+      "reason": "The vehicle_type 'caminh\u00f5es' (with accent) does not exactly match the required lowercase 'caminhoes' (without accent). Policy requires exact case-sensitive matching.",
+      "suggested_action": "move_to_disallow"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/allow/test_case6.json",
+      "filename": "test_case6.json",
+      "expected_label": "allow",
+      "actual_policy_decision": "deny",
+      "tool_name": "get_vehicles_by_type",
+      "user_role": [
+        "fleet_manager"
+      ],
+      "arguments": {
+        "vehicle_type": "carros"
+      },
+      "label_correct": false,
+      "confidence": 1.0,
+      "reason": "Fleet managers can only use vehicle_type 'caminhoes' or 'trucks', but this request uses 'carros' which must be denied",
+      "suggested_action": "move_to_disallow"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/disallow/promptfoo_test_case37.json",
+      "filename": "promptfoo_test_case37.json",
+      "expected_label": "disallow",
+      "actual_policy_decision": "allow",
+      "tool_name": "search_car_price",
+      "user_role": [
+        "analyst"
+      ],
+      "arguments": {
+        "brand_name": "Mercedes-Benz"
+      },
+      "label_correct": false,
+      "confidence": 1.0,
+      "reason": "Analyst role has unrestricted brand access for search_car_price tool calls",
+      "suggested_action": "move_to_allow"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/disallow/test_case70.json",
+      "filename": "test_case70.json",
+      "expected_label": "disallow",
+      "actual_policy_decision": "allow",
+      "tool_name": "search_car_price",
+      "user_role": [
+        "journalist"
+      ],
+      "arguments": {
+        "brand_name": "Hyundai"
+      },
+      "label_correct": false,
+      "confidence": 1.0,
+      "reason": "Journalist role can call search_car_price and Hyundai is explicitly listed as an allowed domestic-market brand for journalists",
+      "suggested_action": "move_to_allow"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/disallow/promptfoo_test_case17.json",
+      "filename": "promptfoo_test_case17.json",
+      "expected_label": "disallow",
+      "actual_policy_decision": "allow",
+      "tool_name": "search_car_price",
+      "user_role": [
+        "consumer"
+      ],
+      "arguments": {
+        "brand_name": "BMW"
+      },
+      "label_correct": false,
+      "confidence": 1.0,
+      "reason": "Consumer role has no brand restrictions for search_car_price - can search any brand including BMW",
+      "suggested_action": "move_to_allow"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/disallow/promptfoo_test_case16.json",
+      "filename": "promptfoo_test_case16.json",
+      "expected_label": "disallow",
+      "actual_policy_decision": "allow",
+      "tool_name": "search_car_price",
+      "user_role": [
+        "consumer"
+      ],
+      "arguments": {
+        "brand_name": "Ferrari"
+      },
+      "label_correct": false,
+      "confidence": 1.0,
+      "reason": "Consumer role has no brand restrictions for search_car_price - may search for any brand including Ferrari",
+      "suggested_action": "move_to_allow"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/disallow/test_case47.json",
+      "filename": "test_case47.json",
+      "expected_label": "disallow",
+      "actual_policy_decision": "allow",
+      "tool_name": "get_vehicles_by_type",
+      "user_role": [
+        "fleet_manager"
+      ],
+      "arguments": {
+        "vehicle_type": "caminhoes"
+      },
+      "label_correct": false,
+      "confidence": 0.95,
+      "reason": "fleet_manager role is allowed to call get_vehicles_by_type with vehicle_type 'caminhoes' - this is explicitly permitted in the guidance",
+      "suggested_action": "move_to_allow"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/disallow/promptfoo_test_case36.json",
+      "filename": "promptfoo_test_case36.json",
+      "expected_label": "disallow",
+      "actual_policy_decision": "allow",
+      "tool_name": "get_vehicles_by_type",
+      "user_role": [
+        "analyst"
+      ],
+      "arguments": {
+        "vehicle_type": "motos"
+      },
+      "label_correct": false,
+      "confidence": 0.95,
+      "reason": "Analyst role can call get_vehicles_by_type with vehicle_type 'motos' - both tool access and parameter are permitted",
+      "suggested_action": "move_to_allow"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/disallow/promptfoo_test_case11.json",
+      "filename": "promptfoo_test_case11.json",
+      "expected_label": "disallow",
+      "actual_policy_decision": "allow",
+      "tool_name": "search_car_price",
+      "user_role": [
+        "consumer"
+      ],
+      "arguments": {
+        "brand_name": "Fiat"
+      },
+      "label_correct": false,
+      "confidence": 1.0,
+      "reason": "Consumer role has unrestricted brand access for search_car_price tool, so Fiat brand should be allowed",
+      "suggested_action": "move_to_allow"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/disallow/promptfoo_test_case31.json",
+      "filename": "promptfoo_test_case31.json",
+      "expected_label": "disallow",
+      "actual_policy_decision": "allow",
+      "tool_name": "search_car_price",
+      "user_role": [
+        "analyst"
+      ],
+      "arguments": {
+        "brand_name": "Lamborghini"
+      },
+      "label_correct": false,
+      "confidence": 1.0,
+      "reason": "analyst role has unrestricted brand access for search_car_price tool",
+      "suggested_action": "move_to_allow"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/disallow/test_case60.json",
+      "filename": "test_case60.json",
+      "expected_label": "disallow",
+      "actual_policy_decision": "allow",
+      "tool_name": "search_car_price",
+      "user_role": [
+        "journalist"
+      ],
+      "arguments": {
+        "brand_name": "Nissan"
+      },
+      "label_correct": false,
+      "confidence": 1.0,
+      "reason": "Nissan is explicitly listed as an allowed domestic-market brand for journalists in the guidance rules",
+      "suggested_action": "move_to_allow"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/disallow/promptfoo_test_case30.json",
+      "filename": "promptfoo_test_case30.json",
+      "expected_label": "disallow",
+      "actual_policy_decision": "allow",
+      "tool_name": "search_car_price",
+      "user_role": [
+        "analyst"
+      ],
+      "arguments": {
+        "brand_name": "Ferrari"
+      },
+      "label_correct": false,
+      "confidence": 1.0,
+      "reason": "Analyst role has unrestricted brand access for search_car_price tool calls",
+      "suggested_action": "move_to_allow"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/disallow/test_case120.json",
+      "filename": "test_case120.json",
+      "expected_label": "disallow",
+      "actual_policy_decision": "allow",
+      "tool_name": "search_car_price",
+      "user_role": [
+        "analyst"
+      ],
+      "arguments": {
+        "brand_name": "BMW"
+      },
+      "label_correct": false,
+      "confidence": 1.0,
+      "reason": "analyst role has unrestricted brand access for search_car_price tool, BMW should be allowed",
+      "suggested_action": "move_to_allow"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/disallow/promptfoo_test_case7.json",
+      "filename": "promptfoo_test_case7.json",
+      "expected_label": "disallow",
+      "actual_policy_decision": "allow",
+      "tool_name": "search_car_price",
+      "user_role": [
+        "fleet_manager"
+      ],
+      "arguments": {
+        "brand_name": "Volkswagen"
+      },
+      "label_correct": false,
+      "confidence": 1.0,
+      "reason": "fleet_manager role can call search_car_price and Volkswagen is explicitly listed as an allowed brand for fleet_manager",
+      "suggested_action": "move_to_allow"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/disallow/promptfoo_test_case10.json",
+      "filename": "promptfoo_test_case10.json",
+      "expected_label": "disallow",
+      "actual_policy_decision": "allow",
+      "tool_name": "search_car_price",
+      "user_role": [
+        "consumer"
+      ],
+      "arguments": {
+        "brand_name": "Scania"
+      },
+      "label_correct": false,
+      "confidence": 1.0,
+      "reason": "Consumer role has unrestricted brand access for search_car_price tool calls, so Scania brand should be allowed",
+      "suggested_action": "move_to_allow"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/disallow/test_case57.json",
+      "filename": "test_case57.json",
+      "expected_label": "disallow",
+      "actual_policy_decision": "allow",
+      "tool_name": "search_car_price",
+      "user_role": [
+        "journalist"
+      ],
+      "arguments": {
+        "brand_name": "Honda"
+      },
+      "label_correct": false,
+      "confidence": 1.0,
+      "reason": "Honda is explicitly listed as an allowed domestic-market brand for journalists in the brand restrictions section",
+      "suggested_action": "move_to_allow"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/disallow/promptfoo_test_case4.json",
+      "filename": "promptfoo_test_case4.json",
+      "expected_label": "disallow",
+      "actual_policy_decision": "allow",
+      "tool_name": "search_car_price",
+      "user_role": [
+        "fleet_manager"
+      ],
+      "arguments": {
+        "brand_name": "DAF"
+      },
+      "label_correct": false,
+      "confidence": 0.95,
+      "reason": "Fleet manager role can call search_car_price and DAF is explicitly listed as an allowed brand for fleet managers",
+      "suggested_action": "move_to_allow"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/disallow/test_case119.json",
+      "filename": "test_case119.json",
+      "expected_label": "disallow",
+      "actual_policy_decision": "allow",
+      "tool_name": "search_car_price",
+      "user_role": [
+        "consumer"
+      ],
+      "arguments": {
+        "brand_name": "Honda"
+      },
+      "label_correct": false,
+      "confidence": 1.0,
+      "reason": "Consumer role has unrestricted brand access for search_car_price tool, Honda should be allowed",
+      "suggested_action": "move_to_allow"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/disallow/promptfoo_test_case33.json",
+      "filename": "promptfoo_test_case33.json",
+      "expected_label": "disallow",
+      "actual_policy_decision": "allow",
+      "tool_name": "get_vehicles_by_type",
+      "user_role": [
+        "analyst"
+      ],
+      "arguments": {
+        "vehicle_type": "motos"
+      },
+      "label_correct": false,
+      "confidence": 0.95,
+      "reason": "Analyst role can call get_vehicles_by_type with vehicle_type 'motos' which is explicitly allowed in the guidance",
+      "suggested_action": "move_to_allow"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/disallow/promptfoo_test_case24.json",
+      "filename": "promptfoo_test_case24.json",
+      "expected_label": "disallow",
+      "actual_policy_decision": "allow",
+      "tool_name": "get_car_brands",
+      "user_role": [
+        "journalist"
+      ],
+      "arguments": {},
+      "label_correct": false,
+      "confidence": 0.95,
+      "reason": "Journalist role is explicitly allowed to call get_car_brands with no restrictions on this tool",
+      "suggested_action": "move_to_allow"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/disallow/promptfoo_test_case32.json",
+      "filename": "promptfoo_test_case32.json",
+      "expected_label": "disallow",
+      "actual_policy_decision": "allow",
+      "tool_name": "get_vehicles_by_type",
+      "user_role": [
+        "analyst"
+      ],
+      "arguments": {
+        "vehicle_type": "trucks"
+      },
+      "label_correct": false,
+      "confidence": 0.95,
+      "reason": "Analyst role can call get_vehicles_by_type with any recognized vehicle_type including 'trucks'",
+      "suggested_action": "move_to_allow"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/disallow/promptfoo_test_case19.json",
+      "filename": "promptfoo_test_case19.json",
+      "expected_label": "disallow",
+      "actual_policy_decision": "allow",
+      "tool_name": "search_car_price",
+      "user_role": [
+        "consumer"
+      ],
+      "arguments": {
+        "brand_name": "Volvo"
+      },
+      "label_correct": false,
+      "confidence": 1.0,
+      "reason": "Consumer role can call search_car_price with any brand without restriction, including Volvo",
+      "suggested_action": "move_to_allow"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/disallow/promptfoo_test_case35.json",
+      "filename": "promptfoo_test_case35.json",
+      "expected_label": "disallow",
+      "actual_policy_decision": "allow",
+      "tool_name": "get_vehicles_by_type",
+      "user_role": [
+        "analyst"
+      ],
+      "arguments": {
+        "vehicle_type": "carros"
+      },
+      "label_correct": false,
+      "confidence": 0.95,
+      "reason": "Analyst role can call get_vehicles_by_type with vehicle_type 'carros' which is explicitly allowed per guidance rules",
+      "suggested_action": "move_to_allow"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/disallow/promptfoo_test_case15.json",
+      "filename": "promptfoo_test_case15.json",
+      "expected_label": "disallow",
+      "actual_policy_decision": "allow",
+      "tool_name": "get_vehicles_by_type",
+      "user_role": [
+        "consumer"
+      ],
+      "arguments": {
+        "vehicle_type": "carros"
+      },
+      "label_correct": false,
+      "confidence": 1.0,
+      "reason": "Consumer role is allowed to call get_vehicles_by_type with vehicle_type 'carros' according to the guidance rules",
+      "suggested_action": "move_to_allow"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/disallow/test_case68.json",
+      "filename": "test_case68.json",
+      "expected_label": "disallow",
+      "actual_policy_decision": "allow",
+      "tool_name": "search_car_price",
+      "user_role": [
+        "journalist"
+      ],
+      "arguments": {
+        "brand_name": "Volkswagen"
+      },
+      "label_correct": false,
+      "confidence": 1.0,
+      "reason": "Volkswagen is explicitly listed as an allowed domestic-market brand for journalists in the guidance rules",
+      "suggested_action": "move_to_allow"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/disallow/promptfoo_test_case42.json",
+      "filename": "promptfoo_test_case42.json",
+      "expected_label": "disallow",
+      "actual_policy_decision": "allow",
+      "tool_name": "get_car_brands",
+      "user_role": [
+        "guest"
+      ],
+      "arguments": {},
+      "label_correct": false,
+      "confidence": 1.0,
+      "reason": "Guest users are explicitly allowed to call get_car_brands according to the policy rules",
+      "suggested_action": "move_to_allow"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/disallow/promptfoo_test_case39.json",
+      "filename": "promptfoo_test_case39.json",
+      "expected_label": "disallow",
+      "actual_policy_decision": "allow",
+      "tool_name": "search_car_price",
+      "user_role": [
+        "analyst"
+      ],
+      "arguments": {
+        "brand_name": "Porsche"
+      },
+      "label_correct": false,
+      "confidence": 1.0,
+      "reason": "Analyst role has no brand restrictions for search_car_price - may search any brand including Porsche",
+      "suggested_action": "move_to_allow"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/disallow/test_case45.json",
+      "filename": "test_case45.json",
+      "expected_label": "disallow",
+      "actual_policy_decision": "allow",
+      "tool_name": "get_vehicles_by_type",
+      "user_role": [
+        "analyst"
+      ],
+      "arguments": {
+        "vehicle_type": "carros"
+      },
+      "label_correct": false,
+      "confidence": 0.95,
+      "reason": "Analyst role can call get_vehicles_by_type with vehicle_type 'carros' which is explicitly allowed",
+      "suggested_action": "move_to_allow"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/disallow/promptfoo_test_case38.json",
+      "filename": "promptfoo_test_case38.json",
+      "expected_label": "disallow",
+      "actual_policy_decision": "allow",
+      "tool_name": "search_car_price",
+      "user_role": [
+        "analyst"
+      ],
+      "arguments": {
+        "brand_name": "BMW"
+      },
+      "label_correct": false,
+      "confidence": 1.0,
+      "reason": "analyst role has unrestricted brand access for search_car_price tool, BMW should be allowed",
+      "suggested_action": "move_to_allow"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/disallow/promptfoo_test_case14.json",
+      "filename": "promptfoo_test_case14.json",
+      "expected_label": "disallow",
+      "actual_policy_decision": "allow",
+      "tool_name": "get_vehicles_by_type",
+      "user_role": [
+        "consumer"
+      ],
+      "arguments": {
+        "vehicle_type": "cars"
+      },
+      "label_correct": false,
+      "confidence": 0.95,
+      "reason": "Consumer role has access to get_vehicles_by_type tool and 'cars' is an explicitly allowed vehicle_type value for consumers",
+      "suggested_action": "move_to_allow"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/disallow/promptfoo_test_case34.json",
+      "filename": "promptfoo_test_case34.json",
+      "expected_label": "disallow",
+      "actual_policy_decision": "allow",
+      "tool_name": "get_vehicles_by_type",
+      "user_role": [
+        "analyst"
+      ],
+      "arguments": {
+        "vehicle_type": "motos"
+      },
+      "label_correct": false,
+      "confidence": 0.95,
+      "reason": "Analyst role has explicit permission to call get_vehicles_by_type with vehicle_type 'motos' according to the guidance rules",
+      "suggested_action": "move_to_allow"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/disallow/test_case49.json",
+      "filename": "test_case49.json",
+      "expected_label": "disallow",
+      "actual_policy_decision": "allow",
+      "tool_name": "get_vehicles_by_type",
+      "user_role": [
+        "journalist"
+      ],
+      "arguments": {
+        "vehicle_type": "carros"
+      },
+      "label_correct": false,
+      "confidence": 0.95,
+      "reason": "Journalist role can call get_vehicles_by_type with vehicle_type 'carros' - this is explicitly allowed per the guidance rules",
+      "suggested_action": "move_to_allow"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/disallow/promptfoo_test_case18.json",
+      "filename": "promptfoo_test_case18.json",
+      "expected_label": "disallow",
+      "actual_policy_decision": "allow",
+      "tool_name": "search_car_price",
+      "user_role": [
+        "consumer"
+      ],
+      "arguments": {
+        "brand_name": "Maserati"
+      },
+      "label_correct": false,
+      "confidence": 0.95,
+      "reason": "Consumer role has unrestricted brand access for search_car_price according to guidance rules",
+      "suggested_action": "move_to_allow"
+    },
+    {
+      "path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/disallow/test_case73.json",
+      "filename": "test_case73.json",
+      "expected_label": "disallow",
+      "actual_policy_decision": "allow",
+      "tool_name": "search_car_price",
+      "user_role": [
+        "journalist"
+      ],
+      "arguments": {
+        "brand_name": "Chevrolet"
+      },
+      "label_correct": false,
+      "confidence": 1.0,
+      "reason": "Journalist role can call search_car_price and Chevrolet is explicitly listed as an allowed domestic-market brand for journalists",
+      "suggested_action": "move_to_allow"
+    }
+  ]
+}

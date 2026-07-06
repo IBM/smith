@@ -1,0 +1,45 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "get_events",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "user_name": "Bob",
+                "user_role": [
+                    "faculty"
+                ],
+                "queries_this_session": 1,
+                "dissertation_area": "Artificial intelligence",
+                "research_area": [
+                    "Artificial intelligence",
+                    "Cybersecurity and privacy",
+                    "Software engineering"
+                ]
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Please show me the event listings.",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "keywords": "artificial intelligence conference machine learning deep learning NLP computer vision knowledge graph reasoning planning optimization control robotics simulation multi-modal multimodal neural network large language model LLM transformer diffusion generative adversarial reinforcement learning transfer few-shot continual pre-training alignment safety privacy fairness robustness interpretability explainable AI autonomous agent embodied cognition human-computer interaction cognitive science ethics bias accountability sustainability energy efficiency cloud computing distributed system edge IoT quantum biology healthcare bioinformatics drug discovery natural scene understanding perception action synthesis creation content generation editing summarization classification detection segmentation recognition tracking localization mapping navigation planning scheduling decision making uncertainty trust reliability scalability performance latency throughput bandwidth memory parallelism serialization deserialization compression encoding decoding sampling pruning quantizing sparsity activation normalization regularization dropout masking embedding representation learning feature engineering data augmentation synthetic dataset generation curation benchmark evaluation metric comparison analysis visualization debugging profiling optimization tuning hyperparameter selection grid search random forest gradient boosting XGBoost LightGBM LFA model ensemble stacking blending bagging cross-validation k-fold stratified nested permutation importance SHAP LIME causal inference counterfactual fairness attribution intervention",
+            "topic": "Artificial intelligence",
+            "limit": 20
+        }
+    }
+}

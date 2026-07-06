@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need pricing details for Rolls-Royce vehicles",
+                "input": "Can you search for Rolls-Royce vehicle pricing information?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

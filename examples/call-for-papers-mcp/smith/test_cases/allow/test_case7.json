@@ -8,16 +8,16 @@
                 "claims": {},
                 "user_name": "Bob",
                 "user_role": [
-                    "phd_student"
-                ],
-                "user_id": "bob@university.edu",
-                "department": [
-                    "electrical_engineering"
+                    "faculty",
+                    "phd_student",
+                    "guest"
                 ],
                 "queries_this_session": 1,
                 "dissertation_area": "Artificial intelligence",
                 "research_area": [
-                    "Cybersecurity and privacy"
+                    "Artificial intelligence",
+                    "Cybersecurity and privacy",
+                    "Software engineering"
                 ]
             },
             "headers": {
@@ -39,7 +39,7 @@
             }
         },
         "arguments": {
-            "keywords": "Artificial intelligence",
+            "keywords": "artificial intelligence",
             "topic": "Artificial intelligence"
         }
     }

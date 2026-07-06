@@ -1,0 +1,43 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "get_events",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "user_role": [
+                    "phd_student"
+                ],
+                "user_name": "Bob",
+                "dissertation_area": "Software engineering",
+                "research_area": [
+                    "Software engineering"
+                ],
+                "queries_this_session": 1
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "I am a PhD student researching Software engineering. Call get_events with topic Software engineering and limit 15, then immediately call it again for Artificial intelligence with limit 10.",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "keywords": "software engineering development testing analysis modeling optimization collaboration security automation tools programming languages version control requirements specification architecture design patterns metrics performance profiling debugging refactoring maintenance usability accessibility international standard compliance regulatory ethics diversity inclusion agile lean DevOps cloud native microservices functional formal verification reliability resilience robustness scalability efficiency productivity innovation sustainability open source community-driven industry-academia collaborative interdisciplinary practical applicability theoretical foundations empirical research experimental validation reproducibility quality assurance",
+            "topic": "Software engineering",
+            "limit": 15
+        }
+    }
+}

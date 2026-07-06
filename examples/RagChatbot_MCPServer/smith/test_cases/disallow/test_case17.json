@@ -10,7 +10,7 @@
                     "manager"
                 ],
                 "teams": [
-                    "Sales"
+                    "Operations"
                 ]
             },
             "headers": {
@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can I access the employment start dates for the Legal team?",
+                "input": "Can I access the employment start dates for the HR team?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,11 +32,7 @@
             }
         },
         "arguments": {
-            "department": "Legal",
-            "select_fields": [
-                "employee_name",
-                "hire_date"
-            ]
+            "department": "HR"
         }
     }
 }

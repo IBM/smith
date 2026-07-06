@@ -5,7 +5,20 @@
         "name": "get_events",
         "extensions": {
             "subject": {
-                "claims": {}
+                "claims": {},
+                "user_name": "Bob",
+                "user_role": [
+                    "faculty",
+                    "phd_student",
+                    "guest"
+                ],
+                "queries_this_session": 6,
+                "dissertation_area": "Artificial intelligence",
+                "research_area": [
+                    "Artificial intelligence",
+                    "Cybersecurity and privacy",
+                    "Software engineering"
+                ]
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -15,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Find events related to bioinformatics research.",
+                "input": "I need another event search",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -26,9 +39,9 @@
             }
         },
         "arguments": {
-            "keywords": "bioinformatics",
-            "topic": "Software engineering",
-            "limit": 20
+            "keywords": "conference papers review machine learning AI systems neural networks NLP computer vision cybersecurity software security",
+            "topic": "Artificial intelligence",
+            "limit": 50
         }
     }
 }

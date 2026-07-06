@@ -10,7 +10,7 @@
                     "manager"
                 ],
                 "teams": [
-                    "Legal"
+                    "Operations"
                 ]
             },
             "headers": {
@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need to verify the department assignments for my Legal team",
+                "input": "I need to verify the department assignments for my Operations team",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,14 +32,7 @@
             }
         },
         "arguments": {
-            "department": "Legal",
-            "select_fields": [
-                "employee_name",
-                "title",
-                "department",
-                "level"
-            ],
-            "format": "JSON"
+            "department": "Operations"
         }
     }
 }

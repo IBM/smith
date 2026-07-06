@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need pricing information for Maserati vehicles",
+                "input": "Can you help me find pricing information for Maserati vehicles?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

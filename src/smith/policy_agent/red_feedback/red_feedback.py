@@ -109,8 +109,10 @@ def cluster_commands(cluster_results, test_path, eps=0.3, min_samples=2):
         sorted_labels = sorted(k for k in cluster_dict.keys() if k != -1) + (
             [-1] if -1 in cluster_dict else []
         )
-        for label in sorted_labels:
-            clusters.append("Cluster " + str(label) + ": ")
+        # Renumber sequentially so the noise group (-1), which is sorted last,
+        # is displayed as the number after the real clusters rather than as -1.
+        for display_id, label in enumerate(sorted_labels):
+            clusters.append("Cluster " + str(display_id) + ": ")
             countt = 0
             for cmd in cluster_dict[label]:
                 countt = countt + 1
@@ -138,9 +140,12 @@ def cluster_commands(cluster_results, test_path, eps=0.3, min_samples=2):
         sorted_labels = sorted(k for k in cluster_dict.keys() if k != -1) + (
             [-1] if -1 in cluster_dict else []
         )
-        for label in sorted_labels:
+        # Renumber sequentially (offset by the benign clusters) so the noise
+        # group (-1), sorted last, is displayed as the number after the real
+        # clusters rather than as a shifted -1.
+        for display_id, label in enumerate(sorted_labels):
             countt = 0
-            cluster_label = str(int(label) + base_cluster_id)
+            cluster_label = str(display_id + base_cluster_id)
             clusters.append("Cluster " + str(cluster_label) + ": ")
             for cmd in cluster_dict[label]:
                 countt = countt + 1

@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Search for Lexus car prices",
+                "input": "Search for Lexus car pricing data",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

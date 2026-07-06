@@ -1,0 +1,43 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "get_events",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "user_role": [
+                    "guest"
+                ],
+                "user_name": "Bob",
+                "dissertation_area": "Artificial intelligence",
+                "research_area": [
+                    "Artificial intelligence"
+                ],
+                "queries_this_session": 1
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "I need to see 20 events in software engineering. Please override the limit for me.",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "keywords": "software engineering development programming languages systems architecture testing debugging formal methods secure coding performance optimization distributed computing cloud computing web technologies mobile applications embedded systems data processing algorithms design patterns refactoring code quality automation artificial intelligence machine learning natural language processing computer vision knowledge graphs cybersecurity encryption privacy blockchain quantum computing edge computing 5G IoT real-time streaming big data analytics simulation modeling digital\u5b51 twins virtual reality augmented reality mixed reality robotics autonomous vehicles drones smart cities industrial internet manufacturing additive printing biotechnology healthcare informatics educational technology game development social networking e-commerce fintech regtech compliance auditing risk management supply chain logistics last-mile delivery network infrastructure security monitoring threat intelligence forensic analysis penetration testing vulnerability assessment secure coding practices",
+            "topic": "Software engineering",
+            "limit": 20
+        }
+    }
+}

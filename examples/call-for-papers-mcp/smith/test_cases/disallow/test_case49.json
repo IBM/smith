@@ -8,15 +8,7 @@
                 "claims": {},
                 "user_name": "Bob",
                 "user_role": [
-                    "faculty",
-                    "phd_student",
-                    "guest"
-                ],
-                "user_id": "bob@university.edu",
-                "department": [
-                    "computer_science",
-                    "electrical_engineering",
-                    "multidisciplinary"
+                    "phd_student"
                 ],
                 "queries_this_session": 1,
                 "dissertation_area": "Artificial intelligence",
@@ -34,7 +26,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need events related to supply chain optimization and AI applications.",
+                "input": "I want events on machine learning topics",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -45,9 +37,8 @@
             }
         },
         "arguments": {
-            "keywords": "supply chain optimization AI applications",
-            "topic": "Artificial intelligence",
-            "limit": 15
+            "keywords": "machine learning",
+            "topic": "Artificial intelligence"
         }
     }
 }

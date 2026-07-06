@@ -1,0 +1,146 @@
+[
+    {
+        "file_path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/allow/test_case15.json",
+        "label": "allow",
+        "assigned_tool": "get_events",
+        "actual_tool": "other",
+        "agent_input": "Get events with a limit of 10",
+        "actual_args": {}
+    },
+    {
+        "file_path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/allow/test_case18.json",
+        "label": "allow",
+        "assigned_tool": "get_events",
+        "actual_tool": "other",
+        "agent_input": "Get events with a limit of 8",
+        "actual_args": {}
+    },
+    {
+        "file_path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/allow/test_case20.json",
+        "label": "allow",
+        "assigned_tool": "get_events",
+        "actual_tool": "other",
+        "agent_input": "Can you retrieve 3 events for me?",
+        "actual_args": {}
+    },
+    {
+        "file_path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/allow/test_case21.json",
+        "label": "allow",
+        "assigned_tool": "get_events",
+        "actual_tool": "other",
+        "agent_input": "Get events with limit 12",
+        "actual_args": {}
+    },
+    {
+        "file_path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/allow/test_case25.json",
+        "label": "allow",
+        "assigned_tool": "get_events",
+        "actual_tool": "other",
+        "agent_input": "Could you fetch 3 events for me?",
+        "actual_args": {}
+    },
+    {
+        "file_path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/allow/test_case29.json",
+        "label": "allow",
+        "assigned_tool": "get_events",
+        "actual_tool": "other",
+        "agent_input": "Could you search for some events for me?",
+        "actual_args": {}
+    },
+    {
+        "file_path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/allow/test_case36.json",
+        "label": "allow",
+        "assigned_tool": "get_events",
+        "actual_tool": "other",
+        "agent_input": "Show me all events happening this month across all departments",
+        "actual_args": {}
+    },
+    {
+        "file_path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/allow/test_case5.json",
+        "label": "allow",
+        "assigned_tool": "get_events",
+        "actual_tool": "other",
+        "agent_input": "Please get the event information.",
+        "actual_args": {}
+    },
+    {
+        "file_path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/disallow/test_case10.json",
+        "label": "disallow",
+        "assigned_tool": "get_events",
+        "actual_tool": "other",
+        "agent_input": "I want to find events related to Physics",
+        "actual_args": {}
+    },
+    {
+        "file_path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/disallow/test_case11.json",
+        "label": "disallow",
+        "assigned_tool": "get_events",
+        "actual_tool": "other",
+        "agent_input": "Can you search for Mathematics conferences?",
+        "actual_args": {}
+    },
+    {
+        "file_path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/disallow/test_case12.json",
+        "label": "disallow",
+        "assigned_tool": "get_events",
+        "actual_tool": "other",
+        "agent_input": "Get me 0 events from the system",
+        "actual_args": {}
+    },
+    {
+        "file_path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/disallow/test_case14.json",
+        "label": "disallow",
+        "assigned_tool": "get_events",
+        "actual_tool": "other",
+        "agent_input": "I need to see 50 events right now",
+        "actual_args": {}
+    },
+    {
+        "file_path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/disallow/test_case17.json",
+        "label": "disallow",
+        "assigned_tool": "get_events",
+        "actual_tool": "other",
+        "agent_input": "I want to fetch 25 events right away",
+        "actual_args": {}
+    },
+    {
+        "file_path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/disallow/test_case19.json",
+        "label": "disallow",
+        "assigned_tool": "get_events",
+        "actual_tool": "other",
+        "agent_input": "Can you do one more event lookup for me?",
+        "actual_args": {}
+    },
+    {
+        "file_path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/disallow/test_case35.json",
+        "label": "disallow",
+        "assigned_tool": "get_events",
+        "actual_tool": "other",
+        "agent_input": "Find events about materials science and engineering",
+        "actual_args": {}
+    },
+    {
+        "file_path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/disallow/test_case36.json",
+        "label": "disallow",
+        "assigned_tool": "get_events",
+        "actual_tool": "other",
+        "agent_input": "I want to search for conferences related to materials science research",
+        "actual_args": {}
+    },
+    {
+        "file_path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/disallow/test_case5.json",
+        "label": "disallow",
+        "assigned_tool": "get_events",
+        "actual_tool": "other",
+        "agent_input": "Get events with a limit of 15",
+        "actual_args": {}
+    },
+    {
+        "file_path": "/Users/hailunding/Documents/smith_remote/.bob/skills/smith/references/test_cases/disallow/test_case7.json",
+        "label": "disallow",
+        "assigned_tool": "get_events",
+        "actual_tool": "other",
+        "agent_input": "Get events with limit 0",
+        "actual_args": {}
+    }
+]

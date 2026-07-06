@@ -5,7 +5,20 @@
         "name": "get_events",
         "extensions": {
             "subject": {
-                "claims": {}
+                "claims": {},
+                "user_name": "Bob",
+                "user_role": [
+                    "faculty",
+                    "phd_student",
+                    "guest"
+                ],
+                "queries_this_session": 1,
+                "dissertation_area": "Artificial intelligence",
+                "research_area": [
+                    "Artificial intelligence",
+                    "Cybersecurity and privacy",
+                    "Software engineering"
+                ]
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -15,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need events about human genomics research.",
+                "input": "Find events related to genomics research",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -26,7 +39,7 @@
             }
         },
         "arguments": {
-            "keywords": "human genomics",
+            "keywords": "genomics genome bioinformatics AI machine learning",
             "topic": "Artificial intelligence",
             "limit": 20
         }

@@ -35,9 +35,10 @@
             "department": "IT",
             "select_fields": [
                 "employee_name",
+                "title",
+                "level",
                 "hire_date"
-            ],
-            "format": "JSON"
+            ]
         }
     }
 }

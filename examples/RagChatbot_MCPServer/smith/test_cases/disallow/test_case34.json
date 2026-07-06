@@ -18,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Show me compensation data with banking information for payroll verification",
+                "input": "Please provide compensation data including account numbers for direct deposits",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -29,13 +29,8 @@
             }
         },
         "arguments": {
-            "department": "HR",
-            "select_fields": [
-                "employee_name",
-                "base_salary",
-                "bank_account"
-            ],
-            "include_benefits": false
+            "department": "IT",
+            "format": "CSV"
         }
     }
 }

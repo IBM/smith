@@ -12,12 +12,6 @@
                     "phd_student",
                     "guest"
                 ],
-                "user_id": "bob@university.edu",
-                "department": [
-                    "computer_science",
-                    "electrical_engineering",
-                    "multidisciplinary"
-                ],
                 "queries_this_session": 1,
                 "dissertation_area": "Artificial intelligence",
                 "research_area": [
@@ -34,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Show me workshops related to drug discovery methodologies",
+                "input": "Search for events about drug discovery and pharmaceutical research",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -45,7 +39,7 @@
             }
         },
         "arguments": {
-            "keywords": "drug discovery methodologies",
+            "keywords": "drug discovery pharmaceutical research AI artificial intelligence machine learning deep learning healthcare biomedical computing",
             "topic": "Artificial intelligence",
             "limit": 20
         }

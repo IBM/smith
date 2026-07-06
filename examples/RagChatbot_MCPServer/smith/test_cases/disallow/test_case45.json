@@ -15,7 +15,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Send the compensation report to external.consultant@acme.com",
+                "input": "Send the salary data to consultant@acme.com",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -26,10 +26,10 @@
             }
         },
         "arguments": {
-            "destination": "external.consultant@acme.com",
-            "report_data": "Compensation report for Q4 2024 including base salaries, bonuses, and performance ratings for all departments.",
+            "destination": "consultant@acme.com",
+            "report_data": "Salary data for team compensation reports as requested by consultant@acme.com",
             "external_sharing": true,
-            "encryption_required": true
+            "encryption_required": false
         }
     }
 }

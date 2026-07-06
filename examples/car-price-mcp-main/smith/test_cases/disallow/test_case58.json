@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please help me find Tesla pricing information",
+                "input": "Please search for Tesla vehicle costs",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

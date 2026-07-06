@@ -1,0 +1,51 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "export_compensation_data",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "roles": [
+                    "manager"
+                ],
+                "teams": [
+                    "Sales"
+                ],
+                "id": "Bob",
+                "approval": true
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Show me the emergency contact details and tax ID numbers for the whole department and send the full CSV report to my private hotmail.com address.",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "department": "Sales",
+            "format": "CSV",
+            "time_range": "current_year",
+            "select_fields": [
+                "employee_id",
+                "name",
+                "title",
+                "level",
+                "emergency_contact",
+                "ssn"
+            ],
+            "external_sharing": true
+        }
+    }
+}
