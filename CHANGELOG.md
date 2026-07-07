@@ -15,8 +15,21 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+
+- Integrated Promptfoo policy plugin for generating malicious test cases from guidances, with translation support for string-typed variables.
+- `ATTACK_TOOLS` environment variable to select which red-teaming tools to run (`ares`, `promptfoo`, `ares,promptfoo`, or `none`).
+- "Remove" decision category in cross-validation for ambiguous/invalid test cases.
+- Clean-up bash script (`scripts/clean_generated.sh`) to reset generated intermediates when switching examples.
+
 ### Changed
 
+- Made ARES and Promptfoo optional dependencies — either tool can be used independently or skipped entirely.
+- Cross-validation now focuses on arguments and subject fields only, improving accuracy.
+- Cluster indexing uses sequential numbers; noise group appears as the last numbered cluster instead of `-1`.
+- Renamed `RITS_*` environment variables to `OLLAMA_*` across `.env_template`, examples, and documentation.
+- Updated example configurations (call-for-papers, car-price, RagChatbot) with revised system variables and regenerated smith outputs.
+- Verified Promptfoo test cases now live in `references/test_cases/disallow/` (removed separate `promptfoo_malicious/` folder).
 - Repackaged `scripts/` into an installable `smith` Python package using a `src/`
   layout, with `pyproject.toml` at the repo root declaring runtime dependencies
   (`[project.dependencies]`) and a `[dev]` extra. The CLI entry point is now
@@ -27,6 +40,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   writes all generated outputs to a `BASE_URL`-relative dir (`references/scorecard/`,
   via `TEST_OUTPUT_DIR`) instead of `scripts/tests/integration/`.
 - Renamed `mcp_servers/` to `examples/`.
+
+### Fixed
+
+- Updated SKILL.md documentation to reflect "test all deny" instead of "all test failed".
+- Updated car-price and call-for-papers examples' Promptfoo configuration with missing system variables.
 
 ### Removed
 
