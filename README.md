@@ -50,8 +50,10 @@ If you are using Aider Desk: https://aiderdesk.hotovo.com/docs/features/skills
 - Python 3.11+
 - [uv](https://docs.astral.sh/uv/) (package management)
 - [OPA](https://www.openpolicyagent.org/) + [Regal](https://github.com/StyraInc/regal#getting-started) (policy testing / linting; OPA runs in Docker for the scorecard)
-- [ARES](https://github.com/IBM/ares) (red-teaming framework)
-- [Promptfoo](https://www.promptfoo.dev/) (red-teaming framework)
+- [ARES](https://github.com/IBM/ares) (red-teaming framework) — **optional**
+- [Promptfoo](https://www.promptfoo.dev/) (red-teaming framework) — **optional**
+
+Which red-teaming tools to use is controlled by the `ATTACK_TOOLS` environment variable (see [Configuration](#configuration)). Set to `none` to skip red-teaming entirely.
 
 **1. Python environment**
 
@@ -122,9 +124,9 @@ Fill in **every** placeholder value in `.env` before running Smith. The most imp
 | `OPENAI_BASE_URL` | Base URL for LLM API endpoint |
 | `MODEL_SONNET` | Model used across the pipelines (e.g., `GCP/claude-4-sonnet` by default) |
 | `AGENT_URL` | URL of the target agent server (must expose `/chat` and `/extract_tool_call`); default `http://localhost:9000` |
-| `RITS_MODEL` | Model name for the target agent's LLM (e.g., `qwen3.5:latest` for Ollama, or a RITS model name) |
-| `RITS_BASE_URL` | Base URL for the agent's LLM API (e.g., `http://localhost:11434/v1` for Ollama) |
-| `RITS_API_KEY` | API key for the agent's LLM (use `ollama` for local Ollama) |
+| `OLLAMA_MODEL` | Model name for the target agent's LLM (e.g., `qwen3.5:latest` for Ollama, or a RITS model name) |
+| `OLLAMA_BASE_URL` | Base URL for the agent's LLM API (e.g., `http://localhost:11434/v1` for Ollama) |
+| `OLLAMA_API_KEY` | API key for the agent's LLM (use `ollama` for local Ollama) |
 | `MCP_TRANSPORT` | MCP transport type: `sse` or `stdio` |
 | `MCP_URL` | MCP server URL (SSE transport only); default `http://localhost:8000/sse` |
 | `MCP_COMMAND` / `MCP_ARGS` / `MCP_CWD` | MCP launch command, args, and working dir (**stdio transport only** — see the commented examples in `.env_template`) |
@@ -132,7 +134,8 @@ Fill in **every** placeholder value in `.env` before running Smith. The most imp
 | `GUIDANCE_FILE` | Path to the policy guidance file, e.g., `examples/RagChatbot_MCPServer/smith/guidance.txt` |
 | `SYSTEM_VAR_FILE` | Path to the system-variables JSON (e.g., `examples/<agent>/smith/system_vars.json`). **Required** — test generation fails without it |
 | `PROMPTFOO_CONFIG_FILE` / `PROMPTFOO_OUTPUT_FILE` | Promptfoo red-team config and generated output paths |
-| `ARES_HOME` | Absolute path to the ARES installation directory (e.g., `/path/to/smith/src/smith/test_generation/ares`). Smith uses this to locate `ares/.venv/bin/ares` |
+| `ATTACK_TOOLS` | Comma-separated list of red-teaming tools to run during test generation. Valid values: `ares`, `promptfoo`, `ares,promptfoo`, `none`. Default: `ares,promptfoo` |
+| `ARES_HOME` | Absolute path to the ARES installation directory (e.g., `/path/to/smith/src/smith/test_generation/ares`). Only required when `ATTACK_TOOLS` includes `ares` |
 
 See `.env_template` for the full list, including model sampling (`TEMP`, `TOP_P`), test-case evaluation thresholds, and refinement/clustering parameters.
 
@@ -301,10 +304,11 @@ smith --flag duplication_suggestion # get both LLM and graph generated duplicati
 
 ```
 smith/
+├── .claude/                 # Claude Code agent configuration
 ├── assets/                  # Policy files and OPA data
 │   ├── policy.rego          # Target policy under management
 │   └── opa/                 # OPA intermediate results (AST, graphs, backups)
-├── examples/             # Agent examples
+├── examples/                # Agent examples
 ├── opa_policy/              # Skills related to OPA policy
 │   ├── policy_creation/     # OPA policy creation workflow
 │   ├── policy_cross_validation/ # Fix structural/syntax issues (0 cases or 100% fail)
@@ -313,6 +317,7 @@ smith/
 │   ├── policy_regal/        # Regal formatting workflow
 │   └── policy_duplication/  # Deduplication workflow
 ├── references/              # All intermediate results (incl. scorecard/ outputs)
+├── scripts/                 # Utility bash scripts (e.g. clean_generated.sh)
 ├── pyproject.toml           # Packaging, dependencies, ruff/black config
 ├── src/smith/               # The `smith` Python package
 │   ├── cli.py               # Main CLI entry point (smith.cli:main)

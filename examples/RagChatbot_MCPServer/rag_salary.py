@@ -18,7 +18,7 @@ Answer:
 """
 
 # The RAG pipeline (LLM + embedded PDF) is built lazily on first use so this
-# module imports cleanly without RITS_*/BASE_URL configured, and the heavy
+# module imports cleanly without OLLAMA_*/BASE_URL configured, and the heavy
 # embedding/PDF work only happens when a query is actually made.
 _chain = None
 _vector_store = None
@@ -28,9 +28,9 @@ def _build():
     global _chain, _vector_store
     if _chain is not None:
         return
-    api_key = os.getenv("RITS_API_KEY")
-    api_url = os.getenv("RITS_BASE_URL")
-    model = os.getenv("RITS_MODEL")
+    api_key = os.getenv("OLLAMA_API_KEY")
+    api_url = os.getenv("OLLAMA_BASE_URL")
+    model = os.getenv("OLLAMA_MODEL")
     base_url = os.getenv("BASE_URL", "")
 
     embeddings = HuggingFaceEmbeddings(model_name="BAAI/bge-small-en-v1.5")
