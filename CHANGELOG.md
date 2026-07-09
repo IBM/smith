@@ -27,7 +27,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Made ARES and Promptfoo optional dependencies — either tool can be used independently or skipped entirely.
 - Cross-validation now focuses on arguments and subject fields only, improving accuracy.
 - Cluster indexing uses sequential numbers; noise group appears as the last numbered cluster instead of `-1`.
-- Renamed `RITS_*` environment variables to `OLLAMA_*` across `.env_template`, examples, and documentation.
+- Renamed the target-agent LLM environment variables (`RITS_*`) to `INFERENCE_MODEL`/`INFERENCE_BASE_URL`/`INFERENCE_API_KEY` across `.env_template`, examples, and documentation. `OLLAMA_BASE_URL` (no `/v1` suffix) is now reserved solely for promptfoo's native ollama provider, resolving the previous duplicate-variable collision.
 - Updated example configurations (call-for-papers, car-price, RagChatbot) with revised system variables and regenerated smith outputs.
 - Verified Promptfoo test cases now live in `references/test_cases/disallow/` (removed separate `promptfoo_malicious/` folder).
 - Repackaged `scripts/` into an installable `smith` Python package using a `src/`

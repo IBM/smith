@@ -68,9 +68,9 @@ async def lifespan(app: FastAPI):
     )
     tools = await mcp_client.get_tools()
 
-    api_key = os.getenv("OLLAMA_API_KEY", "ollama")
-    api_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434/v1")
-    model = os.getenv("OLLAMA_MODEL", "qwen3.5:latest")
+    api_key = os.getenv("INFERENCE_API_KEY", "ollama")
+    api_url = os.getenv("INFERENCE_BASE_URL", "http://localhost:11434/v1")
+    model = os.getenv("INFERENCE_MODEL", "qwen3.5:latest")
 
     llm = ChatOpenAI(
         model=model,

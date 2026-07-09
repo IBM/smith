@@ -18,9 +18,9 @@ from contextlib import asynccontextmanager
 
 # Load .env
 load_dotenv()
-api_key = os.getenv("OLLAMA_API_KEY", "ollama")
-api_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434/v1")
-model = os.getenv("OLLAMA_MODEL", "qwen3.5:latest")
+api_key = os.getenv("INFERENCE_API_KEY", "ollama")
+api_url = os.getenv("INFERENCE_BASE_URL", "http://localhost:11434/v1")
+model = os.getenv("INFERENCE_MODEL", "qwen3.5:latest")
 
 client = OpenAI(api_key=api_key, base_url=api_url)
 

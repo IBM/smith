@@ -124,9 +124,10 @@ Fill in **every** placeholder value in `.env` before running Smith. The most imp
 | `OPENAI_BASE_URL` | Base URL for LLM API endpoint |
 | `MODEL_SONNET` | Model used across the pipelines (e.g., `GCP/claude-4-sonnet` by default) |
 | `AGENT_URL` | URL of the target agent server (must expose `/chat` and `/extract_tool_call`); default `http://localhost:9000` |
-| `OLLAMA_MODEL` | Model name for the target agent's LLM (e.g., `qwen3.5:latest` for Ollama, or a RITS model name) |
-| `OLLAMA_BASE_URL` | Base URL for the agent's LLM API (e.g., `http://localhost:11434/v1` for Ollama) |
-| `OLLAMA_API_KEY` | API key for the agent's LLM (use `ollama` for local Ollama) |
+| `INFERENCE_MODEL` | Model name for the target agent's LLM (e.g., `qwen3.5:latest` for Ollama, or a RITS model name) |
+| `INFERENCE_BASE_URL` | Base URL for the agent's LLM API (e.g., `http://localhost:11434/v1` for Ollama) |
+| `INFERENCE_API_KEY` | API key for the agent's LLM (use `ollama` for local Ollama) |
+| `OLLAMA_BASE_URL` | Base URL for promptfoo's native ollama provider during red-team generation (no `/v1` suffix); default `http://localhost:11434` |
 | `MCP_TRANSPORT` | MCP transport type: `sse` or `stdio` |
 | `MCP_URL` | MCP server URL (SSE transport only); default `http://localhost:8000/sse` |
 | `MCP_COMMAND` / `MCP_ARGS` / `MCP_CWD` | MCP launch command, args, and working dir (**stdio transport only** — see the commented examples in `.env_template`) |
