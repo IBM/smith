@@ -1,0 +1,18 @@
+baseURL = "https://IBM.github.io/smith/"
+defaultContentLanguageInSubdir = false
+title = "Smith Documentation"
+theme = "hugo-book"
+
+[params]
+  BookTheme = "auto"
+  BookToC = true
+  BookSection = "docs"
+  BookRepo = "https://github.com/IBM/smith"
+  BookSearch = true
+  BookComments = false
+
+[markup.goldmark.renderer]
+  unsafe = true
+
+[markup.highlight]
+  lineNos = false
