@@ -270,6 +270,8 @@ def run_validation(
     if tier2_escalate and api_key and openai_base_url and model:
         print(f"\nRunning Tier 3 (LLM judge) on {len(tier2_escalate)} cases...")
         judge = LLMJudge(api_key, openai_base_url, model, temp, top_p)
+        consecutive_failures = 0
+        max_consecutive_failures = 5
 
         for case, t2 in tier2_escalate:
             if max_llm_calls is not None and judge.call_count >= max_llm_calls:
@@ -292,6 +294,7 @@ def run_validation(
                 t3 = judge.evaluate(
                     case.user_input, case.guidance, case.action, case.label
                 )
+                consecutive_failures = 0
                 verdict = (
                     "correct"
                     if t3.predicted_label == normalize_label(case.label)
@@ -311,6 +314,7 @@ def run_validation(
                     )
                 )
             except Exception as e:
+                consecutive_failures += 1
                 results.append(
                     ValidationResult(
                         case_index=case.index,
@@ -324,8 +328,16 @@ def run_validation(
                         reason=f"LLM call failed: {str(e)[:100]}. Tier2: {t2.reason}",
                     )
                 )
-                print(f"  LLM call failed: {str(e)[:80]}. Falling back to Tier 2.")
-                break
+                print(
+                    f"  LLM call failed ({consecutive_failures}/{max_consecutive_failures}): "
+                    f"{str(e)[:80]}. Falling back to Tier 2."
+                )
+                if consecutive_failures >= max_consecutive_failures:
+                    print(
+                        f"  Aborting Tier 3: {max_consecutive_failures} consecutive "
+                        f"failures — LLM appears unavailable."
+                    )
+                    break
 
         print(f"  LLM calls made: {judge.call_count}")
     elif tier2_escalate:
