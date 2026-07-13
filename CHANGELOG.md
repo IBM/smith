@@ -19,6 +19,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 - Tier-3 label validation no longer aborts the entire loop on a single LLM error. Transient failures now fall back for that case and continue; the loop only aborts after 5 consecutive failures indicating the LLM is genuinely unavailable.
 - OPA scorecard no longer silently scores request failures as "deny". Added curl timeout (`--max-time 5`) and exit-code checking; failed requests are logged to `errors.txt` and excluded from TP/FP/TN/FN counts.
+- Updated SKILL.md documentation to reflect "test all deny" instead of "all test failed".
+- Updated car-price and call-for-papers examples' Promptfoo configuration with missing system variables.
 
 ### Added
 
@@ -36,6 +38,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Renamed the target-agent LLM environment variables (`RITS_*`) to `INFERENCE_MODEL`/`INFERENCE_BASE_URL`/`INFERENCE_API_KEY` across `.env_template`, examples, and documentation. `OLLAMA_BASE_URL` (no `/v1` suffix) is now reserved solely for promptfoo's native ollama provider, resolving the previous duplicate-variable collision.
 - Updated example configurations (call-for-papers, car-price, RagChatbot) with revised system variables and regenerated smith outputs.
 - Verified Promptfoo test cases now live in `references/test_cases/disallow/` (removed separate `promptfoo_malicious/` folder).
+
+## [0.1.1] - 2026-06-29
 - Repackaged `scripts/` into an installable `smith` Python package using a `src/`
   layout, with `pyproject.toml` at the repo root declaring runtime dependencies
   (`[project.dependencies]`) and a `[dev]` extra. The CLI entry point is now
@@ -46,11 +50,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   writes all generated outputs to a `BASE_URL`-relative dir (`references/scorecard/`,
   via `TEST_OUTPUT_DIR`) instead of `scripts/tests/integration/`.
 - Renamed `mcp_servers/` to `examples/`.
-
-### Fixed
-
-- Updated SKILL.md documentation to reflect "test all deny" instead of "all test failed".
-- Updated car-price and call-for-papers examples' Promptfoo configuration with missing system variables.
 
 ### Removed
 
