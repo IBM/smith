@@ -15,8 +15,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Tier-3 label validation no longer aborts the entire loop on a single LLM error. Transient failures now fall back for that case and continue; the loop only aborts after 5 consecutive failures indicating the LLM is genuinely unavailable.
+- OPA scorecard no longer silently scores request failures as "deny". Added curl timeout (`--max-time 5`) and exit-code checking; failed requests are logged to `errors.txt` and excluded from TP/FP/TN/FN counts.
+
 ### Added
 
+- Documentation site (Hugo) with guides for configuration, quickstart, policy creation, testing, refinement, cross-validation, Promptfoo integration, and contributing.
 - Integrated Promptfoo policy plugin for generating malicious test cases from guidances, with translation support for string-typed variables.
 - `ATTACK_TOOLS` environment variable to select which red-teaming tools to run (`ares`, `promptfoo`, `ares,promptfoo`, or `none`).
 - "Remove" decision category in cross-validation for ambiguous/invalid test cases.
