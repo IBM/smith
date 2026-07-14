@@ -395,9 +395,9 @@ def main():
 
         run_validation(
             test_cases_file=output_file_cases,
-            classified_promptfoo_file=output_file_classified
-            if "promptfoo" in attack_tools
-            else None,
+            classified_promptfoo_file=(
+                output_file_classified if "promptfoo" in attack_tools else None
+            ),
             output_file=validation_output,
             tier2_high_threshold=tier2_high,
             tier2_low_threshold=tier2_low,
