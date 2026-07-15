@@ -23,6 +23,8 @@ If the user asks to generate test cases, you should strictly follow instructions
 
 After completion, remind the user: “Test cases have been generated. Note that some generated cases may have incorrect labels (allow vs disallow). Next steps: If you already have a policy, run policy testing.”
 
+Adversarial (red-team) coverage depends on the `ATTACK_TOOLS` env var (ARES and/or Promptfoo; may be `none`). The CLI prints which tools were enabled vs skipped. If any attack tool was skipped, tell the user that adversarial coverage is reduced or absent, so “all tests passed” later reflects the legitimate cases only and not resistance to red-teaming.
+
 ## Test Existing Policy
 If the user asks to test an existing policy, you should run `smith --flag policy_testing`.
 

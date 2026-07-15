@@ -67,7 +67,7 @@ def load_generated_cases(path: str) -> List[EvalCase]:
     return cases
 
 
-def load_promptfoo_cases(classified_path) -> List[EvalCase]:
+def load_promptfoo_cases(classified_path: Optional[str]) -> List[EvalCase]:
     if not classified_path:
         return []
     with open(classified_path, "r") as f:
@@ -100,7 +100,7 @@ def load_promptfoo_cases(classified_path) -> List[EvalCase]:
 
 def run_validation(
     test_cases_file: str,
-    classified_promptfoo_file: str,
+    classified_promptfoo_file: Optional[str],
     output_file: str,
     tier2_high_threshold: float = 0.85,
     tier2_low_threshold: float = 0.60,
@@ -110,6 +110,7 @@ def run_validation(
     model: str = "",
     temp: float = 0.2,
     top_p: float = 0.9,
+    max_consecutive_llm_failures: int = 5,
 ):
     print("Loading cases...")
     generated_cases = load_generated_cases(test_cases_file)
@@ -271,9 +272,9 @@ def run_validation(
         print(f"\nRunning Tier 3 (LLM judge) on {len(tier2_escalate)} cases...")
         judge = LLMJudge(api_key, openai_base_url, model, temp, top_p)
         consecutive_failures = 0
-        max_consecutive_failures = 5
+        max_consecutive_failures = max_consecutive_llm_failures
 
-        for case, t2 in tier2_escalate:
+        for i, (case, t2) in enumerate(tier2_escalate):
             if max_llm_calls is not None and judge.call_count >= max_llm_calls:
                 results.append(
                     ValidationResult(
@@ -337,6 +338,26 @@ def run_validation(
                         f"  Aborting Tier 3: {max_consecutive_failures} consecutive "
                         f"failures — LLM appears unavailable."
                     )
+                    # Record the un-iterated cases as uncertain so they still
+                    # appear in results (and in the metrics denominator) rather
+                    # than silently vanishing when the loop breaks early.
+                    for rem_case, rem_t2 in tier2_escalate[i + 1 :]:
+                        results.append(
+                            ValidationResult(
+                                case_index=rem_case.index,
+                                source=rem_case.source,
+                                guidance=rem_case.guidance,
+                                assigned_label=rem_case.label,
+                                predicted_label=rem_t2.predicted_label,
+                                verdict="uncertain",
+                                confidence=rem_t2.confidence,
+                                evaluation_tier="embedding",
+                                reason=(
+                                    f"Tier 3 aborted after {max_consecutive_failures} "
+                                    f"consecutive LLM failures. Tier2: {rem_t2.reason}"
+                                ),
+                            )
+                        )
                     break
 
         print(f"  LLM calls made: {judge.call_count}")

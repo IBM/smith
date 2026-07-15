@@ -82,6 +82,16 @@ def read_files(file_path, command_dict):
     return commands, command_dict
 
 
+def _ordered_cluster_labels(cluster_dict):
+    """Order DBSCAN labels so the noise group (-1) sorts last.
+
+    Real clusters keep ascending order; the noise group, if present, comes
+    after them so it can be renumbered as the final sequential cluster rather
+    than displayed as -1.
+    """
+    return sorted(cluster_dict, key=lambda label: (label == -1, label))
+
+
 def cluster_commands(cluster_results, test_path, eps=0.3, min_samples=2):
     commands_fp = []
     commands_fn = []
@@ -106,9 +116,7 @@ def cluster_commands(cluster_results, test_path, eps=0.3, min_samples=2):
             if label not in cluster_dict.keys():
                 cluster_dict[label] = []
             cluster_dict[label].append(command)
-        sorted_labels = sorted(k for k in cluster_dict.keys() if k != -1) + (
-            [-1] if -1 in cluster_dict else []
-        )
+        sorted_labels = _ordered_cluster_labels(cluster_dict)
         # Renumber sequentially so the noise group (-1), which is sorted last,
         # is displayed as the number after the real clusters rather than as -1.
         for display_id, label in enumerate(sorted_labels):
@@ -137,9 +145,7 @@ def cluster_commands(cluster_results, test_path, eps=0.3, min_samples=2):
             if label not in cluster_dict.keys():
                 cluster_dict[label] = []
             cluster_dict[label].append(command)
-        sorted_labels = sorted(k for k in cluster_dict.keys() if k != -1) + (
-            [-1] if -1 in cluster_dict else []
-        )
+        sorted_labels = _ordered_cluster_labels(cluster_dict)
         # Renumber sequentially (offset by the benign clusters) so the noise
         # group (-1), sorted last, is displayed as the number after the real
         # clusters rather than as a shifted -1.

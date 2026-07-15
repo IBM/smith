@@ -123,6 +123,33 @@ class BlueAgent:
         return run_policy_evaluation(self.base_url, self.test_results_path)
 
 
+VALID_ATTACK_TOOLS = {"ares", "promptfoo", "none"}
+
+
+def resolve_attack_tools():
+    """Parse and validate the ATTACK_TOOLS env var.
+
+    Returns the set of enabled attack tools (never contains "none"). Exits with
+    an actionable error on unrecognized tokens so a typo cannot silently disable
+    red-teaming, and prints which tools are enabled vs skipped so a
+    config-driven skip is distinguishable from a tool that produced no cases.
+    """
+    raw = os.getenv("ATTACK_TOOLS", "ares,promptfoo")
+    tools = {t.strip().lower() for t in raw.split(",") if t.strip()}
+    unknown = tools - VALID_ATTACK_TOOLS
+    if unknown:
+        print(
+            f"ERROR: unknown ATTACK_TOOLS value(s): {', '.join(sorted(unknown))}. "
+            "Valid values: ares, promptfoo, none (comma-separated).",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    tools.discard("none")
+    for tool in ("ares", "promptfoo"):
+        print(f"  ATTACK_TOOLS: {tool} {'enabled' if tool in tools else 'skipped'}")
+    return tools
+
+
 def generate_test(
     base_url,
     system_variables,
@@ -200,10 +227,7 @@ def generate_test(
         batch_processing,
         batch_size=case_generation_batch_size,
     )
-    attack_tools = {
-        t.strip().lower()
-        for t in os.getenv("ATTACK_TOOLS", "ares,promptfoo").split(",")
-    }
+    attack_tools = resolve_attack_tools()
 
     if "ares" in attack_tools:
         attack(
@@ -370,10 +394,7 @@ def main():
         run_extract_tool_args(test_case_path, agent_url)
 
     if args.flag == "test_case_evaluation":
-        attack_tools = {
-            t.strip().lower()
-            for t in os.getenv("ATTACK_TOOLS", "ares,promptfoo").split(",")
-        }
+        attack_tools = resolve_attack_tools()
 
         # Step 1: Classify promptfoo cases to match them to guidance
         if "promptfoo" in attack_tools:

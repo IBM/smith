@@ -25,6 +25,9 @@ mkdir -p "$OUT_DIR/coverage"
 export SMITH_SCORECARD_DIR="$OUT_DIR"
 
 OPA_URL="${SMITH_OPA_URL:-localhost:8181}"
+# Per-request OPA timeout (seconds). Bump for cold starts / large policies /
+# CPU-starved CI runners so slow-but-valid responses aren't dropped as errors.
+OPA_TIMEOUT="${SMITH_OPA_TIMEOUT:-5}"
 
 DIRS_TO_TEST=(
     "$ROOT/references/test_cases/allow"
@@ -59,7 +62,7 @@ for BASE_INPUT_DIR in "${DIRS_TO_TEST[@]}"; do
             EXPECTED_ALLOW="true"
         fi
 
-        if ! RESPONSE=$(curl -sf --max-time 5 -X POST "$OPA_URL/v1/data/mcp/policies/allow" \
+        if ! RESPONSE=$(curl -sf --max-time "$OPA_TIMEOUT" -X POST "$OPA_URL/v1/data/mcp/policies/allow" \
             -H "Content-Type: application/json" \
             --data @"$FILE"); then
             echo "  ERROR: OPA request failed for $FILE (server down or timeout)" >&2
