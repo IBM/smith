@@ -18,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please pull up salary details and home address information for my direct reports",
+                "input": "Show me salary details and where each employee lives",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -29,13 +29,18 @@
             }
         },
         "arguments": {
-            "department": "Sales",
+            "department": "IT",
+            "format": "JSON",
+            "id": "None",
+            "include_benefits": true,
             "select_fields": [
-                "employee_name",
+                "employee_id",
+                "name",
+                "title",
                 "base_salary",
                 "home_address"
             ],
-            "include_benefits": false
+            "time_range": "last_quarter"
         }
     }
 }

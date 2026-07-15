@@ -1,0 +1,45 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "get_events",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "user_name": "Bob",
+                "user_role": [
+                    "faculty"
+                ],
+                "queries_this_session": 1,
+                "dissertation_area": "Artificial intelligence",
+                "research_area": [
+                    "Artificial intelligence",
+                    "Cybersecurity and privacy",
+                    "Software engineering"
+                ]
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Find events in Artificial intelligence, Cybersecurity and privacy, and Software engineering",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "keywords": "Artificial intelligence AI deep learning neural networks machine learning natural language processing computer vision multimodal learning reinforcement learning knowledge reasoning planning decision making generative foundation transformers embeddings semantic representation multi-modal large language models synthetic data privacy safety explainability interpretability ethics fairness robustness scalability efficiency optimization sampling in-context chain reaction few-shot meta prompt engineering retrieval augmented generation hallucinations alignment benchmarking evaluation metrics datasets corpora benchmarks",
+            "topic": "Artificial intelligence",
+            "limit": 20
+        }
+    }
+}

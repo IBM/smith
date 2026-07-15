@@ -12,12 +12,6 @@
                     "phd_student",
                     "guest"
                 ],
-                "user_id": "bob@university.edu",
-                "department": [
-                    "computer_science",
-                    "electrical_engineering",
-                    "multidisciplinary"
-                ],
                 "queries_this_session": 1,
                 "dissertation_area": "Artificial intelligence",
                 "research_area": [
@@ -34,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I'm interested in conferences about quantum physics theories",
+                "input": "I need events with drug discovery in the keywords list",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -45,9 +39,8 @@
             }
         },
         "arguments": {
-            "keywords": "quantum physics quantum theory",
-            "topic": "Artificial intelligence",
-            "limit": 20
+            "keywords": "drug discovery",
+            "topic": "Artificial intelligence"
         }
     }
 }

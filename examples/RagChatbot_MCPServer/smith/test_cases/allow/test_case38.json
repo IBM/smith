@@ -7,9 +7,8 @@
             "subject": {
                 "claims": {},
                 "roles": [
-                    "employee"
-                ],
-                "approval": true
+                    "manager"
+                ]
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -19,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need to buy a new laptop costing $800",
+                "input": "I need to purchase office equipment for $750",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,10 +29,10 @@
             }
         },
         "arguments": {
-            "amount": 800,
-            "product_name": "laptop",
-            "category": "electronics",
-            "justification": "Replacement for outdated work device"
+            "amount": 750,
+            "product_name": "office equipment",
+            "category": "office_supplies",
+            "justification": "Office equipment purchase for department needs"
         }
     }
 }

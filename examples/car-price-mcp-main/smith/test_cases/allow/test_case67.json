@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I want to see all motorcycles in the system",
+                "input": "Could you fetch the motorcycles vehicle information?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

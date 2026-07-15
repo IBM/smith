@@ -31,8 +31,8 @@
         "arguments": {
             "format": "CSV",
             "time_range": "last_quarter",
-            "export_type": "aggregated",
-            "business_justification": "Team compensation review"
+            "external_sharing": false,
+            "select_fields": []
         }
     }
 }

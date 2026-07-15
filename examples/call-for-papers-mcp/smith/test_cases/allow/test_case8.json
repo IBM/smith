@@ -8,15 +8,15 @@
                 "claims": {},
                 "user_name": "Bob",
                 "user_role": [
-                    "faculty"
-                ],
-                "user_id": "bob@university.edu",
-                "department": [
-                    "multidisciplinary"
+                    "faculty",
+                    "phd_student",
+                    "guest"
                 ],
                 "queries_this_session": 1,
                 "dissertation_area": "Artificial intelligence",
                 "research_area": [
+                    "Artificial intelligence",
+                    "Cybersecurity and privacy",
                     "Software engineering"
                 ]
             },
@@ -40,8 +40,7 @@
         },
         "arguments": {
             "keywords": "artificial intelligence",
-            "topic": "Artificial intelligence",
-            "limit": 10
+            "topic": "Artificial intelligence"
         }
     }
 }

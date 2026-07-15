@@ -15,10 +15,16 @@ def build_visualization(
 ):
     with open(test_cases_file, "r") as f:
         test_cases = json.load(f)
-    with open(attack_file, "r") as f:
-        attack_cases = json.load(f)
-    with open(promptfoo_classified_file, "r") as f:
-        promptfoo_cases = json.load(f)
+    if attack_file:
+        with open(attack_file, "r") as f:
+            attack_cases = json.load(f)
+    else:
+        attack_cases = []
+    if promptfoo_classified_file:
+        with open(promptfoo_classified_file, "r") as f:
+            promptfoo_cases = json.load(f)
+    else:
+        promptfoo_cases = []
 
     # Load validation results for confidence scores
     validation_map = {}

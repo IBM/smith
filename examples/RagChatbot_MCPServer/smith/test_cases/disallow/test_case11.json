@@ -10,7 +10,7 @@
                     "manager"
                 ],
                 "teams": [
-                    "Operations"
+                    "Marketing"
                 ]
             },
             "headers": {
@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Show me what bonuses were given to the HR team",
+                "input": "Show me the bonus information for employees in the HR team",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -35,10 +35,10 @@
             "department": "HR",
             "select_fields": [
                 "employee_name",
+                "title",
+                "bonus_target",
                 "actual_bonus_2024"
             ],
-            "time_range": "last_quarter",
-            "format": "JSON",
             "include_benefits": false
         }
     }

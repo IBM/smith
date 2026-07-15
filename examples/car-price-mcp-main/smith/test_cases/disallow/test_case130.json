@@ -8,11 +8,7 @@
                 "claims": {},
                 "user_name": "Bob",
                 "user_role": [
-                    "fleet_manager",
-                    "consumer",
-                    "journalist",
-                    "analyst",
-                    "guest"
+                    "supervisor"
                 ]
             },
             "headers": {
@@ -23,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you get me a list of car brands?",
+                "input": "I want to get a list of all car brands",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

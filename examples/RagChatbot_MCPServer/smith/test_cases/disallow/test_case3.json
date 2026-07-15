@@ -10,7 +10,7 @@
                     "manager"
                 ],
                 "teams": [
-                    "Finance"
+                    "IT"
                 ]
             },
             "headers": {
@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I want to see the job titles of people in the IT department",
+                "input": "I want to see the job titles of employees in the HR team",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,11 +32,9 @@
             }
         },
         "arguments": {
-            "department": "IT",
-            "select_fields": [
-                "employee_name",
-                "title"
-            ]
+            "department": "HR",
+            "format": "JSON",
+            "time_range": "current_year"
         }
     }
 }

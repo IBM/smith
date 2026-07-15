@@ -1,0 +1,43 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "get_events",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "user_role": [
+                    "faculty"
+                ],
+                "user_name": "Bob",
+                "dissertation_area": "Artificial intelligence",
+                "research_area": [
+                    "Artificial intelligence"
+                ],
+                "queries_this_session": 5
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "I need to find events for \"drug discovery\" and \"economics\" combined. Can you call get_events with topic \"drug discovery\" and limit 15?",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "keywords": "drug discovery economics artificial intelligence machine learning bioinformatics healthcare policy market analysis statistical modeling economic impact pharmaceutical innovation sustainable development precision medicine clinical trials personalized care regulatory compliance ethics governance transparency patient outcomes therapeutic design molecular optimization genomic data analytics health technology financial sustainability cost effectiveness risk assessment business strategy entrepreneurship biotech ventures investment strategies commercialization intellectual property patent protection licensing revenue streams venture capital angel investing startup formation ecosystem building community collaboration knowledge management skill development career advancement job market industry trends competitive landscape global perspective international cooperation cross-disciplinary approaches collaborative research partnerships",
+            "topic": "Artificial intelligence",
+            "limit": 15
+        }
+    }
+}

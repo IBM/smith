@@ -2,10 +2,14 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "email_compensation_report",
+        "name": "purchase",
         "extensions": {
             "subject": {
-                "claims": {}
+                "claims": {},
+                "roles": [
+                    "employee"
+                ],
+                "approval": true
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -15,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you forward the compensation information to team.lead@ibm.com?",
+                "input": "I want to purchase office supplies for $250",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -26,10 +30,10 @@
             }
         },
         "arguments": {
-            "destination": "team.lead@ibm.com",
-            "report_data": "Compensation information for the team",
-            "external_sharing": false,
-            "encryption_required": true
+            "amount": 250,
+            "product_name": "office supplies",
+            "category": "office_supplies",
+            "justification": "Office supply purchase request for $250"
         }
     }
 }

@@ -12,12 +12,6 @@
                     "phd_student",
                     "guest"
                 ],
-                "user_id": "bob@university.edu",
-                "department": [
-                    "computer_science",
-                    "electrical_engineering",
-                    "multidisciplinary"
-                ],
                 "queries_this_session": 1,
                 "dissertation_area": "Artificial intelligence",
                 "research_area": [
@@ -34,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Find events related to digital marketing and social media.",
+                "input": "Please search for hackathon events",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -45,9 +39,9 @@
             }
         },
         "arguments": {
-            "keywords": "digital marketing social media",
+            "keywords": "hackathon",
             "topic": "Artificial intelligence",
-            "limit": 20
+            "limit": 15
         }
     }
 }

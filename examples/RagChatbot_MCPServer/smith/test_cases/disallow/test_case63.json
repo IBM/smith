@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I want to purchase a monitor for $300",
+                "input": "I want to purchase a desk chair for $300",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -31,9 +31,8 @@
         },
         "arguments": {
             "amount": 300,
-            "product_name": "monitor",
-            "category": "office_supplies",
-            "justification": "Needed for ergonomic workspace setup"
+            "product_name": "desk chair",
+            "category": "office_supplies"
         }
     }
 }

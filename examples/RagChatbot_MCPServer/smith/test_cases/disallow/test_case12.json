@@ -10,7 +10,7 @@
                     "manager"
                 ],
                 "teams": [
-                    "Legal"
+                    "Finance"
                 ]
             },
             "headers": {
@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I want to see the department information for Sales team members",
+                "input": "I want to see the department information for the Legal team",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,17 +32,7 @@
             }
         },
         "arguments": {
-            "department": "Sales",
-            "select_fields": [
-                "employee_name",
-                "title",
-                "department",
-                "level",
-                "hire_date"
-            ],
-            "time_range": "current_year",
-            "format": "JSON",
-            "include_benefits": false
+            "department": "Legal"
         }
     }
 }

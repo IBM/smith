@@ -31,9 +31,9 @@
         },
         "arguments": {
             "amount": 500,
-            "product_name": "software licenses",
+            "product_name": "Software Licenses",
             "category": "software",
-            "justification": "Needed for team productivity and project delivery"
+            "justification": "Purchase request for software licenses worth $500. Employee has been authorized to proceed with this procurement request following company purchasing policy requirements and budget approval processes. Additional justification: Software tools needed for team productivity and workflow improvements will be provided through official vendor channels to ensure license compliance, ongoing support coverage, and proper access management."
         }
     }
 }

@@ -18,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Could you provide the team's compensation information as a JSON file?",
+                "input": "Generate a JSON export of our team's compensation details",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,9 +30,10 @@
         },
         "arguments": {
             "format": "JSON",
+            "select_fields": "None",
             "time_range": "last_quarter",
-            "export_type": "aggregated",
-            "business_justification": "Team compensation review"
+            "external_sharing": false,
+            "business_justification": ""
         }
     }
 }

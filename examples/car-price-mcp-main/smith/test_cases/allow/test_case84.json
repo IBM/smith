@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Search car prices for MAN brand",
+                "input": "Search for MAN brand car prices",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

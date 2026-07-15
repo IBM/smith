@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need to retrieve all vehicles of type motos",
+                "input": "Can you retrieve all motos vehicles for me?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

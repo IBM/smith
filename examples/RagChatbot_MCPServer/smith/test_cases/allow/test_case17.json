@@ -33,11 +33,14 @@
         },
         "arguments": {
             "department": "Sales",
+            "id": "",
             "select_fields": [
                 "employee_name",
                 "hire_date"
             ],
-            "format": "JSON"
+            "time_range": "current_year",
+            "format": "JSON",
+            "include_benefits": false
         }
     }
 }

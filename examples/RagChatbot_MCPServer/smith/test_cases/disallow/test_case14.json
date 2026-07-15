@@ -10,7 +10,7 @@
                     "manager"
                 ],
                 "teams": [
-                    "IT"
+                    "Legal"
                 ]
             },
             "headers": {
@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I'd like to review the departmental assignments for Operations team",
+                "input": "Display the departmental assignments for the Finance team",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,14 +32,12 @@
             }
         },
         "arguments": {
-            "department": "Operations",
+            "department": "Finance",
             "select_fields": [
                 "employee_name",
                 "title",
-                "department",
                 "level"
-            ],
-            "format": "JSON"
+            ]
         }
     }
 }

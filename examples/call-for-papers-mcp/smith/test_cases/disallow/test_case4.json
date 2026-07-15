@@ -10,12 +10,6 @@
                 "user_role": [
                     "faculty"
                 ],
-                "user_id": "bob@university.edu",
-                "department": [
-                    "computer_science",
-                    "electrical_engineering",
-                    "multidisciplinary"
-                ],
                 "queries_this_session": 1,
                 "dissertation_area": "Artificial intelligence",
                 "research_area": [
@@ -32,7 +26,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please show me 50 events",
+                "input": "Please show me 25 events",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -43,9 +37,9 @@
             }
         },
         "arguments": {
-            "keywords": "artificial intelligence",
+            "keywords": "Artificial Intelligence",
             "topic": "Artificial intelligence",
-            "limit": 50
+            "limit": 25
         }
     }
 }

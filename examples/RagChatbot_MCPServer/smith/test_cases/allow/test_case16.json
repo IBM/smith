@@ -33,11 +33,13 @@
         },
         "arguments": {
             "department": "HR",
+            "format": "JSON",
+            "id": "None",
+            "include_benefits": false,
             "select_fields": [
-                "employee_name",
                 "hire_date"
             ],
-            "format": "JSON"
+            "time_range": "last_quarter"
         }
     }
 }

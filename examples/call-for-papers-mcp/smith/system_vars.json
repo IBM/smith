@@ -1,12 +1,11 @@
 {
   "action_list": ["get_events", "other"],
   "action_description": {
-    "get_events": "Searches WikiCFP for academic conferences matching given keywords. Returns event name, description, dates, location, deadline, and link. Accepts 'keywords' (string, required) and 'limit' (integer, default 10)."
+    "get_events": "Searches WikiCFP for academic conferences matching given keywords. Returns event name, description, dates, location, deadline, and link. Accepts 'keywords' (string, required) and 'limit' (integer, default 10).",
+    "other": "other general Q&A"
   },
   "user_name": "Bob",
   "user_role": ["faculty", "phd_student", "guest"],
-  "user_id": "bob@university.edu",
-  "department": ["computer_science", "electrical_engineering", "multidisciplinary"],
   "queries_this_session": 1,
   "dissertation_area": "Artificial intelligence",
   "research_area": ["Artificial intelligence", "Cybersecurity and privacy", "Software engineering"]

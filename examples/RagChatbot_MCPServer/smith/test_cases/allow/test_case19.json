@@ -18,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you help me download the salary information for my team in CSV format?",
+                "input": "Can you generate a CSV export of the salary information for my team?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -29,10 +29,7 @@
             }
         },
         "arguments": {
-            "format": "CSV",
-            "time_range": "last_quarter",
-            "export_type": "aggregated",
-            "business_justification": "Manager requesting team compensation data for quarterly review"
+            "format": "CSV"
         }
     }
 }

@@ -18,29 +18,30 @@ import os
 import httpx
 from openai import OpenAI
 
-SYSTEM_PROMPT = """You are a policy test case auditor. Your job is to determine whether a failed test case is mislabeled or if the policy has a bug.
+SYSTEM_PROMPT = """You are a policy test case auditor. Your job is to determine whether a failed test case is mislabeled, if the policy has a bug, or if the test case is invalid.
 
 You will be given:
 1. The policy guidance rules (the source of truth)
 2. The system variables and their possible values
 3. A test case that FAILED policy testing (the policy decision did not match the expected label)
 
-For each failed test case, analyze:
-- The user's role and the tool being called
-- The arguments being passed
-- Whether the guidance allows or denies this specific combination
+IMPORTANT — Decision rules:
+Your allow/deny decision MUST be based exclusively on the `arguments` and `subject` (system variables) fields. Do NOT use the `agent input` (user prompt) to determine allow/deny.
 
-Then determine:
-- If the test case label is WRONG (mislabeled during generation), OR
-- If the test case label is CORRECT but the policy has a bug
+For each test case:
+1. Based on `arguments` and `subject` only, should this request be allowed or denied per the guidance?
+2. Does the label match your decision?
+   - If yes → "keep" (policy has a bug)
+   - If no → "move_to_allow" or "move_to_disallow" (mislabeled)
+3. If you are unsure about your decision → "remove" (test generation error)
 
 Respond ONLY in JSON format:
-{"label_correct": true/false, "confidence": 0.0 to 1.0, "reason": "brief explanation of why the label is correct or incorrect based on the guidance", "suggested_action": "keep" or "move_to_allow" or "move_to_disallow" or "remove"}
+{"label_correct": true/false, "confidence": 0.0 to 1.0, "reason": "brief explanation based on arguments and subject fields", "suggested_action": "keep" or "move_to_allow" or "move_to_disallow" or "remove"}
 
-- "keep" = the label is correct, the policy needs fixing
-- "move_to_allow" = the case is mislabeled, it should be in the allow folder
-- "move_to_disallow" = the case is mislabeled, it should be in the disallow folder
-- "remove" = the case is ambiguous or invalid, best to remove it"""
+- "keep" = the label is correct based on structured data, the policy needs fixing
+- "move_to_allow" = the case is mislabeled, structured data shows it should be allowed
+- "move_to_disallow" = the case is mislabeled, structured data shows it should be denied
+- "remove" = unsure about the decision, likely a test generation error"""
 
 
 USER_PROMPT_TEMPLATE = """## Guidance Rules
@@ -54,13 +55,16 @@ File: {file_path}
 Expected label: {expected_label} (based on folder: allow/ or disallow/)
 Actual policy decision: {actual_decision}
 
-Test case content:
+### Structured Data (decide based on these FIRST):
 - Tool: {tool_name}
 - User role: {user_role}
 - Arguments: {arguments}
-- Agent input (user prompt): {agent_input}
+- Subject: {subject}
 
-Based on the guidance rules above, is the expected label ("{expected_label}") correct for this test case?"""
+### Agent Input (use ONLY if structured data is insufficient):
+{agent_input}
+
+Based on the guidance rules, should this request be allowed or denied? Decide based on the arguments and subject first. Is the expected label ("{expected_label}") correct?"""
 
 
 def parse_failures(failures_file):
@@ -103,6 +107,7 @@ def load_test_case(path):
         "tool_name": inp.get("name", "unknown"),
         "user_role": subject.get("user_role", []),
         "arguments": inp.get("arguments", {}),
+        "subject": subject,
         "agent_input": agent.get("input", ""),
     }
 
@@ -168,6 +173,7 @@ def cross_validate_failed_cases(
             tool_name=case_data["tool_name"],
             user_role=case_data["user_role"],
             arguments=json.dumps(case_data["arguments"]),
+            subject=json.dumps(case_data["subject"]),
             agent_input=case_data["agent_input"][:500],
         )
 

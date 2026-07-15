@@ -8,11 +8,7 @@
                 "claims": {},
                 "user_name": "Bob",
                 "user_role": [
-                    "fleet_manager",
-                    "consumer",
-                    "journalist",
-                    "analyst",
-                    "guest"
+                    "fleet_manager"
                 ]
             },
             "headers": {

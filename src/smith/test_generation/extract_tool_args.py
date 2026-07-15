@@ -35,7 +35,6 @@ def run_extract_tool_args(test_case_path, agent_url):
             if test_case["input"].get("name", "").lower() == "other":
                 dest = os.path.join(generated_label_path, os.path.basename(file_path))
                 os.rename(file_path, dest)
-                # print(f"  [OTHER] Moved {file_path} -> {dest}")
 
     for label in labels:
         label_path = os.path.join(test_case_path, label, "*")
@@ -64,14 +63,21 @@ def run_extract_tool_args(test_case_path, agent_url):
             tool_name = result.get("tool_name", "other")
             tool_args = result.get("arguments", {})
             assigned_tool = test_case["input"]["name"]
+            is_promptfoo = assigned_tool.lower() == "promptfoo"
             total_processed += 1
+            test_case["input"]["name"] = tool_name
+            test_case["input"]["arguments"] = tool_args
+            with open(file_path, "w") as f:
+                json.dump(test_case, f, indent=4)
 
-            if assigned_tool.lower() == "promptfoo":
-                test_case["input"]["name"] = tool_name
-                test_case["input"]["arguments"] = tool_args
-                with open(file_path, "w") as f:
-                    json.dump(test_case, f, indent=4)
-            elif tool_name != assigned_tool:
+            is_other = tool_name.lower() == "other"
+            if is_promptfoo:
+                if is_other:
+                    dest = os.path.join(
+                        generated_cases_path, label, os.path.basename(file_path)
+                    )
+                    os.rename(file_path, dest)
+            elif is_other or tool_name != assigned_tool:
                 miscalled_cases.append(
                     {
                         "file_path": file_path,
@@ -89,10 +95,6 @@ def run_extract_tool_args(test_case_path, agent_url):
                     misclassified_path, label, os.path.basename(file_path)
                 )
                 os.rename(file_path, dest)
-            else:
-                test_case["input"]["arguments"] = tool_args
-                with open(file_path, "w") as f:
-                    json.dump(test_case, f, indent=4)
 
     miscalled_output = os.path.join(test_case_path, "miscalled_cases.json")
     with open(miscalled_output, "w") as f:

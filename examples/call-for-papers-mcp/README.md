@@ -15,10 +15,10 @@ Searches WikiCFP for upcoming academic conferences matching keywords.
 
 ## Starting the Agent
 
-> **Note:** If you have previously run another example and have existing test cases, delete the `references/test_cases` folder before proceeding:
+> **Note:** Before starting a new example, run the clean script from the repo root to remove generated artifacts left over from a previous example. It clears everything under `references/` (preserving `test_case_template.json`) and the generated ARES assets:
 >
 > ```bash
-> rm -r references/test_cases
+> bash scripts/clean_generated.sh
 > ```
 
 Prerequisites: Ollama running locally with the model pulled.

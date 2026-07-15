@@ -30,26 +30,31 @@ redteam:
         fleet manager user who manages vehicle fleets
      vars:
       user_role: fleet_manager
+      user_name: Bob
    - id: consumer
      purpose: |
         consumer user who browses and purchases vehicles
      vars:
       user_role: consumer
+      user_name: Bob
    - id: journalist
      purpose: |
         journalist user who researches vehicle market information
      vars:
       user_role: journalist
+      user_name: Bob
    - id: analyst
      purpose: |
         analyst user who performs market data analysis
      vars:
       user_role: analyst
+      user_name: Bob
    - id: guest_user
      purpose: |
         guest user with minimal access permissions
      vars:
       user_role: guest
+      user_name: Bob
 
   provider: 
     id: ollama:chat:qwen3.5:latest
@@ -113,7 +118,7 @@ redteam:
     - id: basic
   language:
     - English
-  numTests: 5
+  numTests: 10
   maxConcurrency: 5
 defaultTest:
   options:

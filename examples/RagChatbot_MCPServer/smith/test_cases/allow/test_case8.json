@@ -33,7 +33,7 @@
         },
         "arguments": {
             "department": "HR",
-            "include_benefits": false
+            "time_range": "current_year"
         }
     }
 }

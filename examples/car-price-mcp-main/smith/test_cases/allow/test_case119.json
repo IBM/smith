@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you help me find Jeep vehicle pricing data?",
+                "input": "Can you help me find Jeep vehicle pricing?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

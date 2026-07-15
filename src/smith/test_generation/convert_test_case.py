@@ -41,8 +41,10 @@ def translate_case(
     with open(output_file_cases, "r") as f:
         test_cases = json.load(f)
 
-    test_cases = merge_with_ares(test_cases, output_file_attack)
-    test_cases = merge_with_promptfoo(test_cases, output_file_attack_promptfoo)
+    if output_file_attack:
+        test_cases = merge_with_ares(test_cases, output_file_attack)
+    if output_file_attack_promptfoo:
+        test_cases = merge_with_promptfoo(test_cases, output_file_attack_promptfoo)
 
     test_case_template = {}
     for test_case in test_cases:
@@ -98,14 +100,19 @@ def merge_with_promptfoo(test_cases, output_file_attack_promptfoo):
 def test_case_field_mapping(test_cases_translated, output_file_ready_cases):
     for condition in test_cases_translated.keys():
         test_cases = test_cases_translated[condition]
+        output_dir = "disallow" if condition == "promptfoo_malicious" else condition
+        prefix = (
+            "promptfoo_test_case" if condition == "promptfoo_malicious" else "test_case"
+        )
         for test_case_index in range(len(test_cases)):
             test_case_template_final = {}
             test_case_template_final["input"] = test_cases[test_case_index]
-            os.makedirs(output_file_ready_cases + condition, exist_ok=True)
+            os.makedirs(output_file_ready_cases + output_dir, exist_ok=True)
             with open(
                 output_file_ready_cases
-                + condition
-                + "/test_case"
+                + output_dir
+                + "/"
+                + prefix
                 + str(test_case_index)
                 + ".json",
                 "w",

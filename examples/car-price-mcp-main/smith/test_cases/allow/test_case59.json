@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please get vehicle data for carros type",
+                "input": "Please retrieve all carros from the vehicle system",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

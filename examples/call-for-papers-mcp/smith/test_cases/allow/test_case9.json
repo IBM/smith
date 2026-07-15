@@ -8,16 +8,16 @@
                 "claims": {},
                 "user_name": "Bob",
                 "user_role": [
-                    "faculty"
-                ],
-                "user_id": "bob@university.edu",
-                "department": [
-                    "computer_science"
+                    "faculty",
+                    "phd_student",
+                    "guest"
                 ],
                 "queries_this_session": 1,
                 "dissertation_area": "Artificial intelligence",
                 "research_area": [
-                    "Cybersecurity and privacy"
+                    "Artificial intelligence",
+                    "Cybersecurity and privacy",
+                    "Software engineering"
                 ]
             },
             "headers": {
@@ -39,9 +39,9 @@
             }
         },
         "arguments": {
-            "keywords": "cybersecurity privacy security encryption threat detection vulnerability analysis",
+            "keywords": "cybersecurity privacy security",
             "topic": "Cybersecurity and privacy",
-            "limit": 20
+            "limit": 10
         }
     }
 }

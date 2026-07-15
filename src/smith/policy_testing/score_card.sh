@@ -25,6 +25,9 @@ mkdir -p "$OUT_DIR/coverage"
 export SMITH_SCORECARD_DIR="$OUT_DIR"
 
 OPA_URL="${SMITH_OPA_URL:-localhost:8181}"
+# Per-request OPA timeout (seconds). Bump for cold starts / large policies /
+# CPU-starved CI runners so slow-but-valid responses aren't dropped as errors.
+OPA_TIMEOUT="${SMITH_OPA_TIMEOUT:-5}"
 
 DIRS_TO_TEST=(
     "$ROOT/references/test_cases/allow"
@@ -42,7 +45,7 @@ POLICY_PATH_COUNT="$ROOT/assets/policy.rego"
 
 TEMP_RESULTS=$(mktemp)
 
-FILES=("fn.txt" "fp.txt" "tn.txt" "tp.txt")
+FILES=("fn.txt" "fp.txt" "tn.txt" "tp.txt" "errors.txt")
 
 for f in "${FILES[@]}"; do
     >"$OUT_DIR/$f"
@@ -59,9 +62,14 @@ for BASE_INPUT_DIR in "${DIRS_TO_TEST[@]}"; do
             EXPECTED_ALLOW="true"
         fi
 
-        RESPONSE=$(curl -s -X POST "$OPA_URL/v1/data/mcp/policies/allow" \
+        if ! RESPONSE=$(curl -sf --max-time "$OPA_TIMEOUT" -X POST "$OPA_URL/v1/data/mcp/policies/allow" \
             -H "Content-Type: application/json" \
-            --data @"$FILE")
+            --data @"$FILE"); then
+            echo "  ERROR: OPA request failed for $FILE (server down or timeout)" >&2
+            echo "$FILE" >>"$OUT_DIR/errors.txt"
+            echo -e "\n-----------------------------\n" >>"$OUTPUT_FILE"
+            continue
+        fi
         echo "$RESPONSE"
 
         if [[ "$RESPONSE" == *'"result":true'* ]]; then
@@ -132,6 +140,12 @@ for DIR in $ALL_DIRS; do
     FAILS=$(echo "$MATCHES" | grep '^\[FAIL')
     echo "$FAILS" >>"$TEST_FAILURES_FILE"
 done
+
+ERROR_COUNT=$(wc -l <"$OUT_DIR/errors.txt" | tr -d ' ')
+if [ "$ERROR_COUNT" -gt 0 ]; then
+    echo "OPA Errors:  $ERROR_COUNT (cases not scored — see errors.txt)" >>"$SCORECARD_FILE"
+    echo "--------------------------" >>"$SCORECARD_FILE"
+fi
 
 echo "===================" >>"$SCORECARD_FILE"
 

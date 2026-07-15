@@ -10,7 +10,7 @@
                     "manager"
                 ],
                 "teams": [
-                    "IT"
+                    "HR"
                 ]
             },
             "headers": {
@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please confirm the departmental information for my IT staff",
+                "input": "Please confirm the departmental information for my HR team members",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,9 +32,7 @@
             }
         },
         "arguments": {
-            "department": "IT",
-            "include_benefits": false,
-            "format": "JSON"
+            "department": "HR"
         }
     }
 }

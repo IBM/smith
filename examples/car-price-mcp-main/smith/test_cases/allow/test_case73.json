@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I want to see all trucks available",
+                "input": "Could you retrieve all trucks vehicle information?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +30,7 @@
             }
         },
         "arguments": {
-            "vehicle_type": "caminhoes"
+            "vehicle_type": "caminh\u00f5es"
         }
     }
 }

@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you find Ford car pricing for me?",
+                "input": "Can you find Ford car prices for me?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

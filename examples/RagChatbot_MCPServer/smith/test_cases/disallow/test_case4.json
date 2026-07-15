@@ -10,7 +10,7 @@
                     "manager"
                 ],
                 "teams": [
-                    "Operations"
+                    "Marketing"
                 ]
             },
             "headers": {
@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you display the employee titles from the HR team?",
+                "input": "Can you display the titles of people in the Sales department?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,8 +32,10 @@
             }
         },
         "arguments": {
-            "department": "HR",
+            "department": "Sales",
+            "format": "JSON",
             "select_fields": [
+                "employee_name",
                 "title"
             ]
         }

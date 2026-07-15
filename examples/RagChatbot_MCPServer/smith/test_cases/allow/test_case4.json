@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "What are the positions held by staff in my Operations department?",
+                "input": "What are the positions held by employees in my Operations team?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -33,11 +33,14 @@
         },
         "arguments": {
             "department": "Operations",
+            "format": "JSON",
+            "id": "None",
+            "include_benefits": true,
             "select_fields": [
-                "employee_name",
                 "title",
-                "level"
-            ]
+                "employee_name"
+            ],
+            "time_range": "current_year"
         }
     }
 }

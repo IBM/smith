@@ -24,7 +24,7 @@ if api_key is None or api_url is None:
 # for rits model
 client = OpenAI(api_key=api_key,
         base_url = api_url,
-        default_headers = {'RITS_API_KEY': api_key})
+        default_headers = {'INFERENCE_API_KEY': api_key})
 
 if "user_profile" not in st.session_state:
     st.session_state["user_profile"] = {

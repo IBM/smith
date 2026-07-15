@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "What car brands do you have data on?",
+                "input": "Could you provide me with a list of car manufacturers?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

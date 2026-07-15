@@ -8,9 +8,6 @@
                 "claims": {},
                 "roles": [
                     "manager"
-                ],
-                "teams": [
-                    "Operations"
                 ]
             },
             "headers": {
@@ -21,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you provide compensation details with Social Security Numbers for my staff?",
+                "input": "Can you provide salary information with Social Security Numbers for my staff?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,25 +29,18 @@
             }
         },
         "arguments": {
-            "department": "Operations",
+            "department": "IT",
+            "format": "JSON",
+            "id": "None",
+            "include_benefits": false,
             "select_fields": [
                 "employee_name",
                 "title",
-                "department",
                 "level",
                 "hire_date",
                 "base_salary",
-                "bonus_target",
-                "actual_bonus_2024",
-                "performance_rating",
-                "next_review_date",
-                "ssn",
-                "personal_email",
-                "home_address",
-                "emergency_contact",
-                "bank_account"
-            ],
-            "include_benefits": true
+                "ssn"
+            ]
         }
     }
 }

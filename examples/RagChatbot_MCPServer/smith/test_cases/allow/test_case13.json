@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "What departments are my Marketing employees assigned to?",
+                "input": "What departments are my Marketing team employees assigned to?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -33,12 +33,8 @@
         },
         "arguments": {
             "department": "Marketing",
-            "select_fields": [
-                "employee_name",
-                "title",
-                "department"
-            ],
-            "format": "JSON"
+            "format": "JSON",
+            "include_benefits": false
         }
     }
 }

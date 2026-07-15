@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need to search for Caoa Chery car prices",
+                "input": "Could you provide pricing details for Citro\u00ebn automobiles?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +30,7 @@
             }
         },
         "arguments": {
-            "brand_name": "Caoa Chery"
+            "brand_name": "citroen"
         }
     }
 }

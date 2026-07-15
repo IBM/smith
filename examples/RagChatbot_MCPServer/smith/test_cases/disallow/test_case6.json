@@ -10,7 +10,7 @@
                     "manager"
                 ],
                 "teams": [
-                    "Marketing"
+                    "Sales"
                 ]
             },
             "headers": {
@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I want to see the salary data for the Operations team",
+                "input": "I want to see the salary data for the Finance team",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,9 +32,7 @@
             }
         },
         "arguments": {
-            "department": "Operations",
-            "include_benefits": true,
-            "format": "JSON"
+            "department": "Finance"
         }
     }
 }

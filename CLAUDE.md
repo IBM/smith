@@ -55,7 +55,7 @@ make opaserver/stop    # stop the OPA server
 ## External tools (install separately)
 
 - **OPA** + **Regal** (Styra linter) — required for testing and `regal_suggestion`.
-- **ARES** (IBM red-teaming) and **Promptfoo** (`npm install -g promptfoo`) — required for adversarial test generation. ARES installs under `src/smith/test_generation/ares/` and needs its plugins (`ares-autodan`, `ares-human-jailbreak`, `ares-garak`).
+- **ARES** (IBM red-teaming) and **Promptfoo** (`npm install -g promptfoo`) — **optional**, controlled by the `ATTACK_TOOLS` env variable (`ares`, `promptfoo`, `ares,promptfoo`, or `none`). ARES installs under `src/smith/test_generation/ares/` and needs its plugins (`ares-autodan`, `ares-human-jailbreak`, `ares-garak`).
 
 ## Repo conventions
 

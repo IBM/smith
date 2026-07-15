@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Show me all SUVs available in our fleet options.",
+                "input": "Show me all SUVs in your inventory.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

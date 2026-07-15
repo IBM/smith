@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you find the cost of Mercedes-Benz trucks?",
+                "input": "Can you get car prices from Mercedes-Benz",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

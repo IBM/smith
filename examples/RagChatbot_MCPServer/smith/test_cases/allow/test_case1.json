@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you show me the employee names for the HR department that I manage?",
+                "input": "Can you show me the employee names for my HR team?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -33,8 +33,10 @@
         },
         "arguments": {
             "department": "HR",
+            "format": "CSV",
             "select_fields": [
-                "employee_name"
+                "employee_name",
+                "name"
             ]
         }
     }

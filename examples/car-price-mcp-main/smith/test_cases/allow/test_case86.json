@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "What are the prices for MAN commercial vehicles?",
+                "input": "Please check car prices for MAN brand",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

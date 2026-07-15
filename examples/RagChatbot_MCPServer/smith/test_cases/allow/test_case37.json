@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I want to purchase office supplies for $250",
+                "input": "I need to buy a new laptop that costs $800",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,9 +30,9 @@
             }
         },
         "arguments": {
-            "amount": 250,
-            "product_name": "office supplies",
-            "category": "office_supplies"
+            "amount": 800,
+            "product_name": "Laptop",
+            "justification": "New work laptop for daily computing and productivity needs"
         }
     }
 }

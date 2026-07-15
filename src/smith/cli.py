@@ -123,6 +123,33 @@ class BlueAgent:
         return run_policy_evaluation(self.base_url, self.test_results_path)
 
 
+VALID_ATTACK_TOOLS = {"ares", "promptfoo", "none"}
+
+
+def resolve_attack_tools():
+    """Parse and validate the ATTACK_TOOLS env var.
+
+    Returns the set of enabled attack tools (never contains "none"). Exits with
+    an actionable error on unrecognized tokens so a typo cannot silently disable
+    red-teaming, and prints which tools are enabled vs skipped so a
+    config-driven skip is distinguishable from a tool that produced no cases.
+    """
+    raw = os.getenv("ATTACK_TOOLS", "ares,promptfoo")
+    tools = {t.strip().lower() for t in raw.split(",") if t.strip()}
+    unknown = tools - VALID_ATTACK_TOOLS
+    if unknown:
+        print(
+            f"ERROR: unknown ATTACK_TOOLS value(s): {', '.join(sorted(unknown))}. "
+            "Valid values: ares, promptfoo, none (comma-separated).",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    tools.discard("none")
+    for tool in ("ares", "promptfoo"):
+        print(f"  ATTACK_TOOLS: {tool} {'enabled' if tool in tools else 'skipped'}")
+    return tools
+
+
 def generate_test(
     base_url,
     system_variables,
@@ -200,21 +227,30 @@ def generate_test(
         batch_processing,
         batch_size=case_generation_batch_size,
     )
-    attack(
-        output_file_cases,
-        output_file_attack,
-        output_file_attack_csv,
-        test_generation_path,
-    )
-    create_promptfoo_cases(
-        base_url, output_promptfoo, output_file_attack_promptfoo, test_generation_path
-    )
+    attack_tools = resolve_attack_tools()
+
+    if "ares" in attack_tools:
+        attack(
+            output_file_cases,
+            output_file_attack,
+            output_file_attack_csv,
+            test_generation_path,
+        )
+
+    if "promptfoo" in attack_tools:
+        create_promptfoo_cases(
+            base_url,
+            output_promptfoo,
+            output_file_attack_promptfoo,
+            test_generation_path,
+        )
+
     translate_case(
         output_file_cases,
         test_case_template_file,
         output_file_ready_cases,
-        output_file_attack,
-        output_file_attack_promptfoo,
+        output_file_attack if "ares" in attack_tools else None,
+        output_file_attack_promptfoo if "promptfoo" in attack_tools else None,
         system_variables,
     )
     return ""
@@ -358,25 +394,31 @@ def main():
         run_extract_tool_args(test_case_path, agent_url)
 
     if args.flag == "test_case_evaluation":
+        attack_tools = resolve_attack_tools()
+
         # Step 1: Classify promptfoo cases to match them to guidance
-        classify_promptfoo_cases(
-            api_key,
-            openai_base_url,
-            model,
-            temp,
-            top_p,
-            output_file_decompose,
-            output_file_attack_promptfoo,
-            output_file_classified,
-            top_n=top_n,
-        )
+        if "promptfoo" in attack_tools:
+            classify_promptfoo_cases(
+                api_key,
+                openai_base_url,
+                model,
+                temp,
+                top_p,
+                output_file_decompose,
+                output_file_attack_promptfoo,
+                output_file_classified,
+                top_n=top_n,
+            )
+
         # Step 2: Validate labels (Tier 1 rules + Tier 2 NLI + Tier 3 LLM)
         validation_output = base_url + "references/label_validation_results.json"
         max_llm_calls = int(max_llm) if max_llm else None
 
         run_validation(
             test_cases_file=output_file_cases,
-            classified_promptfoo_file=output_file_classified,
+            classified_promptfoo_file=(
+                output_file_classified if "promptfoo" in attack_tools else None
+            ),
             output_file=validation_output,
             tier2_high_threshold=tier2_high,
             tier2_low_threshold=tier2_low,
@@ -392,8 +434,8 @@ def main():
         report_output = base_url + "references/test_case_report.html"
         build_visualization(
             output_file_cases,
-            output_file_attack,
-            output_file_classified,
+            output_file_attack if "ares" in attack_tools else None,
+            output_file_classified if "promptfoo" in attack_tools else None,
             validation_output,
             report_output,
         )

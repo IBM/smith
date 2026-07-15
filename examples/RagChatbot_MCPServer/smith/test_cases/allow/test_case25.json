@@ -18,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I want to export the team compensation data in JSON format",
+                "input": "Could you provide the team salary data as a JSON file?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

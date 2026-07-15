@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I would like to retrieve vehicles of type carros",
+                "input": "I need to analyze carros data from the fleet",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

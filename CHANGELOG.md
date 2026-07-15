@@ -15,10 +15,32 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
-## [0.1.1] - 2026-06-29
+### Fixed
+
+- Tier-3 label validation no longer aborts the entire loop on a single LLM error. Transient failures now fall back for that case and continue; the loop only aborts after N consecutive failures (default 5, configurable via `run_validation`) indicating the LLM is genuinely unavailable. On abort, the remaining un-evaluated cases are still recorded as uncertain so validation metrics no longer silently shrink.
+- OPA scorecard no longer silently scores request failures as "deny". Added a curl timeout (configurable via `SMITH_OPA_TIMEOUT`, default 5s) and exit-code checking; failed requests are logged to `errors.txt` and excluded from TP/FP/TN/FN counts.
+- Invalid `ATTACK_TOOLS` values now fail fast with an actionable error instead of silently disabling red-teaming, and the CLI prints which attack tools are enabled vs skipped.
+- Updated SKILL.md documentation to reflect "test all deny" instead of "all test failed".
+- Updated car-price and call-for-papers examples' Promptfoo configuration with missing system variables.
+
+### Added
+
+- Documentation site (Hugo) with guides for configuration, quickstart, policy creation, testing, refinement, cross-validation, Promptfoo integration, and contributing.
+- Integrated Promptfoo policy plugin for generating malicious test cases from guidances, with translation support for string-typed variables.
+- `ATTACK_TOOLS` environment variable to select which red-teaming tools to run (`ares`, `promptfoo`, `ares,promptfoo`, or `none`).
+- "Remove" decision category in cross-validation for ambiguous/invalid test cases.
+- Clean-up bash script (`scripts/clean_generated.sh`) to reset generated intermediates when switching examples.
 
 ### Changed
 
+- Made ARES and Promptfoo optional dependencies — either tool can be used independently or skipped entirely.
+- Cross-validation now focuses on arguments and subject fields only, improving accuracy.
+- Cluster indexing uses sequential numbers; noise group appears as the last numbered cluster instead of `-1`.
+- Renamed the target-agent LLM environment variables (`RITS_*`) to `INFERENCE_MODEL`/`INFERENCE_BASE_URL`/`INFERENCE_API_KEY` across `.env_template`, examples, and documentation. `OLLAMA_BASE_URL` (no `/v1` suffix) is now reserved solely for promptfoo's native ollama provider, resolving the previous duplicate-variable collision.
+- Updated example configurations (call-for-papers, car-price, RagChatbot) with revised system variables and regenerated smith outputs.
+- Verified Promptfoo test cases now live in `references/test_cases/disallow/` (removed separate `promptfoo_malicious/` folder).
+
+## [0.1.1] - 2026-06-29
 - Repackaged `scripts/` into an installable `smith` Python package using a `src/`
   layout, with `pyproject.toml` at the repo root declaring runtime dependencies
   (`[project.dependencies]`) and a `[dev]` extra. The CLI entry point is now

@@ -18,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please create a PDF document containing our team's salary and bonus data",
+                "input": "I want to export the team compensation information in JSON format",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -29,10 +29,9 @@
             }
         },
         "arguments": {
-            "format": "PDF",
+            "format": "JSON",
             "time_range": "last_quarter",
-            "export_type": "aggregated",
-            "business_justification": "Team salary and bonus data review"
+            "export_type": "aggregated"
         }
     }
 }

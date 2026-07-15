@@ -12,12 +12,6 @@
                     "phd_student",
                     "guest"
                 ],
-                "user_id": "bob@university.edu",
-                "department": [
-                    "computer_science",
-                    "electrical_engineering",
-                    "multidisciplinary"
-                ],
                 "queries_this_session": 1,
                 "dissertation_area": "Artificial intelligence",
                 "research_area": [
@@ -34,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please search for events with keywords: artificial intelligence, economics, machine learning.",
+                "input": "Find events with startup expo as a keyword",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -45,8 +39,8 @@
             }
         },
         "arguments": {
-            "keywords": "artificial intelligence, economics, machine learning",
-            "topic": "Artificial intelligence"
+            "keywords": "startup expo",
+            "topic": "Software engineering"
         }
     }
 }

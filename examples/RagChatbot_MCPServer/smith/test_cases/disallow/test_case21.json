@@ -8,9 +8,6 @@
                 "claims": {},
                 "roles": [
                     "employee"
-                ],
-                "teams": [
-                    "Sales"
                 ]
             },
             "headers": {
@@ -33,15 +30,8 @@
         },
         "arguments": {
             "department": "Sales",
-            "select_fields": [
-                "employee_name",
-                "base_salary",
-                "bonus_target",
-                "actual_bonus_2024"
-            ],
-            "time_range": "current_year",
-            "format": "JSON",
-            "include_benefits": false
+            "time_range": "last_quarter",
+            "include_benefits": true
         }
     }
 }

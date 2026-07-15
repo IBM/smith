@@ -48,18 +48,18 @@ contains_disallowed_keyword(keywords_str) if {
 }
 
 # Get user's primary role (first role in the list)
-user_role := subject.claims.user_role[0] if {
-	count(subject.claims.user_role) > 0
+user_role := subject.user_role[0] if {
+	count(subject.user_role) > 0
 } else := ""
 
 # Get user's dissertation area
-dissertation_area := subject.claims.dissertation_area if {
-	subject.claims.dissertation_area
+dissertation_area := subject.dissertation_area if {
+	subject.dissertation_area
 } else := ""
 
 # Get queries this session
-queries_this_session := subject.claims.queries_this_session if {
-	subject.claims.queries_this_session
+queries_this_session := subject.queries_this_session if {
+	subject.queries_this_session
 } else := 0
 
 # === Validation Rules ===

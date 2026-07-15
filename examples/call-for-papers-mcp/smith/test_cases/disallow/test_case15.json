@@ -1,0 +1,47 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "get_events",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "user_name": "Bob",
+                "user_role": [
+                    "faculty",
+                    "phd_student",
+                    "guest"
+                ],
+                "queries_this_session": 1,
+                "dissertation_area": "Artificial intelligence",
+                "research_area": [
+                    "Artificial intelligence",
+                    "Cybersecurity and privacy",
+                    "Software engineering"
+                ]
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Please get me 100 events from the database",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "keywords": "Artificial intelligence Machine learning Deep Learning NLP Computer Vision Robotics AI algorithms Neural Networks optimization reinforcement learning natural language processing semantic web knowledge representation probabilistic reasoning evolutionary computation bioinformatics medical informatics computational linguistics affective computing human-computer interaction cognitive science computer graphics image analysis computer vision pattern recognition decision making intelligent systems autonomous vehicles digital twins edge computing federated learning privacy preserving machine learning explainable artificial intelligence neuro-scientific AI moral machines swarm robotics simulation theory control theory signal processing anomaly detection",
+            "topic": "Artificial intelligence",
+            "limit": 100
+        }
+    }
+}

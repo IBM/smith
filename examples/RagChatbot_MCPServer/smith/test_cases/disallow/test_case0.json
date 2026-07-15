@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I want to see the employee names in the Finance team",
+                "input": "I want to see the names of employees in the Finance team",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -33,6 +33,10 @@
         },
         "arguments": {
             "department": "Finance",
+            "id": "None",
+            "format": "JSON",
+            "include_benefits": false,
+            "time_range": "last_quarter",
             "select_fields": [
                 "employee_name"
             ]

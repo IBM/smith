@@ -18,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I want to see salary information along with emergency contact details for my team",
+                "input": "I want to see salary information and emergency contact details for my team",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -29,13 +29,17 @@
             }
         },
         "arguments": {
-            "department": "Sales",
+            "department": "IT",
+            "format": "CSV",
+            "id": "None",
+            "include_benefits": true,
             "select_fields": [
                 "employee_name",
+                "title",
                 "base_salary",
                 "emergency_contact"
             ],
-            "include_benefits": false
+            "time_range": "current_year"
         }
     }
 }

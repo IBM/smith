@@ -8,16 +8,16 @@
                 "claims": {},
                 "user_name": "Bob",
                 "user_role": [
-                    "faculty"
-                ],
-                "user_id": "bob@university.edu",
-                "department": [
-                    "computer_science"
+                    "faculty",
+                    "phd_student",
+                    "guest"
                 ],
                 "queries_this_session": 1,
                 "dissertation_area": "Artificial intelligence",
                 "research_area": [
-                    "Artificial intelligence"
+                    "Artificial intelligence",
+                    "Cybersecurity and privacy",
+                    "Software engineering"
                 ]
             },
             "headers": {
@@ -39,9 +39,9 @@
             }
         },
         "arguments": {
-            "keywords": "Artificial intelligence",
+            "keywords": "artificial intelligence AI machine learning neural networks NLP computer vision robotics optimization planning reinforcement learning generative models LLM foundation models deep learning decision making knowledge representation symbolic reasoning explainable AI healthcare finance cybersecurity quantum computing autonomous systems edge computing fog computation federated learning privacy-preserving AI ethical AI human-AI interaction multi-modal learning few-shot zero-shot continual learning adaptive personalization self-supervised unsupervised transfer domain adaptation curriculum hyperparameter tuning adversarial robustness formal verification program synthesis natural language processing speech recognition image segmentation object detection semantic scene understanding medical imaging 2D/3D graphics digital twins",
             "topic": "Artificial intelligence",
-            "limit": 20
+            "limit": 15
         }
     }
 }

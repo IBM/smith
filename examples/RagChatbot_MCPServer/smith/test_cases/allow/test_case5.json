@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please show me the titles of employees under my supervision in Legal",
+                "input": "Please show me the employee titles within the Legal department",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -33,10 +33,11 @@
         },
         "arguments": {
             "department": "Legal",
-            "select_fields": [
-                "employee_name",
-                "title"
-            ]
+            "format": "JSON",
+            "id": "None",
+            "include_benefits": false,
+            "": "Select_fields>\n[\"employee_name\", \"title\"]",
+            "time_range": "last_quarter"
         }
     }
 }
