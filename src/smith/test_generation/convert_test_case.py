@@ -65,6 +65,12 @@ def translate_case(
 
 
 def merge_with_ares(test_cases, output_file_attack):
+    if not output_file_attack or not os.path.exists(output_file_attack):
+        print(
+            f"ARES attack file not found ({output_file_attack}); "
+            "skipping ARES merge (nothing was generated for this run)."
+        )
+        return test_cases
     with open(output_file_attack, "r") as f:
         attack_cases = json.load(f)
     for test_cluster in attack_cases:
@@ -85,6 +91,14 @@ def merge_with_ares(test_cases, output_file_attack):
 
 
 def merge_with_promptfoo(test_cases, output_file_attack_promptfoo):
+    if not output_file_attack_promptfoo or not os.path.exists(
+        output_file_attack_promptfoo
+    ):
+        print(
+            f"Promptfoo attack file not found ({output_file_attack_promptfoo}); "
+            "skipping promptfoo merge (nothing was generated for this run)."
+        )
+        return test_cases
     with open(output_file_attack_promptfoo, "r") as f:
         attack_cases = json.load(f)
     for test_cluster in attack_cases:

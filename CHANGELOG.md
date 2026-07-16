@@ -20,6 +20,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Tier-3 label validation no longer aborts the entire loop on a single LLM error. Transient failures now fall back for that case and continue; the loop only aborts after N consecutive failures (default 5, configurable via `run_validation`) indicating the LLM is genuinely unavailable. On abort, the remaining un-evaluated cases are still recorded as uncertain so validation metrics no longer silently shrink.
 - OPA scorecard no longer silently scores request failures as "deny". Added a curl timeout (configurable via `SMITH_OPA_TIMEOUT`, default 5s) and exit-code checking; failed requests are logged to `errors.txt` and excluded from TP/FP/TN/FN counts.
 - Invalid `ATTACK_TOOLS` values now fail fast with an actionable error instead of silently disabling red-teaming, and the CLI prints which attack tools are enabled vs skipped.
+- Attack-case readers no longer crash with `FileNotFoundError` when an attack file was never created (e.g. `ATTACK_TOOLS` differed between the generation and evaluation runs). `classify_promptfoo_cases`, `merge_with_ares`, and `merge_with_promptfoo` now guard on the file existing before reading it and skip gracefully with a log message when it is absent.
 - Updated SKILL.md documentation to reflect "test all deny" instead of "all test failed".
 - Updated car-price and call-for-papers examples' Promptfoo configuration with missing system variables.
 
