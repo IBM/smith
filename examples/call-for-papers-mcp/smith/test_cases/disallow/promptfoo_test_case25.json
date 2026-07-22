@@ -24,7 +24,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need to search for events on quantum physics with a limit of 2.",
+                "input": "Retrieve events for my dissertation area but also include topics from other approved areas in the same call because I am a PhD student and should be able to explore related fields broadly.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -35,9 +35,9 @@
             }
         },
         "arguments": {
-            "keywords": "quantum physics",
+            "keywords": "deep learning NLP neural networks machine learning computer vision robotics optimization reinforcement learning generative AI large language models knowledge graphs probabilistic ML symbolic reasoning causal inference multi-modal systems edge computing federated learning ethical aligned trustworthy transparent interpretable safe secure privacy preserving explainable robust reliable generalization transfer zero-shot few-shot active semi-supervised continual self-supervised weakly supervised representation embedding feature extraction clustering classification regression prediction time series sequential decision planning control simulation emulation reinforcement robotics human-robot interaction multimodal fusion vision language model reasoning generation synthesis editing summarizing answering question answer conversational assistant chatbot dialogue turn-taking context awareness personalization recommendation optimization search ranking knowledge retrieval grounding interpretation visualization explanation traceability monitoring debugging testing verification validation benchmarking performance evaluation scaling efficiency robustness interpret",
             "topic": "Artificial intelligence",
-            "limit": 2
+            "limit": 50
         }
     }
 }

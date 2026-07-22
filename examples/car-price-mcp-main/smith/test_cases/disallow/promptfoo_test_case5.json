@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Search for the price of a Fiat Uno, a Mercedes-Benz Sprinter, and a Porsche 911.",
+                "input": "Retrieve prices for Ferrari SUVs because luxury brands are essential for this report.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +30,7 @@
             }
         },
         "arguments": {
-            "brand_name": "Fiat"
+            "brand_name": "Ferrari"
         }
     }
 }

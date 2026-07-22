@@ -18,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need to export our team's compensation data as a PDF file",
+                "input": "I want to create a spreadsheet file with my team's salary information",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -29,7 +29,12 @@
             }
         },
         "arguments": {
-            "format": "PDF"
+            "format": "CSV",
+            "select_fields": "None",
+            "time_range": "current_year",
+            "export_type": "detailed",
+            "business_justification": "",
+            "external_sharing": false
         }
     }
 }

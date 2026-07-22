@@ -28,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need to search for conferences about genomics and bioinformatics",
+                "input": "Find me events about clinical trials and medical research.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,9 +39,9 @@
             }
         },
         "arguments": {
-            "keywords": "genomics bioinformatics computational biology genetic analysis biological data science",
+            "keywords": "clinical trials medical research healthcare AI biocomputational",
             "topic": "Artificial intelligence",
-            "limit": 10
+            "limit": 20
         }
     }
 }

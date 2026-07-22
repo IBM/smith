@@ -37,9 +37,9 @@
             }
         },
         "arguments": {
-            "keywords": "conference CFP papers proceedings",
-            "limit": 20,
-            "topic": "Artificial intelligence"
+            "keywords": "artificial intelligence machine learning deep learning natural language processing computer vision robotics automation",
+            "topic": "Artificial intelligence",
+            "limit": 20
         }
     }
 }

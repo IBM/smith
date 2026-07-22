@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I want to see the job titles of employees in the HR team",
+                "input": "I want to see the job titles of employees in the HR department",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -34,6 +34,12 @@
         "arguments": {
             "department": "HR",
             "format": "JSON",
+            "id": "None",
+            "include_benefits": true,
+            "select_fields": [
+                "title",
+                "employee_name"
+            ],
             "time_range": "current_year"
         }
     }

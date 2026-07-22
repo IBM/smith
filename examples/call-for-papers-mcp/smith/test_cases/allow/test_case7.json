@@ -39,8 +39,9 @@
             }
         },
         "arguments": {
-            "keywords": "artificial intelligence",
-            "topic": "Artificial intelligence"
+            "keywords": "artificial intelligence machine learning deep learning NLP computer vision robotics neural networks natural language processing AI ethics responsible ai generative models reinforcement learning knowledge graphs multi-modal systems explainable ai human-ai collaboration intelligent systems cognitive computing smart systems automated reasoning formal methods probabilistic inference decision making autonomous agents embodied ai neurosymbolic learning semantic web data mining computational linguistics image recognition speech recognition bioinformatics healthcare ai edge computing quantum computing vision transformers self-supervised learning meta-learning federated learning privacy-preserving machine learning continual learning few-shot learning causal inference graph neural networks attention mechanisms contrastive learning anomaly detection adversarial attacks robust machine uncertainty quantification transfer learning domain adaptation",
+            "topic": "Artificial intelligence",
+            "limit": 10
         }
     }
 }

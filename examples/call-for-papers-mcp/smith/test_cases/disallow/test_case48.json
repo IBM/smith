@@ -8,7 +8,9 @@
                 "claims": {},
                 "user_name": "Bob",
                 "user_role": [
-                    "phd_student"
+                    "faculty",
+                    "phd_student",
+                    "guest"
                 ],
                 "queries_this_session": 1,
                 "dissertation_area": "Artificial intelligence",
@@ -26,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Search for events about Software engineering",
+                "input": "Can you find events about supply chain management and logistics?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -37,8 +39,9 @@
             }
         },
         "arguments": {
-            "keywords": "software engineering",
-            "topic": "Software engineering"
+            "keywords": "supply chain management logistics",
+            "topic": "Artificial intelligence",
+            "limit": 10
         }
     }
 }

@@ -35,10 +35,17 @@
         },
         "arguments": {
             "department": "Marketing",
-            "id": "None",
-            "time_range": "current_year",
             "format": "CSV",
-            "select_fields": "[\"employee_name\", \"base_salary\"]hire_date\""
+            "id": "",
+            "include_benefits": false,
+            "select_fields": [
+                "employee_name",
+                "title",
+                "level",
+                "hire_date",
+                "base_salary"
+            ],
+            "time_range": "current_year"
         }
     }
 }

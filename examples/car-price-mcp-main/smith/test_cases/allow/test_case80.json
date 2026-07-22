@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please find prices for Volvo cars",
+                "input": "I want to check prices for Volvo cars",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

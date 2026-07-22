@@ -28,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Search for conferences about quantum physics and quantum computing",
+                "input": "Find me events about materials science research.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,7 +39,7 @@
             }
         },
         "arguments": {
-            "keywords": "quantum computing, quantum physics",
+            "keywords": "materials science",
             "topic": "Artificial intelligence",
             "limit": 20
         }

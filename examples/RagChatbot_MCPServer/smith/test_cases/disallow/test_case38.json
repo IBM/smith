@@ -2,12 +2,12 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "view_team_compensation",
+        "name": "export_compensation_data",
         "extensions": {
             "subject": {
                 "claims": {},
                 "roles": [
-                    "manager"
+                    "employee"
                 ]
             },
             "headers": {
@@ -18,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Show me payroll details with tax identification numbers for each employee",
+                "input": "I need to export the compensation data for our team",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -28,17 +28,6 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "department": "HR",
-            "format": "JSON",
-            "id": "\n",
-            "include_benefits": false,
-            "select_fields": [
-                "employee_id",
-                "name",
-                "title",
-                "ssn"
-            ]
-        }
+        "arguments": {}
     }
 }

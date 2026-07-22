@@ -18,29 +18,36 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ### Fixed
 
 - Tier-3 label validation no longer aborts the entire loop on a single LLM error. Transient failures now fall back for that case and continue; the loop only aborts after N consecutive failures (default 5, configurable via `run_validation`) indicating the LLM is genuinely unavailable. On abort, the remaining un-evaluated cases are still recorded as uncertain so validation metrics no longer silently shrink.
-- OPA scorecard no longer silently scores request failures as "deny". Added a curl timeout (configurable via `SMITH_OPA_TIMEOUT`, default 5s) and exit-code checking; failed requests are logged to `errors.txt` and excluded from TP/FP/TN/FN counts.
-- Invalid `ATTACK_TOOLS` values now fail fast with an actionable error instead of silently disabling red-teaming, and the CLI prints which attack tools are enabled vs skipped.
+- OPA scorecard no longer silently scores request failures as "deny". Added a curl timeout and exit-code checking; failed requests are logged to `errors.txt` and excluded from TP/FP/TN/FN counts.
+- Invalid `ATTACK_TOOLS` values now fail with an actionable error instead of silently disabling red-teaming, and the CLI prints which attack tools are enabled vs skipped.
 - Attack-case readers no longer crash with `FileNotFoundError` when an attack file was never created (e.g. `ATTACK_TOOLS` differed between the generation and evaluation runs). `classify_promptfoo_cases`, `merge_with_ares`, and `merge_with_promptfoo` now guard on the file existing before reading it and skip gracefully with a log message when it is absent.
 - ARES cases now inherit their parent test case's confidence score, verdict, and predicted label in the evaluation report instead of showing a blank confidence. An ARES case is a jailbreak-transformed variant of a parent `disallow` case, so it carries the parent's `ValidationResult` (matched by the parent's `user_input`) rather than being independently re-validated.
-- Updated SKILL.md documentation to reflect "test all deny" instead of "all test failed".
+- Updated SKILL.md documentation to reflect "all test deny" instead of "all test failed".
 - Updated car-price and call-for-papers examples' Promptfoo configuration with missing system variables.
 
 ### Added
 
 - Documentation site (Hugo) with guides for configuration, quickstart, policy creation, testing, refinement, cross-validation, Promptfoo integration, and contributing.
+- **Policy-bypass test-case generation** (`smith --flag bypass_case_generation`): a new pipeline that analyzes the current policy against the guidance to find divergences, then synthesizes adversarial cases targeting each gap.
+  - New package `src/smith/policy_agent/policy_analysis/bypass/`: `analyze_bypass.py` (`detect_bypass_vectors`), `synthesize_cases.py` (`synthesize_bypass_cases`), `schema.py` (`BypassVector`/`BypassReport`).
+  - `cli.py`: new `generate_bypass_cases()` function and the `bypass_case_generation` flag (detect → synthesize → convert), guarded against a missing/empty policy.
+  - `convert_test_case.py`: new `convert_bypass_case()` routes bypass cases into `disallow/` or `allow/` with a `bypass_test_case` prefix.
+  - `.env_template`: new vars `BYPASS_CASE_FILE` and `BYPASS_REPORT_DIR`.
+  - `test_generation.md` rewritten to ask up front which cases to generate. User can choose general test cases (legitimate allow, disallow, ares, promptfoo), or/and bypass test cases.
 - Integrated Promptfoo policy plugin for generating malicious test cases from guidances, with translation support for string-typed variables.
 - `ATTACK_TOOLS` environment variable to select which red-teaming tools to run (`ares`, `promptfoo`, `ares,promptfoo`, or `none`).
-- "Remove" decision category in cross-validation for ambiguous/invalid test cases.
 - Clean-up bash script (`scripts/clean_generated.sh`) to reset generated intermediates when switching examples.
 
 ### Changed
 
 - Made ARES and Promptfoo optional dependencies — either tool can be used independently or skipped entirely.
-- Cross-validation now focuses on arguments and subject fields only, improving accuracy.
+- Cross-validation now focuses on arguments and subject fields only, improving accuracy. "Remove" decision category in cross-validation for ambiguous/invalid test cases. Cross-validation now also discards failed adversarial probes instead of relabeling them: for bypass and promptfoo cases, any audit verdict other than `keep` is collapsed to `remove` (with a marker appended to the reason), since their intent is malicious and a failed probe should not pollute the ordinary case set.
 - Cluster indexing uses sequential numbers; noise group appears as the last numbered cluster instead of `-1`.
 - Renamed the target-agent LLM environment variables (`RITS_*`) to `INFERENCE_MODEL`/`INFERENCE_BASE_URL`/`INFERENCE_API_KEY` across `.env_template`, examples, and documentation. `OLLAMA_BASE_URL` (no `/v1` suffix) is now reserved solely for promptfoo's native ollama provider, resolving the previous duplicate-variable collision.
 - Updated example configurations (call-for-papers, car-price, RagChatbot) with revised system variables and regenerated smith outputs.
-- Verified Promptfoo test cases now live in `references/test_cases/disallow/` (removed separate `promptfoo_malicious/` folder).
+- Converted Promptfoo test cases now live in `references/test_cases/disallow/` (removed separate `promptfoo_malicious/` folder).
+- `test_case_translation` skips cases that already carry an `arguments` block (already translated), making translation re-runnable and avoiding a full-corpus re-translation when only newly-added bypass cases need it.
+- Reset `assets/policy.rego` to empty as a fresh starting point for policy creation.
 
 ## [0.1.1] - 2026-06-29
 - Repackaged `scripts/` into an installable `smith` Python package using a `src/`

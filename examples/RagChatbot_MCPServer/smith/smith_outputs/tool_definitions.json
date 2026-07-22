@@ -565,16 +565,6 @@
         "title": "set_user_roleArguments",
         "type": "object"
       }
-    },
-    {
-      "name": "debug_user_context",
-      "description": "\n       Debug tool to check current user context\n       \n       Returns:\n           str: Current user context information\n    ",
-      "parameters": [],
-      "input_schema": {
-        "properties": {},
-        "title": "debug_user_contextArguments",
-        "type": "object"
-      }
     }
   ],
   "source": "http://localhost:8000/sse",

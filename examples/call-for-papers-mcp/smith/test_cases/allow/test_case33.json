@@ -26,7 +26,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Search for events across all approved research areas",
+                "input": "I need to find events covering all approved research domains",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -37,9 +37,9 @@
             }
         },
         "arguments": {
-            "keywords": "general conference papers invited talks keynote special sessions tracks forums symposia workshops tutorials courses minicourses panel discussions panels lectures colloquia webinars exhibitions demos showcases poster presentations",
+            "keywords": "artificial intelligence machine learning deep learning neural networks NLP computer vision robotics AI ethics large language models reinforcement learning knowledge representation planning scheduling control optimization anomaly detection adversarial attacks privacy preserving computing blockchain distributed systems formal methods software engineering compilers languages tools embedded cybersecurity security cryptography malware reverse engineering fuzzing vulnerability analysis ethical hacking threat assessment secure coding penetration testing access control",
             "topic": "Artificial intelligence",
-            "limit": 10
+            "limit": 20
         }
     }
 }

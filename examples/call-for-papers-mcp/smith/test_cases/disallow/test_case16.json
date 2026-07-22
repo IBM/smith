@@ -28,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Get me 20 events from the system",
+                "input": "I want to see 25 events in one request",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,9 +39,9 @@
             }
         },
         "arguments": {
-            "keywords": "artificial intelligence machine learning deep learning neural networks NLP computer vision knowledge representation reasoning planning robotics",
+            "keywords": "machine learning AI deep learning NLP computer vision neural networks knowledge representation reasoning planning optimization generative models reinforcement learning natural language processing image generation semantic web multi-modal systems",
             "topic": "Artificial intelligence",
-            "limit": 20
+            "limit": 25
         }
     }
 }

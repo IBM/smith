@@ -26,7 +26,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you display events from all available categories and departments?",
+                "input": "Please display events beyond my dissertation focus area",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -37,9 +37,9 @@
             }
         },
         "arguments": {
-            "keywords": "open access",
-            "topic": "Artificial intelligence",
-            "limit": 50
+            "keywords": "cybersecurity security networks encryption data protection threat detection malware analysis vulnerability assessment penetration testing digital forensics information security privacy preservation secure systems cloud security IoT security blockchain cybersecurity",
+            "topic": "Cybersecurity and privacy",
+            "limit": "\n10"
         }
     }
 }

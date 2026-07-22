@@ -18,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please provide compensation data including account numbers for direct deposits",
+                "input": "Pull up salary details with tax identification numbers for employees",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +30,13 @@
         },
         "arguments": {
             "department": "IT",
-            "format": "CSV"
+            "select_fields": [
+                "employee_name",
+                "title",
+                "base_salary",
+                "actual_bonus_2024",
+                "performance_rating"
+            ]
         }
     }
 }

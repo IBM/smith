@@ -522,20 +522,3 @@ def init_graph(opa_ast_path, policy_dir, graph_path, saver=True):
         nx.nx_pydot.write_dot(G, graph_path)
         parse_dot_format(graph_path)
     return G
-
-
-def main():
-    G = nx.MultiDiGraph(data=True, align="vertical")
-    # G, rule_name_list = init_graph(G, "/Users/hailunding/Documents/submit_sre/submit/sre-opa-policies/blue-agent-components/data/ast.json", '/Users/hailunding/Documents/submit_sre/submit/sre-opa-policies/policies', '')
-    modules = load_ast(
-        "/Users/hailunding/Documents/submit_sre/submit/rebase/sre-opa-policies/resources/data/outputs/ast.json"
-    )
-    G, rule_name_list = extract_rule_calls(modules, G)
-    G = clean_graph(G)
-    H = compress_by_constant_index_paths(G, rule_name_list, index_attr="label")
-    nx.nx_pydot.write_dot(H, "tmp.dot")
-    parse_dot_format("tmp.dot")
-
-
-if __name__ == "__main__":
-    main()

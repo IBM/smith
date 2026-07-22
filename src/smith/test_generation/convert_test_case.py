@@ -37,6 +37,8 @@ def translate_case(
     test_cases_translated["disallow"] = []
     test_cases_translated["ares_malicious"] = []
     test_cases_translated["promptfoo_malicious"] = []
+    test_cases_translated["bypass_malicious"] = []
+    test_cases_translated["bypass_benign"] = []
 
     with open(output_file_cases, "r") as f:
         test_cases = json.load(f)
@@ -45,23 +47,59 @@ def translate_case(
         test_cases = merge_with_ares(test_cases, output_file_attack)
     if output_file_attack_promptfoo:
         test_cases = merge_with_promptfoo(test_cases, output_file_attack_promptfoo)
-
-    test_case_template = {}
     for test_case in test_cases:
-        with open(test_case_template_file, "r") as f:
-            test_case_template = json.load(f)
-        test_case_template["name"] = test_case["action"]
-        test_case_template["extensions"]["agent"]["input"] = test_case["user_input"]
-        for key, value in test_case["system_variables"].items():
-            if key in system_vars:
-                value = _convert_var(value, system_vars[key])
-            if isinstance(value, str) and value.lower() in ("true", "false"):
-                value = value.lower() == "true"
-            test_case_template["extensions"]["subject"][key] = value
-        test_cases_translated[test_case["label"]].append(test_case_template)
+        filled = _fill_template(test_case, test_case_template_file, system_vars)
+        test_cases_translated[test_case["label"]].append(filled)
 
     test_cases = test_case_field_mapping(test_cases_translated, output_file_ready_cases)
     return test_cases
+
+
+def _fill_template(test_case, test_case_template_file, system_vars):
+    """Clone the case template and inject a single abstract case's fields.
+
+    Shared by the main convert path (``translate_case``) and the bypass convert
+    path (``convert_bypass_case``) so both fill the template identically.
+    """
+    with open(test_case_template_file, "r") as f:
+        test_case_template = json.load(f)
+    test_case_template["name"] = test_case["action"]
+    test_case_template["extensions"]["agent"]["input"] = test_case["user_input"]
+    for key, value in test_case["system_variables"].items():
+        if key in system_vars:
+            value = _convert_var(value, system_vars[key])
+        if isinstance(value, str) and value.lower() in ("true", "false"):
+            value = value.lower() == "true"
+        test_case_template["extensions"]["subject"][key] = value
+    return test_case_template
+
+
+def convert_bypass_case(
+    bypass_cases_file,
+    test_case_template_file,
+    output_file_ready_cases,
+    system_vars=None,
+):
+    """Convert only bypass cases into ``bypass_test_case*.json`` files. Independent of ``translate_case``"""
+    if system_vars is None:
+        system_vars = {}
+
+    with open(bypass_cases_file, "r") as f:
+        bypass_cases = json.load(f)
+
+    test_cases_translated = {"bypass_malicious": [], "bypass_benign": []}
+    for test_case in bypass_cases:
+        # Skip cases without a recognized bypass label rather than guessing a
+        # direction — an unlabeled case has no defined intended decision.
+        label = test_case.get("label")
+        if label not in test_cases_translated:
+            print(f"  Skipping bypass case with missing/unknown label: {label!r}")
+            continue
+        filled = _fill_template(test_case, test_case_template_file, system_vars)
+        test_cases_translated[label].append(filled)
+
+    test_case_field_mapping(test_cases_translated, output_file_ready_cases)
+    return test_cases_translated
 
 
 def merge_with_ares(test_cases, output_file_attack):
@@ -112,12 +150,21 @@ def merge_with_promptfoo(test_cases, output_file_attack_promptfoo):
 
 
 def test_case_field_mapping(test_cases_translated, output_file_ready_cases):
+    """Write each translated case to <output_file_ready_cases><label>/<prefix><N>.json."""
     for condition in test_cases_translated.keys():
         test_cases = test_cases_translated[condition]
-        output_dir = "disallow" if condition == "promptfoo_malicious" else condition
-        prefix = (
-            "promptfoo_test_case" if condition == "promptfoo_malicious" else "test_case"
-        )
+        if condition == "promptfoo_malicious":
+            output_dir = "disallow"
+            prefix = "promptfoo_test_case"
+        elif condition == "bypass_malicious":
+            output_dir = "disallow"
+            prefix = "bypass_test_case"
+        elif condition == "bypass_benign":
+            output_dir = "allow"
+            prefix = "bypass_test_case"
+        else:
+            output_dir = condition
+            prefix = "test_case"
         for test_case_index in range(len(test_cases)):
             test_case_template_final = {}
             test_case_template_final["input"] = test_cases[test_case_index]

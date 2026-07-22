@@ -10,7 +10,7 @@
                     "manager"
                 ],
                 "teams": [
-                    "Legal"
+                    "Finance"
                 ]
             },
             "headers": {
@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please show me the bonus information for my Legal team members",
+                "input": "Please show me the bonus information for my Finance department staff",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,17 +32,10 @@
             }
         },
         "arguments": {
-            "department": "Legal",
-            "time_range": "current_year",
+            "department": "Finance",
             "format": "JSON",
-            "select_fields": [
-                "employee_name",
-                "title",
-                "level",
-                "actual_bonus_2024",
-                "bonus_target"
-            ],
-            "include_benefits": false
+            "include_benefits": true,
+            "time_range": "current_year"
         }
     }
 }

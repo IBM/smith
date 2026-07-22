@@ -26,7 +26,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please show me 11 events",
+                "input": "I want 11 events",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -37,7 +37,7 @@
             }
         },
         "arguments": {
-            "keywords": "artificial intelligence deep learning machine learning NLP computer vision AI",
+            "keywords": "artificial intelligence machine learning deep learning neural networks NLP computer vision robotics AI systems computational intelligence knowledge representation",
             "topic": "Artificial intelligence",
             "limit": 11
         }

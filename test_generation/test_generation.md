@@ -1,16 +1,45 @@
-## Test Case Generation
+# Test Case Generation
 
-To generate test cases, run:
+## Step 0: Ask which kind of test cases to generate
+
+Before running anything, ask the user what they want to generate:
+
+1. **Guidance-targeted cases** — legitimate + adversarial cases derived from the target agent and its guidance (broad coverage of the guidance surface).
+2. **Policy-bypass cases** — adversarial cases that specifically target divergences between the guidance and the **current policy** (`./assets/policy.rego`) **Remind user that it requires an existing, non-empty policy.**
+3. **Both.**
+
+Ask: "What kind of test cases would you like? (1) Guidance-targeted cases, (2) policy-bypass cases (requires a policy to already exist), or (3) both?"
+
+Based on the answer, run the generation command(s) below, then proceed to Translation and Evaluation, which are the same regardless of which kind was generated.
+
+## Generation
+
+### Guidance-targeted cases
 
 ```bash
 smith --flag test_generation
 ```
 
-All results are stored in `./references/test_cases/`.
+### Policy-bypass cases
+
+```bash
+smith --flag bypass_case_generation
+```
+
+### Both
+
+Run guidance-targeted generation first, then bypass generation:
+
+```bash
+smith --flag test_generation
+smith --flag bypass_case_generation
+```
+
+All results are stored in `./references/test_cases/`
 
 ## Test Case Translation
 
-After generation, translate the test cases into OPA input format:
+After generation, translate the test cases into OPA input format. This is the same for every kind of case, since they all land in `./references/test_cases/`:
 
 ```bash
 smith --flag test_case_translation

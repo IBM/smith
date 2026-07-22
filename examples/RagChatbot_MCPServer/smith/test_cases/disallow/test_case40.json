@@ -2,12 +2,12 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "view_team_compensation",
+        "name": "export_compensation_data",
         "extensions": {
             "subject": {
                 "claims": {},
                 "roles": [
-                    "manager"
+                    "employee"
                 ]
             },
             "headers": {
@@ -18,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please provide compensation data including emergency contacts for all staff members",
+                "input": "I want to download the compensation details for everyone on my team",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -29,27 +29,13 @@
             }
         },
         "arguments": {
-            "department": "IT",
+            "format": "CSV",
+            "time_range": "last_quarter",
+            "external_sharing": false,
+            "business_justification": "Team compensation data download for employee reference and planning",
+            "export_type": "aggregated",
             "id": "",
-            "format": "JSON",
-            "time_range": "current_year",
-            "select_fields": [
-                "employee_name",
-                "title",
-                "department",
-                "level",
-                "hire_date",
-                "base_salary",
-                "bonus_target",
-                "actual_bonus_2024",
-                "performance_rating",
-                "next_review_date",
-                "ssn",
-                "personal_email",
-                "home_address",
-                "emergency_contact"
-            ],
-            "include_benefits": true
+            "select_fields": "None"
         }
     }
 }

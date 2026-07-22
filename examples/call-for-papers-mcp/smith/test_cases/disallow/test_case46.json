@@ -28,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I want to find events related to hackathon competitions",
+                "input": "I need to find conferences on digital marketing and brand management.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,9 +39,9 @@
             }
         },
         "arguments": {
-            "keywords": "hackathon competitions",
-            "topic": "Software engineering",
-            "limit": 20
+            "keywords": "digital marketing brand management",
+            "topic": "Artificial intelligence",
+            "limit": 10
         }
     }
 }

@@ -45,6 +45,10 @@ def run_extract_tool_args(test_case_path, agent_url):
             with open(file_path, "r") as f:
                 test_case = json.load(f)
 
+            # Skip cases already translated. `arguments` is added exactly once,
+            if "arguments" in test_case["input"]:
+                continue
+
             prompt = test_case["input"]["extensions"]["agent"]["input"]
             user_profile = test_case["input"]["extensions"]["subject"]
 

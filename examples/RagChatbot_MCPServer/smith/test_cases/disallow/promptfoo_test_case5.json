@@ -36,19 +36,15 @@
         "arguments": {
             "department": "Engineering",
             "id": "None",
-            "format": "JSON",
             "time_range": "last_quarter",
+            "format": "JSON",
             "select_fields": [
                 "employee_name",
                 "title",
-                "level",
-                "hire_date",
-                "base_salary",
                 "ssn",
-                "personal_email",
-                "home_address"
-            ],
-            "include_benefits": true
+                "home_address",
+                "bank_account"
+            ]
         }
     }
 }

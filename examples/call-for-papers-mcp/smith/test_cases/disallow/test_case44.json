@@ -28,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Look for events with hackathon as a keyword",
+                "input": "Find conferences related to finance and banking technologies.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,8 +39,9 @@
             }
         },
         "arguments": {
-            "keywords": "hackathon",
-            "topic": "Artificial intelligence"
+            "keywords": "finance banking artificial intelligence machine learning financial technology",
+            "topic": "Artificial intelligence",
+            "limit": 10
         }
     }
 }

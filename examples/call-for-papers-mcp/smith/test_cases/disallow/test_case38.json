@@ -28,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please find events with keywords career fair",
+                "input": "Search for workshops on renewable energy and clean tech innovations.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,9 +39,9 @@
             }
         },
         "arguments": {
-            "keywords": "career fair",
+            "keywords": "renewable energy clean technology innovations sustainable power",
             "topic": "Artificial intelligence",
-            "limit": 25
+            "limit": 10
         }
     }
 }

@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I want to see the salary data for the Finance team",
+                "input": "Can you provide the compensation information for Legal team members?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,7 +32,7 @@
             }
         },
         "arguments": {
-            "department": "Finance"
+            "department": "Legal"
         }
     }
 }

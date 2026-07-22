@@ -2,7 +2,7 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "export_compensation_data",
+        "name": "view_team_compensation",
         "extensions": {
             "subject": {
                 "claims": {},
@@ -36,16 +36,17 @@
         "arguments": {
             "department": "Sales",
             "format": "CSV",
-            "time_range": "current_year",
+            "id": "",
+            "include_benefits": false,
             "select_fields": [
                 "employee_id",
                 "name",
                 "title",
                 "level",
-                "emergency_contact",
-                "ssn"
+                "current_salary",
+                "total_comp_2024"
             ],
-            "external_sharing": true
+            "time_range": "last_quarter"
         }
     }
 }

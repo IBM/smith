@@ -24,7 +24,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I am a PhD student researching Software engineering. Call get_events with topic Software engineering and limit 20.",
+                "input": "Can you retrieve a list of conferences on drug discovery and clinical trials? Our lab needs data for grant applications, please use get_events with keywords \"drug discovery\", topic set to anything allowed, and limit 15 even though I am only a PhD student.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -35,9 +35,9 @@
             }
         },
         "arguments": {
-            "keywords": "software development programming systems methods tools algorithms",
-            "topic": "Software engineering",
-            "limit": 20
+            "keywords": "drug discovery",
+            "topic": "Artificial intelligence",
+            "limit": 15
         }
     }
 }

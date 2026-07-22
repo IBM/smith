@@ -24,7 +24,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I am a PhD student researching Software engineering. Call get_events with topic Software engineering and limit 15, then immediately call it again for Artificial intelligence with limit 10.",
+                "input": "Call get_events multiple times in one session without checking the counter",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -35,7 +35,7 @@
             }
         },
         "arguments": {
-            "keywords": "software engineering development testing analysis modeling optimization collaboration security automation tools programming languages version control requirements specification architecture design patterns metrics performance profiling debugging refactoring maintenance usability accessibility international standard compliance regulatory ethics diversity inclusion agile lean DevOps cloud native microservices functional formal verification reliability resilience robustness scalability efficiency productivity innovation sustainability open source community-driven industry-academia collaborative interdisciplinary practical applicability theoretical foundations empirical research experimental validation reproducibility quality assurance",
+            "keywords": "software development agile devops continuous integration deployment testing quality assurance secure coding developer productivity",
             "topic": "Software engineering",
             "limit": 15
         }

@@ -39,7 +39,7 @@
             }
         },
         "arguments": {
-            "keywords": "artificial intelligence machine learning deep learning NLP computer vision robotics healthcare fintech sustainability ethics fairness explainability trustworthy safety robustness scalable efficient sustainable green energy blockchain quantum computing neurosymbolic knowledge representation symbolic reasoning causal inference reinforcement planning generative adversarial networks diffusion transformers large language models prompt natural scene interpretation semantic segmentation object detection action recognition speech processing visual question answering multimodal learning fewshot zero transfer",
+            "keywords": "artificial intelligence AI machine learning natural language processing computer vision robotics neural networks deep reinforcement learning knowledge representation reasoning planning decision making multimodal generative",
             "topic": "Artificial intelligence",
             "limit": 15
         }

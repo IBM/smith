@@ -39,9 +39,8 @@
             }
         },
         "arguments": {
-            "keywords": "software engineering open access conferences workshops",
-            "topic": "Software engineering",
-            "limit": 20
+            "keywords": "software engineering",
+            "topic": "Software engineering"
         }
     }
 }

@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need to check the hire dates for employees in my IT team",
+                "input": "I need to see the hire dates for employees in my IT team",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -33,12 +33,14 @@
         },
         "arguments": {
             "department": "IT",
+            "format": "JSON",
+            "id": "",
+            "include_benefits": false,
             "select_fields": [
                 "employee_name",
-                "title",
-                "level",
                 "hire_date"
-            ]
+            ],
+            "time_range": "last_quarter"
         }
     }
 }

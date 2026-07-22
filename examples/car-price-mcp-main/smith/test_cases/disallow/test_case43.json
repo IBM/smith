@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you retrieve vehicles of type TRUCKS?",
+                "input": "Get vehicles of type TRUCKS",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

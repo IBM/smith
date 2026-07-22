@@ -67,6 +67,23 @@ Actual policy decision: {actual_decision}
 Based on the guidance rules, should this request be allowed or denied? Decide based on the arguments and subject first. Is the expected label ("{expected_label}") correct?"""
 
 
+# Test cases whose payload is an adversarial probe rather than an organic
+# allow/disallow example. These are identified by their filename prefix:
+# bypass cases from ``convert_bypass_case`` and promptfoo cases from the
+# promptfoo attack path. For these, a non-"keep" audit verdict means the probe
+# no longer demonstrates what it was generated to demonstrate (commonly because
+# translation neutralized the payload), so it is dropped rather than relocated.
+ADVERSARIAL_CASE_PREFIXES = ("bypass_test_case", "promptfoo_test_case")
+
+
+def is_adversarial_case(path):
+    """True if ``path`` is an adversarial probe (bypass or promptfoo) case.
+
+    Identified by filename prefix regardless of which folder the case lives in.
+    """
+    return os.path.basename(path).startswith(ADVERSARIAL_CASE_PREFIXES)
+
+
 def parse_failures(failures_file):
     """Parse score_test_failures.txt into structured list."""
     failures = []
@@ -202,6 +219,17 @@ def cross_validate_failed_cases(
             else:
                 policy_issue_count += 1
 
+            suggested_action = result.get("suggested_action", "keep")
+            reason = result.get("reason", "")
+            # Adversarial probe cases probe a specific guidance-vs-policy divergence or attack. If the auditor concludes
+            # such a case is anything other than "keep", drop it instead relabeling it to allow
+            if is_adversarial_case(path) and suggested_action != "keep":
+                reason = (
+                    f"{reason} [adversarial case: non-keep action "
+                    f"'{suggested_action}' collapsed to 'remove']"
+                ).strip()
+                suggested_action = "remove"
+
             results.append(
                 {
                     "path": path,
@@ -213,8 +241,8 @@ def cross_validate_failed_cases(
                     "arguments": case_data["arguments"],
                     "label_correct": label_correct,
                     "confidence": float(result.get("confidence", 0.5)),
-                    "reason": result.get("reason", ""),
-                    "suggested_action": result.get("suggested_action", "keep"),
+                    "reason": reason,
+                    "suggested_action": suggested_action,
                 }
             )
 

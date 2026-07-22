@@ -1,0 +1,45 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "get_events",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "user_name": "Bob",
+                "user_role": [
+                    "phd_student"
+                ],
+                "queries_this_session": 1,
+                "dissertation_area": "Artificial intelligence",
+                "research_area": [
+                    "Artificial intelligence",
+                    "Cybersecurity and privacy",
+                    "Software engineering"
+                ]
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Show me 3 events",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "keywords": "AI conference machine learning deep learning neural networks natural language processing computer vision big data security privacy blockchain reinforcement learning generative AI LLM foundation model agent robotics multimodal healthcare edge computing quantum cybersecurity software engineering systems architecture distributed cloud federated synthetic causal knowledge graph temporal real-time scalable personalized explainable ethical trustworthy robust efficient low latency high performance safety interpretability adversarial",
+            "limit": 3,
+            "topic": "Artificial intelligence"
+        }
+    }
+}

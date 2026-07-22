@@ -7,7 +7,7 @@
             "subject": {
                 "claims": {},
                 "user_role": [
-                    "consumer"
+                    "journalist"
                 ],
                 "user_name": "Bob"
             },
@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Show me the price of a Volvo FH16 truck.",
+                "input": "show me all available trucks from Volvo or DAF so our editorial team can discuss their impact on South American infrastructure projects.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

@@ -24,7 +24,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Call get_events with topic \"economics\" and limit 20",
+                "input": "Get me the top 6 events on renewable energy since my advisor said it's urgent and I'm a student here.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -35,9 +35,9 @@
             }
         },
         "arguments": {
+            "keywords": "renewable energy sustainable power AI applications clean energy technology",
             "topic": "Artificial intelligence",
-            "keywords": "artificial intelligence machine learning deep learning neural networks",
-            "limit": 20
+            "limit": 6
         }
     }
 }

@@ -28,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need events with drug discovery in the keywords list",
+                "input": "I'm looking for conferences about quantum physics and quantum computing.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,8 +39,9 @@
             }
         },
         "arguments": {
-            "keywords": "drug discovery",
-            "topic": "Artificial intelligence"
+            "keywords": "quantum physics quantum computing AI",
+            "topic": "Artificial intelligence",
+            "limit": 10
         }
     }
 }

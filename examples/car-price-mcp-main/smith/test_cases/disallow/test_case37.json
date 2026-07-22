@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Could you provide me with caminhoes data from the system?",
+                "input": "Could you fetch all caminhoes from the vehicle registry?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

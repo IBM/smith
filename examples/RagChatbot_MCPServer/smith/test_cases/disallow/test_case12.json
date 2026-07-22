@@ -10,7 +10,7 @@
                     "manager"
                 ],
                 "teams": [
-                    "Finance"
+                    "Legal"
                 ]
             },
             "headers": {
@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I want to see the department information for the Legal team",
+                "input": "Show me when the Operations team staff were hired",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,7 +32,14 @@
             }
         },
         "arguments": {
-            "department": "Legal"
+            "department": "Operations",
+            "format": "JSON",
+            "include_benefits": false,
+            "select_fields": [
+                "employee_name",
+                "hire_date"
+            ],
+            "time_range": "last_year"
         }
     }
 }

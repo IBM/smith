@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need to review the job titles of my Finance team members",
+                "input": "I need to check the job titles of my Finance team members",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -34,10 +34,9 @@
         "arguments": {
             "department": "Finance",
             "format": "JSON",
-            "select_fields": [
-                "employee_name",
-                "title"
-            ]
+            "include_benefits": false,
+            "id": "None",
+            "time_range": "current_year"
         }
     }
 }

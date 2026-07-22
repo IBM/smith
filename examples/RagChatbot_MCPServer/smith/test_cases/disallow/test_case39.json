@@ -2,12 +2,12 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "view_team_compensation",
+        "name": "export_compensation_data",
         "extensions": {
             "subject": {
                 "claims": {},
                 "roles": [
-                    "manager"
+                    "employee"
                 ]
             },
             "headers": {
@@ -18,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I want to see salary information and emergency contact details for my team",
+                "input": "Can I get a copy of the team's salary information in a file?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -29,17 +29,11 @@
             }
         },
         "arguments": {
-            "department": "IT",
             "format": "CSV",
-            "id": "None",
-            "include_benefits": true,
-            "select_fields": [
-                "employee_name",
-                "title",
-                "base_salary",
-                "emergency_contact"
-            ],
-            "time_range": "current_year"
+            "time_range": "last_quarter",
+            "export_type": "aggregated",
+            "business_justification": "Request for salary information file as requested by user",
+            "external_sharing": false
         }
     }
 }

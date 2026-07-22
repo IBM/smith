@@ -28,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I'm looking for bioinformatics conferences and workshops",
+                "input": "Can you find events related to genomics research?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,9 +39,9 @@
             }
         },
         "arguments": {
-            "keywords": "bioinformatics",
+            "keywords": "genomics",
             "topic": "Artificial intelligence",
-            "limit": 20
+            "limit": 10
         }
     }
 }

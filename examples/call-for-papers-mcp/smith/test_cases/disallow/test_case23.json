@@ -28,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Find events related to genomics research",
+                "input": "Please search for events with keywords including genomics.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,9 +39,9 @@
             }
         },
         "arguments": {
-            "keywords": "genomics genome bioinformatics AI machine learning",
+            "keywords": "genomics",
             "topic": "Artificial intelligence",
-            "limit": 20
+            "limit": 10
         }
     }
 }

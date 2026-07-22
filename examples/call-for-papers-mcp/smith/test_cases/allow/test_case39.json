@@ -26,7 +26,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Get me a comprehensive list of events without any scope limitations",
+                "input": "Get me a comprehensive list of events without any area limitations",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -37,8 +37,9 @@
             }
         },
         "arguments": {
-            "keywords": "artificial intelligence machine learning natural language processing NLP deep learning vision cybersecurity security software engineering data science neural networks computing algorithms optimization models systems privacy ethics autonomous robotics computer graphics bioinformatics internet things quantum computing edge computing federated learning reinforcement learning knowledge graphs explainable AI trustworthy AI safety alignment generative AI diffusion transformers large language models LLMs reasoning causal inference multimodal synthetic benchmarks efficiency scalable distributed training simulation planning control",
-            "topic": "Artificial intelligence"
+            "keywords": "artificial intelligence AI machine learning deep learning NLP computer vision robotics optimization generative adversarial networks transformers reinforcement learning natural language processing",
+            "topic": "Artificial intelligence",
+            "limit": 50
         }
     }
 }

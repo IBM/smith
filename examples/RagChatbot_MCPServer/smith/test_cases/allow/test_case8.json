@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "What are the current salaries of my HR team members?",
+                "input": "What are the current salaries of employees in my HR department?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,8 +32,7 @@
             }
         },
         "arguments": {
-            "department": "HR",
-            "time_range": "current_year"
+            "department": "HR"
         }
     }
 }

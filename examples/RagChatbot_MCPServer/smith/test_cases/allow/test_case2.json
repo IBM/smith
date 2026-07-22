@@ -33,8 +33,10 @@
         },
         "arguments": {
             "department": "Sales",
+            "format": "JSON",
             "select_fields": [
-                "employee_name"
+                "employee_name",
+                "name"
             ]
         }
     }

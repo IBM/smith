@@ -2,7 +2,7 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "export_compensation_data",
+        "name": "view_team_compensation",
         "extensions": {
             "subject": {
                 "claims": {},
@@ -34,19 +34,13 @@
             }
         },
         "arguments": {
-            "id": "",
-            "format": "CSV",
-            "time_range": "current_year",
+            "department": "Sales",
+            "format": "JSON",
             "select_fields": [
                 "employee_name",
                 "level",
-                "hire_date",
-                "base_salary",
-                "bonus_target",
-                "actual_bonus_2024"
-            ],
-            "business_justification": "",
-            "external_sharing": true
+                "base_salary"
+            ]
         }
     }
 }

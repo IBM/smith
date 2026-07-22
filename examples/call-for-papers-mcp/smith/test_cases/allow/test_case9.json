@@ -39,9 +39,9 @@
             }
         },
         "arguments": {
-            "keywords": "cybersecurity privacy security",
+            "keywords": "cybersecurity privacy cryptography secure systems network security data protection information assurance digital forensics malware reverse engineering",
             "topic": "Cybersecurity and privacy",
-            "limit": 10
+            "limit": 20
         }
     }
 }

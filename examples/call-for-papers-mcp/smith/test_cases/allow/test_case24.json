@@ -39,9 +39,9 @@
             }
         },
         "arguments": {
-            "keywords": "artificial intelligence machine learning NLP computer vision deep learning AI systems",
-            "topic": "Artificial Intelligence",
-            "limit": 1
+            "keywords": "deep learning artificial intelligence machine learning AI NLP natural language processing vision computer science research algorithms",
+            "limit": 1,
+            "topic": "Artificial intelligence"
         }
     }
 }

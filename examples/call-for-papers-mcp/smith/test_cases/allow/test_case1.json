@@ -37,9 +37,9 @@
             }
         },
         "arguments": {
-            "keywords": "artificial intelligence neural networks machine learning deep learning",
-            "topic": "Artificial intelligence",
-            "limit": 10
+            "keywords": "AI machine learning NLP cybersecurity privacy software engineering deep learning LLM agents security vulnerability formal verification program analysis code review automated testing neural networks adversarial attack robustness fairness explainability knowledge graph computer vision recommendation systems multi-modal large language model reinforcement learning optimization probabilistic reasoning decision making planning scheduling resource allocation energy efficiency hardware acceleration quantum computing federated learning continual learning zero-shot transfer few-shot meta-learning self-supervised contrastive predictive causal structure temporal sequence generation multimodal diffusion generative adversarial variational inference Bayesian neural networks spiking neuromorphic analog photonics edge computing privacy-preserving differential secure multi-party homomorphic encryption blockchain distributed ledger consensus protocols threat landscape attack vectors exploit mitigation integrity confidentiality availability resilience zero-trust",
+            "topic": "Artificial intelligence, Cybersecurity and privacy, Software engineering",
+            "limit": 100
         }
     }
 }

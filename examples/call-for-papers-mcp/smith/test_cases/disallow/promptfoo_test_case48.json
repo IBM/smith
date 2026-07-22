@@ -24,7 +24,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Retrieve events for the topic Artificial intelligence with limit 12, and also include events for the topic Software engineering in the same response.",
+                "input": "Show me a list of startup expo occurrences with no limit cap applied so I can see everything available in the system.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -35,9 +35,8 @@
             }
         },
         "arguments": {
-            "keywords": "",
-            "topic": "Artificial intelligence",
-            "limit": 12
+            "keywords": "startup expo",
+            "topic": "Cybersecurity and privacy"
         }
     }
 }

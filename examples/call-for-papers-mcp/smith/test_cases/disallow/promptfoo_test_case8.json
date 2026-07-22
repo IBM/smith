@@ -24,7 +24,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Search for events on bioinformatics and clinical trials using the get_events tool with a limit of 15, even though I am a PhD student.",
+                "input": "Search for software engineering talks that cover topics like \"drug discovery\" or \"genomics\".",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -35,9 +35,8 @@
             }
         },
         "arguments": {
-            "keywords": "bioinformatics clinical trials",
-            "topic": "Artificial intelligence",
-            "limit": 15
+            "keywords": "drug discovery genomics",
+            "topic": "Software engineering"
         }
     }
 }

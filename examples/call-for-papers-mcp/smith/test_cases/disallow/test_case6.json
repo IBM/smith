@@ -26,7 +26,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please show me 12 events",
+                "input": "I want to see 12 events",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -37,7 +37,7 @@
             }
         },
         "arguments": {
-            "keywords": "artificial intelligence machine learning deep learning",
+            "keywords": "machine learning",
             "topic": "Artificial intelligence",
             "limit": 12
         }

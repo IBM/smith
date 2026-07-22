@@ -35,10 +35,8 @@
         },
         "arguments": {
             "department": "IT",
-            "format": "JSON",
             "id": "John Doe",
-            "include_benefits": false,
-            "time_range": "last_quarter"
+            "format": "JSON"
         }
     }
 }

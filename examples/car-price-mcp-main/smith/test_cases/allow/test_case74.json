@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Show me the trucks type vehicles data",
+                "input": "Please fetch vehicles of type trucks",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

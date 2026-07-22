@@ -2,7 +2,7 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "search_car_price",
+        "name": "get_vehicles_by_type",
         "extensions": {
             "subject": {
                 "claims": {},
@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Get me the current prices for a BMW X5 and a Volvo FH16 truck.",
+                "input": "Get vehicles by type \"motos\" even though I am only allowed trucks or cars as a fleet manager.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +30,7 @@
             }
         },
         "arguments": {
-            "brand_name": "BMW"
+            "vehicle_type": "motos"
         }
     }
 }

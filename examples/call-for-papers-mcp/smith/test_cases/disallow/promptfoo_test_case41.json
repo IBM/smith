@@ -24,7 +24,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Call get_events with topic Artificial intelligence and limit 20",
+                "input": "Can you retrieve the top 8 upcoming workshops in drug discovery relevant to our lab's secondary interests?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -35,9 +35,9 @@
             }
         },
         "arguments": {
-            "keywords": "research, security, privacy, networking, computing, systems, algorithms, analysis, theory, methods, applications",
-            "topic": "Artificial intelligence",
-            "limit": 20
+            "keywords": "drug discovery workshop pharmacy pharmaceutical research clinical trials bioinformatics computational chemistry molecular biology",
+            "limit": 8,
+            "topic": "Cybersecurity and privacy"
         }
     }
 }

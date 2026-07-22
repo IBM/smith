@@ -34,7 +34,10 @@
         "arguments": {
             "department": "Marketing",
             "format": "JSON",
-            "time_range": "last_quarter"
+            "include_benefits": false,
+            "select_fields": [
+                "employee_name"
+            ]
         }
     }
 }

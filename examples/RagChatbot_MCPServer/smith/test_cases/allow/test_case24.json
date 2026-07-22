@@ -18,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I want to export the team compensation information in JSON format",
+                "input": "Please create a PDF document containing the salary and benefits data for my team members",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -29,9 +29,11 @@
             }
         },
         "arguments": {
-            "format": "JSON",
-            "time_range": "last_quarter",
-            "export_type": "aggregated"
+            "format": "PDF",
+            "select_fields": "None",
+            "external_sharing": false,
+            "time_range": "current_year",
+            "export_type": "detailed"
         }
     }
 }

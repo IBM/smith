@@ -39,9 +39,9 @@
             }
         },
         "arguments": {
-            "keywords": "cybersecurity privacy security",
-            "limit": 20,
-            "topic": "Cybersecurity and privacy"
+            "keywords": "Cybersecurity, security, networks, data protection, AI in security",
+            "topic": "Cybersecurity and privacy",
+            "limit": 20
         }
     }
 }

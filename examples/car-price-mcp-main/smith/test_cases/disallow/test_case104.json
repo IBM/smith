@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "What's the pricing structure for Lamborghini cars?",
+                "input": "What's the pricing for Lamborghini cars?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

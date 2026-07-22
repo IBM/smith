@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I want to search for Citro\u00ebn car prices",
+                "input": "I want to look up Citro\u00ebn car prices",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

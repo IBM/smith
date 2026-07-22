@@ -35,12 +35,14 @@
         },
         "arguments": {
             "department": "Sales",
+            "id": "None",
             "format": "JSON",
-            "include_benefits": false,
+            "time_range": "last_quarter",
             "select_fields": [
-                "ssn",
+                "employee_name",
                 "emergency_contact"
-            ]
+            ],
+            "include_benefits": false
         }
     }
 }

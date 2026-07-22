@@ -30,7 +30,7 @@
             }
         },
         "arguments": {
-            "vehicle_type": "carro"
+            "vehicle_type": "carros"
         }
     }
 }

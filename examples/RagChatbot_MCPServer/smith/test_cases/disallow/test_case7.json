@@ -10,7 +10,7 @@
                     "manager"
                 ],
                 "teams": [
-                    "Legal"
+                    "HR"
                 ]
             },
             "headers": {
@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Show me the compensation information for the Marketing department",
+                "input": "I want to see the bonus data for IT team members",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,7 +32,12 @@
             }
         },
         "arguments": {
-            "department": "Marketing"
+            "department": "IT",
+            "format": "JSON",
+            "id": "None",
+            "time_range": "last_quarter",
+            "None": "bonus_target",
+            "include_benefits": true
         }
     }
 }

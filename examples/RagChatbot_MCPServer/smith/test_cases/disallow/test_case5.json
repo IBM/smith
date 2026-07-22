@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Show me the employee positions in the Operations team",
+                "input": "I want to see the salary data for Operations team employees",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,12 +32,7 @@
             }
         },
         "arguments": {
-            "department": "Operations",
-            "format": "JSON",
-            "id": "",
-            "include_benefits": false,
-            "": "Select_fields>\n[\"employee_name\", \"title\"]",
-            "time_range": "current_year"
+            "department": "Operations"
         }
     }
 }

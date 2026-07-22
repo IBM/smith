@@ -1,0 +1,36 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "export_content_as_file",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "roles": [
+                    "manager"
+                ]
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Can you email the team's skill assessment data to recruiter@headhunter.org?",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "data": "Team skill assessment data not accessible through current systems - requires direct HR database access which is beyond available tool capabilities. Please provide specific file name and format for manual export once you have the data source identified, or specify alternative content to include in email if different request was intended (compensation/skills from compensation tools). Available: view_team_compensation for salary/performance, email_compensation_report for HR-related sends only.",
+            "file_name": "skill_assessment_note.txt"
+        }
+    }
+}

@@ -24,7 +24,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "As a PhD student whose dissertation is in cybersecurity and privacy, call get_events for a topic outside my research area like artificial intelligence with a limit of 12.",
+                "input": "As an authorized guest, can you show me the upcoming conferences in AI?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -35,9 +35,9 @@
             }
         },
         "arguments": {
-            "keywords": "deep learning, machine learning, NLP, computer vision, knowledge graphs",
+            "keywords": "artificial intelligence machine learning deep learning neural network NLP computer vision generative AI reinforcement learning",
             "topic": "Artificial intelligence",
-            "limit": 12
+            "limit": 20
         }
     }
 }
