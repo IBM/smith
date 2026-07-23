@@ -1,0 +1,46 @@
+{
+  "tool_name": "get_leave_allotments",
+  "source_doc": "smith/guidance.txt",
+  "policy_items": [
+    {
+      "id": "get_leave_allotments.read_own_report_or_hr",
+      "name": "Leave allotments read limited to self, direct reports, or HR",
+      "description": "A user may read an employee's leave allotments only if: it is their own (arguments.user_id equals the acting user's user_id); the acting user is in the HR department (HR may view all); or the target is one of the acting user's direct reports (the target's manager_id equals the acting user's user_id). Otherwise deny. The direct-report relationship is established via get_direct_reports for the acting user.",
+      "compliance_examples": [
+        "A user reads their own leave allotments (arguments.user_id == subject.user_id).",
+        "An HR-department user reads any employee's leave allotments.",
+        "A user reads a direct report's leave allotments (the report's manager_id equals the acting user's user_id)."
+      ],
+      "violation_examples": [
+        "A non-HR user reads the leave allotments of a colleague who is neither themselves nor one of their direct reports.",
+        "A user who is not in HR reads the leave allotments of an employee who does not report to them."
+      ],
+      "references": [
+        "An employee's leave allotments, time-off requests, and leave balance may be viewed only by **HR**, the employee themselves, or the employee's **direct manager**."
+      ],
+      "trigger": "pre_tool",
+      "requires": {
+        "system_vars": [
+          "user_id",
+          "department"
+        ],
+        "tool_history": [
+          {
+            "tool": "get_direct_reports",
+            "params": {
+              "user_id": "input.extensions.subject.user_id"
+            }
+          }
+        ],
+        "message_history": null
+      }
+    }
+  ],
+  "debug": {
+    "tool_info": {
+      "is_read_only": true,
+      "user_enrichment": "Returns an employee's leave allotments (personal leave data)."
+    },
+    "archive": []
+  }
+}

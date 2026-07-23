@@ -1,0 +1,46 @@
+{
+  "tool_name": "list_time_off_requests",
+  "source_doc": "smith/guidance.txt",
+  "policy_items": [
+    {
+      "id": "list_time_off_requests.scope_own_reports_or_hr",
+      "name": "Time-off request listing limited to self, direct reports, or HR",
+      "description": "list_time_off_requests is a bulk read of time-off requests. A user may only receive requests they are authorized to view: a user in the HR department may list all requests; any other user must scope the query (arguments.user_id) to their own user_id or to one of their direct reports (the filtered user_id's manager_id equals the acting user's user_id). Deny an unfiltered listing by a non-HR user, or a listing scoped to a user who is neither the acting user nor one of their direct reports. Direct reports are established via get_direct_reports for the acting user.",
+      "compliance_examples": [
+        "An HR-department user lists all time-off requests.",
+        "A user lists time-off requests filtered to their own user_id.",
+        "A user lists time-off requests filtered to a direct report's user_id (the report's manager_id equals the acting user's user_id)."
+      ],
+      "violation_examples": [
+        "A non-HR user lists time-off requests with no user_id filter (would return other employees' requests).",
+        "A non-HR user lists time-off requests filtered to a colleague who is neither themselves nor one of their direct reports."
+      ],
+      "references": [
+        "An employee's leave allotments, time-off requests, and leave balance may be viewed only by **HR**, the employee themselves, or the employee's **direct manager**."
+      ],
+      "trigger": "pre_tool",
+      "requires": {
+        "system_vars": [
+          "user_id",
+          "department"
+        ],
+        "tool_history": [
+          {
+            "tool": "get_direct_reports",
+            "params": {
+              "user_id": "input.extensions.subject.user_id"
+            }
+          }
+        ],
+        "message_history": null
+      }
+    }
+  ],
+  "debug": {
+    "tool_info": {
+      "is_read_only": true,
+      "user_enrichment": "Bulk read of time-off requests; authorized scope depends on the user_id filter (own / direct report / all for HR)."
+    },
+    "archive": []
+  }
+}

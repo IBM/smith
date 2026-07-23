@@ -1,0 +1,64 @@
+{
+  "tool_name": "list_employees",
+  "source_doc": "smith/guidance.txt",
+  "policy_items": [],
+  "debug": {
+    "tool_info": {
+      "is_read_only": true,
+      "user_enrichment": "Bulk read returning org-directory fields only (user_id, first_name, last_name, role, organization, title, department_id, manager_id, country_code). Salary, home_address, email, salary_currency, and start_date are NOT returned. Filter args: department_id, manager_id, country_code."
+    },
+    "archive": [
+      {
+        "id": "list_employees.restrict_bulk_read",
+        "name": "Bulk employee listing limited to authorized scope",
+        "description": "list_employees is a bulk read that returns employee records (including salary) for many employees. A non-HR user may only receive employees they are authorized to view: their own record, and — for a Manager — their direct reports. HR may list all employees. Deny a listing whose scope would expose employees the acting user is not authorized to view.",
+        "compliance_examples": [
+          "An HR-department user lists all employees.",
+          "A Manager lists employees filtered to manager_id equal to their own user_id (their direct reports).",
+          "An IC lists employees filtered to their own user_id only."
+        ],
+        "violation_examples": [
+          "An IC lists all employees with no restricting filter.",
+          "A Manager lists employees filtered to a department or manager_id they do not manage.",
+          "A non-HR user issues an unfiltered list that would return employees outside their authorized scope.",
+          "A Manager lists employees filtered by manager_id equal to a different manager's id."
+        ],
+        "references": [
+          "An employee may view and edit only their **own data** — home address, passport, visa, emergency contact, and bank account.",
+          "A `Manager` may view only their **direct reports'** data, in addition to their own.",
+          "**HR** may view and edit all employees' data."
+        ],
+        "trigger": "pre_tool",
+        "requires": {
+          "system_vars": [
+            "user_id",
+            "department",
+            "role"
+          ],
+          "tool_history": [
+            {
+              "tool": "get_direct_reports",
+              "params": {
+                "user_id": "input.extensions.subject.user_id"
+              }
+            }
+          ],
+          "message_history": null
+        },
+        "resolved_by_user": [
+          {
+            "type": "clarification",
+            "detail": "The data-access rules are phrased per-employee, but list_employees returns many rows and its authorized scope depends on the filter arguments. It is ambiguous whether the guard should deny the call up-front (pre_tool) based on filters, or filter the returned rows (post_tool).",
+            "question": "For bulk listing, should the policy deny non-HR callers unless they scope the query to themselves/their direct reports (pre_tool), or should it filter out unauthorized rows from the result (post_tool)?",
+            "resolution": {
+              "answer": "Moot: list_employees was changed to return only non-sensitive org-directory fields (no salary, home_address, or other PII), so bulk listing no longer exposes protected employee data. The scoping restriction is dropped entirely — any authenticated user may list employees — so neither pre_tool scoping nor post_tool row filtering is needed.",
+              "decided_by": "human",
+              "effect": "Rule removed from active policy_items and archived; list_employees is unrestricted."
+            }
+          }
+        ],
+        "archive_reason": "list_employees was changed (api/employees.py) to return only non-sensitive org-directory fields (user_id, first_name, last_name, role, organization, title, department_id, manager_id, country_code); salary and all PII (home_address, email, salary_currency, start_date) were removed. With no sensitive data exposed by the tool, the HR-all / Manager-reports / IC-self scoping is no longer warranted, so the rule is dropped and the tool is available to any authenticated user."
+      }
+    ]
+  }
+}

@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Employee Hub — Chat</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #171a21;
+    --panel-2: #1e222b;
+    --border: #2a2f3a;
+    --text: #e6e8ec;
+    --muted: #9aa3b2;
+    --accent: #5b8cff;
+    --user: #2a3550;
+    --agent: #1e222b;
+    --call: #3a2f14;
+    --result: #14261c;
+    --error: #3a1c1c;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    font: 15px/1.5 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+  }
+  header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--panel);
+  }
+  header h1 { font-size: 15px; font-weight: 600; margin: 0; letter-spacing: .2px; }
+  header .spacer { flex: 1; }
+  header label { color: var(--muted); font-size: 13px; display: flex; align-items: center; gap: 6px; cursor: pointer; }
+  button {
+    font: inherit;
+    color: var(--text);
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 7px 14px;
+    cursor: pointer;
+  }
+  button:hover { border-color: var(--accent); }
+  button:disabled { opacity: .5; cursor: default; border-color: var(--border); }
+
+  main { flex: 1; display: flex; min-height: 0; }
+  #conversation-pane {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  #transcript { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+  .msg { max-width: 680px; padding: 10px 14px; border-radius: 12px; white-space: pre-wrap; word-wrap: break-word; }
+  .msg.user { align-self: flex-end; background: var(--user); border-bottom-right-radius: 4px; }
+  .msg.agent { align-self: flex-start; background: var(--agent); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+  .msg.error { align-self: flex-start; background: var(--error); border: 1px solid #5a2a2a; }
+  .msg .role { font-size: 11px; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); margin-bottom: 4px; }
+
+  form { display: flex; gap: 10px; padding: 14px 20px; border-top: 1px solid var(--border); background: var(--panel); }
+  #input { flex: 1; resize: none; font: inherit; color: var(--text); background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; max-height: 140px; }
+  #input:focus { outline: none; border-color: var(--accent); }
+
+  #tools-pane {
+    width: 380px;
+    border-left: 1px solid var(--border);
+    background: var(--panel);
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  body.hide-tools #tools-pane { display: none; }
+  #tools-pane .head { padding: 12px 16px; border-bottom: 1px solid var(--border); font-size: 12px; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); }
+  #timeline { flex: 1; overflow-y: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+  #timeline .empty { color: var(--muted); font-size: 13px; }
+  .step { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .step .label { padding: 8px 12px; font-family: var(--mono); font-size: 12.5px; display: flex; align-items: center; gap: 8px; }
+  .step.call .label { background: var(--call); }
+  .step.result .label { background: var(--result); }
+  .step .tag { font-size: 10px; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); border: 1px solid var(--border); border-radius: 5px; padding: 1px 5px; }
+  .step pre { margin: 0; padding: 10px 12px; font-family: var(--mono); font-size: 12px; color: var(--muted); white-space: pre-wrap; word-break: break-word; max-height: 220px; overflow: auto; border-top: 1px solid var(--border); }
+</style>
+</head>
+<body>
+<header>
+  <h1>Employee Hub — Chat</h1>
+  <div class="spacer"></div>
+  <label><input type="checkbox" id="toggle-tools" checked> Show tool calls</label>
+  <button id="reset">New chat</button>
+</header>
+<main>
+  <section id="conversation-pane">
+    <div id="transcript"></div>
+    <form id="chat-form">
+      <textarea id="input" rows="1" placeholder="Ask about employees, leave, holidays… (Enter to send)"></textarea>
+      <button type="submit" id="send">Send</button>
+    </form>
+  </section>
+  <aside id="tools-pane">
+    <div class="head">Tool activity</div>
+    <div id="timeline"><div class="empty">Tool calls the agent makes will appear here, in order.</div></div>
+  </aside>
+</main>
+
+<script>
+const API = "http://127.0.0.1:8000";
+const transcript = document.getElementById("transcript");
+const timeline = document.getElementById("timeline");
+const input = document.getElementById("input");
+const form = document.getElementById("chat-form");
+const sendBtn = document.getElementById("send");
+let timelineHasEntries = false;
+
+function scrollToEnd(el) { el.scrollTop = el.scrollHeight; }
+
+function addMessage(role, text) {
+  const div = document.createElement("div");
+  div.className = "msg " + role;
+  const label = document.createElement("div");
+  label.className = "role";
+  label.textContent = role === "user" ? "You" : role === "error" ? "Error" : "Agent";
+  const body = document.createElement("div");
+  body.textContent = text;
+  div.append(label, body);
+  transcript.appendChild(div);
+  scrollToEnd(transcript);
+}
+
+function addStep(step) {
+  if (!timelineHasEntries) { timeline.innerHTML = ""; timelineHasEntries = true; }
+  const div = document.createElement("div");
+  div.className = "step " + step.type;
+  const label = document.createElement("div");
+  label.className = "label";
+  const tag = document.createElement("span");
+  tag.className = "tag";
+  tag.textContent = step.type === "call" ? "call" : "result";
+  const name = document.createElement("span");
+  name.textContent = step.name || "(unknown)";
+  label.append(tag, name);
+  div.appendChild(label);
+  const pre = document.createElement("pre");
+  if (step.type === "call") {
+    pre.textContent = JSON.stringify(step.args ?? {}, null, 2);
+  } else {
+    pre.textContent = step.content ?? "";
+  }
+  div.appendChild(pre);
+  timeline.appendChild(div);
+  scrollToEnd(timeline);
+}
+
+function setBusy(busy) {
+  sendBtn.disabled = busy;
+  input.disabled = busy;
+  sendBtn.textContent = busy ? "…" : "Send";
+}
+
+async function send(message) {
+  addMessage("user", message);
+  setBusy(true);
+  try {
+    const res = await fetch(API + "/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message }),
+    });
+    const data = await res.json();
+    if (!res.ok || data.error) {
+      addMessage("error", data.error || ("HTTP " + res.status));
+    } else {
+      (data.steps || []).forEach(addStep);
+      addMessage("agent", data.reply || "");
+    }
+  } catch (err) {
+    addMessage("error", "Could not reach the agent server at " + API + ". Is it running?");
+  } finally {
+    setBusy(false);
+    input.focus();
+  }
+}
+
+form.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const message = input.value.trim();
+  if (!message) return;
+  input.value = "";
+  input.style.height = "auto";
+  send(message);
+});
+
+input.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); form.requestSubmit(); }
+});
+input.addEventListener("input", () => {
+  input.style.height = "auto";
+  input.style.height = Math.min(input.scrollHeight, 140) + "px";
+});
+
+document.getElementById("toggle-tools").addEventListener("change", (e) => {
+  document.body.classList.toggle("hide-tools", !e.target.checked);
+});
+
+document.getElementById("reset").addEventListener("click", async () => {
+  await fetch(API + "/reset", { method: "POST" }).catch(() => {});
+  transcript.innerHTML = "";
+  timeline.innerHTML = '<div class="empty">Tool calls the agent makes will appear here, in order.</div>';
+  timelineHasEntries = false;
+  input.focus();
+});
+
+input.focus();
+</script>
+</body>
+</html>

@@ -1,0 +1,74 @@
+{
+  "tool_name": "add_department",
+  "source_doc": "smith/guidance.txt",
+  "policy_items": [
+    {
+      "id": "add_department.hr_only",
+      "name": "Only HR may add a department",
+      "description": "A user may add a department only if their department is HR. If the acting user's department is not HR, deny.",
+      "compliance_examples": [
+        "A user in the HR department adds a department."
+      ],
+      "violation_examples": [
+        "A user in the Engineering department adds a department.",
+        "A user in the Finance department adds a department."
+      ],
+      "references": [
+        "Only **HR** may add or update a department, add or delete a country holiday, or set a leave allotment."
+      ],
+      "trigger": "pre_tool",
+      "requires": {
+        "system_vars": [
+          "department"
+        ],
+        "tool_history": null,
+        "message_history": null
+      },
+      "resolved_by_user": [
+        {
+          "type": "clarification",
+          "detail": "The guidance specifies no role restriction on who may create/rename departments (a structural org-wide change). Only the generic write-confirmation rule applies.",
+          "question": "Should department management be restricted to a role (e.g. HR or Executive), or is any confirmed caller allowed?",
+          "resolution": {
+            "answer": "Restricted to HR: only users whose department is HR may add a department.",
+            "decided_by": "human",
+            "effect": "Added add_department.hr_only (deny when the acting user's department is not HR)."
+          }
+        }
+      ]
+    },
+    {
+      "id": "add_department.confirm_before_write",
+      "name": "Require explicit confirmation before creating a department",
+      "description": "add_department writes to the database. Before it runs, the agent must first list the details of the new department to the user and obtain the user's explicit 'yes' confirmation. If the conversation history contains no explicit user confirmation ('yes') for this create action, deny.",
+      "compliance_examples": [
+        "The agent lists the exact details of the action to create the department, the user replies 'yes', and only then is the tool called.",
+        "The user explicitly approves this specific action ('yes, go ahead') before the tool to create the department is called."
+      ],
+      "violation_examples": [
+        "The tool to create the department is called with no prior confirmation step at all.",
+        "The agent presents the action but calls the tool to create the department before the user responds.",
+        "The user replies with something ambiguous ('sounds good', 'ok maybe') rather than an explicit 'yes'.",
+        "The user previously said 'yes' to a different action; there is no explicit 'yes' for this specific action to create the department.",
+        "The user explicitly declines ('no'), but the tool to create the department is called anyway."
+      ],
+      "references": [
+        "Before performing any action that writes to or modifies the database(create, update, or delete), the agent must first list the details of the action and obtain the user's explicit confirmation (\"yes\") before proceeding."
+      ],
+      "trigger": "pre_tool",
+      "requires": {
+        "system_vars": [],
+        "tool_history": null,
+        "message_history": true
+      }
+    }
+  ],
+  "debug": {
+    "tool_info": {
+      "is_read_only": false,
+      "user_enrichment": "Restricted to HR (department == HR). A department add action."
+    },
+    "archive": [],
+    "notes": []
+  }
+}

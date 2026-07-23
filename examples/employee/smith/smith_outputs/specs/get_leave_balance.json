@@ -1,0 +1,46 @@
+{
+  "tool_name": "get_leave_balance",
+  "source_doc": "smith/guidance.txt",
+  "policy_items": [
+    {
+      "id": "get_leave_balance.read_own_report_or_hr",
+      "name": "Leave balance read limited to self, direct reports, or HR",
+      "description": "A user may read an employee's leave balance only if: it is their own (arguments.user_id equals the acting user's user_id); the acting user is in the HR department (HR may view all); or the target is one of the acting user's direct reports (the target's manager_id equals the acting user's user_id). Otherwise deny. The direct-report relationship is established via get_direct_reports for the acting user.",
+      "compliance_examples": [
+        "A user reads their own leave balance (arguments.user_id == subject.user_id).",
+        "An HR-department user reads any employee's leave balance.",
+        "A user reads a direct report's leave balance (the report's manager_id equals the acting user's user_id)."
+      ],
+      "violation_examples": [
+        "A non-HR user reads the leave balance of a colleague who is neither themselves nor one of their direct reports.",
+        "A user who is not in HR reads the leave balance of an employee who does not report to them."
+      ],
+      "references": [
+        "An employee's leave allotments, time-off requests, and leave balance may be viewed only by **HR**, the employee themselves, or the employee's **direct manager**."
+      ],
+      "trigger": "pre_tool",
+      "requires": {
+        "system_vars": [
+          "user_id",
+          "department"
+        ],
+        "tool_history": [
+          {
+            "tool": "get_direct_reports",
+            "params": {
+              "user_id": "input.extensions.subject.user_id"
+            }
+          }
+        ],
+        "message_history": null
+      }
+    }
+  ],
+  "debug": {
+    "tool_info": {
+      "is_read_only": true,
+      "user_enrichment": "Returns an employee's per-leave-type balance (personal leave data)."
+    },
+    "archive": []
+  }
+}
