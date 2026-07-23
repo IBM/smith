@@ -1,0 +1,230 @@
+{
+  "tool_name": "update_employee",
+  "source_doc": "smith/guidance.txt",
+  "policy_items": [
+    {
+      "id": "update_employee.edit_own_or_hr",
+      "name": "Editing an employee record is limited to self or HR",
+      "description": "A user may edit an employee record only if it is their own (arguments.user_id equals the acting user's user_id) or the acting user is in the HR department (HR may edit all employees). A Manager may only view — not edit — their direct reports, so managers get no edit access to another employee's record here. Deny any edit of another employee's record by a non-HR user.",
+      "compliance_examples": [
+        "A user creates/updates their own employee record (arguments.user_id == subject.user_id).",
+        "An HR-department user creates/updates another employee's employee record."
+      ],
+      "violation_examples": [
+        "A non-HR user (department != HR) creates/updates another employee's employee record (arguments.user_id != subject.user_id).",
+        "A user creates/updates the employee record of one of their direct reports (the target's manager_id equals the acting user's user_id) — a direct manager may view a report's data but not edit it."
+      ],
+      "references": [
+        "An employee may view and edit only their **own data** — home address, passport, visa, emergency contact, and bank account.",
+        "**HR** may view and edit all employees' data."
+      ],
+      "trigger": "pre_tool",
+      "requires": {
+        "system_vars": [
+          "user_id",
+          "department"
+        ],
+        "tool_history": null,
+        "message_history": null
+      }
+    },
+    {
+      "id": "update_employee.salary_by_hr_or_direct_manager",
+      "name": "Salary changes restricted to HR or the direct manager",
+      "description": "If the call sets or changes the salary field, the acting user must be in the HR department or be the target employee's direct manager (the target employee's manager_id equals the acting user's user_id). Otherwise deny. The target's manager_id must be looked up (e.g. via get_employee) to evaluate the direct-manager condition.",
+      "compliance_examples": [
+        "An HR-department user updates an employee's salary.",
+        "A user updates the salary of a direct report (the employee's manager_id equals the acting user's user_id).",
+        "A user updates non-salary fields only (the rule does not fire when salary is unchanged)."
+      ],
+      "violation_examples": [
+        "A non-HR user who is not the target's direct manager updates the target's salary (the target's manager_id != the acting user's user_id) — even a manager may change salary only for their own direct reports.",
+        "A non-HR user updates their own salary (self-service does not authorize a salary change; only HR or the employee's direct manager may)."
+      ],
+      "references": [
+        "An employee's `salary` may be updated only by **HR** or by that employee's **direct manager**."
+      ],
+      "trigger": "pre_tool",
+      "requires": {
+        "system_vars": [
+          "department",
+          "user_id"
+        ],
+        "tool_history": [
+          {
+            "tool": "get_employee",
+            "params": {
+              "user_id": "input.arguments.user_id"
+            }
+          }
+        ],
+        "message_history": null
+      }
+    },
+    {
+      "id": "update_employee.home_address_same_country",
+      "name": "Home-address changes must stay within the current country",
+      "description": "When home_address is updated, the change must not move the employee to a different country. The country of the employee is tracked by the country_code field: the employee's current country_code (looked up via get_employee) is compared against the country_code after the update. If the update changes country_code to a different country, the move is cross-country and is denied. A home_address change that leaves country_code unchanged stays within the same country and is allowed.",
+      "compliance_examples": [
+        "An employee whose current country_code is 'US' updates their home_address and keeps country_code 'US'.",
+        "The update does not change country_code (the employee stays in the same country).",
+        "The update changes fields other than home_address / country_code (the rule does not apply)."
+      ],
+      "violation_examples": [
+        "An employee whose current country_code is 'US' changes country_code to 'CA' (a cross-country move).",
+        "A home_address update accompanied by a country_code change to a different country than the employee's current country_code."
+      ],
+      "references": [
+        "An employee may update their **home address**  only to an address within their own current country; changing the address to a different country is not allowed through this agent."
+      ],
+      "trigger": "pre_tool",
+      "requires": {
+        "system_vars": [],
+        "tool_history": [
+          {
+            "tool": "get_employee",
+            "params": {
+              "user_id": "input.arguments.user_id"
+            }
+          }
+        ],
+        "message_history": null
+      },
+      "resolved_by_user": [
+        {
+          "type": "clarification",
+          "detail": "home_address is a free-text string with no separate country field, and country_code is a distinct field. Determining the country of a new free-text address (to compare against the current country) is ambiguous.",
+          "suggested_source": "get_employee (current country_code)",
+          "question": "How should the policy determine the country of a new home_address? Should address changes also update country_code, or should the agent supply a structured country for the new address?",
+          "resolution": {
+            "answer": "We can determine whether the employee moved to another country by the country_code field: compare the updated country_code against the employee's current country_code (from get_employee). If the country_code changed to a different country, it is a cross-country move and is denied; the free-text home_address itself is not parsed for a country.",
+            "decided_by": "human",
+            "effect": "Zone 1 updated: cross-country moves are detected by comparing the updated country_code against the current country_code (via get_employee) rather than inferring the country from the free-text home_address."
+          }
+        }
+      ]
+    },
+    {
+      "id": "update_employee.outside_ibm_no_ibm_data",
+      "name": "Users outside the IBM organization may not access IBM employee data",
+      "description": "If the acting user's organization is not 'IBM Corporation' (the user is outside the IBM organization), they may not view or edit data of an employee who belongs to 'IBM Corporation'. Deny the update when the acting user's organization is not 'IBM Corporation' and the target employee is an IBM (IBM Corporation) employee.",
+      "compliance_examples": [
+        "An IBM Corporation user accesses an IBM employee's employee record (the acting user is inside the IBM organization).",
+        "A Red Hat user accesses a Red Hat employee's employee record (the target is not an IBM employee)."
+      ],
+      "violation_examples": [
+        "A Red Hat user accesses an IBM employee's employee record (a user outside the IBM organization accessing IBM employee data).",
+        "A Kyndryl user accesses an IBM employee's employee record (another organization outside IBM accessing IBM employee data)."
+      ],
+      "references": [
+        "Users outside the IBM organization are strictly prohibited from viewing IBM employee data."
+      ],
+      "trigger": "pre_tool",
+      "requires": {
+        "system_vars": [
+          "organization"
+        ],
+        "tool_history": [
+          {
+            "tool": "get_employee",
+            "params": {
+              "user_id": "input.arguments.user_id"
+            }
+          }
+        ],
+        "message_history": null
+      }
+    },
+    {
+      "id": "update_employee.salary_positive",
+      "name": "Salary must be positive when set or updated",
+      "description": "When a salary value is provided in the update, it must be a positive amount (greater than zero). If salary is provided and is zero or negative, deny. When the update does not touch salary, this rule does not apply. This is a value-integrity check distinct from the authorization rule restricting who may change a salary.",
+      "compliance_examples": [
+        "An employee's salary is updated to 120000.",
+        "The update changes non-salary fields only (the rule does not apply)."
+      ],
+      "violation_examples": [
+        "An employee's salary is updated to 0.",
+        "An employee's salary is updated to -1000."
+      ],
+      "references": [
+        "When an employee's **salary** is set or updated, it must be a positive amount (greater than zero)."
+      ],
+      "trigger": "pre_tool",
+      "requires": {
+        "system_vars": [],
+        "tool_history": null,
+        "message_history": null
+      }
+    },
+    {
+      "id": "update_employee.email_matches_org_domain",
+      "name": "Employee email must match the organization's corporate domain",
+      "description": "When both email and organization are provided in the same update call, the email domain must be the corporate domain mapped to that organization: 'IBM Corporation' -> ibm.com, 'Red Hat' -> redhat.com, 'Kyndryl' -> kyndryl.com. If the email domain does not match the mapped domain for the provided organization, deny. When the call does not include organization (e.g. an email-only update), this rule does not apply, because the record's organization would have to be looked up (tool history), which is intentionally out of scope.",
+      "compliance_examples": [
+        "The update sets organization 'IBM Corporation' and email 'alice@ibm.com'.",
+        "The update sets organization 'Red Hat' and email 'bob@redhat.com'.",
+        "The update changes email but does not include organization, so this rule does not apply."
+      ],
+      "violation_examples": [
+        "The update sets organization 'IBM Corporation' and email 'alice@gmail.com'.",
+        "The update sets organization 'Kyndryl' and email 'carol@ibm.com'."
+      ],
+      "references": [
+        "A new or updated employee's work **email** must use their organization's corporate domain: `IBM Corporation` → `@ibm.com`, `Red Hat` → `@redhat.com`, `Kyndryl` → `@kyndryl.com`. This applies when the organization is provided in the same call."
+      ],
+      "trigger": "pre_tool",
+      "requires": {
+        "system_vars": [],
+        "tool_history": null,
+        "message_history": null
+      }
+    },
+    {
+      "id": "update_employee.confirm_before_write",
+      "name": "Require explicit confirmation before updating the employee",
+      "description": "update_employee modifies the database. Before it runs, the agent must first list the details of the change to the user and obtain the user's explicit 'yes' confirmation. If the conversation history contains no explicit user confirmation ('yes') for this specific update, deny.",
+      "compliance_examples": [
+        "The agent lists the exact details of the action to update the employee record, the user replies 'yes', and only then is the tool called.",
+        "The user explicitly approves this specific action ('yes, go ahead') before the tool to update the employee record is called."
+      ],
+      "violation_examples": [
+        "The tool to update the employee record is called with no prior confirmation step at all.",
+        "The agent presents the action but calls the tool to update the employee record before the user responds.",
+        "The user replies with something ambiguous ('sounds good', 'ok maybe') rather than an explicit 'yes'.",
+        "The user previously said 'yes' to a different action; there is no explicit 'yes' for this specific action to update the employee record.",
+        "The user explicitly declines ('no'), but the tool to update the employee record is called anyway."
+      ],
+      "references": [
+        "Before performing any action that writes to or modifies the database(create, update, or delete), the agent must first list the details of the action and obtain the user's explicit confirmation (\"yes\") before proceeding."
+      ],
+      "trigger": "pre_tool",
+      "requires": {
+        "system_vars": [],
+        "tool_history": null,
+        "message_history": true
+      }
+    }
+  ],
+  "conflicts": [
+    {
+      "id": "conflict.update_employee.home_address_scope_vs_hr",
+      "name": "Does the in-country home-address rule bind HR editing others?",
+      "kind": "scope",
+      "conflicting_policies": [
+        "update_employee.edit_own_or_hr",
+        "update_employee.home_address_same_country"
+      ],
+      "description": "Applies when HR updates another employee's home_address to an address in a different country (e.g. an approved relocation). edit_own_or_hr grants HR edit access to all employees, while home_address_same_country denies any change that moves the employee's country_code. Because a tool's policy items AND together, the deny wins and HR is blocked from cross-country relocations. But the guidance phrases the in-country rule as an employee self-service constraint ('An employee may update their home address only ...'), so it is unclear whether it is meant to bind HR acting on another employee's record at all.",
+      "question": "Does 'home address must stay within the current country' apply to HR (and managers) editing another employee's record, or only to an employee editing their own? If HR-initiated relocations are legitimate, home_address_same_country should be scoped to self-service edits.",
+      "resolution": null
+    }
+  ],
+  "debug": {
+    "tool_info": {
+      "is_read_only": false,
+      "user_enrichment": "Can change privilege-sensitive fields (role, manager_id, department_id, salary) and home_address."
+    },
+    "archive": []
+  }
+}

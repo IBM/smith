@@ -1,0 +1,64 @@
+{
+  "tool_name": "set_bank_account",
+  "source_doc": "smith/guidance.txt",
+  "policy_items": [
+    {
+      "id": "set_bank_account.edit_own_or_hr",
+      "name": "Setting a bank account limited to self or HR",
+      "description": "A user may create/replace an employee's bank account only if it is their own (arguments.user_id equals the acting user's user_id) or the acting user is in the HR department (HR may edit all employees' data). Managers may only view, not edit, their reports' personal data. Deny writing another employee's bank account by a non-HR user.",
+      "compliance_examples": [
+        "A user creates/updates their own bank account (arguments.user_id == subject.user_id).",
+        "An HR-department user creates/updates another employee's bank account."
+      ],
+      "violation_examples": [
+        "A non-HR user (department != HR) creates/updates another employee's bank account (arguments.user_id != subject.user_id).",
+        "A user creates/updates the bank account of one of their direct reports (the target's manager_id equals the acting user's user_id) — a direct manager may view a report's data but not edit it."
+      ],
+      "references": [
+        "An employee may view and edit only their **own data** — home address, passport, visa, emergency contact, and bank account.",
+        "**HR** may view and edit all employees' data."
+      ],
+      "trigger": "pre_tool",
+      "requires": {
+        "system_vars": [
+          "user_id",
+          "department"
+        ],
+        "tool_history": null,
+        "message_history": null
+      }
+    },
+    {
+      "id": "set_bank_account.confirm_before_write",
+      "name": "Require explicit confirmation before setting a bank account",
+      "description": "set_bank_account writes to the database. Before it runs, the agent must first list the details of the action to the user and obtain the user's explicit 'yes' confirmation. If the conversation history contains no explicit user confirmation ('yes') for this action, deny.",
+      "compliance_examples": [
+        "The agent lists the exact details of the action to set the bank account, the user replies 'yes', and only then is the tool called.",
+        "The user explicitly approves this specific action ('yes, go ahead') before the tool to set the bank account is called."
+      ],
+      "violation_examples": [
+        "The tool to set the bank account is called with no prior confirmation step at all.",
+        "The agent presents the action but calls the tool to set the bank account before the user responds.",
+        "The user replies with something ambiguous ('sounds good', 'ok maybe') rather than an explicit 'yes'.",
+        "The user previously said 'yes' to a different action; there is no explicit 'yes' for this specific action to set the bank account.",
+        "The user explicitly declines ('no'), but the tool to set the bank account is called anyway."
+      ],
+      "references": [
+        "Before performing any action that writes to or modifies the database(create, update, or delete), the agent must first list the details of the action and obtain the user's explicit confirmation (\"yes\") before proceeding."
+      ],
+      "trigger": "pre_tool",
+      "requires": {
+        "system_vars": [],
+        "tool_history": null,
+        "message_history": true
+      }
+    }
+  ],
+  "debug": {
+    "tool_info": {
+      "is_read_only": false,
+      "user_enrichment": "Upserts highly sensitive financial PII (account number, routing number, IBAN). Subject to own-data edit rule."
+    },
+    "archive": []
+  }
+}

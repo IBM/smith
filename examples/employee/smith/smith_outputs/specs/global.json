@@ -1,0 +1,122 @@
+{
+  "tool_name": "global",
+  "source_doc": "smith/guidance.txt",
+  "policy_items": [
+    {
+      "id": "global.delete_user_requires_exact_confirmation",
+      "name": "Deleting a user requires an exact confirmation phrase",
+      "description": "A user (employee) may be deleted only after the requester provides explicit confirmation in exactly this form: 'I request to delete user [USER NAME] with the following user id: [USER ID]', with the name and id substituted for the user being deleted. This rule cannot be attached to a single tool because the MCP server exposes no employee-deletion tool (only delete_holiday deletes holidays, not users).",
+      "compliance_examples": [
+        "The requester types exactly 'I request to delete user Jane Doe with the following user id: 42', with a name and id that match the target user, and only then is the deletion carried out."
+      ],
+      "violation_examples": [
+        "The requester says 'yes, delete Jane' or 'please remove user 42' without the exact required phrase.",
+        "The exact phrase is used but the user name does not match the given user id.",
+        "The exact phrase is used but the user id does not match the named user.",
+        "No confirmation phrase is provided at all.",
+        "Any employee deletion is attempted, since no employee-deletion tool exists to enforce this against."
+      ],
+      "references": [
+        "A user may be deleted only after the requester provides explicit confirmation in exactly this form:",
+        "`I request to delete user [USER NAME] with the following user id: [USER ID]`."
+      ],
+      "trigger": "pre_tool",
+      "requires": {
+        "system_vars": [],
+        "tool_history": null,
+        "message_history": true
+      },
+      "pending_for_user": [
+        {
+          "type": "missing_tool",
+          "detail": "The guidance defines a delete-user confirmation rule, but there is no tool in tool_definitions.json that deletes an employee/user. The rule therefore has no tool to attach to.",
+          "suggested_tool": "delete_employee",
+          "question": "Which tool is intended to delete a user? Should a delete_employee tool be added so this confirmation rule can be enforced, or is user deletion out of scope for this agent?"
+        }
+      ]
+    },
+    {
+      "id": "global.single_tool_call_at_a_time",
+      "name": "Agent must not interleave tool calls and user responses",
+      "description": "The agent must make only one tool call at a time. When it makes a tool call it must not also respond to the user in the same turn; when it responds to the user it must not also make a tool call in the same turn. This is an orchestration constraint on agent turn structure, not a condition on any single tool's arguments, so it cannot be attached to one tool.",
+      "compliance_examples": [
+        "In one turn the agent emits a single tool call and no user-facing text.",
+        "In one turn the agent replies to the user and makes no tool call."
+      ],
+      "violation_examples": [
+        "The agent emits two or more tool calls in the same turn.",
+        "The agent emits a tool call and a user-facing message in the same turn."
+      ],
+      "references": [
+        "The agent should make only one tool call at a time. When it makes a tool call, it should not respond to the user simultaneously; when it responds to the user, it should not make a tool call at the same time."
+      ],
+      "trigger": "pre_tool",
+      "requires": {
+        "system_vars": [],
+        "tool_history": null,
+        "message_history": true
+      },
+      "pending_for_user": [
+        {
+          "type": "clarification",
+          "detail": "This is a turn-structure / orchestration rule about the agent loop rather than an allow/deny condition on any one tool's arguments. It is unclear whether it should be enforced as an OPA policy at all versus in the agent runtime.",
+          "question": "Should the 'one tool call at a time, never interleaved with a user response' rule be enforced by the policy engine, or handled in the agent orchestration layer?"
+        }
+      ]
+    },
+    {
+      "id": "global.flight_booking_passenger_limit",
+      "name": "Flight booking passenger limit (foreign-domain rule)",
+      "description": "The guidance contains a rule that a customer with a 'regular' membership may not book a flight for more than three passengers unless they own at least 200 frequent flyer points. This rule belongs to a flight-booking domain and does not match the Enterprise Employee Hub: there is no flight-booking tool, no 'membership' concept, and no 'frequent flyer points' variable anywhere in the tools or system variables. It appears to be a leftover from a different policy document.",
+      "compliance_examples": [],
+      "violation_examples": [],
+      "references": [
+        "A customer with a `regular` membership may not book a flight for more than three passengers unless they own at least 200 frequent flyer points."
+      ],
+      "trigger": "pre_tool",
+      "requires": {
+        "system_vars": [],
+        "tool_history": null,
+        "message_history": null
+      },
+      "pending_for_user": [
+        {
+          "type": "clarification",
+          "detail": "This rule references flight booking, memberships, passengers, and frequent flyer points — none of which exist in this employee-hub MCP server, its tools, or its system variables. It conflicts with the actual domain of this policy.",
+          "question": "This flight-booking rule does not belong to the employee hub. Should it be removed from guidance.txt, or is a flight-booking tool/domain expected to be added?"
+        }
+      ]
+    }
+  ],
+  "conflicts": [
+    {
+      "id": "conflict.global.ibm_organization_definition",
+      "name": "What counts as 'the IBM organization' for the outside-IBM prohibition?",
+      "kind": "definition",
+      "conflicting_policies": [
+        "get_employee.outside_ibm_no_ibm_data",
+        "get_employee.read_own_report_or_hr",
+        "get_bank_account.outside_ibm_no_ibm_data",
+        "get_bank_account.read_own_report_or_hr",
+        "get_emergency_contact.outside_ibm_no_ibm_data",
+        "get_emergency_contact.read_own_report_or_hr",
+        "get_passport.outside_ibm_no_ibm_data",
+        "get_passport.read_own_report_or_hr",
+        "get_visa.outside_ibm_no_ibm_data",
+        "get_visa.read_own_report_or_hr",
+        "update_employee.outside_ibm_no_ibm_data",
+        "update_employee.edit_own_or_hr"
+      ],
+      "description": "Applies across every personal/employee read and edit tool whenever an HR user or a manager whose organization is Red Hat or Kyndryl accesses an IBM employee's record. The role grant (read_own_report_or_hr / edit_own_or_hr) would allow the access, while outside_ibm_no_ibm_data denies any access to IBM-Corporation employee data by a user whose organization is not 'IBM Corporation'. Under AND composition the prohibition wins, but the compiled policy hardcodes organization == 'IBM Corporation' and so treats Red Hat and Kyndryl — both IBM-owned — as 'outside IBM'. Whether that is intended is a data-model/definition question that spans all these tools, not a per-tool dominance decision, so it is recorded once here.",
+      "question": "Does 'the IBM organization' mean only organization == 'IBM Corporation' (so Red Hat and Kyndryl users are 'outside IBM' and blocked from IBM employee data), or the whole IBM group including Red Hat and Kyndryl? If the latter, the outside_ibm policies need a group definition rather than a single-organization equality check.",
+      "resolution": null
+    }
+  ],
+  "debug": {
+    "tool_info": {
+      "is_read_only": false,
+      "user_enrichment": "Global bucket for rules that cannot be attached to a single tool: orphan rules (no matching tool), orchestration-level rules, foreign-domain conflicts, and cross-cutting missing-data gaps."
+    },
+    "archive": []
+  }
+}

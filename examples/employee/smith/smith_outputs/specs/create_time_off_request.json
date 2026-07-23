@@ -1,0 +1,157 @@
+{
+  "tool_name": "create_time_off_request",
+  "source_doc": "smith/guidance.txt",
+  "policy_items": [
+    {
+      "id": "create_time_off_request.own_only",
+      "name": "An employee may create a time-off request only for themselves",
+      "description": "A user may create a time-off request only for themselves: the request's user_id (arguments.user_id) must equal the acting user's user_id. If arguments.user_id differs from the acting user's user_id, deny.",
+      "compliance_examples": [
+        "A user creates a time-off request where arguments.user_id equals their own user_id."
+      ],
+      "violation_examples": [
+        "A user creates a time-off request for another employee (arguments.user_id != subject.user_id).",
+        "An HR-department user creates a time-off request on behalf of another employee (only the employee themselves may create their request)."
+      ],
+      "references": [
+        "An employee may create a time-off request only for themselves."
+      ],
+      "trigger": "pre_tool",
+      "requires": {
+        "system_vars": [
+          "user_id"
+        ],
+        "tool_history": null,
+        "message_history": null
+      },
+      "resolved_by_user": [
+        {
+          "type": "clarification",
+          "detail": "The guidance does not state whether an employee may create a time-off request for a user_id other than their own (e.g. HR/manager on behalf of a report).",
+          "question": "May a user create a time-off request for another employee (arguments.user_id != subject.user_id), or only for themselves?",
+          "resolution": {
+            "answer": "Only the employee themselves may create their own time-off request; no on-behalf-of creation (including by HR or a manager).",
+            "decided_by": "human",
+            "effect": "Added create_time_off_request.own_only (deny when arguments.user_id != acting user's user_id)."
+          }
+        }
+      ]
+    },
+    {
+      "id": "create_time_off_request.sufficient_balance",
+      "name": "Time-off request requires sufficient available balance",
+      "description": "An employee may not create a time-off request unless they have sufficient available balance for the requested leave type to cover the requested date range. If the number of leave days implied by start_date..end_date exceeds the remaining balance for that leave_type, deny. The remaining balance must be obtained (e.g. via get_leave_balance for the requester and year). Untracked types (e.g. Unpaid) have no balance limit.",
+      "compliance_examples": [
+        "An employee with 10 remaining Vacation days requests 3 Vacation days.",
+        "An employee requests exactly the number of working days remaining in their balance (still sufficient).",
+        "An employee requests Unpaid leave, an untracked type with no balance limit."
+      ],
+      "violation_examples": [
+        "An employee with 2 remaining Vacation days requests 5 Vacation days.",
+        "An employee with 0 remaining days for the leave type requests any days of that type.",
+        "The requested date range (after excluding weekends and the employee's country holidays) exceeds the remaining balance."
+      ],
+      "references": [
+        "An employee may not create a time-off request unless they have sufficient available balance for the requested leave type."
+      ],
+      "trigger": "pre_tool",
+      "requires": {
+        "system_vars": [],
+        "tool_history": [
+          {
+            "tool": "get_leave_balance",
+            "params": {
+              "user_id": "input.arguments.user_id",
+              "year": "year-of(input.arguments.start_date)"
+            }
+          }
+        ],
+        "message_history": null
+      }
+    },
+    {
+      "id": "create_time_off_request.notify_manager_after_create",
+      "name": "Email the manager for approval after a request is created",
+      "description": "After an employee creates a time-off request, an email must be sent to their manager for approval. This is a required post-action side effect rather than an allow/deny condition on the create itself.",
+      "compliance_examples": [
+        "After the request is created, an approval email is dispatched to the employee's manager."
+      ],
+      "violation_examples": [
+        "A time-off request is created but no approval notification is sent to the manager.",
+        "The request is created for an employee who has no manager (top of the org) and it is unclear who receives the approval email."
+      ],
+      "references": [
+        "After an employee creates a time-off request, an email is sent to their manager for approval."
+      ],
+      "trigger": "post_tool",
+      "requires": {
+        "system_vars": [],
+        "tool_history": null,
+        "message_history": null
+      },
+      "pending_for_user": [
+        {
+          "type": "missing_tool",
+          "detail": "There is no email / notification tool exposed by the MCP server, so the required 'email the manager for approval' side effect cannot be performed or verified.",
+          "suggested_tool": "send_email / notify_manager",
+          "question": "Which tool should send the manager approval email after a time-off request is created? Should a notification tool be added, or is this handled outside the agent?"
+        }
+      ]
+    },
+    {
+      "id": "create_time_off_request.max_length_90_days",
+      "name": "A single time-off request may not exceed 90 calendar days",
+      "description": "The requested date range must not exceed 90 consecutive calendar days. If the span from arguments.start_date to arguments.end_date is more than 90 calendar days, deny. This is a plain calendar-day span computed from start_date and end_date; it is NOT a business-day count, so no holiday lookup is required.",
+      "compliance_examples": [
+        "start_date 2026-08-01 and end_date 2026-08-15 (15 calendar days, well within 90).",
+        "start_date 2026-08-01 and end_date 2026-09-30 (about 60 calendar days, within 90)."
+      ],
+      "violation_examples": [
+        "start_date 2026-08-01 and end_date 2026-12-01 (about 122 calendar days, exceeds 90).",
+        "start_date 2026-01-01 and end_date 2026-12-31 (a full year, far exceeding 90 days)."
+      ],
+      "references": [
+        "A single time-off request may not span more than **90 consecutive calendar days** (`end_date` minus `start_date`); longer leave must be split into separate requests."
+      ],
+      "trigger": "pre_tool",
+      "requires": {
+        "system_vars": [],
+        "tool_history": null,
+        "message_history": null
+      }
+    },
+    {
+      "id": "create_time_off_request.confirm_before_write",
+      "name": "Require explicit confirmation before creating a time-off request",
+      "description": "create_time_off_request writes to the database. Before it runs, the agent must first list the details of the request (leave_type, start_date, end_date) to the user and obtain the user's explicit 'yes' confirmation. If the conversation history contains no explicit user confirmation ('yes') for this action, deny.",
+      "compliance_examples": [
+        "The agent lists the exact details of the action to create the time-off request, the user replies 'yes', and only then is the tool called.",
+        "The user explicitly approves this specific action ('yes, go ahead') before the tool to create the time-off request is called."
+      ],
+      "violation_examples": [
+        "The tool to create the time-off request is called with no prior confirmation step at all.",
+        "The agent presents the action but calls the tool to create the time-off request before the user responds.",
+        "The user replies with something ambiguous ('sounds good', 'ok maybe') rather than an explicit 'yes'.",
+        "The user previously said 'yes' to a different action; there is no explicit 'yes' for this specific action to create the time-off request.",
+        "The user explicitly declines ('no'), but the tool to create the time-off request is called anyway."
+      ],
+      "references": [
+        "Before performing any action that writes to or modifies the database(create, update, or delete), the agent must first list the details of the action and obtain the user's explicit confirmation (\"yes\") before proceeding."
+      ],
+      "trigger": "pre_tool",
+      "requires": {
+        "system_vars": [],
+        "tool_history": null,
+        "message_history": true
+      }
+    }
+  ],
+  "debug": {
+    "tool_info": {
+      "is_read_only": false,
+      "user_enrichment": "Creates a Pending time-off request. Balance depends on get_leave_balance; a manager-approval email is expected afterward."
+    },
+    "archive": [],
+    "notes": []
+  }
+}

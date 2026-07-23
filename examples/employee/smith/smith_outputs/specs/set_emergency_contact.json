@@ -1,0 +1,102 @@
+{
+  "tool_name": "set_emergency_contact",
+  "source_doc": "smith/guidance.txt",
+  "policy_items": [
+    {
+      "id": "set_emergency_contact.edit_own_or_hr",
+      "name": "Setting an emergency contact limited to self or HR",
+      "description": "A user may create/replace an employee's emergency contact only if it is their own (arguments.user_id equals the acting user's user_id) or the acting user is in the HR department (HR may edit all employees' data). Managers may only view, not edit, their reports' personal data. Deny writing another employee's emergency contact by a non-HR user.",
+      "compliance_examples": [
+        "A user creates/updates their own emergency contact (arguments.user_id == subject.user_id).",
+        "An HR-department user creates/updates another employee's emergency contact."
+      ],
+      "violation_examples": [
+        "A non-HR user (department != HR) creates/updates another employee's emergency contact (arguments.user_id != subject.user_id).",
+        "A user creates/updates the emergency contact of one of their direct reports (the target's manager_id equals the acting user's user_id) — a direct manager may view a report's data but not edit it."
+      ],
+      "references": [
+        "An employee may view and edit only their **own data** — home address, passport, visa, emergency contact, and bank account.",
+        "**HR** may view and edit all employees' data."
+      ],
+      "trigger": "pre_tool",
+      "requires": {
+        "system_vars": [
+          "user_id",
+          "department"
+        ],
+        "tool_history": null,
+        "message_history": null
+      }
+    },
+    {
+      "id": "set_emergency_contact.same_area_as_employee",
+      "name": "Emergency contact must reside in the same area as the employee",
+      "description": "The emergency contact's location must be in the same area as the employee. If the contact's area (derived from the provided city/country/postal_code) differs from the employee's own area, deny. The employee's area must be obtained (e.g. via get_employee).",
+      "compliance_examples": [
+        "An employee whose country is the US sets an emergency contact located in the US (same area).",
+        "An employee updates their emergency contact to another location within the same area."
+      ],
+      "violation_examples": [
+        "An employee whose country is the US sets an emergency contact located in Canada (different area).",
+        "An employee sets an emergency contact in a different country than their own.",
+        "The emergency contact's location fields are empty/unknown, so it cannot be confirmed to be in the employee's area."
+      ],
+      "references": [
+        "An employee's **emergency contact** must reside in the same area as the employee."
+      ],
+      "trigger": "pre_tool",
+      "requires": {
+        "system_vars": [],
+        "tool_history": [
+          {
+            "tool": "get_employee",
+            "params": {
+              "user_id": "input.arguments.user_id"
+            }
+          }
+        ],
+        "message_history": null
+      },
+      "pending_for_user": [
+        {
+          "type": "clarification",
+          "detail": "'Same area' is undefined — it could mean same country, same city, or same postal region. The employee's own area is not directly provided; only home_address (free text) and country_code are available via get_employee.",
+          "suggested_source": "get_employee (home_address / country_code)",
+          "question": "How is 'same area' defined for the emergency-contact rule — same country, same city, or same postal region — and which employee field should it be compared against?"
+        }
+      ]
+    },
+    {
+      "id": "set_emergency_contact.confirm_before_write",
+      "name": "Require explicit confirmation before setting an emergency contact",
+      "description": "set_emergency_contact writes to the database. Before it runs, the agent must first list the details of the action to the user and obtain the user's explicit 'yes' confirmation. If the conversation history contains no explicit user confirmation ('yes') for this action, deny.",
+      "compliance_examples": [
+        "The agent lists the exact details of the action to set the emergency contact, the user replies 'yes', and only then is the tool called.",
+        "The user explicitly approves this specific action ('yes, go ahead') before the tool to set the emergency contact is called."
+      ],
+      "violation_examples": [
+        "The tool to set the emergency contact is called with no prior confirmation step at all.",
+        "The agent presents the action but calls the tool to set the emergency contact before the user responds.",
+        "The user replies with something ambiguous ('sounds good', 'ok maybe') rather than an explicit 'yes'.",
+        "The user previously said 'yes' to a different action; there is no explicit 'yes' for this specific action to set the emergency contact.",
+        "The user explicitly declines ('no'), but the tool to set the emergency contact is called anyway."
+      ],
+      "references": [
+        "Before performing any action that writes to or modifies the database(create, update, or delete), the agent must first list the details of the action and obtain the user's explicit confirmation (\"yes\") before proceeding."
+      ],
+      "trigger": "pre_tool",
+      "requires": {
+        "system_vars": [],
+        "tool_history": null,
+        "message_history": true
+      }
+    }
+  ],
+  "debug": {
+    "tool_info": {
+      "is_read_only": false,
+      "user_enrichment": "Upserts an emergency contact; relationship restricted to a fixed set (validated by the tool). Subject to own-data edit rule and same-area rule."
+    },
+    "archive": []
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "tool_name": "delete_holiday",
+  "source_doc": "smith/guidance.txt",
+  "policy_items": [
+    {
+      "id": "delete_holiday.hr_only",
+      "name": "Only HR may delete a country holiday",
+      "description": "A user may delete a country holiday only if their department is HR. If the acting user's department is not HR, deny.",
+      "compliance_examples": [
+        "A user in the HR department deletes a country holiday."
+      ],
+      "violation_examples": [
+        "A user in the Engineering department deletes a country holiday.",
+        "A user in the Finance department deletes a country holiday."
+      ],
+      "references": [
+        "Only **HR** may add or update a department, add or delete a country holiday, or set a leave allotment."
+      ],
+      "trigger": "pre_tool",
+      "requires": {
+        "system_vars": [
+          "department"
+        ],
+        "tool_history": null,
+        "message_history": null
+      },
+      "resolved_by_user": [
+        {
+          "type": "clarification",
+          "detail": "The delete-user exact-confirmation-phrase rule applies to deleting a user, not a holiday; holiday deletion only requires the generic write confirmation. Managing holidays has no role restriction in the guidance.",
+          "question": "Should deleting holidays be restricted to a role (e.g. HR or an admin), or is any confirmed caller allowed?",
+          "resolution": {
+            "answer": "Restricted to HR: only users whose department is HR may delete a country holiday.",
+            "decided_by": "human",
+            "effect": "Added delete_holiday.hr_only (deny when the acting user's department is not HR)."
+          }
+        }
+      ]
+    },
+    {
+      "id": "delete_holiday.confirm_before_write",
+      "name": "Require explicit confirmation before deleting a holiday",
+      "description": "delete_holiday deletes from the database. Before it runs, the agent must first list the details of the action (which holiday will be deleted) to the user and obtain the user's explicit 'yes' confirmation. If the conversation history contains no explicit user confirmation ('yes') for this delete, deny.",
+      "compliance_examples": [
+        "The agent lists the exact details of the action to delete the holiday, the user replies 'yes', and only then is the tool called.",
+        "The user explicitly approves this specific action ('yes, go ahead') before the tool to delete the holiday is called."
+      ],
+      "violation_examples": [
+        "The tool to delete the holiday is called with no prior confirmation step at all.",
+        "The agent presents the action but calls the tool to delete the holiday before the user responds.",
+        "The user replies with something ambiguous ('sounds good', 'ok maybe') rather than an explicit 'yes'.",
+        "The user previously said 'yes' to a different action; there is no explicit 'yes' for this specific action to delete the holiday.",
+        "The user explicitly declines ('no'), but the tool to delete the holiday is called anyway."
+      ],
+      "references": [
+        "Before performing any action that writes to or modifies the database(create, update, or delete), the agent must first list the details of the action and obtain the user's explicit confirmation (\"yes\") before proceeding."
+      ],
+      "trigger": "pre_tool",
+      "requires": {
+        "system_vars": [],
+        "tool_history": null,
+        "message_history": true
+      }
+    }
+  ],
+  "debug": {
+    "tool_info": {
+      "is_read_only": false,
+      "user_enrichment": "Restricted to HR (department == HR). A country holiday delete action."
+    },
+    "archive": [],
+    "notes": []
+  }
+}

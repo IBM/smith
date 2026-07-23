@@ -1,0 +1,145 @@
+{
+  "tool_name": "add_employee",
+  "source_doc": "smith/guidance.txt",
+  "policy_items": [
+    {
+      "id": "add_employee.only_hr_may_add",
+      "name": "Only HR may add a new employee",
+      "description": "A new employee may be created only by a user whose department is HR. If the acting user's department is not HR, deny the call.",
+      "compliance_examples": [
+        "A user in the HR department adds a new employee."
+      ],
+      "violation_examples": [
+        "A user in the Engineering department adds a new employee (only the HR department may create employees).",
+        "A user in the Finance department adds a new employee.",
+        "A user in the Product department adds a new employee.",
+        "A user in the Corporate Leadership department adds a new employee."
+      ],
+      "references": [
+        "Only **HR** may add a new employee."
+      ],
+      "trigger": "pre_tool",
+      "requires": {
+        "system_vars": [
+          "department"
+        ],
+        "tool_history": null,
+        "message_history": null
+      }
+    },
+    {
+      "id": "add_employee.salary_set",
+      "name": "Salary on creation restricted to HR",
+      "description": "When a new employee is created with a salary value, that salary may be set only by a user whose department is HR. Since only HR may add a new employee, salary at creation is necessarily set by HR. If a salary is provided and the acting user's department is not HR, deny.",
+      "compliance_examples": [
+        "A user in the HR department adds a new employee and sets salary=90000.",
+        "A user in the HR department adds a new employee without providing a salary (the rule does not apply when no salary is set)."
+      ],
+      "violation_examples": [
+        "A user in the Engineering department adds a new employee with salary=150000.",
+        "A user in the Finance department adds a new employee and sets a salary.",
+        "A user in the Product department adds a new employee and sets a salary."
+      ],
+      "references": [
+        "An employee's `salary` may be updated only by **HR** or by that employee's **direct manager**."
+      ],
+      "trigger": "pre_tool",
+      "requires": {
+        "system_vars": [
+          "department"
+        ],
+        "tool_history": null,
+        "message_history": null
+      },
+      "resolved_by_user": [
+        {
+          "type": "clarification",
+          "detail": "The guidance phrases the salary rule as 'may be updated'. Its application to creation (add_employee) is inferred: the only 'direct manager' knowable at creation is the manager_id passed in the call.",
+          "question": "At creation time, may a manager set the initial salary only when they are the assigned manager_id, or should salary on creation be restricted to HR only?",
+          "resolution": {
+            "answer": "Guidance now states only HR may add a new employee, so salary at creation can only be set by a user in the HR department; the assigned-manager branch cannot occur at creation.",
+            "decided_by": "human",
+            "effect": "Salary-on-creation rule restricted to HR only (manager branch removed; user_id dropped from requires.system_vars); subsumed by add_employee.only_hr_may_add."
+          }
+        }
+      ]
+    },
+    {
+      "id": "add_employee.salary_positive",
+      "name": "Salary must be positive when set on creation",
+      "description": "When a salary value is provided on employee creation, it must be a positive amount (greater than zero). If salary is provided and is zero or negative, deny. When no salary is provided, this rule does not apply. This is a value-integrity check distinct from the authorization rule restricting who may set a salary.",
+      "compliance_examples": [
+        "A new employee is created with salary 90000.",
+        "A new employee is created without a salary (the rule does not apply)."
+      ],
+      "violation_examples": [
+        "A new employee is created with salary 0.",
+        "A new employee is created with salary -5000."
+      ],
+      "references": [
+        "When an employee's **salary** is set or updated, it must be a positive amount (greater than zero)."
+      ],
+      "trigger": "pre_tool",
+      "requires": {
+        "system_vars": [],
+        "tool_history": null,
+        "message_history": null
+      }
+    },
+    {
+      "id": "add_employee.email_matches_org_domain",
+      "name": "Employee email must match the organization's corporate domain",
+      "description": "When both email and organization are provided in the call, the email domain must be the corporate domain mapped to that organization: 'IBM Corporation' -> ibm.com, 'Red Hat' -> redhat.com, 'Kyndryl' -> kyndryl.com. If the email domain does not match the mapped domain for the provided organization, deny. When organization is not provided in the call, this rule does not apply (the record's organization is not looked up).",
+      "compliance_examples": [
+        "organization 'IBM Corporation' and email 'alice@ibm.com'.",
+        "organization 'Red Hat' and email 'bob@redhat.com'.",
+        "The call provides no organization, so this rule does not apply."
+      ],
+      "violation_examples": [
+        "organization 'IBM Corporation' and email 'alice@gmail.com'.",
+        "organization 'Kyndryl' and email 'carol@ibm.com'."
+      ],
+      "references": [
+        "A new or updated employee's work **email** must use their organization's corporate domain: `IBM Corporation` → `@ibm.com`, `Red Hat` → `@redhat.com`, `Kyndryl` → `@kyndryl.com`. This applies when the organization is provided in the same call."
+      ],
+      "trigger": "pre_tool",
+      "requires": {
+        "system_vars": [],
+        "tool_history": null,
+        "message_history": null
+      }
+    },
+    {
+      "id": "add_employee.confirm_before_write",
+      "name": "Require explicit confirmation before creating the employee",
+      "description": "add_employee writes to the database. Before it runs, the agent must first list the details of the action to the user and obtain the user's explicit 'yes' confirmation. If the conversation history contains no explicit user confirmation ('yes') for this specific create action, deny.",
+      "compliance_examples": [
+        "The agent lists the exact details of the action to create the employee, the user replies 'yes', and only then is the tool called.",
+        "The user explicitly approves this specific action ('yes, go ahead') before the tool to create the employee is called."
+      ],
+      "violation_examples": [
+        "The tool to create the employee is called with no prior confirmation step at all.",
+        "The agent presents the action but calls the tool to create the employee before the user responds.",
+        "The user replies with something ambiguous ('sounds good', 'ok maybe') rather than an explicit 'yes'.",
+        "The user previously said 'yes' to a different action; there is no explicit 'yes' for this specific action to create the employee.",
+        "The user explicitly declines ('no'), but the tool to create the employee is called anyway."
+      ],
+      "references": [
+        "Before performing any action that writes to or modifies the database(create, update, or delete), the agent must first list the details of the action and obtain the user's explicit confirmation (\"yes\") before proceeding."
+      ],
+      "trigger": "pre_tool",
+      "requires": {
+        "system_vars": [],
+        "tool_history": null,
+        "message_history": true
+      }
+    }
+  ],
+  "debug": {
+    "tool_info": {
+      "is_read_only": false,
+      "user_enrichment": "Creates an employee record and can set salary, manager_id, department_id."
+    },
+    "archive": []
+  }
+}
