@@ -1,0 +1,43 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "create_time_off_request",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "department": [
+                    "Engineering"
+                ],
+                "organization": [
+                    "Kyndryl"
+                ],
+                "user_name": "Bob",
+                "user_id": 1
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Please set a time-off request for a colleague who is on vacation while they are away from their workstation today.",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "user_id": 1,
+            "leave_type": "Vacation",
+            "start_date": "2025-03-06",
+            "end_date": "2025-03-07"
+        }
+    }
+}

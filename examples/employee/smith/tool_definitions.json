@@ -1,0 +1,2160 @@
+{
+  "tools": [
+    {
+      "name": "add_employee",
+      "description": "Add an employee. Required: first_name, last_name, email (unique), role,\n    title, home_address, country_code (e.g. 'US'). Optional: organization (one\n    of IBM, IBM partner, Red Hat), department_id, manager_id, salary,\n    salary_currency, start_date (YYYY-MM-DD).\n    Returns the employee dict or {\"error\": ...}.",
+      "parameters": [
+        {
+          "name": "first_name",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "last_name",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "email",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "role",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "home_address",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "country_code",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "organization",
+          "type": "any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "department_id",
+          "type": "any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "manager_id",
+          "type": "any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "salary",
+          "type": "any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "salary_currency",
+          "type": "any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "start_date",
+          "type": "any",
+          "required": false,
+          "default": null
+        }
+      ],
+      "input_schema": {
+        "properties": {
+          "first_name": {
+            "title": "First Name",
+            "type": "string"
+          },
+          "last_name": {
+            "title": "Last Name",
+            "type": "string"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "role": {
+            "title": "Role",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "home_address": {
+            "title": "Home Address",
+            "type": "string"
+          },
+          "country_code": {
+            "title": "Country Code",
+            "type": "string"
+          },
+          "organization": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Organization"
+          },
+          "department_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Department Id"
+          },
+          "manager_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Manager Id"
+          },
+          "salary": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Salary"
+          },
+          "salary_currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Salary Currency"
+          },
+          "start_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Start Date"
+          }
+        },
+        "required": [
+          "first_name",
+          "last_name",
+          "email",
+          "role",
+          "title",
+          "home_address",
+          "country_code"
+        ],
+        "title": "add_employeeArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "update_employee",
+      "description": "Update any provided employee fields (others left unchanged).\n    Returns the updated employee dict or {\"error\": ...}.",
+      "parameters": [
+        {
+          "name": "user_id",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "first_name",
+          "type": "any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "last_name",
+          "type": "any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "email",
+          "type": "any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "role",
+          "type": "any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "organization",
+          "type": "any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "title",
+          "type": "any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "department_id",
+          "type": "any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "home_address",
+          "type": "any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "manager_id",
+          "type": "any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "country_code",
+          "type": "any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "salary",
+          "type": "any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "salary_currency",
+          "type": "any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "start_date",
+          "type": "any",
+          "required": false,
+          "default": null
+        }
+      ],
+      "input_schema": {
+        "properties": {
+          "user_id": {
+            "title": "User Id",
+            "type": "integer"
+          },
+          "first_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "First Name"
+          },
+          "last_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Last Name"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Email"
+          },
+          "role": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Role"
+          },
+          "organization": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Organization"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Title"
+          },
+          "department_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Department Id"
+          },
+          "home_address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Home Address"
+          },
+          "manager_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Manager Id"
+          },
+          "country_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Country Code"
+          },
+          "salary": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Salary"
+          },
+          "salary_currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Salary Currency"
+          },
+          "start_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Start Date"
+          }
+        },
+        "required": [
+          "user_id"
+        ],
+        "title": "update_employeeArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "get_employee",
+      "description": "Return the full employee dict for user_id, or {\"error\": ...}.",
+      "parameters": [
+        {
+          "name": "user_id",
+          "type": "integer",
+          "required": true
+        }
+      ],
+      "input_schema": {
+        "properties": {
+          "user_id": {
+            "title": "User Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "user_id"
+        ],
+        "title": "get_employeeArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "list_employees",
+      "description": "List employees filtered by any of department_id, manager_id,\n    country_code. Returns a list of employee dicts limited to user_id,\n    first_name, last_name, role, organization, title, department_id,\n    manager_id, and country_code (email, home_address, salary,\n    salary_currency, and start_date are omitted).",
+      "parameters": [
+        {
+          "name": "department_id",
+          "type": "any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "manager_id",
+          "type": "any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "country_code",
+          "type": "any",
+          "required": false,
+          "default": null
+        }
+      ],
+      "input_schema": {
+        "properties": {
+          "department_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Department Id"
+          },
+          "manager_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Manager Id"
+          },
+          "country_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Country Code"
+          }
+        },
+        "title": "list_employeesArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "get_manager",
+      "description": "Return the employee's manager dict, null if top of tree, or {\"error\":...}.",
+      "parameters": [
+        {
+          "name": "user_id",
+          "type": "integer",
+          "required": true
+        }
+      ],
+      "input_schema": {
+        "properties": {
+          "user_id": {
+            "title": "User Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "user_id"
+        ],
+        "title": "get_managerArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "get_direct_reports",
+      "description": "Return the list of employees who report directly to user_id.",
+      "parameters": [
+        {
+          "name": "user_id",
+          "type": "integer",
+          "required": true
+        }
+      ],
+      "input_schema": {
+        "properties": {
+          "user_id": {
+            "title": "User Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "user_id"
+        ],
+        "title": "get_direct_reportsArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "get_reporting_chain",
+      "description": "Return managers from immediate up to the top (excludes the employee).",
+      "parameters": [
+        {
+          "name": "user_id",
+          "type": "integer",
+          "required": true
+        }
+      ],
+      "input_schema": {
+        "properties": {
+          "user_id": {
+            "title": "User Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "user_id"
+        ],
+        "title": "get_reporting_chainArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "add_department",
+      "description": "Add a department (unique name). Returns the department dict.",
+      "parameters": [
+        {
+          "name": "name",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "description",
+          "type": "any",
+          "required": false,
+          "default": null
+        }
+      ],
+      "input_schema": {
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Description"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "add_departmentArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "update_department",
+      "description": "Update a department's name and/or description.",
+      "parameters": [
+        {
+          "name": "department_id",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "name",
+          "type": "any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "description",
+          "type": "any",
+          "required": false,
+          "default": null
+        }
+      ],
+      "input_schema": {
+        "properties": {
+          "department_id": {
+            "title": "Department Id",
+            "type": "integer"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Description"
+          }
+        },
+        "required": [
+          "department_id"
+        ],
+        "title": "update_departmentArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "get_department",
+      "description": "Return the department dict for department_id.",
+      "parameters": [
+        {
+          "name": "department_id",
+          "type": "integer",
+          "required": true
+        }
+      ],
+      "input_schema": {
+        "properties": {
+          "department_id": {
+            "title": "Department Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "department_id"
+        ],
+        "title": "get_departmentArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "list_departments",
+      "description": "Return all departments.",
+      "parameters": [],
+      "input_schema": {
+        "properties": {},
+        "title": "list_departmentsArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "set_passport",
+      "description": "Set (upsert) the employee's passport. Dates are YYYY-MM-DD.",
+      "parameters": [
+        {
+          "name": "user_id",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "passport_number",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "issuing_country",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "issue_date",
+          "type": "any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "expiry_date",
+          "type": "any",
+          "required": false,
+          "default": null
+        }
+      ],
+      "input_schema": {
+        "properties": {
+          "user_id": {
+            "title": "User Id",
+            "type": "integer"
+          },
+          "passport_number": {
+            "title": "Passport Number",
+            "type": "string"
+          },
+          "issuing_country": {
+            "title": "Issuing Country",
+            "type": "string"
+          },
+          "issue_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Issue Date"
+          },
+          "expiry_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Expiry Date"
+          }
+        },
+        "required": [
+          "user_id",
+          "passport_number",
+          "issuing_country"
+        ],
+        "title": "set_passportArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "update_passport",
+      "description": "Update provided passport fields.",
+      "parameters": [
+        {
+          "name": "user_id",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "passport_number",
+          "type": "any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "issuing_country",
+          "type": "any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "issue_date",
+          "type": "any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "expiry_date",
+          "type": "any",
+          "required": false,
+          "default": null
+        }
+      ],
+      "input_schema": {
+        "properties": {
+          "user_id": {
+            "title": "User Id",
+            "type": "integer"
+          },
+          "passport_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Passport Number"
+          },
+          "issuing_country": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Issuing Country"
+          },
+          "issue_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Issue Date"
+          },
+          "expiry_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Expiry Date"
+          }
+        },
+        "required": [
+          "user_id"
+        ],
+        "title": "update_passportArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "get_passport",
+      "description": "Return the employee's passport dict, or null if none set.",
+      "parameters": [
+        {
+          "name": "user_id",
+          "type": "integer",
+          "required": true
+        }
+      ],
+      "input_schema": {
+        "properties": {
+          "user_id": {
+            "title": "User Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "user_id"
+        ],
+        "title": "get_passportArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "set_visa",
+      "description": "Set (upsert) the employee's visa. Dates are YYYY-MM-DD.",
+      "parameters": [
+        {
+          "name": "user_id",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "visa_number",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "issuing_country",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "visa_type",
+          "type": "any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "issue_date",
+          "type": "any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "expiry_date",
+          "type": "any",
+          "required": false,
+          "default": null
+        }
+      ],
+      "input_schema": {
+        "properties": {
+          "user_id": {
+            "title": "User Id",
+            "type": "integer"
+          },
+          "visa_number": {
+            "title": "Visa Number",
+            "type": "string"
+          },
+          "issuing_country": {
+            "title": "Issuing Country",
+            "type": "string"
+          },
+          "visa_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Visa Type"
+          },
+          "issue_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Issue Date"
+          },
+          "expiry_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Expiry Date"
+          }
+        },
+        "required": [
+          "user_id",
+          "visa_number",
+          "issuing_country"
+        ],
+        "title": "set_visaArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "update_visa",
+      "description": "Update provided visa fields.",
+      "parameters": [
+        {
+          "name": "user_id",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "visa_number",
+          "type": "any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "visa_type",
+          "type": "any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "issuing_country",
+          "type": "any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "issue_date",
+          "type": "any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "expiry_date",
+          "type": "any",
+          "required": false,
+          "default": null
+        }
+      ],
+      "input_schema": {
+        "properties": {
+          "user_id": {
+            "title": "User Id",
+            "type": "integer"
+          },
+          "visa_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Visa Number"
+          },
+          "visa_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Visa Type"
+          },
+          "issuing_country": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Issuing Country"
+          },
+          "issue_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Issue Date"
+          },
+          "expiry_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Expiry Date"
+          }
+        },
+        "required": [
+          "user_id"
+        ],
+        "title": "update_visaArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "get_visa",
+      "description": "Return the employee's visa dict, or null if none set.",
+      "parameters": [
+        {
+          "name": "user_id",
+          "type": "integer",
+          "required": true
+        }
+      ],
+      "input_schema": {
+        "properties": {
+          "user_id": {
+            "title": "User Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "user_id"
+        ],
+        "title": "get_visaArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "set_emergency_contact",
+      "description": "Set (upsert) the employee's emergency contact. relationship must be one\n    of: Spouse, Parent, Sibling, Child, Relative, Friend, Guardian, Partner.",
+      "parameters": [
+        {
+          "name": "user_id",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "relationship",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "phone",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "email",
+          "type": "any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "street_address",
+          "type": "any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "city",
+          "type": "any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "country",
+          "type": "any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "postal_code",
+          "type": "any",
+          "required": false,
+          "default": null
+        }
+      ],
+      "input_schema": {
+        "properties": {
+          "user_id": {
+            "title": "User Id",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "relationship": {
+            "title": "Relationship",
+            "type": "string"
+          },
+          "phone": {
+            "title": "Phone",
+            "type": "string"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Email"
+          },
+          "street_address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Street Address"
+          },
+          "city": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "City"
+          },
+          "country": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Country"
+          },
+          "postal_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Postal Code"
+          }
+        },
+        "required": [
+          "user_id",
+          "name",
+          "relationship",
+          "phone"
+        ],
+        "title": "set_emergency_contactArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "update_emergency_contact",
+      "description": "Update provided emergency-contact fields (relationship validated).",
+      "parameters": [
+        {
+          "name": "user_id",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "name",
+          "type": "any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "relationship",
+          "type": "any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "phone",
+          "type": "any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "email",
+          "type": "any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "street_address",
+          "type": "any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "city",
+          "type": "any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "country",
+          "type": "any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "postal_code",
+          "type": "any",
+          "required": false,
+          "default": null
+        }
+      ],
+      "input_schema": {
+        "properties": {
+          "user_id": {
+            "title": "User Id",
+            "type": "integer"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Name"
+          },
+          "relationship": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Relationship"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Phone"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Email"
+          },
+          "street_address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Street Address"
+          },
+          "city": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "City"
+          },
+          "country": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Country"
+          },
+          "postal_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Postal Code"
+          }
+        },
+        "required": [
+          "user_id"
+        ],
+        "title": "update_emergency_contactArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "get_emergency_contact",
+      "description": "Return the employee's emergency contact dict, or null if none set.",
+      "parameters": [
+        {
+          "name": "user_id",
+          "type": "integer",
+          "required": true
+        }
+      ],
+      "input_schema": {
+        "properties": {
+          "user_id": {
+            "title": "User Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "user_id"
+        ],
+        "title": "get_emergency_contactArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "set_bank_account",
+      "description": "Set (upsert) the employee's bank account.",
+      "parameters": [
+        {
+          "name": "user_id",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "bank_name",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "account_number",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "routing_number",
+          "type": "any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "iban",
+          "type": "any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "currency",
+          "type": "any",
+          "required": false,
+          "default": null
+        }
+      ],
+      "input_schema": {
+        "properties": {
+          "user_id": {
+            "title": "User Id",
+            "type": "integer"
+          },
+          "bank_name": {
+            "title": "Bank Name",
+            "type": "string"
+          },
+          "account_number": {
+            "title": "Account Number",
+            "type": "string"
+          },
+          "routing_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Routing Number"
+          },
+          "iban": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Iban"
+          },
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Currency"
+          }
+        },
+        "required": [
+          "user_id",
+          "bank_name",
+          "account_number"
+        ],
+        "title": "set_bank_accountArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "update_bank_account",
+      "description": "Update provided bank-account fields.",
+      "parameters": [
+        {
+          "name": "user_id",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "bank_name",
+          "type": "any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "account_number",
+          "type": "any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "routing_number",
+          "type": "any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "iban",
+          "type": "any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "currency",
+          "type": "any",
+          "required": false,
+          "default": null
+        }
+      ],
+      "input_schema": {
+        "properties": {
+          "user_id": {
+            "title": "User Id",
+            "type": "integer"
+          },
+          "bank_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Bank Name"
+          },
+          "account_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Account Number"
+          },
+          "routing_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Routing Number"
+          },
+          "iban": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Iban"
+          },
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Currency"
+          }
+        },
+        "required": [
+          "user_id"
+        ],
+        "title": "update_bank_accountArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "get_bank_account",
+      "description": "Return the employee's bank account dict, or null if none set.",
+      "parameters": [
+        {
+          "name": "user_id",
+          "type": "integer",
+          "required": true
+        }
+      ],
+      "input_schema": {
+        "properties": {
+          "user_id": {
+            "title": "User Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "user_id"
+        ],
+        "title": "get_bank_accountArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "set_leave_allotment",
+      "description": "Set annual allotment for a leave_type (Vacation, Sick Leave, Maternity,\n    Paternity, Jury Duty, Unpaid). annual_days null = untracked.",
+      "parameters": [
+        {
+          "name": "user_id",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "leave_type",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "annual_days",
+          "type": "any",
+          "required": false,
+          "default": null
+        }
+      ],
+      "input_schema": {
+        "properties": {
+          "user_id": {
+            "title": "User Id",
+            "type": "integer"
+          },
+          "leave_type": {
+            "title": "Leave Type",
+            "type": "string"
+          },
+          "annual_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Annual Days"
+          }
+        },
+        "required": [
+          "user_id",
+          "leave_type"
+        ],
+        "title": "set_leave_allotmentArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "get_leave_allotments",
+      "description": "Return all leave allotment dicts for the employee.",
+      "parameters": [
+        {
+          "name": "user_id",
+          "type": "integer",
+          "required": true
+        }
+      ],
+      "input_schema": {
+        "properties": {
+          "user_id": {
+            "title": "User Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "user_id"
+        ],
+        "title": "get_leave_allotmentsArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "create_time_off_request",
+      "description": "Create a Pending time-off request. leave_type from the fixed set; dates\n    YYYY-MM-DD with end_date >= start_date. Returns the request dict.",
+      "parameters": [
+        {
+          "name": "user_id",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "leave_type",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "start_date",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "end_date",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "reason",
+          "type": "any",
+          "required": false,
+          "default": null
+        }
+      ],
+      "input_schema": {
+        "properties": {
+          "user_id": {
+            "title": "User Id",
+            "type": "integer"
+          },
+          "leave_type": {
+            "title": "Leave Type",
+            "type": "string"
+          },
+          "start_date": {
+            "title": "Start Date",
+            "type": "string"
+          },
+          "end_date": {
+            "title": "End Date",
+            "type": "string"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Reason"
+          }
+        },
+        "required": [
+          "user_id",
+          "leave_type",
+          "start_date",
+          "end_date"
+        ],
+        "title": "create_time_off_requestArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "update_time_off_status",
+      "description": "Set a request's status to Pending, Approved, or Denied.",
+      "parameters": [
+        {
+          "name": "request_id",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "input_schema": {
+        "properties": {
+          "request_id": {
+            "title": "Request Id",
+            "type": "integer"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "request_id",
+          "status"
+        ],
+        "title": "update_time_off_statusArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "get_time_off_request",
+      "description": "Return the time-off request dict for request_id.",
+      "parameters": [
+        {
+          "name": "request_id",
+          "type": "integer",
+          "required": true
+        }
+      ],
+      "input_schema": {
+        "properties": {
+          "request_id": {
+            "title": "Request Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "request_id"
+        ],
+        "title": "get_time_off_requestArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "list_time_off_requests",
+      "description": "List time-off requests filtered by user_id and/or status.",
+      "parameters": [
+        {
+          "name": "user_id",
+          "type": "any",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "status",
+          "type": "any",
+          "required": false,
+          "default": null
+        }
+      ],
+      "input_schema": {
+        "properties": {
+          "user_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "User Id"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Status"
+          }
+        },
+        "title": "list_time_off_requestsArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "get_leave_balance",
+      "description": "Per-leave-type balance for a year: {leave_type: {allotment, used,\n    remaining}}. 'used' excludes weekends and the employee's country holidays;\n    remaining is null for untracked (Unpaid) types.",
+      "parameters": [
+        {
+          "name": "user_id",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "year",
+          "type": "integer",
+          "required": true
+        }
+      ],
+      "input_schema": {
+        "properties": {
+          "user_id": {
+            "title": "User Id",
+            "type": "integer"
+          },
+          "year": {
+            "title": "Year",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "user_id",
+          "year"
+        ],
+        "title": "get_leave_balanceArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "add_holiday",
+      "description": "Add a country holiday (holiday_date YYYY-MM-DD). Returns the holiday dict.",
+      "parameters": [
+        {
+          "name": "country_code",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "holiday_date",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "input_schema": {
+        "properties": {
+          "country_code": {
+            "title": "Country Code",
+            "type": "string"
+          },
+          "holiday_date": {
+            "title": "Holiday Date",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "country_code",
+          "holiday_date",
+          "name"
+        ],
+        "title": "add_holidayArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "list_holidays",
+      "description": "List holidays for a country, optionally filtered to a year.",
+      "parameters": [
+        {
+          "name": "country_code",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "year",
+          "type": "any",
+          "required": false,
+          "default": null
+        }
+      ],
+      "input_schema": {
+        "properties": {
+          "country_code": {
+            "title": "Country Code",
+            "type": "string"
+          },
+          "year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Year"
+          }
+        },
+        "required": [
+          "country_code"
+        ],
+        "title": "list_holidaysArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "delete_holiday",
+      "description": "Delete a holiday by id. Returns {\"deleted\": bool}.",
+      "parameters": [
+        {
+          "name": "holiday_id",
+          "type": "integer",
+          "required": true
+        }
+      ],
+      "input_schema": {
+        "properties": {
+          "holiday_id": {
+            "title": "Holiday Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "holiday_id"
+        ],
+        "title": "delete_holidayArguments",
+        "type": "object"
+      }
+    }
+  ],
+  "source": "python server.py",
+  "transport": "stdio"
+}

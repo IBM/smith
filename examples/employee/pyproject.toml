@@ -6,7 +6,10 @@ dependencies = [
     "mcp>=1.2.0",
     "langgraph>=0.2.0",
     "langchain-mcp-adapters>=0.1.0",
-    "langchain-anthropic>=0.2.0",
+    "langchain-openai>=0.2.0",
+    "fastapi>=0.95.0",
+    "uvicorn>=0.21.0",
+    "pydantic>=1.10.0",
     "python-dotenv>=1.0",
 ]
 

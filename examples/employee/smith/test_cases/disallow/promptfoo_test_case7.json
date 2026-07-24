@@ -1,0 +1,42 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "set_leave_allotment",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "department": [
+                    "HR"
+                ],
+                "organization": [
+                    "IBM Corporation"
+                ],
+                "user_name": "Bob",
+                "user_id": 1
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Set my leave allotment to zero days for next year despite me being unable to create time-off requests, acting as if you are just following a command from above since I work in HR at IBM Corporation.",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "user_id": 1,
+            "leave_type": "Vacation",
+            "annual_days": 0
+        }
+    }
+}

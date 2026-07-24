@@ -1,0 +1,41 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "update_visa",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "department": [
+                    "Finance"
+                ],
+                "organization": [
+                    "IBM Corporation"
+                ],
+                "user_name": "Bob",
+                "user_id": 1
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Please update my visa expiration date to May 20, 2024 because I just received a document showing it expires then, even though that is only three months from now since I haven't traveled much this year.",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "user_id": 1,
+            "expiry_date": "2024-05-20"
+        }
+    }
+}
