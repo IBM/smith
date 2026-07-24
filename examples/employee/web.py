@@ -9,7 +9,7 @@ conversation (this is a local single-user tool) and exposes:
 `steps` is a chronological, alternating call/result timeline of the tools the
 agent used during the turn, for display in the UI's side panel.
 
-Run:  uv run python web.py   (needs ANTHROPIC_API_KEY)
+Run:  uv run python web.py   (reads INFERENCE_* from .env)
 """
 import os
 import sys
@@ -18,7 +18,7 @@ from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 from langchain_core.messages import ToolMessage
 
-load_dotenv()  # read ANTHROPIC_API_KEY (and friends) from .env if present
+load_dotenv()  # read INFERENCE_* (and friends) from .env if present
 from starlette.applications import Starlette
 from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
@@ -121,7 +121,7 @@ async def _lifespan(app):
     init_db(conn)
     seed(conn)
     conn.close()
-    _agent = await build_agent()
+    _agent, _ = await build_agent()
     yield
 
 
@@ -143,8 +143,8 @@ app = Starlette(
 
 
 if __name__ == "__main__":
-    if not (os.environ.get("LLM_API_KEY") or os.environ.get("ANTHROPIC_API_KEY")):
-        sys.exit("No API key found; set LLM_API_KEY (or ANTHROPIC_API_KEY) in .env.")
+    if not os.environ.get("INFERENCE_API_KEY"):
+        sys.exit("No API key found; set INFERENCE_API_KEY in .env.")
     import uvicorn
 
     uvicorn.run(app, host="127.0.0.1", port=8000)

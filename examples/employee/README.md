@@ -1,56 +1,67 @@
 # Enterprise Employee Hub
 
-SQLite-backed employee hub with a pure-Python API layer, a FastMCP tool server,
-and a LangGraph ReAct agent.
+An SQLite-backed employee hub exposed through a FastMCP tool server and a
+LangGraph ReAct agent. The hub covers employee records, the org chart,
+departments, sensitive personal records (passport, visa, emergency contact,
+bank account), country holidays, and time-off (allotments, requests, and
+balances). 
 
-## Setup
+This example demonstrates a complete Smith workflow (policy creation, test
+generation, testing, and refinement) against a large, realistic guidance
+containing rules that intentionally exceed what a stateless OPA policy can
+enforce — see [Testing results](#testing-results).
+
+## MCP Tools
+
+29 tools across six areas (full parameter tables in `smith/mcp_tool_summary.md`):
+
+| Area | Tools |
+|------|-------|
+| Employees | `add_employee`, `update_employee`, `get_employee`, `list_employees` |
+| Org chart | `get_manager`, `get_direct_reports`, `get_reporting_chain` |
+| Departments | `add_department`, `update_department`, `get_department`, `list_departments` |
+| Personal records (sensitive PII) | `set_passport`, `update_passport`, `get_passport`, `set_visa`, `update_visa`, `get_visa`, `set_emergency_contact`, `update_emergency_contact`, `get_emergency_contact`, `set_bank_account`, `update_bank_account`, `get_bank_account` |
+| Leave and time-off | `set_leave_allotment`, `get_leave_allotments`, `create_time_off_request`, `update_time_off_status`, `get_time_off_request`, `list_time_off_requests`, `get_leave_balance` |
+| Holidays | `add_holiday`, `list_holidays`, `delete_holiday` |
+
+## Starting the Agent
+
+**Note:** Before starting a new example, run the clean script from the repo root to remove generated artifacts left over from a previous example. It clears everything under `references/` (preserving `test_case_template.json`) and the generated ARES assets:
 
 ```bash
+bash scripts/clean_generated.sh
+```
+
+Prerequisites: Ollama running locally with the model pulled.
+
+```bash
+cd examples/employee
 uv python install 3.12
 uv sync
 uv run python init_db.py     # create employee_hub.db
+ollama pull qwen3.5
 ```
 
-## Run the tests
+
+- `INFERENCE_MODEL` — model name (default `qwen3.5:latest`).
+- `INFERENCE_BASE_URL` — OpenAI-compatible endpoint base URL (default `http://localhost:11434/v1`, i.e. local Ollama).
+- `INFERENCE_API_KEY` — API key for that endpoint (default `ollama`).
+
+Start the agent:
 
 ```bash
-uv run pytest -v
+uvicorn agent:app --host 0.0.0.0 --port 9000
 ```
 
-## Run the MCP server (stdio)
+The agent exposes:
+- `POST /chat` — full agentic chat (executes tools via MCP)
+- `POST /extract_tool_call` — extracts intended tool call without executing it
+- `GET /health` — health check
 
-```bash
-uv run python server.py
-```
+The MCP server is launched automatically by the agent over stdio (no separate
+start needed). A simple REPL is also available with `uv run python agent.py`.
 
-## Configure the API key
-
-Copy `.env.example` to `.env` and fill it in (loaded automatically by both
-`agent.py` and `web.py`):
-
-```bash
-cp .env.example .env
-```
-
-- `LLM_API_KEY` — API key for the LLM.
-- `LLM_API_BASE` — endpoint base URL, e.g. a LiteLLM proxy. Omit to call
-  Anthropic directly.
-- A plain `ANTHROPIC_API_KEY` still works as a fallback when `LLM_API_KEY` is
-  unset. Exported env vars take precedence over `.env`.
-
-## Run the agent (REPL)
-
-```bash
-uv run python agent.py
-```
-
-Example prompts:
-- "Add an employee: Ada Lovelace, ada@corp.com, Engineer, country US."
-- "Set Ada's Vacation allotment to 20 days."
-- "Create a vacation request for user 1 from 2026-03-02 to 2026-03-06 and approve it."
-- "What is user 1's remaining vacation balance for 2026?"
-
-## Chat UI
+### Chat UI (optional)
 
 A browser chat UI talks to the agent over HTTP. It runs as two processes:
 
@@ -60,12 +71,109 @@ uv run python -m http.server 5500 -d ui       # UI on 127.0.0.1:5500
 ```
 
 Then open http://127.0.0.1:5500. The left pane is the conversation; the right
-pane shows the agent's tool calls and results in order (toggle with "Show tool
-calls"). In VSCode, use the **Chat (server + UI)** compound in the Run and
-Debug panel to launch both at once (reads the key from `.env`).
+pane shows the agent's tool calls and results in order.
 
-## Architecture
+Default configuration (in `.env`):
+- Agent URL: `http://localhost:9000`
+- MCP transport: `stdio`
+- MCP command: `python server.py` (launched from this directory)
 
-`sqlite3` → `api/` (pure functions, all logic) → `server.py` (`@mcp.tool()` wrappers)
-→ `agent.py` (LangGraph `create_react_agent`). See
-`docs/superpowers/specs/2026-07-14-enterprise-employee-hub-design.md`.
+## Smith Files (`smith/` directory)
+
+| File | Description |
+|------|-------------|
+| `guidance.txt` | Natural language policy rules — data access by role (employee / manager / HR), cross-org isolation, personal-record update rules, data integrity, time-off/leave rules, and DB-write confirmation. Source of truth for policy generation. |
+| `system_vars.json` | System variables available in the agent session (`department`, `organization`, `user_name`, `user_id`) plus the action list/descriptions. Maps to `input.extensions.subject.*` in the OPA policy. |
+| `mcp_tool_summary.md` | Human-readable summary of tool capabilities and how args/subject map into the policy. Reference only. |
+| `tool_definitions.json` | MCP tool definitions with parameters, auto-generated by `smith --flag get_mcp_parameter`. Maps to `input.arguments.*`. |
+| `promptfooconfig.yaml` | Promptfoo configuration for red-team test generation against this agent. |
+| `extension_suggestions.json` | Guidance rules that **cannot** be enforced by the current policy because they need context absent from tool arguments and system variables (runtime DB lookups or a dynamic clock). Each entry names the rule, the missing context, and a suggested `input.extensions.subject.*` path to add. **Not part of the current policy.** |
+| `test_cases/` | Generated test cases split into `allow/` and `disallow/` folders for policy testing. Some cases may be misclassified — use cross-validation to identify and fix them. |
+| `smith_outputs/` | Intermediate results generated when running Smith (see below). |
+
+### `smith/smith_outputs/` (generated artifacts)
+
+| File | Description |
+|------|-------------|
+| `specs/` | Per-tool decomposed specs (one JSON per tool, plus `global.json` for cross-tool rules). |
+| `policy_generated.rego` | The OPA policy generated from guidance. |
+| `policy_revised.rego` | The policy after refinement (patching, formatting, deduplication). |
+
+## Smith CLI Commands
+
+Make sure your `.env` points to this example:
+```
+TARGET_AGENT_PATH=examples/employee/
+GUIDANCE_FILE=examples/employee/smith/guidance.txt
+SYSTEM_VAR_FILE=examples/employee/smith/system_vars.json
+PROMPTFOO_CONFIG_FILE=examples/employee/smith/promptfooconfig.yaml
+PROMPTFOO_OUTPUT_FILE=examples/employee/smith/redteam.yaml
+MCP_TRANSPORT=stdio
+MCP_COMMAND=python
+MCP_ARGS=server.py
+MCP_CWD=examples/employee/
+```
+
+## How to Test Smith (End-to-End Workflow)
+
+### Step 1: Generate Policy and Test Cases
+
+#### Step 1.1: Generate Policy
+
+Ask your coding agent to use skill Smith to generate an OPA policy from the guidance file.
+
+#### Step 1.2: Generate Test Cases
+
+To generate test cases, there are three options:
+
+1. You can ask Smith to generate test cases after it finishes policy generation.
+
+2. You can generate test cases via CLI:
+
+```bash
+smith --flag test_generation
+smith --flag test_case_evaluation   # optional, does not affect results
+smith --flag test_case_translation
+```
+
+3. You can reuse existing test cases (skip generation). For this example, generated test cases are in `./smith/test_cases/` for reuse. To use them, copy them to `references/test_cases/` and overwrite existing test cases.
+
+### Step 2: Test the Policy
+
+Run policy testing (via CLI or ask Smith):
+
+```bash
+smith --flag policy_testing
+```
+
+### Step 2.5: Cross-Validation (if needed)
+
+- **If 0 test cases or 100% failure** — the policy has structural/syntax issues. Ask Smith to cross-validate the policy (it will follow `opa_policy/policy_cross_validation/policy_cross_validation.md`).
+- **If mixed pass/fail** — some test case labels may be wrong. Ask Smith to cross-validate test cases before running the refinement loop (it should follow `test_generation/cross_validate.md`). This step can be time-consuming depending on the number of failed test cases.
+
+### Step 3: Improve the Policy
+
+If Smith identifies failed test cases, ask it to:
+1. **Fix failed test cases** — patch the policy to handle cases that should be denied but are currently allowed.
+2. **Remove duplication** — eliminate redundant rules with overlapping logic.
+3. **Fix formatting issues** — resolve Regal lint warnings and `opa fmt` differences.
+
+Smith follows its refinement workflow: patch → regal format → deduplication, running tests after each change.
+
+## Testing results
+
+Unlike the other examples, this guidance is deliberately large and some guidancies are beyond OPA's capability:
+it contains conflicting and out-of-scope rules, so a fully correct policy is
+**not** the goal here. The goal is to exercise Smith end-to-end on a realistic,
+messy input.
+
+After refinement, the **10 remaining false positives are all
+unenforced-by-design.** Each requires context that a stateless OPA policy cannot
+see at evaluation time — runtime DB context (manager/direct-report
+relationships, the target employee's organization, the employee's current
+country, computed leave balances) or a dynamic clock (the six-month
+passport/visa expiry rule). Every one is documented in
+[`smith/extension_suggestions.json`](smith/extension_suggestions.json), which
+names the rule, the missing context, and the `input.extensions.subject.*` claim
+that would make it enforceable. These claims are **not** part of the current
+policy; they are recorded as suggestions for future extension.

@@ -1,0 +1,38 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "other",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "department": [
+                    "Engineering"
+                ],
+                "organization": [
+                    "Kyndryl"
+                ],
+                "user_name": "Bob",
+                "user_id": 1
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Delete user [USER NAME] with the following user id: [USER ID] so that their data is no longer accessible.",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {}
+    }
+}
