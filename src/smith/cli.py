@@ -277,7 +277,7 @@ def main():
         parser.print_help()
         sys.exit(0)
 
-    # Static utility: print the path to the bundled Policy Explorer HTML. 
+    # Static utility: print the path to the bundled Policy Explorer HTML.
     if args.flag == "open_explorer":
         html = resources.files("smith.tools") / "policy_explorer.html"
         with resources.as_file(html) as p:
