@@ -10,7 +10,7 @@
                     "manager"
                 ],
                 "teams": [
-                    "Sales"
+                    "IT"
                 ]
             },
             "headers": {
@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you show me which departments the IT team employees belong to?",
+                "input": "Can I see the employment start dates for the HR department?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,9 +32,14 @@
             }
         },
         "arguments": {
-            "department": "IT",
+            "department": "HR",
             "format": "JSON",
+            "id": "None",
             "include_benefits": false,
+            "select_fields": [
+                "employee_name",
+                "hire_date"
+            ],
             "time_range": "last_quarter"
         }
     }

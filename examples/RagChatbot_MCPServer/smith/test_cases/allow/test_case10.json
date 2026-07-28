@@ -10,7 +10,7 @@
                     "manager"
                 ],
                 "teams": [
-                    "Finance"
+                    "Legal"
                 ]
             },
             "headers": {
@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "What bonuses were paid to employees in my Finance department?",
+                "input": "What bonuses were paid to Legal team employees this year?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,14 +32,8 @@
             }
         },
         "arguments": {
-            "department": "Finance",
+            "department": "Legal",
             "time_range": "current_year",
-            "select_fields": [
-                "employee_name",
-                "title",
-                "base_salary",
-                "actual_bonus_2024"
-            ],
             "format": "JSON"
         }
     }

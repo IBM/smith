@@ -28,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Search for events about drug discovery and pharmaceutical research",
+                "input": "Search for events using drug discovery as a keyword.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,9 +39,9 @@
             }
         },
         "arguments": {
-            "keywords": "drug discovery pharmaceutical research AI artificial intelligence machine learning deep learning healthcare biomedical computing",
+            "keywords": "drug discovery",
             "topic": "Artificial intelligence",
-            "limit": 20
+            "limit": 50
         }
     }
 }

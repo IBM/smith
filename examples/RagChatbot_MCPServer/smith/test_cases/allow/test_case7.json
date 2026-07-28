@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you provide the compensation details for employees in my IT department?",
+                "input": "Show me the compensation details for IT team members",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

@@ -8,7 +8,9 @@
                 "claims": {},
                 "user_name": "Bob",
                 "user_role": [
-                    "phd_student"
+                    "faculty",
+                    "phd_student",
+                    "guest"
                 ],
                 "queries_this_session": 1,
                 "dissertation_area": "Artificial intelligence",
@@ -26,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I want events on machine learning topics",
+                "input": "I'm looking for conferences on supply chain optimization and technology.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -37,8 +39,9 @@
             }
         },
         "arguments": {
-            "keywords": "machine learning",
-            "topic": "Artificial intelligence"
+            "keywords": "supply chain optimization technology artificial intelligence",
+            "topic": "Artificial intelligence",
+            "limit": 10
         }
     }
 }

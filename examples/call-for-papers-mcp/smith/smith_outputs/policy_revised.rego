@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 package mcp.policies
 
 default allow := false
@@ -5,19 +6,15 @@ default allow := false
 # === Input Accessors ===
 subject := input.extensions.subject
 args := object.get(input, "arguments", {})
-tool_name := input.name
 
 # === Constants ===
-
-# Approved research topics for the department
 approved_topics := {
 	"Artificial intelligence",
 	"Cybersecurity and privacy",
 	"Software engineering",
 }
 
-# Disallowed keywords (case-insensitive matching)
-disallowed_keywords := {
+blocked_keywords := {
 	"bioinformatics", "genomics", "clinical trials", "drug discovery",
 	"quantum physics", "materials science", "renewable energy",
 	"economics", "finance", "marketing", "supply chain",
@@ -25,145 +22,112 @@ disallowed_keywords := {
 	"trade show", "career fair", "startup expo", "hackathon",
 }
 
-# Role-based limit caps
-role_limit_caps := {
-	"faculty": 15,
-	"phd_student": 10,
-}
-
-# Roles allowed to use get_events
-allowed_roles := {"faculty", "phd_student"}
+faculty_limit_cap := 15
+phd_limit_cap := 10
+session_limit := 5
 
 # === Tool Argument Keys ===
 allowed_arg_keys := {"get_events": {"keywords", "topic", "limit"}}
 
-# === Helper Functions ===
-
-# Check if any disallowed keyword appears in the keywords string (case-insensitive)
-contains_disallowed_keyword(keywords_str) if {
-	some disallowed in disallowed_keywords
-	lower_keywords := lower(keywords_str)
-	lower_disallowed := lower(disallowed)
-	contains(lower_keywords, lower_disallowed)
-}
-
-# Get user's primary role (first role in the list)
-default user_role := ""
-
-user_role := subject.user_role[0] if {
-	count(subject.user_role) > 0
-}
-
-# Get user's dissertation area
-default dissertation_area := ""
-
-dissertation_area := subject.dissertation_area
-
-# Get queries this session
-default queries_this_session := 0
-
-queries_this_session := subject.queries_this_session
-
-# === Validation Rules ===
-
-# Validate envelope structure
+# === Envelope Validation ===
 valid_envelope if {
 	input.kind == "tool_call"
 	input.action == "execute"
-	input.name
+	input.name != ""
 }
 
-# === Global DENY Rules ===
+# === DENY Rules ===
 
-# Deny if tool is not get_events (only tool we support)
-deny[msg] if {
-	tool_name != "get_events"
-	msg := sprintf("Tool '%s' is not supported. Only 'get_events' is allowed.", [tool_name])
+# Deny invalid envelope
+deny["Invalid request envelope: kind must be tool_call, action must be execute"] if {
+	not valid_envelope
 }
 
-# === Tool-Specific DENY Rules for get_events ===
-
-# Rule 1: Only faculty and phd_student may use get_events
-deny[msg] if {
-	tool_name == "get_events"
-	not user_role in allowed_roles
-	msg := sprintf(
-		"User role '%s' is not authorized to use get_events. Only 'faculty' and 'phd_student' are allowed.",
-		[user_role],
-	)
+# Deny missing or empty user_role
+deny["Access denied: user_role is missing or empty"] if {
+	input.name == "get_events"
+	roles := object.get(subject, "user_role", [])
+	count(roles) == 0
 }
 
-# Rule 2: Topic must be one of the three approved research areas
+# Deny guest role from using get_events
+deny["Access denied: only faculty or phd_student may use get_events"] if {
+	input.name == "get_events"
+	roles := subject.user_role
+	not "faculty" in roles
+	not "phd_student" in roles
+}
+
+# Deny unapproved topic
 deny[msg] if {
-	tool_name == "get_events"
+	input.name == "get_events"
 	topic := args.topic
 	not topic in approved_topics
-	msg := sprintf(
-		"Topic '%s' is not approved. Must be exactly one of: 'Artificial intelligence', 'Cybersecurity and privacy', 'Software engineering'.",
-		[topic],
-	)
+	msg := sprintf("Denied: topic '%v' is not in the approved research areas", [topic])
 }
 
-# Rule 3: PhD students can only request topics matching their dissertation area
+# Deny limit below 1
+deny["Denied: limit must be at least 1"] if {
+	input.name == "get_events"
+	args.limit < 1
+}
+
+# Deny limit above absolute maximum (15)
+deny["Denied: limit exceeds the absolute maximum of 15"] if {
+	input.name == "get_events"
+	args.limit > faculty_limit_cap
+}
+
+# Deny phd_student exceeding their limit cap (10)
+deny["Denied: phd_student limit may not exceed 10"] if {
+	input.name == "get_events"
+	roles := subject.user_role
+	"phd_student" in roles
+	not "faculty" in roles
+	args.limit > phd_limit_cap
+}
+
+# Deny exceeding session search count
+deny["Denied: maximum of 5 get_events searches per session reached"] if {
+	input.name == "get_events"
+	subject.queries_this_session >= session_limit
+}
+
+# Deny blocked keywords (case-insensitive)
 deny[msg] if {
-	tool_name == "get_events"
-	user_role == "phd_student"
+	input.name == "get_events"
+	kw := args.keywords
+	some bk in blocked_keywords
+	contains(lower(kw), lower(bk))
+	msg := sprintf("Denied: keyword '%v' is not permitted for department use", [bk])
+}
+
+# Deny phd_student with missing dissertation_area
+deny["Denied: phd_student must have a dissertation_area defined"] if {
+	input.name == "get_events"
+	roles := subject.user_role
+	"phd_student" in roles
+	not "faculty" in roles
+	not subject.dissertation_area
+}
+
+# Deny phd_student searching outside their dissertation_area
+deny[msg] if {
+	input.name == "get_events"
+	roles := subject.user_role
+	"phd_student" in roles
+	not "faculty" in roles
 	topic := args.topic
-	dissertation_area != ""
-	topic != dissertation_area
+	topic != subject.dissertation_area
 	msg := sprintf(
-		"PhD student with dissertation area '%s' cannot request topic '%s'. Topic must match dissertation area.",
-		[dissertation_area, topic],
+		"Denied: phd_student may only search their dissertation area '%v', not '%v'",
+		[subject.dissertation_area, topic],
 	)
 }
 
-# Rule 4: Limit must not exceed role-specific cap
-deny[msg] if {
-	tool_name == "get_events"
-	limit := args.limit
-	cap := role_limit_caps[user_role]
-	limit > cap
-	msg := sprintf("Limit %d exceeds the maximum of %d for role '%s'.", [limit, cap, user_role])
-}
-
-# Rule 5: Limit must not exceed absolute maximum of 15
-deny[msg] if {
-	tool_name == "get_events"
-	limit := args.limit
-	limit > 15
-	msg := sprintf("Limit %d exceeds the absolute maximum of 15 per request.", [limit])
-}
-
-# Rule 6: Keywords must not contain disallowed terms
-deny[msg] if {
-	tool_name == "get_events"
-	keywords := args.keywords
-	contains_disallowed_keyword(keywords)
-	msg := sprintf(
-		concat("", [
-			"Keywords '%s' contain disallowed terms. ",
-			"Prohibited keywords include: bioinformatics, genomics, clinical trials, drug discovery, ",
-			"quantum physics, materials science, renewable energy, economics, finance, marketing, ",
-			"supply chain, education, psychology, sociology, political science, trade show, ",
-			"career fair, startup expo, hackathon.",
-		]),
-		[keywords],
-	)
-}
-
-# Rule 8: No more than 5 queries per session
-deny[msg] if {
-	tool_name == "get_events"
-	queries_this_session > 5
-	msg := sprintf(
-		"Query limit exceeded. Maximum 5 queries per session allowed. Current count: %d.",
-		[queries_this_session],
-	)
-}
-
-# === Collect All Denials ===
+# === any_deny helper ===
 any_deny if {
-	count(deny) > 0
+	some _ in deny
 }
 
 # === Final ALLOW ===

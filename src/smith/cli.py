@@ -25,7 +25,16 @@ from smith.test_generation.decompose import decompose_guidance
 from smith.test_generation.variable_extraction import variable_extraction
 from smith.test_generation.attack import attack
 from smith.test_generation.case_generation import case_generation
-from smith.test_generation.convert_test_case import translate_case
+from smith.test_generation.convert_test_case import (
+    translate_case,
+    convert_bypass_case,
+)
+from smith.policy_agent.policy_analysis.bypass.analyze_bypass import (
+    detect_bypass_vectors,
+)
+from smith.policy_agent.policy_analysis.bypass.synthesize_cases import (
+    synthesize_bypass_cases,
+)
 from smith.test_generation.grey_condition import grey_extraction
 from smith.test_generation.attack_promptfoo import create_promptfoo_cases
 from smith.test_case_evaluation.classify_guidance import classify_promptfoo_cases
@@ -127,13 +136,7 @@ VALID_ATTACK_TOOLS = {"ares", "promptfoo", "none"}
 
 
 def resolve_attack_tools():
-    """Parse and validate the ATTACK_TOOLS env var.
-
-    Returns the set of enabled attack tools (never contains "none"). Exits with
-    an actionable error on unrecognized tokens so a typo cannot silently disable
-    red-teaming, and prints which tools are enabled vs skipped so a
-    config-driven skip is distinguishable from a tool that produced no cases.
-    """
+    """Parse and validate the ATTACK_TOOLS env var."""
     raw = os.getenv("ATTACK_TOOLS", "ares,promptfoo")
     tools = {t.strip().lower() for t in raw.split(",") if t.strip()}
     unknown = tools - VALID_ATTACK_TOOLS
@@ -256,6 +259,70 @@ def generate_test(
     return ""
 
 
+def generate_bypass_cases(
+    api_key,
+    openai_base_url,
+    model,
+    temp,
+    top_p,
+    policy_path,
+    guidance_file,
+    tool_definitions,
+    system_variables,
+    test_case_template_file,
+    output_file_ready_cases,
+    bypass_report_dir,
+    bypass_cases_file,
+):
+    """Find guidance-vs-policy divergences and generate adversarial cases."""
+    if not os.path.exists(policy_path):
+        print(
+            f"Bypass case generation skipped: policy not found at {policy_path}. "
+            "Create a policy first, then re-run."
+        )
+        return ""
+    if os.path.getsize(policy_path) == 0:
+        print(f"Bypass case generation skipped: policy at {policy_path} is empty.")
+        return ""
+
+    bypass_report = detect_bypass_vectors(
+        api_key,
+        bypass_report_dir,
+        openai_base_url,
+        policy_path,
+        model,
+        temp,
+        top_p,
+        guidance_file,
+        tool_definitions=tool_definitions,
+        system_vars=system_variables,
+    )
+    synthesize_bypass_cases(
+        api_key,
+        openai_base_url,
+        model,
+        temp,
+        top_p,
+        bypass_report,
+        bypass_cases_file,
+        tool_definitions=tool_definitions,
+        system_vars=system_variables,
+    )
+    convert_bypass_case(
+        bypass_cases_file,
+        test_case_template_file,
+        output_file_ready_cases,
+        system_variables,
+    )
+    print(
+        f"Bypass case generation complete: {len(bypass_report.vectors)} "
+        f"divergence(s) found. New bypass_test_case*.json written under "
+        f"{output_file_ready_cases}{{allow,disallow}}/. Run test_case_translation, "
+        "then policy_testing and red_suggestion."
+    )
+    return ""
+
+
 def main():
 
     # Parse CLI args first so `--help` and argument errors work without a
@@ -285,6 +352,7 @@ def main():
 
     # project settings
     base_url = os.getenv("BASE_URL")
+    policy_path = base_url + os.getenv("POLICY_DIR") + os.getenv("POLICY_PATH")
 
     # test case generation settings
     guidance_file = base_url + os.getenv("GUIDANCE_FILE")
@@ -303,6 +371,10 @@ def main():
     output_file_attack_promptfoo = base_url + os.getenv("ATTACK_FILE_PROMPT")
     test_generation_path = base_url + os.getenv("TEST_GENERATION_PATH")
     test_case_path = base_url + os.getenv("TEST_CASE_PATH", "references/test_cases/")
+    bypass_cases_file = base_url + os.getenv(
+        "BYPASS_CASE_FILE", "references/bypass_cases.json"
+    )
+    bypass_report_dir = base_url + os.getenv("BYPASS_REPORT_DIR", "references/bypass/")
     system_variables = {}
     with open(system_var_file, encoding="utf-8") as f:
         system_variables = json.load(f)
@@ -367,6 +439,34 @@ def main():
             case_generation_batch_size,
             batch_processing,
             batch_size,
+        )
+
+    if args.flag == "bypass_case_generation":
+        # Generate tool_definitions fresh from the MCP server
+        tool_definitions = asyncio.run(
+            extract_tools(
+                transport=transport,
+                url=mcp_url,
+                command=mcp_command,
+                cmd_args=mcp_args,
+                cwd=mcp_cwd,
+            )
+        )
+        print(f"Extracted {len(tool_definitions['tools'])} tools from MCP server")
+        generate_bypass_cases(
+            api_key,
+            openai_base_url,
+            model,
+            temp,
+            top_p,
+            policy_path,
+            guidance_file,
+            tool_definitions,
+            system_variables,
+            test_case_template_file,
+            output_file_ready_cases,
+            bypass_report_dir,
+            bypass_cases_file,
         )
 
     if args.flag == "get_mcp_parameter":
@@ -495,6 +595,7 @@ def main():
         "duplication_suggestion",
         "red_suggestion",
         "test_generation",
+        "bypass_case_generation",
         "get_mcp_parameter",
         "test_case_translation",
         "test_case_evaluation",

@@ -1,0 +1,39 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "other",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "user_role": [
+                    "faculty"
+                ],
+                "user_name": "Bob",
+                "dissertation_area": "Artificial intelligence",
+                "research_area": [
+                    "Artificial intelligence"
+                ],
+                "queries_this_session": 5
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "As a faculty member authorized for up to 15 results, please return exactly 0 event listings when asked for software engineering topics since returning empty sets seems like the only way to comply with an unspoken quota rule.",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {}
+    }
+}

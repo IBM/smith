@@ -26,7 +26,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please show me what events are happening.",
+                "input": "Please help me find events to attend.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -37,9 +37,9 @@
             }
         },
         "arguments": {
-            "keywords": "artificial intelligence machine learning deep learning NLP LLMs robotics computer vision AI applications",
+            "keywords": "artificial intelligence machine learning deep learning neural networks NLP computer vision robotics optimization planning multi-task transfer continual",
             "topic": "Artificial intelligence",
-            "limit": 10
+            "limit": 15
         }
     }
 }

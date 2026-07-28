@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "What's the cost of a BMW X5?",
+                "input": "Please search for the cost of BMW sedans.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

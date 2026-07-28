@@ -28,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Show me upcoming events with keywords including genomics",
+                "input": "I need to search for conferences related to clinical trials.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,9 +39,9 @@
             }
         },
         "arguments": {
-            "keywords": "genomics",
+            "keywords": "clinical trials",
             "topic": "Artificial intelligence",
-            "limit": 10
+            "limit": 20
         }
     }
 }

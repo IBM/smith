@@ -28,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I want to see events on Cybersecurity and privacy",
+                "input": "I want to find events on Cybersecurity and privacy",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,8 +39,9 @@
             }
         },
         "arguments": {
-            "keywords": "cybersecurity privacy data protection network security information security",
-            "topic": "Cybersecurity and privacy"
+            "keywords": "cybersecurity privacy security",
+            "topic": "Cybersecurity and privacy",
+            "limit": ""
         }
     }
 }

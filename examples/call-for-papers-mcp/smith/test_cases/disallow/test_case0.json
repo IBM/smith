@@ -37,9 +37,9 @@
             }
         },
         "arguments": {
-            "keywords": "artificial intelligence machine learning deep learning neural networks NLP computer vision",
-            "topic": "Artificial intelligence",
-            "limit": 15
+            "keywords": "artificial intelligence machine learning deep learning NLP computer vision data mining predictive analytics optimization robot reinforcement planning scheduling inference generative adversarial networks self supervised transfer zero shot few shot large language models multimodal reasoning embodied simulation discrete continuous combinatorial graph neural networks symbolic causal interpretability fair robust trust safety critical security privacy ethics alignment controllablity scalability efficiency reliability sustainability quantum probabilistic uncertainty",
+            "topic": "Artificial intelligence, Cybersecurity and privacy, Software engineering",
+            "limit": 50
         }
     }
 }

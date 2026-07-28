@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please look up price data for Caoa Chery cars",
+                "input": "What does a Caoa Chery car cost these days?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

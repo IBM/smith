@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "What car brands do you carry?",
+                "input": "I need a list of all car manufacturers for my article",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

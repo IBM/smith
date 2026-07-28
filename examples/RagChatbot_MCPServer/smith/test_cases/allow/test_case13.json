@@ -10,7 +10,7 @@
                     "manager"
                 ],
                 "teams": [
-                    "Marketing"
+                    "IT"
                 ]
             },
             "headers": {
@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "What departments are my Marketing team employees assigned to?",
+                "input": "Show me the departmental information for IT team employees",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,9 +32,7 @@
             }
         },
         "arguments": {
-            "department": "Marketing",
-            "format": "JSON",
-            "include_benefits": false
+            "department": "IT"
         }
     }
 }

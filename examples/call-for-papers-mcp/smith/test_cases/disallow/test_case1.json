@@ -26,7 +26,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I would like to get the upcoming events.",
+                "input": "I would like to get information about upcoming events.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -37,9 +37,9 @@
             }
         },
         "arguments": {
-            "keywords": "artificial intelligence machine learning deep learning NLP computer vision AI robotics optimization neural networks reinforcement learning knowledge representation natural language processing graph networks federated learning quantum computing edge computing healthcare cybersecurity ethics explainability causality multimodal reasoning symbolic grounding world models self-supervised pre-trained foundation model semantic understanding embodied cognitive systems neuro-symbolic few-shot zero-shot transfer continuous planning autonomous navigation swarm control adaptive decision making causal inference probabilistic graphical models large scale",
+            "keywords": "conferences workshops symposiums papers submission deadline cfp open invited tracks special sessions tutorial track",
             "topic": "Artificial intelligence",
-            "limit": 10
+            "limit": 20
         }
     }
 }

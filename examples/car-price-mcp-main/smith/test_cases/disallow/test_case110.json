@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "What are the current prices for Rolls-Royce cars?",
+                "input": "What are the current Rolls-Royce car costs?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

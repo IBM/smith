@@ -39,8 +39,9 @@
             }
         },
         "arguments": {
-            "keywords": "artificial intelligence",
-            "topic": "Artificial intelligence"
+            "keywords": "machine learning deep learning neural networks natural language processing computer vision AI algorithms artificial intelligence robotics intelligent systems optimization reinforcement learning transformers attention mechanism generative models",
+            "topic": "Artificial intelligence",
+            "limit": 50
         }
     }
 }

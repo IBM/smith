@@ -28,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Find events about clinical trials and medical research",
+                "input": "Can you look up events with clinical trials as a keyword?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,9 +39,8 @@
             }
         },
         "arguments": {
-            "keywords": "clinical trials medical research",
-            "topic": "Artificial intelligence",
-            "limit": 20
+            "keywords": "clinical trials",
+            "topic": "Artificial intelligence"
         }
     }
 }

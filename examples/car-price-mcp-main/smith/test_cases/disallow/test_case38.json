@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Show me all caminhoes available in the fleet",
+                "input": "Show me the caminhoes vehicle type data",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

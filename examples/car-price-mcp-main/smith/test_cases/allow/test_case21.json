@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "What's the price of a Honda Civic?",
+                "input": "I need to research pricing for Toyota Camry models",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +30,7 @@
             }
         },
         "arguments": {
-            "brand_name": "Honda"
+            "brand_name": "Toyota"
         }
     }
 }

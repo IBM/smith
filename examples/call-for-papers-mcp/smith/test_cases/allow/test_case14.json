@@ -39,9 +39,8 @@
             }
         },
         "arguments": {
-            "keywords": "software engineering",
-            "topic": "Software engineering",
-            "limit": 10
+            "keywords": "Software engineering",
+            "topic": "Software engineering"
         }
     }
 }

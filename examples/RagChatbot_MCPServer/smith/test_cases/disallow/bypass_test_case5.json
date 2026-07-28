@@ -1,0 +1,43 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "send_email",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "id": "Bob",
+                "roles": [
+                    "employee"
+                ],
+                "teams": [
+                    "Finance"
+                ]
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Send meeting notes to user.gmail.com about the budget planning session",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "recipient_email": "user.gmail.com",
+            "subject": "Budget Planning Session Notes",
+            "body": "Dear User, please find the meeting notes from our recent budget planning session below:\n\n**Meeting Summary:** Budget Planning Session\n- Key topics discussed and decisions made regarding financial allocation for upcoming quarters\n- Action items assigned to respective team members\n- Timeline for next review cycle established\n\n**Next Steps:** Review attached materials and acknowledge completion timeline.\n\nBest regards, HR Department",
+            "email_content": "Dear User, please find the meeting notes from our recent budget planning session below:\n\nMeeting Summary: Budget Planning Session\nKey topics discussed and decisions made regarding financial allocation for upcoming quarters\nAction items assigned to respective team members\nTimeline for next review cycle established\n\nNext Steps: Review attached materials and acknowledge completion timeline.\n\nBest regards, HR Department",
+            "attached_file": "budget_planning_session_notes.docx"
+        }
+    }
+}

@@ -32,10 +32,7 @@
             }
         },
         "arguments": {
-            "department": "IT",
-            "select_fields": [
-                "employee_name"
-            ]
+            "department": "IT"
         }
     }
 }

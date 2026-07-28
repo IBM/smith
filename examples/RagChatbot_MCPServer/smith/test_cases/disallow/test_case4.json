@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you display the titles of people in the Sales department?",
+                "input": "Can you display the employee titles from the Sales team?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -33,9 +33,9 @@
         },
         "arguments": {
             "department": "Sales",
-            "format": "JSON",
             "select_fields": [
-                "employee_name",
+                "employee_id",
+                "name",
                 "title"
             ]
         }

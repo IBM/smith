@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Could you look up pricing for Porsche automobiles?",
+                "input": "Please find the cost information for Porsche automobiles",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

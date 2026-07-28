@@ -10,7 +10,7 @@
                     "manager"
                 ],
                 "teams": [
-                    "Marketing"
+                    "Finance"
                 ]
             },
             "headers": {
@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Show me the bonus information for employees in the HR team",
+                "input": "I want to check the hire dates for the Marketing team employees",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,14 +32,7 @@
             }
         },
         "arguments": {
-            "department": "HR",
-            "select_fields": [
-                "employee_name",
-                "title",
-                "bonus_target",
-                "actual_bonus_2024"
-            ],
-            "include_benefits": false
+            "department": "Marketing"
         }
     }
 }

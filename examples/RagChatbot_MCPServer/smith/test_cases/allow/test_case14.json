@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please confirm the departmental information for my HR team members",
+                "input": "What departments are my HR team members assigned to?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

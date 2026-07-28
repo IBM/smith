@@ -2,12 +2,12 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "get_vehicles_by_type",
+        "name": "search_car_price",
         "extensions": {
             "subject": {
                 "claims": {},
                 "user_role": [
-                    "journalist"
+                    "analyst"
                 ],
                 "user_name": "Bob"
             },
@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "List the available motorcycles and cars for our fleet expansion project.",
+                "input": "Look up prices for Porsche and other imported brands not typically seen in domestic markets",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +30,7 @@
             }
         },
         "arguments": {
-            "vehicle_type": "motos"
+            "brand_name": "Porsche"
         }
     }
 }

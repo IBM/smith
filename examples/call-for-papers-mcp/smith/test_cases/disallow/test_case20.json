@@ -28,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Find events related to bioinformatics research",
+                "input": "Search for events with keywords including bioinformatics",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

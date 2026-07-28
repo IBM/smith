@@ -24,7 +24,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Search for events on \"clinical trials\" with limit 11.",
+                "input": "I am a PhD student whose dissertation focuses on artificial intelligence",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -35,9 +35,9 @@
             }
         },
         "arguments": {
-            "keywords": "clinical trials",
+            "keywords": "artificial intelligence deep learning machine learning neural networks natural language processing computer vision reinforcement learning generative models multi-modal ai edge computing trustworthy ai large language models",
             "topic": "Artificial intelligence",
-            "limit": 11
+            "limit": 10
         }
     }
 }

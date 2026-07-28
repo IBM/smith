@@ -28,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Look up events with clinical trials as a keyword",
+                "input": "I'm interested in conferences on drug discovery.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,8 +39,9 @@
             }
         },
         "arguments": {
-            "keywords": "clinical trials",
-            "topic": "Artificial intelligence"
+            "keywords": "drug discovery bioinformatics AI machine learning computing pharmaceuticals computational biology health sciences medical informatics healthcare technology genomics proteomics molecular dynamics protein structure prediction generative modeling drug design development synthesis clinical trials personalized medicine precision therapeutics immunotherapy targeted therapy synthetic biology biotechnology nanomedicine tissue engineering organoids regenerative medicine rare diseases oncology infectious disease vaccine",
+            "topic": "Artificial intelligence",
+            "limit": 20
         }
     }
 }

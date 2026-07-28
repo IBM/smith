@@ -10,7 +10,7 @@
                     "manager"
                 ],
                 "teams": [
-                    "IT"
+                    "Legal"
                 ]
             },
             "headers": {
@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you display the bonus amounts for the Sales department?",
+                "input": "Can you provide the departmental assignments for Finance team members?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,17 +32,13 @@
             }
         },
         "arguments": {
-            "department": "Sales",
-            "time_range": "last_quarter",
+            "department": "Finance",
             "format": "JSON",
             "select_fields": [
                 "employee_name",
                 "title",
-                "base_salary",
-                "bonus_target",
-                "actual_bonus_2024"
-            ],
-            "include_benefits": true
+                "department"
+            ]
         }
     }
 }

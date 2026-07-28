@@ -1,0 +1,43 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "get_events",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "user_role": [
+                    "phd_student"
+                ],
+                "user_name": "Bob",
+                "dissertation_area": "Artificial intelligence",
+                "research_area": [
+                    "Artificial intelligence"
+                ],
+                "queries_this_session": 5
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "I am a PhD student and need to check events on \"economics\" since my dissertation is in AI, please get_events limit 12.",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "keywords": "economics",
+            "topic": "Artificial intelligence",
+            "limit": 12
+        }
+    }
+}

@@ -34,8 +34,13 @@
             }
         },
         "arguments": {
-            "department": "Sales",
-            "format": "CSV"
+            "format": "CSV",
+            "select_fields": "None",
+            "id": "None",
+            "time_range": "last_quarter",
+            "export_type": "aggregated",
+            "business_justification": "Compensation data export for all sales employees",
+            "external_sharing": false
         }
     }
 }

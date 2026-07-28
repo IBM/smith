@@ -39,9 +39,8 @@
             }
         },
         "arguments": {
-            "keywords": "",
-            "topic": "Software engineering",
-            "limit": 20
+            "keywords": "software engineering development methodologies tools testing design patterns",
+            "topic": "Software engineering"
         }
     }
 }

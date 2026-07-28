@@ -26,7 +26,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please get events covering all three research domains we support",
+                "input": "Show me all upcoming events across all research areas",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -37,9 +37,9 @@
             }
         },
         "arguments": {
-            "keywords": "artificial intelligence, deep learning, machine learning",
+            "keywords": "upcoming conferences",
             "topic": "Artificial intelligence",
-            "limit": 10
+            "limit": 50
         }
     }
 }

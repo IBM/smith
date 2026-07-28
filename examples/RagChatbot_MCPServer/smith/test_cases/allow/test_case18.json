@@ -30,9 +30,9 @@
         },
         "arguments": {
             "format": "CSV",
+            "business_justification": "HR team needs to export compensation data for records and reporting",
             "time_range": "last_quarter",
-            "external_sharing": false,
-            "select_fields": []
+            "external_sharing": false
         }
     }
 }

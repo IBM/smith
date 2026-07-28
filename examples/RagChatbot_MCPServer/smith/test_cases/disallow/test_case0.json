@@ -33,13 +33,13 @@
         },
         "arguments": {
             "department": "Finance",
-            "id": "None",
             "format": "JSON",
+            "id": "None",
             "include_benefits": false,
-            "time_range": "last_quarter",
             "select_fields": [
                 "employee_name"
-            ]
+            ],
+            "time_range": "current_year"
         }
     }
 }

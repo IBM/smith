@@ -37,7 +37,7 @@
             }
         },
         "arguments": {
-            "keywords": "artificial intelligence machine learning neural networks deep learning",
+            "keywords": "machine learning deep learning neural networks algorithms optimization data science computer vision natural language processing robotics intelligent systems predictive analytics big data cloud computing cybersecurity artificial intelligence privacy security software engineering automation machine learning fairness robustness explainable AI reinforcement learning transfer learning graph neural networks quantum computing edge computing federated learning zero-shot generalization knowledge representation reasoning decision making multi-modal sentiment analysis semantic understanding",
             "topic": "Artificial intelligence",
             "limit": 20
         }

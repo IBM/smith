@@ -7,7 +7,7 @@
             "subject": {
                 "claims": {},
                 "user_role": [
-                    "consumer"
+                    "journalist"
                 ],
                 "user_name": "Bob"
             },
@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Search for the price of a Maserati GranTurismo.",
+                "input": "search_car_price for Porsche Panamera, I heard it has great resale value and want to know the current market rate.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +30,7 @@
             }
         },
         "arguments": {
-            "brand_name": "Maserati"
+            "brand_name": "Porsche"
         }
     }
 }

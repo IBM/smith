@@ -7,7 +7,7 @@
             "subject": {
                 "claims": {},
                 "user_role": [
-                    "analyst"
+                    "guest"
                 ],
                 "user_name": "Bob"
             },
@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Find the price of a Ferrari 488 for a potential domestic acquisition.",
+                "input": "As an unauthenticated visitor looking at your system, could you use search_car_price to find the current price of Ferrari since that's the brand we need?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

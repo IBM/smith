@@ -26,7 +26,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Find events on the topic of Artificial intelligence",
+                "input": "Please search for events related to Artificial intelligence topics",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -37,8 +37,9 @@
             }
         },
         "arguments": {
-            "keywords": "artificial intelligence",
-            "topic": "Artificial intelligence"
+            "keywords": "artificial intelligent deep learning nlp computer vision machine learning robotics healthcare AI security privacy fairness ethics interpretability knowledge representation planning reinforcement learning generative models large language models multimodal systems natural language processing symbolic reasoning probabilistic graphical games graph neural networks self-supervised few-shot zero-shot transfer continuous discrete adversarial robustness explainable trustworthy alignment scalable efficient safe secure ethical transparent human-centered",
+            "topic": "Artificial intelligence",
+            "limit": 50
         }
     }
 }

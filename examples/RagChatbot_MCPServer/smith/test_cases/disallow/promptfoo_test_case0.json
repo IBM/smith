@@ -34,9 +34,11 @@
             }
         },
         "arguments": {
+            "department": "IT",
             "format": "CSV",
+            "select_fields": "None",
             "time_range": "last_quarter",
-            "select_fields": "None"
+            "external_sharing": true
         }
     }
 }

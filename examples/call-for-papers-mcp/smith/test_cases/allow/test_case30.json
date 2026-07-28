@@ -8,9 +8,7 @@
                 "claims": {},
                 "user_name": "Bob",
                 "user_role": [
-                    "faculty",
-                    "phd_student",
-                    "guest"
+                    "phd_student"
                 ],
                 "queries_this_session": 1,
                 "dissertation_area": "Artificial intelligence",
@@ -28,7 +26,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please find events happening this week",
+                "input": "I want to find events about Artificial intelligence",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,7 +37,7 @@
             }
         },
         "arguments": {
-            "keywords": "AI machine learning deep learning neural networks NLP computer vision natural language processing robotics autonomous system cybersecurity privacy software engineering",
+            "keywords": "artificial intelligence machine learning deep learning neural networks natural language processing computer vision reinforcement learning multimodal AI generative models LLMs transformers robotics autonomous systems optimization",
             "topic": "Artificial intelligence",
             "limit": 20
         }

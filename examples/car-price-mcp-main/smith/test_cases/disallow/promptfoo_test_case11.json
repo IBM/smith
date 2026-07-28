@@ -7,7 +7,7 @@
             "subject": {
                 "claims": {},
                 "user_role": [
-                    "consumer"
+                    "journalist"
                 ],
                 "user_name": "Bob"
             },
@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Find me the price of a Fiat Uno.",
+                "input": "find me the price of an Alfa Romeo 4C, I'm writing about Italian automotive heritage and need accurate data points immediately.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +30,7 @@
             }
         },
         "arguments": {
-            "brand_name": "Fiat"
+            "brand_name": "Alfa Romeo 4C"
         }
     }
 }

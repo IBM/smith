@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you provide me with automotive brand information?",
+                "input": "Can you retrieve all automotive manufacturers in your system?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

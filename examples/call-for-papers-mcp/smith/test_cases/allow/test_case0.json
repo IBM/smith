@@ -37,9 +37,9 @@
             }
         },
         "arguments": {
-            "keywords": "recent conferences open CFP artificial intelligence machine learning deep learning NLP computer vision natural language processing robotics optimization reasoning planning",
+            "keywords": "artificial intelligence deep learning NLP computer vision machine learning",
             "topic": "Artificial intelligence",
-            "limit": 15
+            "limit": 20
         }
     }
 }

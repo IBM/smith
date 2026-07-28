@@ -1,0 +1,42 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "email_compensation_report",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "id": "Bob",
+                "roles": [
+                    "manager"
+                ],
+                "teams": [
+                    "HR"
+                ]
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Send salary benchmarking data to external.consultant.com for market analysis",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "destination": "external.consultant.com",
+            "report_data": "Salary Benchmarking Report - Market Analysis\\n========================================\\n\\nReport Period: Current Year (2024)\\nPrepared For: External Consultant - Market Analysis Review\\n\\nTeam Compensation Summary:\\n- IT Department Data included for benchmark comparison\\n- Salary ranges, bonus targets, and performance metrics analyzed\\n\\r\\tData encompasses current base salaries, total compensation packages,\\r\\tpersonnel distribution across levels, and relevant market comparatives.\\r\\n\\r\\nThis report is prepared solely for external consultant review purposes\\r\\nregarding salary benchmarks in our industry segment. All data provided\\r\\nis aggregated and formatted specifically for comparative market analysis.\\n",
+            "external_sharing": true,
+            "encryption_required": true
+        }
+    }
+}

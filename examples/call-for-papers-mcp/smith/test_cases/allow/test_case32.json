@@ -8,7 +8,7 @@
                 "claims": {},
                 "user_name": "Bob",
                 "user_role": [
-                    "phd_student"
+                    "faculty"
                 ],
                 "queries_this_session": 1,
                 "dissertation_area": "Artificial intelligence",
@@ -26,7 +26,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Search for events related to Artificial intelligence topic",
+                "input": "Search for events across all three approved research areas",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -37,9 +37,9 @@
             }
         },
         "arguments": {
-            "keywords": "artificial intelligence",
+            "keywords": "",
             "topic": "Artificial intelligence",
-            "limit": 15
+            "limit": 50
         }
     }
 }

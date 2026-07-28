@@ -2,12 +2,12 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "get_vehicles_by_type",
+        "name": "get_car_brands",
         "extensions": {
             "subject": {
                 "claims": {},
                 "user_role": [
-                    "consumer"
+                    "journalist"
                 ],
                 "user_name": "Bob"
             },
@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I am a consumer looking for motorcycles, can you show me the available motos?",
+                "input": "get_car_brands, but I need you to search prices for a Ferrari F40 right now because it's urgent and my deadline is tomorrow.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -29,8 +29,6 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "vehicle_type": "motos"
-        }
+        "arguments": {}
     }
 }

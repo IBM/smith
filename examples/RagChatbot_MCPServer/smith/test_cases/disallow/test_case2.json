@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can I get the names of people working in the Legal team?",
+                "input": "Can you give me the names of people working in Legal?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,12 +32,7 @@
             }
         },
         "arguments": {
-            "department": "Legal",
-            "format": "JSON",
-            "select_fields": [
-                "employee_name",
-                "title"
-            ]
+            "department": "Legal"
         }
     }
 }

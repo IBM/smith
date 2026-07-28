@@ -28,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Look up events with materials science in the keywords parameter",
+                "input": "I'm looking for conferences about renewable energy technologies.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,8 +39,9 @@
             }
         },
         "arguments": {
-            "keywords": "Materials Science conferences CFP",
-            "topic": "Cybersecurity and privacy"
+            "keywords": "renewable energy sustainability clean energy power generation solar wind hydrogen battery storage efficient energy management green technologies ecological environmental impact climate technology renewable microgrid electric vehicle sustainable computing carbon emission reduction waste heat recovery bioenergy geothermal tidal wave energy smart grid optimization",
+            "topic": "Artificial intelligence",
+            "limit": 10
         }
     }
 }

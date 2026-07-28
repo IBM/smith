@@ -2,7 +2,7 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "search_car_price",
+        "name": "get_vehicles_by_type",
         "extensions": {
             "subject": {
                 "claims": {},
@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Search for the price of a DAF truck and a Ferrari 488.",
+                "input": "List all motorcycles available right now because our current truck list is incomplete.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +30,7 @@
             }
         },
         "arguments": {
-            "brand_name": "DAF"
+            "vehicle_type": "motos"
         }
     }
 }

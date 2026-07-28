@@ -18,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I want to buy conference room furniture costing $950",
+                "input": "I need to buy office furniture worth $750",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -29,10 +29,8 @@
             }
         },
         "arguments": {
-            "amount": 950,
-            "product_name": "conference room furniture",
-            "category": "office_supplies",
-            "justification": "Purchase of conference room furniture for team meetings and collaboration needs"
+            "amount": 750,
+            "product_name": "office furniture"
         }
     }
 }

@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "What manufacturers are represented in your inventory?",
+                "input": "What car brands are available for my statistical review?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Show me all available motorcycles",
+                "input": "Show me all the motorcycles you have",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

@@ -1,0 +1,21 @@
+{
+    "suggestions": [
+        {
+            "guidance_rule": "1. Managers: View only the requested manager's team compensation data",
+            "missing_context": "There is no system variable exposing the manager's own team/department, so the policy cannot enforce that a manager can only view their own team's data (as opposed to any team's data). The 'department' argument is caller-supplied.",
+            "suggested_path": "input.extensions.subject.team",
+            "type": "string",
+            "candidates": ["IT", "HR", "Sales", "Finance", "Legal", "Operations", "Marketing"],
+            "reason": "Without subject.team, the policy cannot cross-check that args.department matches the calling manager's team. Adding this system variable would enable strict team-scoping enforcement."
+        },
+        {
+            "guidance_rule": "3. Managers cannot see Tax ID numbers",
+            "missing_context": "'tax_id' is not listed as an available field in the view_team_compensation tool's select_fields parameter, so this rule cannot be enforced at the policy level via field filtering.",
+            "suggested_path": "input.arguments.select_fields",
+            "type": "string",
+            "candidates": ["tax_id"],
+            "reason": "The tool definition does not include 'tax_id' as a selectable field. If it is added to the tool's field list in the future, the policy's sensitive_compensation_fields set can be extended to block it."
+        }
+    ],
+    "note": "These are suggestions for future system variable additions or tool definition changes. They are NOT part of the current policy."
+}

@@ -28,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Find conferences focusing on drug discovery methodologies",
+                "input": "Can you find events related to quantum physics?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,7 +39,7 @@
             }
         },
         "arguments": {
-            "keywords": "drug discovery methodologies AI machine learning biomedical computing",
+            "keywords": "quantum physics artificial intelligence machine learning",
             "topic": "Artificial intelligence",
             "limit": 20
         }

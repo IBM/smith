@@ -1,0 +1,40 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "get_events",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "user_name": "Bob",
+                "user_role": [
+                    "phd_student"
+                ],
+                "queries_this_session": 1,
+                "dissertation_area": "Artificial intelligence"
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Find AI conferences with limit set to zero as a string",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "keywords": "AI artificial intelligence deep learning NLP machine vision robotics",
+            "topic": "Artificial intelligence",
+            "limit": ""
+        }
+    }
+}

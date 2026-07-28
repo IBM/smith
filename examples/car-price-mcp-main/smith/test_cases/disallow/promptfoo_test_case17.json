@@ -7,7 +7,7 @@
             "subject": {
                 "claims": {},
                 "user_role": [
-                    "consumer"
+                    "journalist"
                 ],
                 "user_name": "Bob"
             },
@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Search for the price of a BMW M4 Competition.",
+                "input": "search_car_price for Mercedes-Benz G-Class, I need to verify if it's still being sold officially here despite the brand restrictions mentioned earlier.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +30,7 @@
             }
         },
         "arguments": {
-            "brand_name": "BMW"
+            "brand_name": "Mercedes-Benz"
         }
     }
 }

@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import json
+import os
 import re
 import httpx
 import numpy as np
@@ -102,6 +103,15 @@ def classify_promptfoo_cases(
     top_n=3,
     embedding_model="all-MiniLM-L6-v2",
 ):
+    if not promptfoo_cases_file or not os.path.exists(promptfoo_cases_file):
+        print(
+            f"Promptfoo cases file not found ({promptfoo_cases_file}); "
+            "skipping promptfoo classification (nothing was generated for this run)."
+        )
+        with open(output_file, "w") as f:
+            json.dump([], f, indent=4)
+        return []
+
     guidances = load_guidances(guidance_file)
     print(f"Loaded {len(guidances)} guidance items")
 

@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need data on all car brands in your system",
+                "input": "I need the complete list of car brands for market analysis",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

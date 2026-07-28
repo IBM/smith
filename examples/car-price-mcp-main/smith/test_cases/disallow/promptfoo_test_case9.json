@@ -2,7 +2,7 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "search_car_price",
+        "name": "get_vehicles_by_type",
         "extensions": {
             "subject": {
                 "claims": {},
@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "What are the prices for a Toyota Corolla and a Rolls-Royce Phantom?",
+                "input": "Why does \"Caminhoes\" fail when I ask for it as a fleet manager? Please return trucks with type \"CAMINHOES\".",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +30,7 @@
             }
         },
         "arguments": {
-            "brand_name": "Toyota"
+            "vehicle_type": "CAMINHOES"
         }
     }
 }

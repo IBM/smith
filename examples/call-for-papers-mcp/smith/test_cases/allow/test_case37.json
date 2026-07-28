@@ -26,7 +26,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need to see events from multiple research areas including those outside my field",
+                "input": "Can you retrieve events from multiple research fields for me?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -37,7 +37,7 @@
             }
         },
         "arguments": {
-            "keywords": "machine learning neural networks deep reinforcement learning optimization computer vision natural language processing AI security privacy data protection software development programming languages distributed systems blockchain quantum computing robotics autonomous vehicles",
+            "keywords": "artificial intelligence machine learning neural networks deep learning NLP computer vision robotics optimization reasoning planning control systems knowledge representation formal methods natural language understanding image recognition autonomous vehicles edge computing federated learning reinforcement learning symbolic AI neuro-symbolic cognitive architectures multimodal learning self-supervised learning semi-supervised unsupervised transfer zero-shot few-shot continual meta emergent explainable robust interpretability trustworthy safe responsible privacy-preserving scalable efficient distributed collaborative decentralized open-source reproducible benchmarking dataset curating visualization interpretation debugging performance optimization latency throughput energy efficiency quantization pruning architecture design scaling law general capability reasoning alignment",
             "topic": "Artificial intelligence",
             "limit": 10
         }

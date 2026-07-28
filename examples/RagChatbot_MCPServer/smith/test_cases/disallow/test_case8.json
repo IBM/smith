@@ -10,7 +10,7 @@
                     "manager"
                 ],
                 "teams": [
-                    "Operations"
+                    "Marketing"
                 ]
             },
             "headers": {
@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can I access salary details for employees in the IT team?",
+                "input": "Can you display the bonus amounts for Sales team employees?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,8 +32,13 @@
             }
         },
         "arguments": {
-            "department": "IT",
-            "format": "JSON"
+            "department": "Sales",
+            "select_fields": [
+                "employee_id",
+                "name",
+                "actual_bonus_2024",
+                "bonus_target"
+            ]
         }
     }
 }

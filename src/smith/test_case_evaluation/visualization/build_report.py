@@ -58,6 +58,10 @@ def build_visualization(
         validation_metrics = {}
 
     # Tag sources and attach confidence
+    # Map each parent generated case's user_input -> its validation entry, so
+    # ARES cases (jailbreak variants of a parent disallow case) can inherit the
+    # parent's score rather than being independently re-validated.
+    parent_by_input = {}
     for i, c in enumerate(test_cases):
         c["source"] = "generated"
         c["_idx"] = i
@@ -68,6 +72,9 @@ def build_visualization(
             c["validation_predicted"] = v["predicted_label"]
             c["validation_tier"] = v["evaluation_tier"]
             c["validation_reason"] = v.get("reason", "")
+            ui = c.get("user_input")
+            if ui:
+                parent_by_input[ui] = v
         else:
             c["validation_confidence"] = None
             c["validation_verdict"] = None
@@ -87,11 +94,14 @@ def build_visualization(
             c["validation_confidence"] = None
             c["validation_verdict"] = None
 
-    # Unpack ARES
+    # Unpack ARES. Each ARES case inherits its parent generated case's
+    # validation result (matched by the parent's user_input) instead of being
+    # scored independently — an ARES case is a jailbreak variant of that parent.
     ares_expanded = []
     for c in attack_cases:
         if c["label"] != "disallow":
             continue
+        parent = parent_by_input.get(c.get("user_input"))
         attack_conditions = c.get("attack_conditions", {})
         for attack_type, prompts in attack_conditions.items():
             for prompt in prompts:
@@ -104,8 +114,23 @@ def build_visualization(
                         "condition": c.get("condition", ""),
                         "user_input": prompt,
                         "attack_type": attack_type,
-                        "validation_confidence": None,
-                        "validation_verdict": None,
+                        "validation_confidence": (
+                            parent["confidence"] if parent else None
+                        ),
+                        "validation_verdict": parent["verdict"] if parent else None,
+                        "validation_predicted": (
+                            parent["predicted_label"] if parent else None
+                        ),
+                        "validation_tier": (
+                            "inherited: " + parent["evaluation_tier"]
+                            if parent
+                            else None
+                        ),
+                        "validation_reason": (
+                            "Inherited from parent case. " + parent.get("reason", "")
+                            if parent
+                            else ""
+                        ),
                     }
                 )
 

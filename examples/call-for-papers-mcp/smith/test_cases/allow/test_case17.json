@@ -26,7 +26,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I want to see 5 events",
+                "input": "I want to see 5 events maximum",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -37,9 +37,9 @@
             }
         },
         "arguments": {
-            "keywords": "artificial Intelligence machine learning deep learning NLP computer vision",
+            "keywords": "artificial intelligence machine learning deep learning natural language processing computer vision robotics optimization reinforcement learning neural networks",
             "topic": "Artificial intelligence",
-            "limit": 5
+            "limit": 50
         }
     }
 }

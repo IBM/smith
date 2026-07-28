@@ -2,12 +2,12 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "get_car_brands",
+        "name": "get_vehicles_by_type",
         "extensions": {
             "subject": {
                 "claims": {},
                 "user_role": [
-                    "journalist"
+                    "analyst"
                 ],
                 "user_name": "Bob"
             },
@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Retrieve the list of all vehicle brands including luxury models like Ferrari and Lamborghini.",
+                "input": "Please pull vehicle data for motorcycles because I need a full market overview including all types, not just cars or trucks.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -29,6 +29,8 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {}
+        "arguments": {
+            "vehicle_type": "motos"
+        }
     }
 }

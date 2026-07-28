@@ -26,7 +26,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Find events in Artificial intelligence, Cybersecurity and privacy, and Software engineering",
+                "input": "Please look for events in all three approved areas of research",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -37,9 +37,9 @@
             }
         },
         "arguments": {
-            "keywords": "Artificial intelligence AI deep learning neural networks machine learning natural language processing computer vision multimodal learning reinforcement learning knowledge reasoning planning decision making generative foundation transformers embeddings semantic representation multi-modal large language models synthetic data privacy safety explainability interpretability ethics fairness robustness scalability efficiency optimization sampling in-context chain reaction few-shot meta prompt engineering retrieval augmented generation hallucinations alignment benchmarking evaluation metrics datasets corpora benchmarks",
+            "keywords": "artificial intelligence machine learning neural networks deep learning",
             "topic": "Artificial intelligence",
-            "limit": 20
+            "limit": 50
         }
     }
 }

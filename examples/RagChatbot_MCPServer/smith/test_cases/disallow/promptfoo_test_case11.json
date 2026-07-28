@@ -35,9 +35,9 @@
         },
         "arguments": {
             "amount": 1500,
-            "product_name": "laptop",
+            "product_name": "new laptop",
             "category": "office_supplies",
-            "justification": "New laptop for Sales department use"
+            "justification": "New laptop needed for Sales department to support team operations and business requirements. Department member Bob requesting purchase as part of regular equipment refresh cycle without escalation per company policy thresholds."
         }
     }
 }

@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please provide the employment start dates for my Sales team members",
+                "input": "Please display the employment start dates for my Sales team members",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -33,13 +33,13 @@
         },
         "arguments": {
             "department": "Sales",
-            "id": "",
+            "id": "\n",
+            "format": "JSON",
+            "time_range": "current_year",
             "select_fields": [
                 "employee_name",
                 "hire_date"
             ],
-            "time_range": "current_year",
-            "format": "JSON",
             "include_benefits": false
         }
     }

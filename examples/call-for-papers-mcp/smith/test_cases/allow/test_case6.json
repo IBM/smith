@@ -39,9 +39,8 @@
             }
         },
         "arguments": {
-            "keywords": "artificial intelligence AI machine learning neural networks NLP computer vision robotics optimization planning reinforcement learning generative models LLM foundation models deep learning decision making knowledge representation symbolic reasoning explainable AI healthcare finance cybersecurity quantum computing autonomous systems edge computing fog computation federated learning privacy-preserving AI ethical AI human-AI interaction multi-modal learning few-shot zero-shot continual learning adaptive personalization self-supervised unsupervised transfer domain adaptation curriculum hyperparameter tuning adversarial robustness formal verification program synthesis natural language processing speech recognition image segmentation object detection semantic scene understanding medical imaging 2D/3D graphics digital twins",
-            "topic": "Artificial intelligence",
-            "limit": 15
+            "keywords": "artificial intelligence",
+            "topic": "Artificial intelligence"
         }
     }
 }

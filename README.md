@@ -14,7 +14,8 @@ An open skill for AI code agents that automates OPA policy creation, test genera
 Smith is a skill (plugin) for AI code agents that manages the full lifecycle of [Open Policy Agent (OPA)](https://www.openpolicyagent.org/) policies (more types of policies will be supported). It enables agents to:
 
 - **Create** OPA policies from natural language guidance and an agent description.
-- **Generate** both synthetic legitimate and adversarial test cases using LLM-based fuzzing and existing red-teaming tools.
+- **Generate** both synthetic legitimate and adversarial test cases using LLM-based fuzzing and existing red-teaming tools, plus
+policy-bypass cases that target divergences between the guidance and the current policy.
 - **Test** policies against generated and custom test suites.
 - **Refine** policies automatically through iterative feedback loops (patches for failed test cases, linting, etc.).
 
@@ -35,13 +36,7 @@ Guidance Description (NLP) + Agent Description → Enforceable Policy Creation �
 
 Place the entire `smith` folder under the `skills/` or `plugin/` directory of your code agent (Claude Code, Bob, Aider, etc.). The coding agent automatically recognizes Smith as an open skill.
 
-For more details of how to use skills in different coding agents, you can refer to the following links:
-
-If you are using bob: https://bob.ibm.com/docs/ide/features/skills
-
-If you are using Claude: https://code.claude.com/docs/en/skills
-
-If you are using Aider Desk: https://aiderdesk.hotovo.com/docs/features/skills
+For more details of how to use skills in different coding agents, see [Bob](https://bob.ibm.com/docs/ide/features/skills), [Claude](https://code.claude.com/docs/en/skills), and [Aider](https://aiderdesk.hotovo.com/docs/features/skills).
 
 ## Install
 
@@ -172,24 +167,26 @@ For an SSE-based MCP server instead, set `MCP_TRANSPORT=sse` and `MCP_URL=http:/
 Smith operates as an agent skill with a CLI backend. The AI agent reads instructions from `SKILL.md` and orchestrates the appropriate workflows by invoking the `smith` CLI or following embedded markdown guides.
 
 ```
-┌──────────────────────────────────────────────────────────────────────────┐
-│                                  Smith                                   │
-│                                                                          │
-│  SKILL.md ──→ Orchestration ──→ smith CLI                                │
-│                                    │                                     │
-│              ┌─────────────────────┼────────────────┬─────────┐          │
-│              ▼                     ▼                ▼         ▼          │
-│         Policy              Test Case Gen        Policy     Policy       │
-│         Creation                 │               Testing   Refinement    │
-│              │          ┌────────┼────────┐        │         │           │
-│              ▼          ▼        ▼        ▼        └────⇄────┘           │
-│         OPA Policy  Legitimate  ARES  Promptfoo                          │
-│         (.rego)         │        │        │                              │
-│                         └────────┼────────┘                              │
-│                                  ▼                                       │
-│                          Test Case Evaluation                            │
-└──────────────────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────────────────┐
+│                                     Smith                                      │
+│                                                                                │
+│  SKILL.md ──→ Orchestration ──→ smith CLI                                      │
+│                                    │                                           │
+│              ┌─────────────────────┼──────────────────────┬─────────┐          │
+│              ▼                     ▼                      ▼         ▼          │
+│         Policy              Test Case Gen              Policy     Policy       │
+│         Creation                 │                     Testing   Refinement    │
+│              │        ┌──────────┼──────────┬────────┐    │         │          │
+│              ▼        ▼          ▼          ▼        ▼    └────⇄────┘          │
+│         OPA Policy Legitimate  ARES    Promptfoo  Bypass                       │
+│         (.rego)        │        │          │        │                          │
+│                        └────────┴────┬─────┴────────┘                          │
+│                                      ▼                                         │
+│                              Test Case Evaluation                              │
+└────────────────────────────────────────────────────────────────────────────────┘
 ```
+
+Bypass cases are generated from the current policy (a `Policy Creation` output) rather than the guidance alone, so they close the loop back into `Test Case Gen`.
 
 
 ## Core Concepts
@@ -210,7 +207,13 @@ The policy only references data available from tool arguments and system variabl
 
 ### Test Case Generation
 
-The agent follows `test_generation/test_generation.md` to generate test cases through a multi-stage pipeline:
+The agent follows `test_generation/test_generation.md`, which first asks which kind of test cases you want, then runs the matching command(s):
+
+- **Guidance-targeted cases** — legitimate + adversarial cases derived from the guidance (broad coverage).
+- **Policy-bypass cases** — adversarial cases that target divergences between the guidance and the **current policy** (requires an existing, non-empty policy).
+- **Both.**
+
+#### Guidance-targeted generation
 
 ```bash
 # CLI commands used for test case generation
@@ -225,6 +228,21 @@ This runs the following stages:
 4. **Legitimate and Adversarial Case Generation** — Create benign (allow and disallow) inputs that should pass the policy. Create adversarial inputs using ARES and Promptfoo. Finally, combine into structured test cases
 
 All results are stored in `./references/test_cases/`.
+
+#### Policy-bypass generation
+
+```bash
+# Requires an existing, non-empty policy at assets/policy.rego
+smith --flag bypass_case_generation
+```
+
+Instead of generating from the guidance alone, this analyzes the **current policy against the guidance** to find where they diverge (e.g. a rule that omits an existence check, a numeric comparison with no type assertion, a substring match a malformed value slips past), then synthesizes adversarial cases that exercise each divergence:
+
+1. **Detect** — Compare the full Rego policy to the guidance and classifies each divergence by mechanism (`omitted_field`, `type_confusion`, `malformed_value`, `keyword_evasion`). If the model returns malformed JSON, the call is retried (up to `MAX_BYPASS_PARSE_ATTEMPTS`, default 3) before giving up with an empty report.
+2. **Synthesize** — Turn each divergence into concrete abstract cases.
+3. **Convert** — Write them into `./references/test_cases/{allow,disallow}/` with a `bypass_test_case` prefix.
+
+The divergence report is saved to `./references/bypass/` (JSON + Markdown). If the policy is missing or empty, generation is skipped with a message.
 
 ### Test Case Evaluation
 
@@ -262,6 +280,7 @@ Calls the agent's `/extract_tool_call` endpoint to extract tool names and argume
 
 - Cases where the returned tool name doesn't match the expected one are flagged as mismatches and removed
 - Cases labeled as "other" (general questions that don't invoke any tool) are moved to `./references/test_cases/malicious/` for future guardrail features
+- Cases that already carry an `arguments` block are skipped, so translation is re-runnable. After adding bypass cases you can re-run it to translate only the new cases instead of re-translating the whole corpus
 
 ### Policy Testing
 
@@ -278,7 +297,7 @@ Two cross-validation workflows handle different failure scenarios after policy t
 
 **Policy Cross-Validation** — When policy testing returns 0 test cases evaluated or 100% failure, the policy likely has structural issues (input path mismatches or OPA syntax bugs). The agent follows `opa_policy/policy_cross_validation/policy_cross_validation.md` to diagnose and fix these issues before proceeding to refinement.
 
-**Test Case Cross-Validation** — When policy testing produces mixed pass/fail results, some failures may be caused by mislabeled test cases rather than policy bugs. This workflow uses an LLM to check each failed case against the guidance and suggests corrections (move to correct folder or remove).
+**Test Case Cross-Validation** — When policy testing produces mixed pass/fail results, some failures may be caused by mislabeled test cases rather than policy bugs. This workflow uses an LLM to check each failed case against the guidance and suggests corrections (move to correct folder or remove). Adversarial cases (filenames prefixed `bypass_test_case` or `promptfoo_test_case`) are an exception: any non-`keep` verdict is collapsed to `remove` rather than relabeled, so a failed malicious probe is discarded instead of being moved into `allow/`.
 
 ```bash
 smith --flag cross_validate          # generate report of mislabeled cases

@@ -2,7 +2,7 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "search_car_price",
+        "name": "get_vehicles_by_type",
         "extensions": {
             "subject": {
                 "claims": {},
@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Search for the price of a Scania truck and a Ferrari F8.",
+                "input": "Retrieve vehicles by type \"trucks\" and also include motorcycles because I need to cross-reference them for a safety study as an analyst.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +30,7 @@
             }
         },
         "arguments": {
-            "brand_name": "Ferrari"
+            "vehicle_type": "trucks"
         }
     }
 }

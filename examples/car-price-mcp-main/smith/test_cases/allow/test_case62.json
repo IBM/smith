@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Show me all cars available in the fleet for my research",
+                "input": "Please retrieve vehicle data for cars type",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

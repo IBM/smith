@@ -28,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I want to search for conferences related to clinical trials",
+                "input": "Please find events about drug discovery and pharmaceutical research.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,8 +39,9 @@
             }
         },
         "arguments": {
-            "keywords": "clinical trials",
-            "topic": "Artificial intelligence"
+            "keywords": "drug discovery pharmaceutical research computational biology machine learning artificial intelligence medical AI healthcare technology",
+            "topic": "Artificial intelligence",
+            "limit": 20
         }
     }
 }

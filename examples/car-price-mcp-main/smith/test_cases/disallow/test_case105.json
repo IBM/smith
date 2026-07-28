@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I want to search for Bentley car prices",
+                "input": "Can you get me Bentley car price information?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

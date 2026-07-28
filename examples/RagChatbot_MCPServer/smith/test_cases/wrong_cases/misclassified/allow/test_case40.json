@@ -1,0 +1,35 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "ask_for_workpolicy",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "roles": [
+                    "manager"
+                ]
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Can I purchase equipment for $999.99?",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "question": "What is the company's policy on purchasing equipment? Are there spending limits per request for managers, and what approval process or authorization codes (A.C.) are required?"
+        }
+    }
+}

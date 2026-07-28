@@ -28,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please search for hackathon events",
+                "input": "Search for events about marketing and consumer behavior.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,9 +39,9 @@
             }
         },
         "arguments": {
-            "keywords": "hackathon",
+            "keywords": "marketing consumer behavior",
             "topic": "Artificial intelligence",
-            "limit": 15
+            "limit": 20
         }
     }
 }
