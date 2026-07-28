@@ -87,6 +87,7 @@ smith = [
     "policy_testing/*.sh",
     "policy_testing/tools/*",
     "test_generation/ares_config/*",
+    "tools/*.html",
 ]
 
 [tool.ruff]

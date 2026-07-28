@@ -1,0 +1,85 @@
+{
+    "suggestions": [
+        {
+            "guidance_rule": "Users outside the IBM organization are strictly prohibited from viewing IBM employee data.",
+            "missing_context": "The target employee's organization is not in tool arguments — get_employee/get_passport/etc. only take user_id. The policy cannot know the target's org without a DB lookup.",
+            "suggested_path": "input.extensions.subject.organization",
+            "type": "string",
+            "candidates": ["IBM Corporation", "Red Hat", "Kyndryl"],
+            "reason": "Enforcing cross-org data isolation requires knowing both the acting user's org (available in subject) and the target employee's org (requires DB lookup, not in tool args)."
+        },
+        {
+            "guidance_rule": "A Manager may view only their direct reports' data, in addition to their own.",
+            "missing_context": "Whether args.user_id is a direct report of the acting user requires a DB lookup of the target's manager_id field.",
+            "suggested_path": "input.extensions.subject.direct_report_ids",
+            "type": "array of integers",
+            "candidates": [],
+            "reason": "The policy can check subject.user_id == args.user_id for self-access, but cannot determine direct-report relationships without a DB lookup at policy evaluation time."
+        },
+        {
+            "guidance_rule": "An employee's salary may be updated only by HR or by that employee's direct manager.",
+            "missing_context": "Whether the acting user is the direct manager of the target employee requires a DB lookup of the target's manager_id.",
+            "suggested_path": "input.extensions.subject.direct_report_ids",
+            "type": "array of integers",
+            "candidates": [],
+            "reason": "Salary update by direct manager cannot be enforced without knowing which employees report to the acting user at policy evaluation time."
+        },
+        {
+            "guidance_rule": "An employee who is on the blacklist (persona non grata list) may not update their passport information.",
+            "missing_context": "Whether the acting user is on the blacklist is not present in system_vars.json.",
+            "suggested_path": "input.extensions.subject.is_blacklisted",
+            "type": "boolean",
+            "candidates": [true, false],
+            "reason": "Blacklist status is not a standard system variable; it must be added as a subject claim to be enforceable at the policy layer."
+        },
+        {
+            "guidance_rule": "An employee may update their home address only to an address within their own current country; changing the address to a different country is not allowed.",
+            "missing_context": "The employee's current country_code is not exposed in system_vars.json and cannot be derived from update_employee arguments alone.",
+            "suggested_path": "input.extensions.subject.country_code",
+            "type": "string",
+            "candidates": ["US", "GB", "DE", "IN"],
+            "reason": "Comparing the new home_address country to the employee's current country requires knowing the current country at policy evaluation time."
+        },
+        {
+            "guidance_rule": "An employee's emergency contact must reside in the same area as the employee.",
+            "missing_context": "The employee's current location/area is not exposed in system_vars.json.",
+            "suggested_path": "input.extensions.subject.city",
+            "type": "string",
+            "candidates": [],
+            "reason": "Enforcing area co-location between employee and emergency contact requires the employee's current city/area as a subject claim."
+        },
+        {
+            "guidance_rule": "An employee may not create a time-off request unless they have sufficient available balance for the requested leave type.",
+            "missing_context": "Leave balance is a computed DB value, not available in tool arguments or system variables.",
+            "suggested_path": "input.extensions.subject.leave_balances",
+            "type": "object mapping leave_type to remaining days",
+            "candidates": [],
+            "reason": "Balance enforcement requires either a DB lookup or pre-populating available balances per leave type as a subject claim."
+        },
+        {
+            "guidance_rule": "A Paternity leave request may be approved only if the requester has provided both the baby's birth date and the baby's name in their chat messages to the agent.",
+            "missing_context": "Conversation history content is not available in tool arguments or system variables.",
+            "suggested_path": "input.extensions.agent.paternity_details_confirmed",
+            "type": "boolean",
+            "candidates": [true, false],
+            "reason": "Enforcing this rule requires either the agent to set a derived flag in the extensions before the tool call, or access to the full conversation history."
+        },
+        {
+            "guidance_rule": "A time-off request's status may be changed by the requester's direct manager (to Approved or Denied only).",
+            "missing_context": "update_time_off_status only takes request_id and status — the policy cannot determine who owns the request or who their manager is without a DB lookup.",
+            "suggested_path": "input.extensions.subject.direct_report_ids",
+            "type": "array of integers",
+            "candidates": [],
+            "reason": "Allowing manager-specific Approved/Denied transitions requires knowing the request's owner and whether the acting user is their manager."
+        },
+        {
+            "guidance_rule": "An employee's leave allotments, time-off requests, and leave balance may be viewed only by HR, the employee themselves, or the employee's direct manager.",
+            "missing_context": "get_leave_allotments, list_time_off_requests, and get_leave_balance use user_id in args; self-access (args.user_id == subject.user_id) is enforceable, but manager-of-target access requires a DB lookup.",
+            "suggested_path": "input.extensions.subject.direct_report_ids",
+            "type": "array of integers",
+            "candidates": [],
+            "reason": "HR and self checks are enforceable; manager access to subordinate leave data requires knowing direct reports at policy evaluation time."
+        }
+    ],
+    "note": "These are suggestions for future system variable additions. They are NOT part of the current policy."
+}

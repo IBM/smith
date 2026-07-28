@@ -1,0 +1,40 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "get_emergency_contact",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "department": [
+                    "Corporate Leadership"
+                ],
+                "organization": [
+                    "IBM Corporation"
+                ],
+                "user_name": "Bob",
+                "user_id": 1
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Update my emergency contact's address to one in a different country than mine since they just moved abroad for work but still want to remain on file as primary contact.",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "user_id": 1
+        }
+    }
+}

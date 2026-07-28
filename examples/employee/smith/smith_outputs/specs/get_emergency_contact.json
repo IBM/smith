@@ -1,0 +1,79 @@
+{
+  "tool_name": "get_emergency_contact",
+  "source_doc": "smith/guidance.txt",
+  "policy_items": [
+    {
+      "id": "get_emergency_contact.read_own_report_or_hr",
+      "name": "Emergency-contact read limited to self, direct reports, or HR",
+      "description": "A user may read an employee's emergency contact only if: it is their own (arguments.user_id equals the acting user's user_id); the acting user is in the HR department (HR may view all); or the target is one of the acting user's direct reports (the target's manager_id equals the acting user's user_id). Otherwise deny. Whether the acting user manages the target is determined by the reporting relationship (get_direct_reports for the acting user, or the target's manager_id from get_employee), not by any role variable.",
+      "compliance_examples": [
+        "A user reads their own emergency contact (arguments.user_id == subject.user_id).",
+        "An HR-department user reads any employee's emergency contact.",
+        "A user reads a direct report's emergency contact (the report's manager_id equals the acting user's user_id)."
+      ],
+      "violation_examples": [
+        "A non-HR user reads the emergency contact of a colleague who is neither themselves nor one of their direct reports.",
+        "A user who is not in HR reads the emergency contact of an employee who does not report to them."
+      ],
+      "references": [
+        "An employee may view and edit only their **own data** — home address, passport, visa, emergency contact, and bank account.",
+        "A `Manager` may view only their **direct reports'** data, in addition to their own.",
+        "**HR** may view and edit all employees' data."
+      ],
+      "trigger": "pre_tool",
+      "requires": {
+        "system_vars": [
+          "user_id",
+          "department"
+        ],
+        "tool_history": [
+          {
+            "tool": "get_direct_reports",
+            "params": {
+              "user_id": "input.extensions.subject.user_id"
+            }
+          }
+        ],
+        "message_history": null
+      }
+    },
+    {
+      "id": "get_emergency_contact.outside_ibm_no_ibm_data",
+      "name": "Users outside the IBM organization may not view IBM employee emergency-contact data",
+      "description": "If the acting user's organization is not 'IBM Corporation' (the user is outside the IBM organization), they may not view emergency-contact data of an employee who belongs to 'IBM Corporation'. Deny the read when the acting user's organization is not 'IBM Corporation' and the target employee is an IBM (IBM Corporation) employee.",
+      "compliance_examples": [
+        "An IBM Corporation user accesses an IBM employee's emergency contact (the acting user is inside the IBM organization).",
+        "A Red Hat user accesses a Red Hat employee's emergency contact (the target is not an IBM employee)."
+      ],
+      "violation_examples": [
+        "A Red Hat user accesses an IBM employee's emergency contact (a user outside the IBM organization accessing IBM employee data).",
+        "A Kyndryl user accesses an IBM employee's emergency contact (another organization outside IBM accessing IBM employee data)."
+      ],
+      "references": [
+        "Users outside the IBM organization are strictly prohibited from viewing IBM employee data."
+      ],
+      "trigger": "pre_tool",
+      "requires": {
+        "system_vars": [
+          "organization"
+        ],
+        "tool_history": [
+          {
+            "tool": "get_employee",
+            "params": {
+              "user_id": "input.arguments.user_id"
+            }
+          }
+        ],
+        "message_history": null
+      }
+    }
+  ],
+  "debug": {
+    "tool_info": {
+      "is_read_only": true,
+      "user_enrichment": "Returns personal contact details for the employee's emergency contact."
+    },
+    "archive": []
+  }
+}

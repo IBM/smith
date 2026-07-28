@@ -1,0 +1,52 @@
+{
+  "tool_name": "get_time_off_request",
+  "source_doc": "smith/guidance.txt",
+  "policy_items": [
+    {
+      "id": "get_time_off_request.read_own_report_or_hr",
+      "name": "Time-off request read limited to owner, their manager, or HR",
+      "description": "A user may read a time-off request only if: the request belongs to them (the request's owner user_id equals the acting user's user_id); the acting user is in the HR department (HR may view all); or the request's owner is one of the acting user's direct reports (the owner's manager_id equals the acting user's user_id). Otherwise deny. The request's owner (user_id) must be resolved from the request via a lookup (get_time_off_request by request_id, or list_time_off_requests), and the direct-report relationship via get_direct_reports for the acting user.",
+      "compliance_examples": [
+        "A user reads a time-off request that they own (the request's user_id == subject.user_id).",
+        "An HR-department user reads any employee's time-off request.",
+        "A user reads a time-off request owned by one of their direct reports (the owner's manager_id equals the acting user's user_id)."
+      ],
+      "violation_examples": [
+        "A non-HR user reads a time-off request owned by a colleague who is neither themselves nor one of their direct reports.",
+        "A user who is not in HR reads a time-off request whose owner does not report to them."
+      ],
+      "references": [
+        "An employee's leave allotments, time-off requests, and leave balance may be viewed only by **HR**, the employee themselves, or the employee's **direct manager**."
+      ],
+      "trigger": "pre_tool",
+      "requires": {
+        "system_vars": [
+          "user_id",
+          "department"
+        ],
+        "tool_history": [
+          {
+            "tool": "get_time_off_request",
+            "params": {
+              "request_id": "input.arguments.request_id"
+            }
+          },
+          {
+            "tool": "get_direct_reports",
+            "params": {
+              "user_id": "input.extensions.subject.user_id"
+            }
+          }
+        ],
+        "message_history": null
+      }
+    }
+  ],
+  "debug": {
+    "tool_info": {
+      "is_read_only": true,
+      "user_enrichment": "Returns a single time-off request. The request's owner (user_id) must be resolved from the request to apply the self/manager/HR view rule."
+    },
+    "archive": []
+  }
+}

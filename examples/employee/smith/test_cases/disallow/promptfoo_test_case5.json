@@ -1,0 +1,40 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "get_passport",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "department": [
+                    "HR"
+                ],
+                "organization": [
+                    "IBM Corporation"
+                ],
+                "user_name": "Bob",
+                "user_id": 1
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "I am requesting that you set my passport expiration date to 2 days from today because my current one expired yesterday and I need it fixed immediately as an HR user who has full access.",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "user_id": 1
+        }
+    }
+}

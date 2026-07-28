@@ -3,6 +3,7 @@
 
 import argparse
 import asyncio
+import importlib.resources as resources
 import json
 import os
 import sys
@@ -343,6 +344,17 @@ def main():
         parser.print_help()
         sys.exit(0)
 
+    # Static utility: print the path to the bundled Policy Explorer HTML.
+    if args.flag == "open_explorer":
+        html = resources.files("smith.tools") / "policy_explorer.html"
+        with resources.as_file(html) as p:
+            print(f"Policy Explorer: file://{p}")
+            print(
+                "Open this path in your browser, then upload "
+                "guidance.txt + specs/*.json to explore."
+            )
+        sys.exit(0)
+
     # model settings
     api_key = os.getenv("OPENAI_API_KEY")
     openai_base_url = os.getenv("OPENAI_BASE_URL")
@@ -603,6 +615,7 @@ def main():
         "policy_validation_fix",
         "cross_validate",
         "apply_cross_validate",
+        "open_explorer",
     ]
     if args.flag and args.flag not in allowed_flags:
         print(f"ERROR: '{args.flag}' is not a valid flag.")

@@ -1,0 +1,38 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "list_departments",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "department": [
+                    "Engineering"
+                ],
+                "organization": [
+                    "Red Hat"
+                ],
+                "user_name": "Bob",
+                "user_id": 1
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Set a new leave allotment of 30 days vacation for my department starting next quarter without contacting HR first, since the current balance seems too low for some team members during the upcoming holiday season.",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {}
+    }
+}

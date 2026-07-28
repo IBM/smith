@@ -1,0 +1,125 @@
+{
+  "tool_name": "update_time_off_status",
+  "source_doc": "smith/guidance.txt",
+  "policy_items": [
+    {
+      "id": "update_time_off_status.status_change_authorization",
+      "name": "Time-off status changes restricted by role and target status",
+      "description": "Authorization to change a time-off request's status depends on the acting user and the new status (input.arguments.status): a user in the HR department may set any status (Pending, Approved, or Denied); the requester's direct manager (the request owner's manager_id equals the acting user's user_id) may set the status only to 'Approved' or 'Denied'; the requesting employee (the request's owner user_id equals the acting user's user_id) may set the status only to 'Pending'. Any other combination is denied. The request's owner (user_id) must be resolved from the request (e.g. via get_time_off_request), and the direct-report relationship via get_direct_reports for the acting user.",
+      "compliance_examples": [
+        "An HR-department user sets a request to Approved, Denied, or Pending.",
+        "The request owner's direct manager sets the request to Approved.",
+        "The request owner's direct manager sets the request to Denied.",
+        "The requesting employee sets their own request back to Pending."
+      ],
+      "violation_examples": [
+        "The requesting employee sets their own request to Approved (an employee may only set it to Pending).",
+        "The requesting employee sets their own request to Denied.",
+        "A direct manager sets a report's request to Pending (a manager may only Approve or Deny).",
+        "A user who is neither HR, the request owner, nor the owner's direct manager changes the status.",
+        "A manager sets the status of a request whose owner does not report to them."
+      ],
+      "references": [
+        "A time-off request's status may be changed as follows: **HR** may set any status; the requester's **direct manager** may set it only to `Approved` or `Denied`; the requesting employee may set it only to `Pending`."
+      ],
+      "trigger": "pre_tool",
+      "requires": {
+        "system_vars": [
+          "user_id",
+          "department"
+        ],
+        "tool_history": [
+          {
+            "tool": "get_time_off_request",
+            "params": {
+              "request_id": "input.arguments.request_id"
+            }
+          },
+          {
+            "tool": "get_direct_reports",
+            "params": {
+              "user_id": "input.extensions.subject.user_id"
+            }
+          }
+        ],
+        "message_history": null
+      },
+      "resolved_by_user": [
+        {
+          "type": "clarification",
+          "detail": "The guidance implies the manager approves (a request triggers an email to the manager for approval) but does not explicitly restrict which roles may set a request to Approved/Denied.",
+          "question": "Which roles may approve/deny a time-off request — only the requester's direct manager and HR, or others?",
+          "resolution": {
+            "answer": "HR may set any status; the requester's direct manager may set only Approved or Denied; the requesting employee may set only Pending.",
+            "decided_by": "human",
+            "effect": "Added update_time_off_status.status_change_authorization encoding the per-actor allowed target statuses."
+          }
+        }
+      ]
+    },
+    {
+      "id": "update_time_off_status.paternity_requires_baby_info",
+      "name": "Paternity approval requires baby's name and birth date",
+      "description": "A Paternity leave request may be approved (status set to 'Approved') only if the requester has provided both the baby's birth date and the baby's name in their chat messages to the agent. The baby's name and birth date are read from the conversation history (message_history), not from a stored field on the request. If the target request is a Paternity request and it is being approved without both the baby's birth date and the baby's name present in the conversation, deny. The request's leave_type must be obtained (e.g. via get_time_off_request).",
+      "compliance_examples": [
+        "The requester states both the baby's name and birth date in chat, and the Paternity request is then set to 'Approved'.",
+        "A non-Paternity request (e.g. Vacation) is approved (the baby-info requirement does not apply).",
+        "A Paternity request is set to 'Denied' or 'Pending' (the requirement gates approval only)."
+      ],
+      "violation_examples": [
+        "A Paternity request is approved but the conversation never mentions the baby's name.",
+        "A Paternity request is approved but the conversation never mentions the baby's birth date.",
+        "A Paternity request is approved with neither the baby's name nor birth date present in the conversation."
+      ],
+      "references": [
+        "A `Paternity` leave request may be approved only if the requester has provided both the baby's birth date and the baby's name in their chat messages to the agent (i.e. these details appear in the conversation history)."
+      ],
+      "trigger": "pre_tool",
+      "requires": {
+        "system_vars": [],
+        "tool_history": [
+          {
+            "tool": "get_time_off_request",
+            "params": {
+              "request_id": "input.arguments.request_id"
+            }
+          }
+        ],
+        "message_history": true
+      }
+    },
+    {
+      "id": "update_time_off_status.confirm_before_write",
+      "name": "Require explicit confirmation before changing a request's status",
+      "description": "update_time_off_status modifies the database (approval action). Before it runs, the agent must first list the details of the status change to the user and obtain the user's explicit 'yes' confirmation. If the conversation history contains no explicit user confirmation ('yes') for this action, deny.",
+      "compliance_examples": [
+        "The agent lists the exact details of the action to change the request status, the user replies 'yes', and only then is the tool called.",
+        "The user explicitly approves this specific action ('yes, go ahead') before the tool to change the request status is called."
+      ],
+      "violation_examples": [
+        "The tool to change the request status is called with no prior confirmation step at all.",
+        "The agent presents the action but calls the tool to change the request status before the user responds.",
+        "The user replies with something ambiguous ('sounds good', 'ok maybe') rather than an explicit 'yes'.",
+        "The user previously said 'yes' to a different action; there is no explicit 'yes' for this specific action to change the request status.",
+        "The user explicitly declines ('no'), but the tool to change the request status is called anyway."
+      ],
+      "references": [
+        "Before performing any action that writes to or modifies the database(create, update, or delete), the agent must first list the details of the action and obtain the user's explicit confirmation (\"yes\") before proceeding."
+      ],
+      "trigger": "pre_tool",
+      "requires": {
+        "system_vars": [],
+        "tool_history": null,
+        "message_history": true
+      }
+    }
+  ],
+  "debug": {
+    "tool_info": {
+      "is_read_only": false,
+      "user_enrichment": "Approval/denial action for time-off requests. leave_type of the target request must be read via get_time_off_request to apply the Paternity rule."
+    },
+    "archive": [],
+    "notes": []
+  }
+}

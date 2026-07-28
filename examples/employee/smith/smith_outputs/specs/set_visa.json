@@ -1,0 +1,110 @@
+{
+  "tool_name": "set_visa",
+  "source_doc": "smith/guidance.txt",
+  "policy_items": [
+    {
+      "id": "set_visa.edit_own_or_hr",
+      "name": "Setting a visa limited to self or HR",
+      "description": "A user may create/replace an employee's visa only if it is their own (arguments.user_id equals the acting user's user_id) or the acting user is in the HR department (HR may edit all employees' data). Managers may only view, not edit, their reports' personal data. Deny writing another employee's visa by a non-HR user.",
+      "compliance_examples": [
+        "A user creates/updates their own visa (arguments.user_id == subject.user_id).",
+        "An HR-department user creates/updates another employee's visa."
+      ],
+      "violation_examples": [
+        "A non-HR user (department != HR) creates/updates another employee's visa (arguments.user_id != subject.user_id).",
+        "A user creates/updates the visa of one of their direct reports (the target's manager_id equals the acting user's user_id) — a direct manager may view a report's data but not edit it."
+      ],
+      "references": [
+        "An employee may view and edit only their **own data** — home address, passport, visa, emergency contact, and bank account.",
+        "**HR** may view and edit all employees' data."
+      ],
+      "trigger": "pre_tool",
+      "requires": {
+        "system_vars": [
+          "user_id",
+          "department"
+        ],
+        "tool_history": null,
+        "message_history": null
+      }
+    },
+    {
+      "id": "set_visa.expiry_min_six_months",
+      "name": "Visa expiration must be more than six months out",
+      "description": "If expiry_date is provided, the new expiration must be more than six months after the current date (the date of the update). If the provided expiry_date is not more than six months in the future, deny. The current date is supplied by the runtime clock.",
+      "compliance_examples": [
+        "On 2026-07-16 the visa expiry_date is set to 2028-01-01 (well more than six months out).",
+        "On 2026-07-16 the visa expiry_date is set to 2027-02-01 (more than six months out).",
+        "The call updates other visa fields without providing an expiry_date, so this rule does not apply."
+      ],
+      "violation_examples": [
+        "On 2026-07-16 the visa expiry_date is set to 2027-01-16 (exactly six months out — the rule requires MORE than six months).",
+        "On 2026-07-16 the visa expiry_date is set to 2026-09-01 (less than six months out).",
+        "The visa expiry_date is set to a date in the past."
+      ],
+      "references": [
+        "An employee may set or update a passport or visa **expiration date**  only if the new expiration is more than **six months** after the date of the update."
+      ],
+      "trigger": "pre_tool",
+      "requires": {
+        "system_vars": [],
+        "tool_history": null,
+        "message_history": null
+      }
+    },
+    {
+      "id": "set_visa.issue_before_expiry",
+      "name": "Visa issue date must precede expiration date",
+      "description": "When both issue_date and expiry_date are provided in the same call, issue_date must be strictly earlier than expiry_date. If issue_date is on or after expiry_date, deny. When only one of the two dates is provided, this rule does not apply (the stored counterpart is not looked up).",
+      "compliance_examples": [
+        "issue_date 2026-01-01 and expiry_date 2030-01-01 (issue strictly before expiry).",
+        "The call provides only an expiry_date (or only an issue_date), so this rule does not apply."
+      ],
+      "violation_examples": [
+        "issue_date 2030-01-01 and expiry_date 2026-01-01 (issue after expiry).",
+        "issue_date 2026-01-01 and expiry_date 2026-01-01 (equal dates — issue must be strictly earlier)."
+      ],
+      "references": [
+        "An employee's passport or visa **issue date** must be strictly earlier than its **expiration date** when both dates are provided in the same call."
+      ],
+      "trigger": "pre_tool",
+      "requires": {
+        "system_vars": [],
+        "tool_history": null,
+        "message_history": null
+      }
+    },
+    {
+      "id": "set_visa.confirm_before_write",
+      "name": "Require explicit confirmation before setting a visa",
+      "description": "set_visa writes to the database. Before it runs, the agent must first list the details of the action to the user and obtain the user's explicit 'yes' confirmation. If the conversation history contains no explicit user confirmation ('yes') for this action, deny.",
+      "compliance_examples": [
+        "The agent lists the exact details of the action to set the visa, the user replies 'yes', and only then is the tool called.",
+        "The user explicitly approves this specific action ('yes, go ahead') before the tool to set the visa is called."
+      ],
+      "violation_examples": [
+        "The tool to set the visa is called with no prior confirmation step at all.",
+        "The agent presents the action but calls the tool to set the visa before the user responds.",
+        "The user replies with something ambiguous ('sounds good', 'ok maybe') rather than an explicit 'yes'.",
+        "The user previously said 'yes' to a different action; there is no explicit 'yes' for this specific action to set the visa.",
+        "The user explicitly declines ('no'), but the tool to set the visa is called anyway."
+      ],
+      "references": [
+        "Before performing any action that writes to or modifies the database(create, update, or delete), the agent must first list the details of the action and obtain the user's explicit confirmation (\"yes\") before proceeding."
+      ],
+      "trigger": "pre_tool",
+      "requires": {
+        "system_vars": [],
+        "tool_history": null,
+        "message_history": true
+      }
+    }
+  ],
+  "debug": {
+    "tool_info": {
+      "is_read_only": false,
+      "user_enrichment": "Upserts sensitive PII (visa). Subject to own-data edit rule and expiry rule (blacklist rule is passport-only)."
+    },
+    "archive": []
+  }
+}
