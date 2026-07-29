@@ -38,6 +38,7 @@ from smith.policy_agent.policy_analysis.bypass.synthesize_cases import (
 )
 from smith.test_generation.grey_condition import grey_extraction
 from smith.test_generation.attack_promptfoo import create_promptfoo_cases
+from smith.test_generation.generate_promptfoo_config import generate_promptfoo_config
 from smith.test_case_evaluation.classify_guidance import classify_promptfoo_cases
 from smith.test_case_evaluation.validate_labels import run_validation
 from smith.test_case_evaluation.visualization.build_report import build_visualization
@@ -501,6 +502,24 @@ def main():
             param_names = [p["name"] for p in tool["parameters"]]
             print(f"  - {tool['name']} ({', '.join(param_names)})")
 
+    if args.flag == "generate_promptfoo_config":
+        promptfoo_config_path = base_url + os.getenv("PROMPTFOO_CONFIG_FILE")
+        promptfoo_template_path = base_url + os.getenv(
+            "PROMPTFOO_CONFIG_TEMPLATE", "references/promptfoo_config_template.yaml"
+        )
+        generate_promptfoo_config(
+            api_key,
+            openai_base_url,
+            model,
+            temp,
+            top_p,
+            guidance_file,
+            system_var_file,
+            agent_url,
+            promptfoo_config_path,
+            promptfoo_template_path,
+        )
+
     if args.flag == "test_case_translation":
         target_agent_path = base_url + target_agent_path
         run_extract_tool_args(test_case_path, agent_url)
@@ -616,6 +635,7 @@ def main():
         "cross_validate",
         "apply_cross_validate",
         "open_explorer",
+        "generate_promptfoo_config",
     ]
     if args.flag and args.flag not in allowed_flags:
         print(f"ERROR: '{args.flag}' is not a valid flag.")
