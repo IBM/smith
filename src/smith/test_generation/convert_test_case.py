@@ -141,7 +141,7 @@ def merge_with_promptfoo(test_cases, output_file_attack_promptfoo):
         attack_cases = json.load(f)
     for test_cluster in attack_cases:
         formatted_test_case = {}
-        formatted_test_case["action"] = "Promptfoo"
+        formatted_test_case["action"] = test_cluster.get("action", "Promptfoo")
         formatted_test_case["system_variables"] = test_cluster["system_variables"]
         formatted_test_case["label"] = "promptfoo_malicious"
         formatted_test_case["user_input"] = test_cluster["user_input"]

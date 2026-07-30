@@ -38,6 +38,7 @@ from smith.policy_agent.policy_analysis.bypass.synthesize_cases import (
 )
 from smith.test_generation.grey_condition import grey_extraction
 from smith.test_generation.attack_promptfoo import create_promptfoo_cases
+from smith.test_generation.classify_promptfoo_tool import classify_promptfoo_tool
 from smith.test_generation.generate_promptfoo_config import generate_promptfoo_config
 from smith.test_case_evaluation.classify_guidance import classify_promptfoo_cases
 from smith.test_case_evaluation.validate_labels import run_validation
@@ -137,6 +138,21 @@ class BlueAgent:
 VALID_ATTACK_TOOLS = {"ares", "promptfoo", "none"}
 
 
+def get_tool_definitions(transport, mcp_url, mcp_command, mcp_args, mcp_cwd):
+    """Extract tool definitions from the MCP server."""
+    tool_definitions = asyncio.run(
+        extract_tools(
+            transport=transport,
+            url=mcp_url,
+            command=mcp_command,
+            cmd_args=mcp_args,
+            cwd=mcp_cwd,
+        )
+    )
+    print(f"Extracted {len(tool_definitions['tools'])} tools from MCP server")
+    return tool_definitions
+
+
 def resolve_attack_tools():
     """Parse and validate the ATTACK_TOOLS env var."""
     raw = os.getenv("ATTACK_TOOLS", "ares,promptfoo")
@@ -177,6 +193,7 @@ def generate_test(
     output_file_cases,
     output_promptfoo,
     case_generation_batch_size,
+    tool_definitions=None,
     batch_processing=False,
     batch_size=10,
     flatten_flag=False,
@@ -248,6 +265,15 @@ def generate_test(
             output_promptfoo,
             output_file_attack_promptfoo,
             test_generation_path,
+        )
+        classify_promptfoo_tool(
+            api_key,
+            openai_base_url,
+            model,
+            temp,
+            top_p,
+            tool_definitions,
+            output_file_attack_promptfoo,
         )
 
     translate_case(
@@ -344,16 +370,10 @@ def main():
     if not args.flag:
         parser.print_help()
         sys.exit(0)
-
-    # Static utility: print the path to the bundled Policy Explorer HTML.
+        
     if args.flag == "open_explorer":
-        html = resources.files("smith.tools") / "policy_explorer.html"
-        with resources.as_file(html) as p:
-            print(f"Policy Explorer: file://{p}")
-            print(
-                "Open this path in your browser, then upload "
-                "guidance.txt + specs/*.json to explore."
-            )
+        from smith.tools.explorer_server import serve
+        serve(port=8100)
         sys.exit(0)
 
     # model settings
@@ -428,6 +448,9 @@ def main():
     if args.flag == "red_suggestion":
         results = agent.get_red_feedback()
     if args.flag == "test_generation":
+        tool_definitions = get_tool_definitions(
+            transport, mcp_url, mcp_command, mcp_args, mcp_cwd
+        )
         generate_test(
             base_url,
             system_variables,
@@ -450,22 +473,15 @@ def main():
             output_file_cases,
             output_promptfoo,
             case_generation_batch_size,
+            tool_definitions,
             batch_processing,
             batch_size,
         )
 
     if args.flag == "bypass_case_generation":
-        # Generate tool_definitions fresh from the MCP server
-        tool_definitions = asyncio.run(
-            extract_tools(
-                transport=transport,
-                url=mcp_url,
-                command=mcp_command,
-                cmd_args=mcp_args,
-                cwd=mcp_cwd,
-            )
+        tool_definitions = get_tool_definitions(
+            transport, mcp_url, mcp_command, mcp_args, mcp_cwd
         )
-        print(f"Extracted {len(tool_definitions['tools'])} tools from MCP server")
         generate_bypass_cases(
             api_key,
             openai_base_url,
@@ -485,19 +501,12 @@ def main():
     if args.flag == "get_mcp_parameter":
         target_agent_path = base_url + target_agent_path
         output_file = os.path.join(target_agent_path, "smith", "tool_definitions.json")
-        result = asyncio.run(
-            extract_tools(
-                transport=transport,
-                url=mcp_url,
-                command=mcp_command,
-                cmd_args=mcp_args,
-                cwd=mcp_cwd,
-            )
+        result = get_tool_definitions(
+            transport, mcp_url, mcp_command, mcp_args, mcp_cwd
         )
         os.makedirs(os.path.dirname(output_file), exist_ok=True)
         with open(output_file, "w") as f:
             json.dump(result, f, indent=2)
-        print(f"Extracted {len(result['tools'])} tools to {output_file}")
         for tool in result["tools"]:
             param_names = [p["name"] for p in tool["parameters"]]
             print(f"  - {tool['name']} ({', '.join(param_names)})")
