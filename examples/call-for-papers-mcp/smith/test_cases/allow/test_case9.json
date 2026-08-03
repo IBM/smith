@@ -28,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Get events for Cybersecurity and privacy",
+                "input": "Can you get cybersecurity events with topic Cybersecurity and privacy and keywords network security",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,9 +39,8 @@
             }
         },
         "arguments": {
-            "keywords": "cybersecurity privacy cryptography secure systems network security data protection information assurance digital forensics malware reverse engineering",
-            "topic": "Cybersecurity and privacy",
-            "limit": 20
+            "keywords": "network security",
+            "topic": "Cybersecurity and privacy"
         }
     }
 }

@@ -28,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Show me events about Cybersecurity and privacy",
+                "input": "Search for conferences with keywords 'programming languages' in the Software engineering topic with limit 5",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,9 +39,9 @@
             }
         },
         "arguments": {
-            "keywords": "Cybersecurity, security, networks, data protection, AI in security",
-            "topic": "Cybersecurity and privacy",
-            "limit": 20
+            "keywords": "programming languages",
+            "limit": 5,
+            "topic": "Software engineering"
         }
     }
 }

@@ -19,6 +19,7 @@ def case_generation(
     top_p,
     output_file_variables,
     output_file_cases,
+    tool_definitions=None,
     batch_processing=False,
     batch_size=10,
 ):
@@ -81,6 +82,7 @@ Hard requirements:
 7) Prompt variables may vary freely but must not alter system-level truths.
 8) Output must be valid JSON following the required schema exactly.
 9) Do NOT output explanations or extra text.
+10) The user_input MUST include concrete values for the target tool's required parameters. For example, if the tool requires first_name, last_name, email, salary — the user_input should mention specific values for these (e.g., "Add employee John Smith with email john@company.com and salary 5000"). Reference the provided tool parameter definitions to know which parameters exist for each action.
 Output example:
 
 [
@@ -99,6 +101,21 @@ Output example:
     with open(output_file_variables, "r") as f:
         guidances = json.load(f)
 
+    tools = tool_definitions.get("tools", []) if tool_definitions else []
+
+    def _get_tool_params_text(items):
+        """Get tool parameter definitions relevant to a set of guidance items."""
+        if not tools:
+            return ""
+        actions = {item["action"] for item in items if "action" in item}
+        relevant = [
+            {"name": t["name"], "description": t["description"], "parameters": t["parameters"]}
+            for t in tools if t["name"] in actions
+        ]
+        if not relevant:
+            return ""
+        return f"\nTarget tool parameters (generate user_input with concrete values for these parameters):\n{json.dumps(relevant, indent=2)}\n"
+
     # Initialize OpenAI client
     http_client = httpx.Client(verify=False, timeout=300.0)
     client = OpenAI(api_key=api_key, base_url=openai_base_url, http_client=http_client)
@@ -112,10 +129,11 @@ Output example:
             print(
                 f"Sending batch {batch_num}/{total_batches} ({len(batch)} items) for test case generation..."
             )
+            tool_params_text = _get_tool_params_text(batch)
             user_instruction = f"""
 System variable candidates: {str(system_variables)}
 Guidance items: {str(batch)}
-"""
+{tool_params_text}"""
             response = client.chat.completions.create(
                 model=model,
                 messages=[
@@ -142,10 +160,12 @@ Guidance items: {str(batch)}
         with open(output_file_cases, "w") as f:
             json.dump(all_results, f, indent=4)
     else:
+        items = guidances if isinstance(guidances, list) else [guidances]
+        tool_params_text = _get_tool_params_text(items)
         user_instruction = f"""
 System variable candidates: {str(system_variables)}
 Guidance items: {str(guidances)}
-"""
+{tool_params_text}"""
         print("Sending guidance for test case generation...")
         response = client.chat.completions.create(
             model=model,

@@ -28,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Search for events with keywords including bioinformatics",
+                "input": "Search for conferences with keywords 'genomics' and topic 'Artificial intelligence' with limit 5",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,8 +39,9 @@
             }
         },
         "arguments": {
-            "keywords": "bioinformatics",
-            "topic": "Artificial intelligence"
+            "keywords": "genomics",
+            "topic": "Artificial intelligence",
+            "limit": 5
         }
     }
 }

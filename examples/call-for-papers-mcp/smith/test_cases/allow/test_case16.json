@@ -26,7 +26,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please retrieve 15 events",
+                "input": "Find conferences on 'algorithms' in Software engineering topic with limit 14",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -37,9 +37,9 @@
             }
         },
         "arguments": {
-            "keywords": "Artificial Intelligence AI machine learning deep learning NLP computer vision robotics natural language processing optimization reasoning planning multi-modal systems ethical computing generative models reinforcement learning neural networks knowledge graphs semantic web digital twins edge intelligence federated learning privacy preserving ML trustworthy adaptive robust cognitive scalable efficient sparse transformers diffusion probabilistic autoregressive graph neural symbolic grounding interpretable explainable safe reliable secure aligned",
-            "topic": "Artificial intelligence",
-            "limit": 15
+            "keywords": "algorithms",
+            "topic": "Software engineering",
+            "limit": 14
         }
     }
 }

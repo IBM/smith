@@ -7,10 +7,7 @@
             "subject": {
                 "claims": {},
                 "roles": [
-                    "manager"
-                ],
-                "teams": [
-                    "IT"
+                    "employee"
                 ]
             },
             "headers": {
@@ -21,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can I see the employment start dates for the HR department?",
+                "input": "I'd like to see the compensation data for the IT department using view_team_compensation",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,15 +29,7 @@
             }
         },
         "arguments": {
-            "department": "HR",
-            "format": "JSON",
-            "id": "None",
-            "include_benefits": false,
-            "select_fields": [
-                "employee_name",
-                "hire_date"
-            ],
-            "time_range": "last_quarter"
+            "department": "IT"
         }
     }
 }

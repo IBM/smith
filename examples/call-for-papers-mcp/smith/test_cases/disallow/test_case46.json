@@ -28,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need to find conferences on digital marketing and brand management.",
+                "input": "Search for academic conferences with keywords 'political science algorithms' in Cybersecurity and privacy topic",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,9 +39,8 @@
             }
         },
         "arguments": {
-            "keywords": "digital marketing brand management",
-            "topic": "Artificial intelligence",
-            "limit": 10
+            "keywords": "political science algorithms",
+            "topic": "Cybersecurity and privacy"
         }
     }
 }

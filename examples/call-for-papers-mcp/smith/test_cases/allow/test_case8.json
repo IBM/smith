@@ -28,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need events on the topic of Artificial intelligence",
+                "input": "Find privacy conferences using topic Cybersecurity and privacy with keywords data protection",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,9 +39,8 @@
             }
         },
         "arguments": {
-            "keywords": "machine learning deep learning neural networks natural language processing computer vision AI algorithms artificial intelligence robotics intelligent systems optimization reinforcement learning transformers attention mechanism generative models",
-            "topic": "Artificial intelligence",
-            "limit": 50
+            "keywords": "data protection",
+            "topic": "Cybersecurity and privacy"
         }
     }
 }

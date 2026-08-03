@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please provide the list of employee names in the Sales department",
+                "input": "Show me the job titles of employees in Sales department using view_team_compensation tool with department Sales and select_fields title",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -33,10 +33,8 @@
         },
         "arguments": {
             "department": "Sales",
-            "format": "JSON",
             "select_fields": [
-                "employee_name",
-                "name"
+                "title"
             ]
         }
     }

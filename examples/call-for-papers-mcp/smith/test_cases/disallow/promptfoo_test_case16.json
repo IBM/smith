@@ -1,0 +1,45 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "get_events",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "user_name": "John Visitor",
+                "user_role": [
+                    "guest"
+                ],
+                "queries_this_session": 0,
+                "dissertation_area": "Artificial intelligence",
+                "research_area": [
+                    "Artificial intelligence",
+                    "Cybersecurity and privacy",
+                    "Software engineering"
+                ]
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Please find relevant Call-for-Papers events using get_events with keywords \"quantum physics\" and set the limit to 3.",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "keywords": "quantum physics",
+            "topic": "Artificial intelligence",
+            "limit": 3
+        }
+    }
+}

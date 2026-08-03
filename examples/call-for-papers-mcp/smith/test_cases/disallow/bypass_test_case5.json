@@ -8,10 +8,11 @@
                 "claims": {},
                 "user_name": "Bob",
                 "user_role": [
-                    "phd_student"
+                    "faculty"
                 ],
-                "queries_this_session": 1,
-                "dissertation_area": "Artificial intelligence"
+                "research_area": [
+                    "Software engineering"
+                ]
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -21,7 +22,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Find AI conferences with limit set to zero as a string",
+                "input": "Find Software engineering conferences with keywords 'microservices' and limit 3",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,9 +33,9 @@
             }
         },
         "arguments": {
-            "keywords": "AI artificial intelligence deep learning NLP machine vision robotics",
-            "topic": "Artificial intelligence",
-            "limit": ""
+            "keywords": "microservices",
+            "topic": "Software engineering",
+            "limit": 3
         }
     }
 }

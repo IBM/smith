@@ -28,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Find events related to bioinformatics and computational biology",
+                "input": "Find events about computational biology and bioinformatics in Software engineering topic",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,9 +39,8 @@
             }
         },
         "arguments": {
-            "keywords": "bioinformatics computational biology",
-            "topic": "Artificial intelligence",
-            "limit": 20
+            "keywords": "computational biology and bioinformatics",
+            "topic": "Software engineering"
         }
     }
 }

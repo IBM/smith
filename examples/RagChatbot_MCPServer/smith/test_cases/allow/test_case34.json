@@ -2,10 +2,13 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "email_compensation_report",
+        "name": "purchase",
         "extensions": {
             "subject": {
-                "claims": {}
+                "claims": {},
+                "roles": [
+                    "manager"
+                ]
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -15,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please send the salary report to john.smith@ibm.com",
+                "input": "I want to purchase office supplies worth $750. Product name is 'Premium Stationery Bundle' for office supplies category. This is for the team's quarterly needs.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -26,10 +29,10 @@
             }
         },
         "arguments": {
-            "destination": "john.smith@ibm.com",
-            "report_data": "Salary Report - Team Compensation Summary\n\nThis email contains salary and compensation data for your reference. The report includes base salaries, bonuses, stock grants, performance ratings, and total compensation information as per HR records.\n\nReport generated with encryption enabled to protect confidential employee data. Please review the attached team breakdown if any questions arise regarding individual compensation details.",
-            "encryption_required": true,
-            "external_sharing": false
+            "amount": 750,
+            "product_name": "Premium Stationery Bundle",
+            "category": "office_supplies",
+            "justification": "for the team's quarterly needs"
         }
     }
 }

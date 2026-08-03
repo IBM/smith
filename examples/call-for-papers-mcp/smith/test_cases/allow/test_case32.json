@@ -26,7 +26,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Search for events across all three approved research areas",
+                "input": "I need to find software engineering events with keywords 'agile development' in Software engineering category, show me 20 results",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -37,9 +37,9 @@
             }
         },
         "arguments": {
-            "keywords": "",
-            "topic": "Artificial intelligence",
-            "limit": 50
+            "keywords": "agile development",
+            "topic": "Software engineering",
+            "limit": 20
         }
     }
 }

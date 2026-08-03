@@ -28,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I'm looking for workshops on corporate finance and risk management.",
+                "input": "Look up conferences using keywords 'psychology and AI' for Cybersecurity and privacy topic",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,9 +39,8 @@
             }
         },
         "arguments": {
-            "keywords": "workshops corporate finance risk management AI financial technology blockchain fintech quantitative methods machine learning predictive modeling cybersecurity fraud analytics decision support digital transformation regulatory compliance investment strategy market exposure portfolio optimization enterprise risk assessment stress testing scenario analysis operational resilience climate change sustainability ESG governance internal controls audit assurance information security privacy encryption authorization data classification access control intrusion detection anomaly behavioral biometric physical cyber threat attribution incident response continuity backup recovery disaster protection",
-            "topic": "Cybersecurity and privacy",
-            "limit": 20
+            "keywords": "psychology and AI",
+            "topic": "Cybersecurity and privacy"
         }
     }
 }

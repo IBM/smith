@@ -31,7 +31,8 @@ make test            # policy scorecard: starts OPA in Docker + runs the package
 
 # CLI pipeline stages (run from anywhere once installed; reads paths from .env)
 smith --flag get_mcp_parameter      # auto-extract MCP tool defs -> <TARGET_AGENT_PATH>/smith/tool_definitions.json
-smith --flag test_generation        # full test-case generation pipeline
+smith --flag test_generation        # full test-case generation pipeline (includes promptfoo tool classification)
+smith --flag generate_promptfoo_config  # generate/update promptfoo redteam config from guidance
 smith --flag test_case_evaluation   # classify + validate labels + HTML report
 smith --flag test_case_translation  # resolve tool calls via agent /extract_tool_call
 smith --flag policy_testing         # run policy against all test cases (needs OPA server)
@@ -42,6 +43,7 @@ smith --flag cross_validate         # LLM cross-check failed cases → reference
 smith --flag apply_cross_validate   # apply approved label corrections from cross_validate report
 smith --flag policy_validation --policy_path <file.rego>      # validate a rego file
 smith --flag policy_validation_fix --policy_path <file.rego>  # validate and auto-fix
+smith --flag open_explorer          # launch the Policy Explorer UI (browse specs, select guidance)
 
 # Policy-testing OPA server (root Makefile; the packaged harness in
 # src/smith/policy_testing/ is what `smith --flag policy_testing` and `make test` invoke)
@@ -74,6 +76,8 @@ Target-agent selection is driven by a small set of vars: `TARGET_AGENT_PATH`, `G
 
 Key model vars: `MODEL_SONNET` (the LLM used across pipelines), `OPENAI_API_KEY`, `OPENAI_BASE_URL`, `TEMP`, `TOP_P`.
 
+Session/IR config: `SESSION_CONFIG_FILE` (default `references/session_config.json`) — written by the Policy Explorer UI with `use_ir` and `selected_tools`; consumed by `translate_case` to filter test cases to only the tools selected in the explorer.
+
 ## Per-target-agent inputs
 
 Each target agent under `examples/<agent>/` carries its Smith inputs in a `smith/` subfolder:
@@ -92,9 +96,10 @@ The generated policy may **only** reference data available from tool arguments o
 ## src/smith/ package map
 
 - `policy_generation/` — MCP tool extraction (`extract_tools.py`) and rego validation (`validate_policy.py`).
-- `test_generation/` — generation pipeline stages run in order by the `test_generation` flag: `decompose` → `grey_condition` → `variable_extraction` → `case_generation` → `attack` (ARES) → `attack_promptfoo` → `convert_test_case`. Also `extract_tool_args.py` for translation.
+- `test_generation/` — generation pipeline stages run in order by the `test_generation` flag: `decompose` → `grey_condition` → `variable_extraction` → `case_generation` → `attack` (ARES) → `attack_promptfoo` → `classify_promptfoo_tool` → `convert_test_case`. Also `extract_tool_args.py` for translation and `generate_promptfoo_config.py` for config generation.
 - `test_case_evaluation/` — three-tier label validation: `tier1_rules.py` (pattern match) → `tier2_semantic.py` (embeddings + NLI) → `tier3_llm_judge.py` (LLM), plus `classify_guidance.py` and `visualization/build_report.py`.
 - `policy_agent/` — refinement engine: `red_feedback/` (DBSCAN clustering of failed cases, tuned by `CLUSTER_EPS`/`CLUSTER_MIN_SAMPLES`), `policy_analysis/regal/` (Regal), `reduce_improve/` (graph + LLM dedup), `policy_evaluation/`.
+- `tools/` — developer utilities: `explorer_server.py` (policy explorer UI bridge), `license_headers.py`.
 - `tests/integration/` — the `make test` scorecard harness (bash + curl against the OPA server).
 
 ## Refinement workflow (the SKILL.md contract)

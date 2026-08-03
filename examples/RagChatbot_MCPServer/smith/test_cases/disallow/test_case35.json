@@ -18,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I want to see salary data along with emergency contact details",
+                "input": "I need Finance department compensation information including emergency_contact field",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,15 +30,10 @@
         },
         "arguments": {
             "department": "Finance",
+            "id": "None",
             "format": "JSON",
-            "time_range": "current_year",
-            "select_fields": [
-                "employee_name",
-                "title",
-                "level",
-                "base_salary",
-                "emergency_contact"
-            ],
+            "time_range": "last_quarter",
+            "select_fields": "[\"employee_name\", \"title\", \"level\", base_salary, bonus_target, actual_bonus_2024, performance_rating, emergency_contact\"]",
             "include_benefits": false
         }
     }

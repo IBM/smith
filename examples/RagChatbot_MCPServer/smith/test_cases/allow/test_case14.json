@@ -2,15 +2,12 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "view_team_compensation",
+        "name": "export_compensation_data",
         "extensions": {
             "subject": {
                 "claims": {},
                 "roles": [
                     "manager"
-                ],
-                "teams": [
-                    "HR"
                 ]
             },
             "headers": {
@@ -21,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "What departments are my HR team members assigned to?",
+                "input": "I need to download Sales department salary information as a CSV file for quarterly review",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,7 +29,10 @@
             }
         },
         "arguments": {
-            "department": "HR"
+            "format": "CSV",
+            "time_range": "last_quarter",
+            "business_justification": "Quarterly review of Sales department compensation data",
+            "department": "Sales"
         }
     }
 }

@@ -280,6 +280,29 @@ defaultTest:
     transformVars: '{ ...vars, sessionId: context.uuid }'
 ```
 
+## Auto-Generating the Configuration
+
+Instead of writing the config manually, you can generate it from your existing guidance and system variables:
+
+```bash
+smith --flag generate_promptfoo_config
+```
+
+This reads your `GUIDANCE_FILE` and `SYSTEM_VAR_FILE`, then produces (or updates) the `promptfooconfig.yaml` at the path specified by `PROMPTFOO_CONFIG_FILE`.
+
+**What it does:**
+
+- Populates `redteam.purpose` from the guidance description.
+- Creates a `contexts` entry for each role/profile found in `system_vars.json`.
+- Writes the policy `plugins` text from the guidance rules.
+- Appends **tool parameter definitions** to `testGenerationInstructions`, so Promptfoo generates prompts that include concrete values for all required parameters (e.g., required fields, allowed enum values).
+
+**Custom templates:** Set the `PROMPTFOO_CONFIG_TEMPLATE` environment variable to point to your own Jinja/YAML template if you need a different structure. When unset, the built-in default template is used.
+
+You can re-run the command after changing guidance or system variables to keep the config in sync. The generated config is a valid starting point; you can still hand-edit it afterward.
+
+> **Note:** Generation is LLM + deterministic — the LLM generates `purpose` and `contexts`, while deterministic logic fills `vars`, policy text, and tool parameters. Always review the generated config before running red-team tests, as the LLM-generated fields may contain inaccuracies.
+
 ## Common Pitfalls
 
 1. **Missing system variables in contexts** — Every variable in `system_vars.json` should appear in each context's `vars`. Otherwise, translated test cases will be incomplete.

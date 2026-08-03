@@ -2,7 +2,7 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "export_compensation_data",
+        "name": "send_email",
         "extensions": {
             "subject": {
                 "claims": {},
@@ -18,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please create a PDF document containing the salary and benefits data for my team members",
+                "input": "Send the project timeline report to client@external.com with subject 'Q4 Project Update' and attach the schedule.pdf file",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -29,11 +29,11 @@
             }
         },
         "arguments": {
-            "format": "PDF",
-            "select_fields": "None",
-            "external_sharing": false,
-            "time_range": "current_year",
-            "export_type": "detailed"
+            "recipient_email": "client@external.com",
+            "subject": "Q4 Project Update",
+            "body": "Dear Client, Please find attached the Q4 Project Timeline Report for your review. The schedule.pdf file contains detailed project milestones and delivery dates as discussed. Should you have any questions or require additional information regarding the timeline items listed, please don't hesitate to reach out. Thank you! Best regards, HR Team",
+            "email_content": "Dear Client,\n\nThis email serves as a formal update on our Q4 Project Timeline deliverables and current status. Attached is the schedule.pdf document containing:\n\n- Key project milestones for Q4 2024\n- Current delivery dates and deadlines\n- Resource allocation summary\n- Upcoming checkpoint events (Q1-Q2 projections)\n- Budget tracking information as requested\n\nPlease review the attached timeline at your earliest convenience and let us know if any adjustments are required to the projected schedule. We remain committed to delivering all Q4 deliverables on time and within scope per our service level agreements.\n\nThank you for continuing business with us, and please reach out should you have any questions regarding this update or require clarification on specific timeline items listed in the attachment.\n\nBest regards,\nHR Department Project Management Team",
+            "attached_file": "schedule.pdf"
         }
     }
 }

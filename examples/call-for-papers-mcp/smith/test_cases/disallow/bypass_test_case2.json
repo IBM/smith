@@ -10,7 +10,10 @@
                 "user_role": [
                     "phd_student"
                 ],
-                "dissertation_area": "Artificial intelligence"
+                "queries_this_session": 1,
+                "research_area": [
+                    "Software engineering"
+                ]
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -20,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Search for AI conferences about neural networks",
+                "input": "Search for Software engineering conferences with keywords 'agile development' and limit 8",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -31,9 +34,9 @@
             }
         },
         "arguments": {
-            "keywords": "neural networks",
-            "topic": "Artificial intelligence",
-            "limit": 20
+            "keywords": "agile development",
+            "topic": "Software engineering",
+            "limit": 8
         }
     }
 }

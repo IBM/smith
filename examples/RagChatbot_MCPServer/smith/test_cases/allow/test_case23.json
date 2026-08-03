@@ -18,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you generate a PDF report of the compensation information for my team?",
+                "input": "Please generate a JSON export of our department's compensation information",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -29,9 +29,12 @@
             }
         },
         "arguments": {
-            "format": "PDF",
-            "time_range": "current_year",
-            "business_justification": "HR report request for team compensation overview"
+            "format": "json",
+            "time_range": "last_quarter",
+            "select_fields": "[None]",
+            "export_type": "aggregated",
+            "business_justification": "",
+            "external_sharing": false
         }
     }
 }

@@ -28,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need conferences related to behavioral economics and policy.",
+                "input": "Find academic conferences with keywords 'machine learning education' in the topic of Artificial intelligence with limit 15",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,9 +39,9 @@
             }
         },
         "arguments": {
-            "keywords": "behavioral economics policy decision making human-centered computing",
+            "keywords": "machine learning education",
             "topic": "Artificial intelligence",
-            "limit": 10
+            "limit": 15
         }
     }
 }

@@ -57,7 +57,7 @@ python -m venv .venv
 source .venv/bin/activate
 ```
 
-**2. ARES** (red-teaming framework). Installs into `src/smith/test_generation/ares/` with its own `.venv`, which is the layout the test-generation pipeline expects (`src/smith/test_generation/attack.py` invokes `ares/.venv/bin/ares`):
+**2. ARES** (optional red-teaming framework). Installs into `src/smith/test_generation/ares/` with its own `.venv`, which is the layout the test-generation pipeline expects (`src/smith/test_generation/attack.py` invokes `ares/.venv/bin/ares`):
 
 ```bash
 cd src/smith/test_generation/ares
@@ -77,7 +77,7 @@ cd ../../../../
 source .venv/bin/activate
 ```
 
-**3. Promptfoo** (red-teaming framework).
+**3. Promptfoo** (optional red-teaming framework).
 
 ```bash
 npm install -g promptfoo
@@ -171,22 +171,22 @@ Smith operates as an agent skill with a CLI backend. The AI agent reads instruct
 │                                     Smith                                      │
 │                                                                                │
 │  SKILL.md ──→ Orchestration ──→ smith CLI                                      │
-│                                    │                                           │
-│              ┌─────────────────────┼──────────────────────┬─────────┐          │
-│              ▼                     ▼                      ▼         ▼          │
-│         Policy              Test Case Gen              Policy     Policy       │
-│         Creation                 │                     Testing   Refinement    │
-│              │        ┌──────────┼──────────┬────────┐    │         │          │
+│                                       │                                        │
+│              ┌────────────────────────┼───────────────────┬─────────┐          │
+│              ▼                        ▼                   ▼         ▼          │
+│         Policy              Test Case Generatio        Policy     Policy       │
+│         Creation                      │                Testing   Refinement    │
+│              │        ┌──────────┬────┼─────┬────────┐    │         │          │
 │              ▼        ▼          ▼          ▼        ▼    └────⇄────┘          │
 │         OPA Policy Legitimate  ARES    Promptfoo  Bypass                       │
 │         (.rego)        │        │          │        │                          │
-│                        └────────┴────┬─────┴────────┘                          │
-│                                      ▼                                         │
+│                        └────────┴─────┬────┴────────┘                          │
+│                                       ▼                                        │
 │                              Test Case Evaluation                              │
 └────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-Bypass cases are generated from the current policy (a `Policy Creation` output) rather than the guidance alone, so they close the loop back into `Test Case Gen`.
+Bypass cases are generated from the current policy (a `Policy Creation` output) rather than the guidance alone, so they close the loop back into `Test Case Generation`.
 
 
 ## Core Concepts
@@ -212,6 +212,16 @@ The agent follows `test_generation/test_generation.md`, which first asks which k
 - **Guidance-targeted cases** — legitimate + adversarial cases derived from the guidance (broad coverage).
 - **Policy-bypass cases** — adversarial cases that target divergences between the guidance and the **current policy** (requires an existing, non-empty policy).
 - **Both.**
+
+#### Promptfoo config auto-generation
+
+If you use Promptfoo for red-teaming, you can auto-generate the `promptfooconfig.yaml` instead of writing it manually:
+
+```bash
+smith --flag generate_promptfoo_config
+```
+
+This generates `purpose`, `contexts`, and `policy` text from your guidance and system variables, and appends tool parameter definitions to `testGenerationInstructions` so Promptfoo generates prompts with concrete values for all required parameters. Generation is LLM + deterministic — always review the output before running red-team tests.
 
 #### Guidance-targeted generation
 
@@ -344,9 +354,11 @@ smith/
 │   ├── policy_agent/        # OPA policy analysis and refinement
 │   ├── policy_generation/   # MCP tool extraction and policy generation
 │   ├── test_generation/     # Test case generation and translation pipeline
+│   │   ├── classify_promptfoo_tool.py  # LLM-based tool classification for promptfoo cases
+│   │   └── generate_promptfoo_config.py # Auto-generate promptfoo redteam config
 │   ├── test_case_evaluation/ # Label validation and report generation
 │   ├── policy_testing/      # OPA scorecard harness (score_card.sh, coverage)
-│   └── tools/               # Repo tooling (e.g. license headers)
+│   └── tools/               # Developer utilities (explorer UI, license headers)
 ├── tests/                   # Placeholder for the test suite (TODO)
 ├── test_generation/         # Test generation skill markdown file
 ├── .env_template            # Environment template

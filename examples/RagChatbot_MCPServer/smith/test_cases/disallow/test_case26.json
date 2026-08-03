@@ -18,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need to see the salary data including home addresses for my team members",
+                "input": "I need to view salary information for the Sales department with home_address field included",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -29,13 +29,18 @@
             }
         },
         "arguments": {
-            "department": "IT",
-            "format": "JSON",
-            "include_benefits": false,
-            "id": "None",
+            "department": "Sales",
             "select_fields": [
                 "employee_name",
+                "title",
+                "department",
+                "level",
+                "hire_date",
                 "base_salary",
+                "bonus_target",
+                "actual_bonus_2024",
+                "performance_rating",
+                "next_review_date",
                 "home_address"
             ]
         }

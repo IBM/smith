@@ -8,9 +8,7 @@
                 "claims": {},
                 "user_name": "Bob",
                 "user_role": [
-                    "faculty",
-                    "phd_student",
-                    "guest"
+                    "phd_student"
                 ],
                 "queries_this_session": 1,
                 "dissertation_area": "Artificial intelligence",
@@ -28,7 +26,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Search for events using keywords like psychology and mental health.",
+                "input": "Get events with keywords 'encryption' in topic Cybersecurity and privacy with limit 8",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,9 +37,9 @@
             }
         },
         "arguments": {
-            "keywords": "psychology mental health",
-            "topic": "Artificial intelligence",
-            "limit": 20
+            "keywords": "encryption",
+            "topic": "Cybersecurity and privacy",
+            "limit": 8
         }
     }
 }

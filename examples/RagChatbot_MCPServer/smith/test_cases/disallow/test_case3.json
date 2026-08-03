@@ -10,7 +10,7 @@
                     "manager"
                 ],
                 "teams": [
-                    "IT"
+                    "HR"
                 ]
             },
             "headers": {
@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I want to see the job titles of employees in the HR department",
+                "input": "Please show titles of Finance team employees using view_team_compensation with department Finance and select_fields set to title",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,15 +32,12 @@
             }
         },
         "arguments": {
-            "department": "HR",
-            "format": "JSON",
-            "id": "None",
-            "include_benefits": true,
+            "department": "Finance",
+            "format": "CSV",
             "select_fields": [
-                "title",
-                "employee_name"
-            ],
-            "time_range": "current_year"
+                "employee_name",
+                "title"
+            ]
         }
     }
 }

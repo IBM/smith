@@ -8,7 +8,9 @@
                 "claims": {},
                 "user_name": "Bob",
                 "user_role": [
-                    "phd_student"
+                    "faculty",
+                    "phd_student",
+                    "guest"
                 ],
                 "queries_this_session": 1,
                 "dissertation_area": "Artificial intelligence",
@@ -26,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please retrieve 7 events",
+                "input": "Find software architecture events in Software engineering topic with keywords 'microservices', show 10 results",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -37,9 +39,9 @@
             }
         },
         "arguments": {
-            "keywords": "machine learning deep learning AI neural networks natural language processing computer vision robotics reinforcement Learning knowledge representation reasoning multi-modal systems generative models optimization algorithms probabilistic graphical models semantic understanding cognitive computing explainable artificial intelligence autonomous agents digital twins edge computing federated learning trustworthy ai ethical AI privacy-preserving compute security software defined networking quantum computing formal methods",
-            "topic": "Artificial intelligence",
-            "limit": 7
+            "keywords": "software architecture microservices design patterns scalable systems distributed computing cloud-native applications service-based architectures enterprise integration system design best practices",
+            "topic": "Software engineering",
+            "limit": 10
         }
     }
 }

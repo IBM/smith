@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need to verify the department assignments for my Sales team",
+                "input": "I want to view hire date information for my Sales team through view_team_compensation",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -33,8 +33,9 @@
         },
         "arguments": {
             "department": "Sales",
-            "format": "JSON",
-            "include_benefits": false
+            "select_fields": [
+                "hire_date"
+            ]
         }
     }
 }

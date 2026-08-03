@@ -10,7 +10,7 @@
                     "manager"
                 ],
                 "teams": [
-                    "Operations"
+                    "Marketing"
                 ]
             },
             "headers": {
@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "What are the employee titles in my Operations team?",
+                "input": "I want to view the base salaries of my Marketing team using view_team_compensation tool with department Marketing and select_fields base_salary",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,11 +32,10 @@
             }
         },
         "arguments": {
-            "department": "Operations",
+            "department": "Marketing",
             "format": "JSON",
-            "select_fields": [
-                "title"
-            ]
+            "include_benefits": false,
+            "": "Select_fields>\n[\"base_salary\"]"
         }
     }
 }

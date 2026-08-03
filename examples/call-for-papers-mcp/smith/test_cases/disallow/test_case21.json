@@ -28,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you find events related to genomics research?",
+                "input": "Find events related to machine learning and genomics in the Software engineering topic area",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,9 +39,8 @@
             }
         },
         "arguments": {
-            "keywords": "genomics",
-            "topic": "Artificial intelligence",
-            "limit": 10
+            "keywords": "machine learning and genomics",
+            "topic": "Software engineering"
         }
     }
 }

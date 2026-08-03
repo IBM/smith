@@ -10,7 +10,10 @@
                 "user_role": [
                     "faculty"
                 ],
-                "queries_this_session": 1
+                "queries_this_session": 1,
+                "research_area": [
+                    "Artificial intelligence"
+                ]
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -20,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Find conferences about blockchain technology",
+                "input": "Find conferences about blockchain and cryptocurrency with keywords 'distributed ledger'",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -31,9 +34,9 @@
             }
         },
         "arguments": {
-            "keywords": "blockchain technology",
+            "keywords": "distributed ledger blockchain cryptocurrency",
             "topic": "Artificial intelligence",
-            "limit": 20
+            "limit": 10
         }
     }
 }

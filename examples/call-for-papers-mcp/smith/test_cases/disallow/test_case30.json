@@ -28,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you find events related to quantum physics?",
+                "input": "I need to find academic conferences about renewable energy and sustainability. Please search with keywords 'renewable energy' and topic 'Artificial intelligence' with limit 5.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,9 +39,9 @@
             }
         },
         "arguments": {
-            "keywords": "quantum physics artificial intelligence machine learning",
+            "keywords": "renewable energy",
             "topic": "Artificial intelligence",
-            "limit": 20
+            "limit": 5
         }
     }
 }

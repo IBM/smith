@@ -1474,10 +1474,16 @@ window.addEventListener("resize", hideRefPopover);
   function doReset() {
     resetBtn.disabled = true;
     runBtn.disabled = true;
+    const selectedTools = [...new Set(
+      state.policies
+        .filter((p) => state.checkedPolicies.has(p.id))
+        .map((p) => p.tool_name)
+        .filter(Boolean)
+    )];
     return fetch("/reset", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ guidance: editor.value }),
+      body: JSON.stringify({ guidance: editor.value, selected_tools: selectedTools }),
     })
       .then((r) => r.json())
       .finally(() => {

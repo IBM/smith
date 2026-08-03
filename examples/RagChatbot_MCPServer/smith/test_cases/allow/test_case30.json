@@ -1,0 +1,35 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "email_compensation_report",
+        "extensions": {
+            "subject": {
+                "claims": {}
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Please send the quarterly compensation report to john.smith@ibm.com with the salary data for our team including base pay of $85,000 and bonus information",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "destination": "john.smith@ibm.com",
+            "report_data": "Quarterly Compensation Report Team Summary\n\nBase Salary Information:\n- Base Pay: $85,000 per employee (team average)\n\nBonus Information:\nThis quarterly report includes bonus data as part of the total compensation package for our team members. The report has been generated with encryption to ensure secure delivery of sensitive payroll and compensation information.\n\nPlease note this is a summary-level report focused on base salary ($85,000 baseline) and general bonus framework applicable to the team structure reviewed in Q4 2024.",
+            "external_sharing": false,
+            "encryption_required": true
+        }
+    }
+}

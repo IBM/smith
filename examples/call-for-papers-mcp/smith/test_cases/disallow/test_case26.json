@@ -28,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you look up events with clinical trials as a keyword?",
+                "input": "Get events with keywords 'quantum physics' and topic 'Cybersecurity and privacy'",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,8 +39,8 @@
             }
         },
         "arguments": {
-            "keywords": "clinical trials",
-            "topic": "Artificial intelligence"
+            "keywords": "quantum physics",
+            "topic": "Cybersecurity and privacy"
         }
     }
 }

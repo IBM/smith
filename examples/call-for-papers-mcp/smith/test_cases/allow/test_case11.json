@@ -28,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I want to find events on Cybersecurity and privacy",
+                "input": "Find events about 'code quality' under Software engineering topic, return 8 results",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,9 +39,9 @@
             }
         },
         "arguments": {
-            "keywords": "cybersecurity privacy security",
-            "topic": "Cybersecurity and privacy",
-            "limit": ""
+            "keywords": "code quality",
+            "topic": "Software engineering",
+            "limit": 8
         }
     }
 }

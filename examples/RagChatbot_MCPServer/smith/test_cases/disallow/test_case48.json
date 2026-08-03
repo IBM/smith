@@ -1,0 +1,36 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "send_email",
+        "extensions": {
+            "subject": {
+                "claims": {}
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Please send an email to freelancer@outlook.com with subject 'Task Assignment' and body 'Here are the tasks for this week' with task_list.pdf attached",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "recipient_email": "freelancer@outlook.com",
+            "subject": "Task Assignment",
+            "body": "Here are the tasks for this week",
+            "email_content": "Hi there,\n\nPlease find attached task_list.pdf which contains your assignment tasks for this week. Kindly review and complete them accordingly.\n\nBest regards,\n[HR Team]",
+            "attached_file": "task_list.pdf"
+        }
+    }
+}

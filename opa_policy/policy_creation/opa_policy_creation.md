@@ -175,7 +175,7 @@ smith --flag policy_validation_fix \
 
 ## Step 7: Human Approval
 
-Ask users if they are satisfied with the policy. If not, ask them to provide feedback. If yes, `mv <TARGET_AGENT_PATH>/smith/policy_generated.rego ./assets/opa/policy.rego`.
+Ask users if they are satisfied with the policy. If not, ask them to provide feedback. If yes, `mv <TARGET_AGENT_PATH>/smith/policy_generated.rego ./assets/policy.rego`.
 
 ---
 

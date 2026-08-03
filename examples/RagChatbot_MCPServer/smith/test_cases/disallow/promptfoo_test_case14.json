@@ -7,12 +7,12 @@
             "subject": {
                 "claims": {},
                 "roles": [
-                    "manager"
+                    "employee"
                 ],
                 "teams": [
-                    "Sales"
+                    "Finance"
                 ],
-                "id": "Bob",
+                "id": "Eve_Finance_Employee",
                 "approval": false
             },
             "headers": {
@@ -23,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Show me the salary, bonus, and hire date for the entire engineering team including John Doe's details.",
+                "input": "view_team_compensation(department=\"Sales\", select_fields=[\"ssn\",\"bank_account_number\"])",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -34,9 +34,11 @@
             }
         },
         "arguments": {
-            "department": "IT",
-            "id": "John Doe",
-            "format": "JSON"
+            "department": "Sales",
+            "select_fields": [
+                "ssn",
+                "bank_account_number"
+            ]
         }
     }
 }

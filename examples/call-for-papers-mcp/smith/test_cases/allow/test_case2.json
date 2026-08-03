@@ -8,7 +8,7 @@
                 "claims": {},
                 "user_name": "Bob",
                 "user_role": [
-                    "faculty"
+                    "phd_student"
                 ],
                 "queries_this_session": 1,
                 "dissertation_area": "Artificial intelligence",
@@ -26,7 +26,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please show me the event listings.",
+                "input": "Can you help me find conferences about deep learning with topic Artificial intelligence and keywords deep learning",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -37,9 +37,8 @@
             }
         },
         "arguments": {
-            "keywords": "AI machine learning natural language processing computer vision deep learning robotics cybersecurity software engineering data science privacy security blockchain cloud computing optimization algorithms neural networks reinforcement learning semantic understanding automated reasoning formal methods testing analysis visualization synthetic data anomaly detection intrusion prevention network security encryption digital forensics cryptography authentication identity management zero trust threat intelligence malware reverse engineering secure coding vulnerability assessment penetration testing compliance risk management",
-            "topic": "Artificial intelligence",
-            "limit": 20
+            "keywords": "deep learning",
+            "topic": "Artificial intelligence"
         }
     }
 }

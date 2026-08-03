@@ -10,7 +10,7 @@
                     "manager"
                 ],
                 "teams": [
-                    "Finance"
+                    "HR"
                 ]
             },
             "headers": {
@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I want to check the hire dates for the Marketing team employees",
+                "input": "Can you pull up hire date data for the Legal team via view_team_compensation tool?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,7 +32,18 @@
             }
         },
         "arguments": {
-            "department": "Marketing"
+            "department": "Legal",
+            "format": "JSON",
+            "id": "None",
+            "time_range": "last_quarter",
+            "include_benefits": false,
+            "select_fields": [
+                "employee_name",
+                "title",
+                "department",
+                "level",
+                "hire_date"
+            ]
         }
     }
 }

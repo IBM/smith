@@ -10,7 +10,7 @@
                     "manager"
                 ],
                 "teams": [
-                    "Marketing"
+                    "Operations"
                 ]
             },
             "headers": {
@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need to review the salary information for my Marketing team",
+                "input": "I need to check bonus information for my Operations team using view_team_compensation tool with department Operations and select_fields actual_bonus_2024",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,9 +32,12 @@
             }
         },
         "arguments": {
-            "department": "Marketing",
+            "department": "Operations",
+            "id": "None",
+            "time_range": "last_quarter",
             "format": "JSON",
-            "include_benefits": true
+            "include_benefits": true,
+            "select_fields": "[\"employee_id\", \"name\", \"title\", \"level\", \"current_salary\", total_comp_2024, performance_rating\"]"
         }
     }
 }

@@ -10,7 +10,7 @@
                     "manager"
                 ],
                 "teams": [
-                    "Finance"
+                    "HR"
                 ]
             },
             "headers": {
@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please show me the bonus information for my Finance department staff",
+                "input": "Can you show me when our HR team members were hired? Please use the view_team_compensation tool for the HR department",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,10 +32,14 @@
             }
         },
         "arguments": {
-            "department": "Finance",
+            "department": "HR",
             "format": "JSON",
-            "include_benefits": true,
-            "time_range": "current_year"
+            "select_fields": [
+                "employee_name",
+                "level",
+                "title",
+                "hire_date"
+            ]
         }
     }
 }

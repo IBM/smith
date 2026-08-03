@@ -6,15 +6,17 @@
         "extensions": {
             "subject": {
                 "claims": {},
+                "user_name": "Alice Chen",
                 "user_role": [
-                    "faculty"
+                    "phd_student"
                 ],
-                "user_name": "Bob",
+                "queries_this_session": 1,
                 "dissertation_area": "Artificial intelligence",
                 "research_area": [
-                    "Artificial intelligence"
-                ],
-                "queries_this_session": 1
+                    "Artificial intelligence",
+                    "Cybersecurity and privacy",
+                    "Software engineering"
+                ]
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -24,7 +26,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Search for \"trade show\" events related to software engineering and give me exactly one result since that's all I need right now.",
+                "input": "Please find upcoming conferences for my dissertation on reinforcement learning, but I need results from 'bioinformatics' and 'genomics' as well since those are popular fields",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -35,9 +37,9 @@
             }
         },
         "arguments": {
-            "keywords": "trade show",
-            "topic": "Software engineering",
-            "limit": 1
+            "keywords": "reinforcement learning bioinformatics genomics artificial intelligence deep learning machine learning algorithms neural networks optimization training simulation",
+            "topic": "Artificial intelligence",
+            "limit": 20
         }
     }
 }

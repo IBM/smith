@@ -28,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I'm looking for conferences on supply chain optimization and technology.",
+                "input": "Please search for conferences using keywords 'cybersecurity trade show' under Cybersecurity and privacy topic with limit 8",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,9 +39,9 @@
             }
         },
         "arguments": {
-            "keywords": "supply chain optimization technology artificial intelligence",
-            "topic": "Artificial intelligence",
-            "limit": 10
+            "keywords": "cybersecurity trade show",
+            "topic": "Cybersecurity and privacy",
+            "limit": 8
         }
     }
 }

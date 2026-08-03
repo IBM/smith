@@ -24,6 +24,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - ARES cases now inherit their parent test case's confidence score, verdict, and predicted label in the evaluation report instead of showing a blank confidence. An ARES case is a jailbreak-transformed variant of a parent `disallow` case, so it carries the parent's `ValidationResult` (matched by the parent's `user_input`) rather than being independently re-validated.
 - Updated SKILL.md documentation to reflect "all test deny" instead of "all test failed".
 - Updated car-price and call-for-papers examples' Promptfoo configuration with missing system variables.
+- `opa_policy_creation.md` Step 7: changed `cp` to `mv` for the generated policy file.
+- Include target tool parameters in the LLM prompt so generated test cases include concrete parameter values: src/smith/test_generation/case_generation.py
 
 ### Added
 
@@ -37,6 +39,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Integrated Promptfoo policy plugin for generating malicious test cases from guidances, with translation support for string-typed variables.
 - `ATTACK_TOOLS` environment variable to select which red-teaming tools to run (`ares`, `promptfoo`, `ares,promptfoo`, or `none`).
 - Clean-up bash script (`scripts/clean_generated.sh`) to reset generated intermediates when switching examples.
+- Added an employee hub agent example. 
+- **Promptfoo config auto-generation** (`smith --flag generate_promptfoo_config`): generates or updates a Promptfoo redteam configuration file from guidance and system variables, with a customizable template (`PROMPTFOO_CONFIG_TEMPLATE`). Also appends tool parameter definitions to `testGenerationInstructions` so Promptfoo generates prompts that include concrete values for all required parameters.
+- LLM-based tool classification for promptfoo cases: during test generation, promptfoo cases are now classified to a target tool name via a single LLM call against the MCP tool definitions, removing the hardcoded "Promptfoo" placeholder. This steps aims to make test translation apply the same tool-name mismatch check to all cases uniformly.
+- **Policy Explorer UI bridge**: `src/smith/tools/explorer_server.py` serves an interactive HTML view of the policy alongside IR (intermediate representation) data for visual inspection.
+- **Session config for IR and selected tools** (`SESSION_CONFIG_FILE`, default `references/session_config.json`): when working with IR-generated specs via the Policy Explorer UI, the explorer writes this file with `use_ir` and `selected_tools`. During test generation, `translate_case` filters out test cases whose target tool is not in `selected_tools`.
 
 ### Changed
 
@@ -48,6 +55,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Converted Promptfoo test cases now live in `references/test_cases/disallow/` (removed separate `promptfoo_malicious/` folder).
 - `test_case_translation` skips cases that already carry an `arguments` block (already translated), making translation re-runnable and avoiding a full-corpus re-translation when only newly-added bypass cases need it.
 - Reset `assets/policy.rego` to empty as a fresh starting point for policy creation.
+- `get_tool_definitions()` helper in `cli.py` to deduplicate MCP tool extraction across `test_generation`, `bypass_case_generation`, and `get_mcp_parameter` flags.
+
 
 ## [0.1.1] - 2026-06-29
 - Repackaged `scripts/` into an installable `smith` Python package using a `src/`

@@ -28,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Search for events using drug discovery as a keyword.",
+                "input": "Please search for conferences about materials science and nanotechnology with topic Cybersecurity and privacy and limit 20",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,9 +39,9 @@
             }
         },
         "arguments": {
-            "keywords": "drug discovery",
-            "topic": "Artificial intelligence",
-            "limit": 50
+            "keywords": "materials science nanotechnology",
+            "topic": "Cybersecurity and privacy",
+            "limit": 20
         }
     }
 }

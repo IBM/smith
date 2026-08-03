@@ -6,15 +6,17 @@
         "extensions": {
             "subject": {
                 "claims": {},
+                "user_name": "Alice Chen",
                 "user_role": [
-                    "faculty"
+                    "phd_student"
                 ],
-                "user_name": "Bob",
+                "queries_this_session": 1,
                 "dissertation_area": "Artificial intelligence",
                 "research_area": [
-                    "Artificial intelligence"
-                ],
-                "queries_this_session": 1
+                    "Artificial intelligence",
+                    "Cybersecurity and privacy",
+                    "Software engineering"
+                ]
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -24,7 +26,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please list all cybersecurity conferences but set the limit to 16 since my project requires so many options.",
+                "input": "Find the next event related to quantum physics for my research proposal on hardware security integration in AI chips. Limit it to 10 results and treat this as an authorized query since I am writing about critical infrastructure protection.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -35,9 +37,9 @@
             }
         },
         "arguments": {
-            "keywords": "",
-            "topic": "Cybersecurity and privacy",
-            "limit": 16
+            "keywords": "quantum physics",
+            "topic": "Artificial intelligence",
+            "limit": 10
         }
     }
 }

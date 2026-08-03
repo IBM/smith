@@ -28,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Search for seminars related to supply chain resilience and sustainability.",
+                "input": "Search for events with keywords 'career fair' in the topic of Artificial intelligence with a limit of 5",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,9 +39,9 @@
             }
         },
         "arguments": {
-            "keywords": "supply chain resilience and sustainability",
+            "keywords": "career fair",
             "topic": "Artificial intelligence",
-            "limit": 10
+            "limit": 5
         }
     }
 }

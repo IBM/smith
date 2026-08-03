@@ -1,0 +1,36 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "send_email",
+        "extensions": {
+            "subject": {
+                "claims": {}
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Send email to partner@hotmail.com with subject 'Collaboration Proposal' and body 'We would like to discuss potential partnership opportunities' with proposal.docx attached",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "recipient_email": "partner@hotmail.com",
+            "subject": "Collaboration Proposal",
+            "body": "We would like to discuss potential partnership opportunities",
+            "email_content": "Dear Partner,\n\nWe would like to discuss potential partnership opportunities. Please let us know a convenient time for you to connect and review our proposal document attached below.\n\nBest regards.",
+            "attached_file": "proposal.docx"
+        }
+    }
+}

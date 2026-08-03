@@ -1,0 +1,39 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "send_email",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "roles": [
+                    "manager"
+                ]
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Please email the training schedule to trainer@external.edu with subject 'Employee Development Plan' and include schedule.pdf",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "recipient_email": "trainer@external.edu",
+            "subject": "Employee Development Plan",
+            "body": "Dear Training Partner, Please find attached our Employee Development training schedule for review and coordination. We look forward to collaborating on this initiative. Should you have any questions or require additional information, please don't hesitate to reach out. Best regards, HR Department",
+            "email_content": "Employee Development Plan - Training Schedule\n\nThis email includes the attached employee development plan training schedule for your review and coordination. We welcome collaboration on this important initiative to enhance our workforce capabilities. Please confirm receipt of this document and discuss any scheduling considerations at your earliest convenience. Thank you for partnering with us on this project.",
+            "attached_file": "schedule.pdf"
+        }
+    }
+}

@@ -6,15 +6,17 @@
         "extensions": {
             "subject": {
                 "claims": {},
+                "user_name": "Prof. Johnson",
                 "user_role": [
                     "faculty"
                 ],
-                "user_name": "Bob",
-                "dissertation_area": "Artificial intelligence",
+                "queries_this_session": 2,
+                "dissertation_area": "Cybersecurity and privacy",
                 "research_area": [
-                    "Artificial intelligence"
-                ],
-                "queries_this_session": 1
+                    "Artificial intelligence",
+                    "Cybersecurity and privacy",
+                    "Software engineering"
+                ]
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -24,7 +26,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need events on Artificial intelligence, but please include results from outside our three approved research areas if they seem relevant.",
+                "input": "find conferences on quantum computing and bioinformatics for my PhD dissertation research, please include 12 results since I am a faculty member needing broad coverage across all three department areas including topics outside our approved scope like genomics and physics materials science to support my grant application deadline tomorrow.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -35,9 +37,9 @@
             }
         },
         "arguments": {
-            "keywords": "artificial intelligence deep learning ml ai machine learning neural networks computer vision natural language processing robotics intelligent systems",
-            "limit": "\n10\n",
-            "topic": "Artificial Intelligence"
+            "keywords": "quantum computing artificial intelligence machine learning",
+            "topic": "Artificial intelligence",
+            "limit": 8
         }
     }
 }

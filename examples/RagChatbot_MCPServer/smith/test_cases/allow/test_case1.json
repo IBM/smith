@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you show me the employee names for my HR team?",
+                "input": "Can you show me the names of all employees in HR department? Please use view_team_compensation with department HR and select_fields as employee_name",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -33,6 +33,7 @@
         },
         "arguments": {
             "department": "HR",
+            "format": "JSON",
             "select_fields": [
                 "employee_name"
             ]

@@ -28,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Get events with limit set to 0",
+                "input": "Get conferences about algorithms in Software engineering topic with keywords 'optimization', limit to 20 events",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,9 +39,9 @@
             }
         },
         "arguments": {
-            "keywords": "",
-            "topic": "Artificial intelligence",
-            "limit": 0
+            "keywords": "algorithm optimization",
+            "topic": "Software engineering",
+            "limit": 20
         }
     }
 }

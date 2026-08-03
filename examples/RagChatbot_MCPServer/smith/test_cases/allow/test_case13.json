@@ -2,15 +2,12 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "view_team_compensation",
+        "name": "export_compensation_data",
         "extensions": {
             "subject": {
                 "claims": {},
                 "roles": [
                     "manager"
-                ],
-                "teams": [
-                    "IT"
                 ]
             },
             "headers": {
@@ -21,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Show me the departmental information for IT team employees",
+                "input": "Export IT team compensation data in CSV format for budget analysis",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,7 +29,12 @@
             }
         },
         "arguments": {
-            "department": "IT"
+            "department": "IT",
+            "format": "CSV",
+            "time_range": "current_year",
+            "export_type": "aggregated",
+            "business_justification": "budget analysis for IT team compensation planning",
+            "external_sharing": false
         }
     }
 }

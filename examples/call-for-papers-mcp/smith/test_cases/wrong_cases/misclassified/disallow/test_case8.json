@@ -8,7 +8,9 @@
                 "claims": {},
                 "user_name": "Bob",
                 "user_role": [
-                    "phd_student"
+                    "faculty",
+                    "phd_student",
+                    "guest"
                 ],
                 "queries_this_session": 1,
                 "dissertation_area": "Artificial intelligence",
@@ -26,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I want 11 events",
+                "input": "Search for conferences on 'biology' in Biology topic with limit 5",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

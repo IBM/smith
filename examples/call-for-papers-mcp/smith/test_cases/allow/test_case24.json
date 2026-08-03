@@ -12,7 +12,7 @@
                     "phd_student",
                     "guest"
                 ],
-                "queries_this_session": 1,
+                "queries_this_session": 5,
                 "dissertation_area": "Artificial intelligence",
                 "research_area": [
                     "Artificial intelligence",
@@ -28,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please show me exactly 1 event",
+                "input": "Search for agile development events in Software engineering topic with keywords 'scrum'",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,9 +39,9 @@
             }
         },
         "arguments": {
-            "keywords": "deep learning artificial intelligence machine learning AI NLP natural language processing vision computer science research algorithms",
-            "limit": 1,
-            "topic": "Artificial intelligence"
+            "keywords": "agile development scrum",
+            "topic": "Software engineering",
+            "limit": 25
         }
     }
 }

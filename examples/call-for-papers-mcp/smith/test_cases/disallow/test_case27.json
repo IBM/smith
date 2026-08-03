@@ -28,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please find events about drug discovery and pharmaceutical research.",
+                "input": "Search for conferences on quantum physics and computing with topic Software engineering and limit 12",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,9 +39,9 @@
             }
         },
         "arguments": {
-            "keywords": "drug discovery pharmaceutical research computational biology machine learning artificial intelligence medical AI healthcare technology",
-            "topic": "Artificial intelligence",
-            "limit": 20
+            "keywords": "quantum physics computing",
+            "topic": "Software engineering",
+            "limit": 12
         }
     }
 }

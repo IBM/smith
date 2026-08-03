@@ -28,6 +28,7 @@ def translate_case(
     output_file_attack,
     output_file_attack_promptfoo,
     system_vars=None,
+    selected_tools=None,
 ):
     if system_vars is None:
         system_vars = {}
@@ -47,6 +48,14 @@ def translate_case(
         test_cases = merge_with_ares(test_cases, output_file_attack)
     if output_file_attack_promptfoo:
         test_cases = merge_with_promptfoo(test_cases, output_file_attack_promptfoo)
+
+    if selected_tools:
+        before_count = len(test_cases)
+        test_cases = [tc for tc in test_cases if tc.get("action") in selected_tools]
+        filtered = before_count - len(test_cases)
+        if filtered:
+            print(f"Filtered {filtered} test cases not targeting selected tools: {sorted(selected_tools)}")
+
     for test_case in test_cases:
         filled = _fill_template(test_case, test_case_template_file, system_vars)
         test_cases_translated[test_case["label"]].append(filled)

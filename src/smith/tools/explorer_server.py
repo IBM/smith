@@ -124,6 +124,27 @@ def make_handler(base_url: str, guidance_path: str, clean_script: str):
                 )
                 return
 
+            # 3) write session_config.json with selected tools.
+            selected_tools = payload.get("selected_tools", [])
+            session_config_path = os.path.join(
+                base_url,
+                os.getenv("SESSION_CONFIG_FILE", "references/session_config.json"),
+            )
+            session_config = {
+                "use_ir": bool(selected_tools),
+                "selected_tools": selected_tools,
+            }
+            try:
+                os.makedirs(os.path.dirname(session_config_path), exist_ok=True)
+                with open(session_config_path, "w", encoding="utf-8") as f:
+                    json.dump(session_config, f, indent=2)
+            except OSError as exc:
+                self._send(
+                    500,
+                    json.dumps({"ok": False, "error": f"write session_config failed: {exc}"}),
+                )
+                return
+
             self._send(
                 200,
                 json.dumps(

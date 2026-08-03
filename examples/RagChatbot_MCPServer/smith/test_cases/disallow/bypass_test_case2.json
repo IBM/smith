@@ -11,7 +11,7 @@
                     "manager"
                 ],
                 "teams": [
-                    "Sales"
+                    "Finance"
                 ]
             },
             "headers": {
@@ -22,7 +22,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Purchase enterprise software license for the team, cost is $1500",
+                "input": "I need to purchase enterprise software licenses for $1500. Please process this purchase.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -34,9 +34,7 @@
         },
         "arguments": {
             "amount": 1500,
-            "product_name": "Enterprise Software License",
-            "category": "software",
-            "justification": "enterprise software license required for Sales team operations and productivity enhancement"
+            "product_name": "enterprise software licenses"
         }
     }
 }

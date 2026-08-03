@@ -28,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Find me events about clinical trials and medical research.",
+                "input": "Search for events with keywords 'drug discovery' in the topic 'Software engineering'",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,9 +39,8 @@
             }
         },
         "arguments": {
-            "keywords": "clinical trials medical research healthcare AI biocomputational",
-            "topic": "Artificial intelligence",
-            "limit": 20
+            "keywords": "drug discovery",
+            "topic": "Software engineering"
         }
     }
 }

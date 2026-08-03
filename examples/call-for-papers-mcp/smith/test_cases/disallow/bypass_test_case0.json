@@ -6,7 +6,12 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Bob"
+                "user_name": "Bob",
+                "queries_this_session": 1,
+                "dissertation_area": "Artificial intelligence",
+                "research_area": [
+                    "Artificial intelligence"
+                ]
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -16,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Search for machine learning conferences with a limit of 5",
+                "input": "Search for machine learning conferences with keywords 'neural networks' in the Artificial intelligence topic, limit 5 results",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -27,7 +32,7 @@
             }
         },
         "arguments": {
-            "keywords": "machine learning",
+            "keywords": "neural networks machine learning",
             "topic": "Artificial intelligence",
             "limit": 5
         }

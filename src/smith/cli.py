@@ -138,6 +138,15 @@ class BlueAgent:
 VALID_ATTACK_TOOLS = {"ares", "promptfoo", "none"}
 
 
+def _load_session_config(base_url):
+    """Load session config from the path specified by SESSION_CONFIG_FILE."""
+    config_path = base_url + os.getenv("SESSION_CONFIG_FILE", "references/session_config.json")
+    if os.path.exists(config_path):
+        with open(config_path, "r") as f:
+            return json.load(f)
+    return {}
+
+
 def get_tool_definitions(transport, mcp_url, mcp_command, mcp_args, mcp_cwd):
     """Extract tool definitions from the MCP server."""
     tool_definitions = asyncio.run(
@@ -246,6 +255,7 @@ def generate_test(
         top_p,
         output_file_variables,
         output_file_cases,
+        tool_definitions,
         batch_processing,
         batch_size=case_generation_batch_size,
     )
@@ -276,6 +286,13 @@ def generate_test(
             output_file_attack_promptfoo,
         )
 
+    session_config = _load_session_config(base_url)
+    selected_tools = None
+    if session_config.get("use_ir", False):
+        tools_list = session_config.get("selected_tools", [])
+        if tools_list:
+            selected_tools = set(tools_list)
+
     translate_case(
         output_file_cases,
         test_case_template_file,
@@ -283,6 +300,7 @@ def generate_test(
         output_file_attack if "ares" in attack_tools else None,
         output_file_attack_promptfoo if "promptfoo" in attack_tools else None,
         system_variables,
+        selected_tools,
     )
     return ""
 
@@ -516,6 +534,9 @@ def main():
         promptfoo_template_path = base_url + os.getenv(
             "PROMPTFOO_CONFIG_TEMPLATE", "references/promptfoo_config_template.yaml"
         )
+        tool_definitions = get_tool_definitions(
+            transport, mcp_url, mcp_command, mcp_args, mcp_cwd
+        )
         generate_promptfoo_config(
             api_key,
             openai_base_url,
@@ -527,6 +548,7 @@ def main():
             agent_url,
             promptfoo_config_path,
             promptfoo_template_path,
+            tool_definitions,
         )
 
     if args.flag == "test_case_translation":

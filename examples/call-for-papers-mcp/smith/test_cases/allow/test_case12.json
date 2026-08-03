@@ -8,9 +8,7 @@
                 "claims": {},
                 "user_name": "Bob",
                 "user_role": [
-                    "faculty",
-                    "phd_student",
-                    "guest"
+                    "faculty"
                 ],
                 "queries_this_session": 1,
                 "dissertation_area": "Artificial intelligence",
@@ -28,7 +26,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please get events for Software engineering",
+                "input": "Get conferences about 'machine learning' in Artificial intelligence topic with limit 12",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,8 +37,9 @@
             }
         },
         "arguments": {
-            "keywords": "software engineering development methodologies tools testing design patterns",
-            "topic": "Software engineering"
+            "keywords": "machine learning",
+            "topic": "Artificial intelligence",
+            "limit": 12
         }
     }
 }

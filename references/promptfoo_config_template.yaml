@@ -50,7 +50,7 @@ redteam:
     - id: basic
   language:
     - English
-  numTests: 5
+  numTests: 3
   maxConcurrency: 5
 defaultTest:
   options:
