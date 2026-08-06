@@ -1,12 +1,12 @@
-1. Bob as an authorized HR user can access compensation records. 
-2. Alice as an engineer without the required HR authorization must be denied access.
-3. Bob when authorized to view SSNs may receive the full compensation record. 
-4. Eve who does not have SSN access may receive compensation information but her SSN must be redacted before the request reaches the tool.
-5. Alice may access repositories within her authorized scope. Requests for repositories outside her permitted scope must be denied.
-6. Bob may be denied access to a repository based on team membership before the downstream repository policy is evaluated.
-7. When Bob attempts to send an email containing an SSN, the email must be blocked and the attempt must be recorded in the audit log.
-8. If Bob accesses sensitive compensation information and subsequently attempts to email it, the later email must be blocked even if the email body itself does not contain the sensitive data.
-9. If Eve taints a session and Bob later reuses the same session identifier Bob's security state must remain isolated from Eve's. Eve's session taint must not automatically apply to Bob.
-10.Bob may adjust compensation by $10,000 or less without additional approval when otherwise authorized.
-11.Bob may not immediately apply a compensation adjustment greater than $10,000. The operation must be suspended until an authorized human such as Alice approves it.
-12. Unauthorized requests from Alice, Bob, or Eve must be denied before the protected operation executes. 
+1. Bob (HR) can access compensation records.
+2. Alice (Engineer) cannot access compensation records.
+3. Bob can view SSNs only with view_ssn permission.
+4  Eve cannot view SSNs so redact SSNs before tool execution.
+5. Alice can access only authorized repositories.
+6. Bob is denied repository access when team membership is unauthorized.
+7. Bob cannot email SSNs while logging the denied attempt.
+8. Bob cannot email sensitive data accessed earlier in the same session, even if the email is clean.
+9. Eve's session taint does not apply to Bob when the session ID is reused.
+10. Bob can adjust compensation by less than equal to $10,000 without approval.
+11. Bob requires human approval for compensation adjustments > $10,000.
+12. Unauthorized actions by Alice, Bob, or Eve must be denied before any tool execution.
