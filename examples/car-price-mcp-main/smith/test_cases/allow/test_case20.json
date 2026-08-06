@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "What automotive brands are represented in your database?",
+                "input": "Please fetch all car brand information for my research",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

@@ -2,23 +2,17 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "get_emergency_contact",
+        "name": "get_visa",
         "extensions": {
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
                 "user_id": 1,
                 "department": [
-                    "Corporate Leadership",
-                    "Engineering",
-                    "Product",
-                    "HR",
-                    "Finance"
+                    "HR"
                 ],
                 "organization": [
-                    "IBM Corporation",
-                    "Red Hat",
-                    "Kyndryl"
+                    "IBM Corporation"
                 ]
             },
             "headers": {
@@ -29,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I'd like to view my emergency contact details for my account ID 1",
+                "input": "I want to check my visa information for user ID 1",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

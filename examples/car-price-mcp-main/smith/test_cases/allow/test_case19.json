@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you provide me with the available car brands?",
+                "input": "Can you provide me with the complete list of available car manufacturers?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

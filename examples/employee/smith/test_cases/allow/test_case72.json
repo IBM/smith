@@ -2,16 +2,22 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "update_passport",
+        "name": "list_holidays",
         "extensions": {
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
                 "user_id": 1,
                 "department": [
-                    "HR"
+                    "Corporate Leadership",
+                    "Engineering",
+                    "Product",
+                    "HR",
+                    "Finance"
                 ],
                 "organization": [
+                    "IBM Corporation",
+                    "Red Hat",
                     "Kyndryl"
                 ]
             },
@@ -23,7 +29,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please update my passport to expire on February 14, 2026. The current date is July 10, 2025.",
+                "input": "Show me the holidays for country code US",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -34,8 +40,7 @@
             }
         },
         "arguments": {
-            "user_id": 1,
-            "expiry_date": "2026-02-14"
+            "country_code": "US"
         }
     }
 }

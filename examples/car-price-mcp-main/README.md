@@ -52,7 +52,7 @@ Default configuration (in `.env`):
 |------|-------------|
 | `guidance.txt` | Natural language policy rules — defines role-based access (fleet_manager, consumer, journalist, analyst, guest), vehicle type restrictions, and brand restrictions. Source of truth for policy generation. |
 | `system_vars.json` | System variables available in the agent session (user_role, user_name). Maps to `input.extensions.subject.*` in the OPA policy. |
-| `promptfooconfig.yaml` | Promptfoo configuration for red-team test generation against this agent. |
+| `promptfooconfig.yaml` | Promptfoo configuration for red-team test generation against this agent. Can be auto-generated with `smith --flag generate_promptfoo_config` (LLM + deterministic — review output before use). |
 | `redteam.yaml` | Promptfoo red-team output file. |
 | `test_cases/` | Generated test cases split into `allow/` and `disallow/` folders for policy testing. Some cases may be misclassified — use cross-validation to identify and fix them. |
 | `smith_outputs/` | Intermediate results generated when running Smith (see below). |
@@ -98,6 +98,7 @@ To generate test cases, there are three options:
 2. you can generate test cases via CLI when smith is generating the policy:
 
 ```bash
+smith --flag generate_promptfoo_config # optional: auto-generate promptfoo config (LLM + deterministic — review before use)
 smith --flag test_generation          # guidance-targeted cases
 smith --flag bypass_case_generation    # optional: policy-bypass cases (requires an existing, non-empty policy)
 smith --flag test_case_evaluation      # optional, does not affect results

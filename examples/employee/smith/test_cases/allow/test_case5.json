@@ -2,16 +2,22 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "get_employee",
+        "name": "update_employee",
         "extensions": {
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
                 "user_id": 1,
                 "department": [
+                    "Corporate Leadership",
+                    "Engineering",
+                    "Product",
+                    "HR",
                     "Finance"
                 ],
                 "organization": [
+                    "IBM Corporation",
+                    "Red Hat",
                     "Kyndryl"
                 ]
             },
@@ -23,7 +29,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I want to see my home address information",
+                "input": "Update my personal details for user ID 1 with first name Robert and last name Johnson",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -34,7 +40,9 @@
             }
         },
         "arguments": {
-            "user_id": 1
+            "user_id": 1,
+            "first_name": "Robert",
+            "last_name": "Johnson"
         }
     }
 }

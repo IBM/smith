@@ -9,46 +9,58 @@
         "deny[\"Unknown role: access denied\"]"
       ],
       "field": "input.extensions.subject.user_role",
-      "reason": "Policy allows requests when user_role field is completely omitted from subject",
+      "reason": "Policy allows requests when user_role field is completely omitted from the subject",
       "exploit_strategy": "Send request with input.extensions.subject containing no user_role field at all",
       "severity": "high"
     },
     {
       "category": "omitted_field",
       "direction": "guidance_deny_policy_allow",
-      "guidance_rule": "vehicle_type is matched exactly and case-sensitively against these lowercase values. Any other value — including different casing such as \"Caminhoes\" — is denied for every role.",
+      "guidance_rule": "get_vehicles_by_type vehicle_type restrictions based on role",
       "rules_involved": [
         "deny[\"vehicle_type must be a recognized value\"]"
       ],
       "field": "input.arguments.vehicle_type",
-      "reason": "Policy uses object.get with empty string default, but get_vehicles_by_type has default \"carros\" which bypasses validation when field omitted",
-      "exploit_strategy": "Call get_vehicles_by_type without vehicle_type argument, relying on tool's default value",
+      "reason": "Policy uses object.get with empty string default, but tool schema shows 'carros' default - omitting the field bypasses validation",
+      "exploit_strategy": "Call get_vehicles_by_type with no vehicle_type argument in the request body",
       "severity": "medium"
     },
     {
-      "category": "keyword_evasion",
+      "category": "type_confusion",
       "direction": "guidance_deny_policy_allow",
-      "guidance_rule": "vehicle_type is matched exactly and case-sensitively against these lowercase values. Any other value — including different casing such as \"Caminhoes\" — is denied for every role.",
+      "guidance_rule": "vehicle_type is matched exactly and case-sensitively against these lowercase values",
       "rules_involved": [
         "deny[\"vehicle_type must be a recognized value\"]"
       ],
       "field": "input.arguments.vehicle_type",
-      "reason": "Policy accepts mixed case values like \"Carros\" or \"TRUCKS\" which guidance explicitly forbids",
-      "exploit_strategy": "Use vehicle_type value \"Carros\" or \"TRUCKS\" to bypass case-sensitive validation",
+      "reason": "Policy checks string membership without type assertion - non-string values bypass validation",
+      "exploit_strategy": "Send vehicle_type as integer 0 or boolean false to bypass string set membership check",
       "severity": "medium"
     },
     {
-      "category": "keyword_evasion",
+      "category": "type_confusion",
       "direction": "guidance_deny_policy_allow",
-      "guidance_rule": "brand_name is compared to the allow/block lists by exact, case-sensitive string equality. Partial or differently-cased names (e.g. \"mercedes\", \"benz\", \"volvo\") are not evaluated against the lists and are denied.",
+      "guidance_rule": "brand_name restrictions for fleet_manager and journalist roles",
       "rules_involved": [
         "deny[\"fleet_manager may only search truck-relevant brands\"]",
         "deny[\"journalist may only search domestic-market brands\"]"
       ],
       "field": "input.arguments.brand_name",
-      "reason": "Policy allows case variations like \"mercedes-benz\" or \"VOLVO\" which should be denied per guidance",
-      "exploit_strategy": "Use lowercase brand names like \"mercedes-benz\" or \"volvo\" to bypass fleet_manager restrictions",
+      "reason": "Policy checks string membership without type assertion - non-string values bypass brand restrictions",
+      "exploit_strategy": "Send brand_name as integer or boolean to bypass string set membership checks for restricted roles",
       "severity": "medium"
+    },
+    {
+      "category": "type_confusion",
+      "direction": "guidance_deny_policy_allow",
+      "guidance_rule": "A search_car_price call with an empty or whitespace-only brand_name must be denied for all roles",
+      "rules_involved": [
+        "deny[\"brand_name must not be empty or whitespace\"]"
+      ],
+      "field": "input.arguments.brand_name",
+      "reason": "trim_space function expects string input - non-string values bypass empty/whitespace validation",
+      "exploit_strategy": "Send brand_name as integer 0 or boolean false to bypass trim_space check",
+      "severity": "low"
     }
   ]
 }

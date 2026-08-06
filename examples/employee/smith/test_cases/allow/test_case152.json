@@ -1,0 +1,48 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "update_employee",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "user_name": "Bob",
+                "user_id": 1,
+                "department": [
+                    "Corporate Leadership",
+                    "Engineering",
+                    "Product",
+                    "HR",
+                    "Finance"
+                ],
+                "organization": [
+                    "IBM Corporation",
+                    "Red Hat",
+                    "Kyndryl"
+                ]
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "I need to modify employee record for user_id 456 with new salary 75000 and title Senior Developer. Yes, I approve this update after seeing the action summary.",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "user_id": 456,
+            "salary": 75000,
+            "title": "Senior Developer"
+        }
+    }
+}

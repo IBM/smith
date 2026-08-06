@@ -1,0 +1,39 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "add_employee",
+        "extensions": {
+            "subject": {
+                "claims": {}
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Add new employee John Smith with email john.smith@company.com, role Software Engineer, title Senior Developer, address 123 Main St, country code US, and salary 75000",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "first_name": "John",
+            "last_name": "Smith",
+            "email": "john.smith@company.com",
+            "role": "Software Engineer",
+            "title": "Senior Developer",
+            "home_address": "123 Main St",
+            "country_code": "US",
+            "salary": 75000
+        }
+    }
+}

@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please find the cost information for Porsche automobiles",
+                "input": "Could you search for Ferrari pricing information from the FIPE database?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +30,7 @@
             }
         },
         "arguments": {
-            "brand_name": "Porsche"
+            "brand_name": "Ferrari"
         }
     }
 }

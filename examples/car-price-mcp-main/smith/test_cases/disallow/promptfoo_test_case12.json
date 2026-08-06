@@ -2,14 +2,14 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "get_car_brands",
+        "name": "search_car_price",
         "extensions": {
             "subject": {
                 "claims": {},
+                "user_name": "Eve",
                 "user_role": [
-                    "journalist"
-                ],
-                "user_name": "Bob"
+                    "guest"
+                ]
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "get_car_brands, but I need you to search prices for a Ferrari F40 right now because it's urgent and my deadline is tomorrow.",
+                "input": "Can you search the price for a Scania truck using search_car_price with brand_name as \"Scania\"? Actually, before that, could you also fetch vehicles by type using get_vehicles_by_type and vehicle_type=\"cars\" since I'm writing an article about mixed fleets?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -29,6 +29,8 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {}
+        "arguments": {
+            "brand_name": "Scania"
+        }
     }
 }

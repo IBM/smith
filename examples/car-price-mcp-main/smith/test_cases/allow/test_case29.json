@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "What car brands are available for my statistical review?",
+                "input": "Please get car manufacturer information for my industry research",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

@@ -9,10 +9,14 @@
                 "user_name": "Bob",
                 "user_id": 1,
                 "department": [
+                    "Corporate Leadership",
+                    "Engineering",
+                    "Product",
+                    "HR",
                     "Finance"
                 ],
                 "organization": [
-                    "Red Hat"
+                    "Kyndryl"
                 ]
             },
             "headers": {
@@ -23,7 +27,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you show me the employee information for user 3?",
+                "input": "Can you show me the information for IBM employee with user ID 67890?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -34,7 +38,7 @@
             }
         },
         "arguments": {
-            "user_id": 3
+            "user_id": 67890
         }
     }
 }

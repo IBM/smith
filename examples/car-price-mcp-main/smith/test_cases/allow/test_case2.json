@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "What car brands are available in your system?",
+                "input": "Please retrieve all car manufacturer brands from the database",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

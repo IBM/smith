@@ -10,6 +10,12 @@ args := object.get(input, "arguments", {})
 
 # === Constants ===
 
+# Today's date (YYYY-MM-DD) used for expiry-date checks
+today := "2026-08-04"
+
+# Six months from today (YYYY-MM-DD) — expiry must be strictly after this
+six_months_from_today := "2027-02-04"
+
 # Corporate email domains per organization
 org_domains := {
 	"IBM Corporation": "@ibm.com",
@@ -19,7 +25,6 @@ org_domains := {
 
 # Tools restricted to HR only
 hr_only_tools := {
-	"add_employee",
 	"add_department",
 	"update_department",
 	"set_leave_allotment",
@@ -71,6 +76,12 @@ valid_envelope if {
 	input.name != ""
 }
 
+# === Role Helpers ===
+
+# True when the subject's department is HR (handles both string and array forms)
+is_hr if subject.department == "HR"
+is_hr if "HR" in subject.department
+
 # === Any-deny Aggregator ===
 any_deny if some _ in deny
 
@@ -83,33 +94,16 @@ deny["Invalid envelope: kind must be tool_call and action must be execute"] if {
 
 # === HR-only Tools ===
 
-# Only HR may perform HR-restricted operations
+# Only HR may add a new employee
+deny["Only HR may add a new employee"] if {
+	input.name == "add_employee"
+	not is_hr
+}
+
+# Only HR may add a department
 deny["Only HR may add or update a department"] if {
 	input.name in hr_only_tools
-	not "HR" in subject.department
-}
-
-# === Employee Data Access ===
-
-# Non-HR employees may only view their own employee record
-deny["Only HR or the employee themselves may view an employee record"] if {
-	input.name == "get_employee"
-	args.user_id != subject.user_id
-	not "HR" in subject.department
-}
-
-# Non-HR employees may only view their own passport record
-deny["Only HR or the employee themselves may view a passport record"] if {
-	input.name == "get_passport"
-	args.user_id != subject.user_id
-	not "HR" in subject.department
-}
-
-# Non-HR employees may only view their own emergency contact record
-deny["Only HR or the employee themselves may view an emergency contact record"] if {
-	input.name == "get_emergency_contact"
-	args.user_id != subject.user_id
-	not "HR" in subject.department
+	not is_hr
 }
 
 # === Data Integrity: Email Domain ===
@@ -154,45 +148,77 @@ deny["Salary must be a positive amount greater than zero"] if {
 
 # === Personal-Record: Passport ===
 
+# set_passport: expiry_date must be more than 6 months from today
+deny["Passport expiry date must be more than six months from today"] if {
+	input.name == "set_passport"
+	expiry := args.expiry_date
+	expiry != null
+	expiry <= six_months_from_today
+}
+
+# update_passport: expiry_date must be more than 6 months from today
+deny["Passport expiry date must be more than six months from today"] if {
+	input.name == "update_passport"
+	expiry := args.expiry_date
+	expiry != null
+	expiry <= six_months_from_today
+}
+
 # set_passport: issue_date must be strictly before expiry_date when both provided
 deny["Passport issue date must be earlier than expiry date"] if {
 	input.name == "set_passport"
-	args.issue_date != null
-	args.expiry_date != null
 	issue := args.issue_date
 	expiry := args.expiry_date
+	issue != null
+	expiry != null
 	issue >= expiry
 }
 
 # update_passport: issue_date must be strictly before expiry_date when both provided
 deny["Passport issue date must be earlier than expiry date"] if {
 	input.name == "update_passport"
-	args.issue_date != null
-	args.expiry_date != null
 	issue := args.issue_date
 	expiry := args.expiry_date
+	issue != null
+	expiry != null
 	issue >= expiry
 }
 
 # === Personal-Record: Visa ===
 
+# set_visa: expiry_date must be more than 6 months from today
+deny["Visa expiry date must be more than six months from today"] if {
+	input.name == "set_visa"
+	expiry := args.expiry_date
+	expiry != null
+	expiry <= six_months_from_today
+}
+
+# update_visa: expiry_date must be more than 6 months from today
+deny["Visa expiry date must be more than six months from today"] if {
+	input.name == "update_visa"
+	expiry := args.expiry_date
+	expiry != null
+	expiry <= six_months_from_today
+}
+
 # set_visa: issue_date must be strictly before expiry_date when both provided
 deny["Visa issue date must be earlier than expiry date"] if {
 	input.name == "set_visa"
-	args.issue_date != null
-	args.expiry_date != null
 	issue := args.issue_date
 	expiry := args.expiry_date
+	issue != null
+	expiry != null
 	issue >= expiry
 }
 
 # update_visa: issue_date must be strictly before expiry_date when both provided
 deny["Visa issue date must be earlier than expiry date"] if {
 	input.name == "update_visa"
-	args.issue_date != null
-	args.expiry_date != null
 	issue := args.issue_date
 	expiry := args.expiry_date
+	issue != null
+	expiry != null
 	issue >= expiry
 }
 
@@ -209,10 +235,10 @@ deny["An employee may only create a time-off request for themselves"] if {
 # A single time-off request may not span more than 90 consecutive calendar days
 deny["A single time-off request may not span more than 90 consecutive calendar days"] if {
 	input.name == "create_time_off_request"
-	args.start_date != null
-	args.end_date != null
 	start := args.start_date
 	end := args.end_date
+	start != null
+	end != null
 	span_days(start, end) > 90
 }
 
@@ -221,14 +247,58 @@ deny["A single time-off request may not span more than 90 consecutive calendar d
 # Non-HR employees may not set status to Approved or Denied (only HR or managers can approve/deny)
 deny["Only HR may set a time-off request status to Approved or Denied"] if {
 	input.name == "update_time_off_status"
-	not "HR" in subject.department
+	not is_hr
 	args.status == "Approved"
 }
 
 deny["Only HR may set a time-off request status to Approved or Denied"] if {
 	input.name == "update_time_off_status"
-	not "HR" in subject.department
+	not is_hr
 	args.status == "Denied"
+}
+
+# Only valid statuses are Approved, Denied, Pending
+deny["Invalid time-off request status value"] if {
+	input.name == "update_time_off_status"
+	not args.status in {"Approved", "Denied", "Pending"}
+}
+
+# === Own-Data Enforcement ===
+
+# Employees may not update another employee's record unless HR
+deny["Only HR may update another employee's record"] if {
+	input.name == "update_employee"
+	args.user_id != subject.user_id
+	not is_hr
+}
+
+# Employees may not update another employee's visa unless HR
+deny["Only HR may update another employee's visa"] if {
+	input.name in {"update_visa", "set_visa"}
+	args.user_id != subject.user_id
+	not is_hr
+}
+
+# Employees may not update another employee's passport unless HR
+deny["Only HR may update another employee's passport"] if {
+	input.name in {"update_passport", "set_passport"}
+	args.user_id != subject.user_id
+	not is_hr
+}
+
+# Employees may not update another employee's emergency contact unless HR
+deny["Only HR may update another employee's emergency contact"] if {
+	input.name in {"update_emergency_contact", "set_emergency_contact"}
+	args.user_id != subject.user_id
+	not is_hr
+}
+
+# === Address Country Change ===
+
+# Employees may not change their home address to a different country
+deny["Changing home address to a different country is not allowed"] if {
+	input.name == "update_employee"
+	args.country_code != null
 }
 
 # === Helper Functions ===

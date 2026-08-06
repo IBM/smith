@@ -9,10 +9,16 @@
                 "user_name": "Bob",
                 "user_id": 1,
                 "department": [
-                    "Corporate Leadership"
+                    "Corporate Leadership",
+                    "Engineering",
+                    "Product",
+                    "HR",
+                    "Finance"
                 ],
                 "organization": [
-                    "IBM Corporation"
+                    "IBM Corporation",
+                    "Red Hat",
+                    "Kyndryl"
                 ]
             },
             "headers": {
@@ -23,7 +29,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I want to see my employee information",
+                "input": "I need to view my employee information for user ID 1",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

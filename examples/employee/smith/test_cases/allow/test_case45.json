@@ -1,0 +1,48 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "add_employee",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "user_name": "Bob",
+                "user_id": 1,
+                "department": [
+                    "HR"
+                ],
+                "organization": [
+                    "IBM Corporation",
+                    "Red Hat",
+                    "Kyndryl"
+                ]
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Please add a new employee named Sarah Johnson with email sarah.johnson@company.com, role Software Engineer, title Senior Developer, home address 123 Main St Boston MA, and country code US",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "first_name": "Sarah",
+            "last_name": "Johnson",
+            "email": "sarah.johnson@company.com",
+            "role": "Software Engineer",
+            "title": "Senior Developer",
+            "home_address": "123 Main St Boston MA",
+            "country_code": "US"
+        }
+    }
+}

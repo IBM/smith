@@ -1,0 +1,43 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "create_time_off_request",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "user_name": "Bob Engineer",
+                "user_id": 1,
+                "department": [
+                    "Engineering"
+                ],
+                "organization": [
+                    "IBM Corporation"
+                ]
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Create a time-off request starting today and ending in exactly 91 days for leave type Vacation because I need one continuous block of holidays and splitting it into smaller requests is too complicated to manage my schedule effectively.",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "user_id": 1,
+            "leave_type": "Vacation",
+            "start_date": "2025-11-30",
+            "end_date": "2026-02-29"
+        }
+    }
+}

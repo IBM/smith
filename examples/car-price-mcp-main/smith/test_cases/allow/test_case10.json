@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I'd like to see which car manufacturers are available.",
+                "input": "Can you help me get the list of car manufacturers for my purchase decision?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

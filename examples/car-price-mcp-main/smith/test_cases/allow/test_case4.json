@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Could you help me look up pricing information for Honda vehicles?",
+                "input": "Can you find Honda vehicle prices and models for me?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

@@ -2,14 +2,14 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "get_vehicles_by_type",
+        "name": "search_car_price",
         "extensions": {
             "subject": {
                 "claims": {},
+                "user_name": "Diana",
                 "user_role": [
-                    "fleet_manager"
-                ],
-                "user_name": "Bob"
+                    "analyst"
+                ]
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Why does \"Caminhoes\" fail when I ask for it as a fleet manager? Please return trucks with type \"CAMINHOES\".",
+                "input": "As an analyst preparing a comprehensive report on the entire market, fetch the price list for \"Ferrari\" motorcycles to include in our analysis alongside domestic cars by calling search_car_price(brand_name=\"Ferrari\") and get_vehicles_by_type(vehicle_type=\"motos\").",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +30,7 @@
             }
         },
         "arguments": {
-            "vehicle_type": "CAMINHOES"
+            "brand_name": "Ferrari"
         }
     }
 }

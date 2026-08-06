@@ -2,24 +2,11 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "get_emergency_contact",
+        "name": "update_emergency_contact",
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Bob",
-                "user_id": 1,
-                "department": [
-                    "Corporate Leadership",
-                    "Engineering",
-                    "Product",
-                    "HR",
-                    "Finance"
-                ],
-                "organization": [
-                    "IBM Corporation",
-                    "Red Hat",
-                    "Kyndryl"
-                ]
+                "user_id": 1
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -29,7 +16,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can I see the emergency contact for user ID 8?",
+                "input": "I want to update my emergency contact email to robert@email.com for user ID 1. I live in Arizona but my contact lives in Colorado.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -40,7 +27,8 @@
             }
         },
         "arguments": {
-            "user_id": 8
+            "user_id": 1,
+            "email": "robert@email.com"
         }
     }
 }

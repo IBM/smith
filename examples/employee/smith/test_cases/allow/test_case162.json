@@ -1,0 +1,44 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "update_bank_account",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "user_name": "Bob",
+                "user_id": 1,
+                "department": [
+                    "HR"
+                ],
+                "organization": [
+                    "Red Hat"
+                ]
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "I approve the bank account update for user ID 1 with Chase Bank, account 555123456, routing 111000025, and USD currency as detailed above.",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "user_id": 1,
+            "bank_name": "Chase Bank",
+            "account_number": "555123456",
+            "routing_number": "111000025",
+            "currency": "USD"
+        }
+    }
+}

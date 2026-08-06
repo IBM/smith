@@ -2,16 +2,22 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "list_time_off_requests",
+        "name": "get_leave_allotments",
         "extensions": {
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
                 "user_id": 1,
                 "department": [
-                    "Product"
+                    "Corporate Leadership",
+                    "Engineering",
+                    "Product",
+                    "HR",
+                    "Finance"
                 ],
                 "organization": [
+                    "IBM Corporation",
+                    "Red Hat",
                     "Kyndryl"
                 ]
             },
@@ -23,7 +29,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please display time-off history for my team member with user ID 3",
+                "input": "Please retrieve leave information for employee user ID 22 who reports to me",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -34,7 +40,7 @@
             }
         },
         "arguments": {
-            "user_id": 3
+            "user_id": 22
         }
     }
 }

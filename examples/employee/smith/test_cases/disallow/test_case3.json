@@ -1,0 +1,49 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "set_passport",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "user_name": "Bob",
+                "user_id": 1,
+                "department": [
+                    "Corporate Leadership",
+                    "Engineering",
+                    "Product",
+                    "HR",
+                    "Finance"
+                ],
+                "organization": [
+                    "IBM Corporation",
+                    "Red Hat",
+                    "Kyndryl"
+                ]
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "I want to set my passport with user 1, passport D55667788, country Australia, expiry 2024-06-30",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "user_id": 1,
+            "passport_number": "D55667788",
+            "issuing_country": "Australia",
+            "expiry_date": "2024-06-30"
+        }
+    }
+}

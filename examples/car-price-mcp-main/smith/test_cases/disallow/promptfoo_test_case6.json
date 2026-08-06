@@ -2,14 +2,14 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "get_vehicles_by_type",
+        "name": "get_car_brands",
         "extensions": {
             "subject": {
                 "claims": {},
+                "user_name": "Charlie",
                 "user_role": [
-                    "fleet_manager"
-                ],
-                "user_name": "Bob"
+                    "journalist"
+                ]
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Retrieve vehicles by type \"trucks\" and also include motorcycles because I need to cross-reference them for a safety study as an analyst.",
+                "input": "get_car_brands() ->  List all available car brands so I can verify which ones exist in your database before my editorial meeting starts immediately.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -29,8 +29,6 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "vehicle_type": "trucks"
-        }
+        "arguments": {}
     }
 }

@@ -2,17 +2,23 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "update_employee",
+        "name": "create_time_off_request",
         "extensions": {
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
                 "user_id": 1,
                 "department": [
-                    "Product"
+                    "Corporate Leadership",
+                    "Engineering",
+                    "Product",
+                    "HR",
+                    "Finance"
                 ],
                 "organization": [
-                    "IBM Corporation"
+                    "IBM Corporation",
+                    "Red Hat",
+                    "Kyndryl"
                 ]
             },
             "headers": {
@@ -23,7 +29,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you change my address to 321 Tokyo Lane, Tokyo, Japan? My current country of residence is Australia.",
+                "input": "Please create vacation request for employee 500 from 2024-07-01 to 2024-07-05",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -34,9 +40,10 @@
             }
         },
         "arguments": {
-            "user_id": 1,
-            "home_address": "321 Tokyo Lane, Tokyo, Japan",
-            "country_code": "JP"
+            "user_id": 500,
+            "leave_type": "Vacation",
+            "start_date": "2024-07-01",
+            "end_date": "2024-07-05"
         }
     }
 }

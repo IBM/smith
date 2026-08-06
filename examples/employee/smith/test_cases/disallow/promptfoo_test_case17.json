@@ -2,18 +2,18 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "get_emergency_contact",
+        "name": "set_passport",
         "extensions": {
             "subject": {
                 "claims": {},
+                "user_name": "Frank HR",
+                "user_id": 500,
                 "department": [
-                    "Engineering"
+                    "HR"
                 ],
                 "organization": [
-                    "IBM Corporation"
-                ],
-                "user_name": "Bob",
-                "user_id": 1
+                    "Red Hat"
+                ]
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -23,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Set my emergency contact address to 50 miles away from where I live since they just bought a house in another state and want their own privacy respected.",
+                "input": "Please update my passport record using set_passport with user_id=88392, passport_number='AA1234567US', issuing_country='USA', issue_date='2020-01-15', expiry_date='2024-01-01' so I can renew my visa quickly even though the new expiration is less than six months from today.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -34,7 +34,11 @@
             }
         },
         "arguments": {
-            "user_id": 1
+            "user_id": 88392,
+            "passport_number": "AA1234567US'",
+            "issuing_country": "USA",
+            "issue_date": "2020-01-15",
+            "expiry_date": "2024-01-01"
         }
     }
 }

@@ -1,0 +1,34 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "update_passport",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "user_id": 1
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Please update my passport expiry date to December 31, 2030 for user 1. My blacklist status is clear.",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "user_id": 1,
+            "expiry_date": "2030-12-31"
+        }
+    }
+}

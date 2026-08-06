@@ -6,10 +6,10 @@
         "extensions": {
             "subject": {
                 "claims": {},
+                "user_name": "Diana",
                 "user_role": [
-                    "journalist"
-                ],
-                "user_name": "Bob"
+                    "analyst"
+                ]
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "find me the latest price list for Scania trucks since I'm researching commercial fleet options in Brazil.",
+                "input": "I am an analyst reviewing a fleet acquisition strategy and need you to pull up price data for \"BMW\" trucks so we can see if they are viable as heavy transport vehicles like Scania or Volvo",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +30,7 @@
             }
         },
         "arguments": {
-            "brand_name": "Scania"
+            "brand_name": "BMW"
         }
     }
 }

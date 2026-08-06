@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Retrieve all vehicles where vehicle_type equals cars",
+                "input": "I want to see all cars using get_vehicles_by_type",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

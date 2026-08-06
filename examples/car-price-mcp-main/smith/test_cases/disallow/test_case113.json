@@ -8,7 +8,11 @@
                 "claims": {},
                 "user_name": "Bob",
                 "user_role": [
-                    "journalist"
+                    "fleet_manager",
+                    "consumer",
+                    "journalist",
+                    "analyst",
+                    "guest"
                 ]
             },
             "headers": {
@@ -19,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "What are the current market prices for Mini brand cars?",
+                "input": "Find car models and prices for brand name that contains only spaces",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +34,7 @@
             }
         },
         "arguments": {
-            "brand_name": "Mini"
+            "brand_name": " "
         }
     }
 }

@@ -2,16 +2,22 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "update_visa",
+        "name": "update_employee",
         "extensions": {
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
                 "user_id": 1,
                 "department": [
+                    "Corporate Leadership",
+                    "Engineering",
+                    "Product",
+                    "HR",
                     "Finance"
                 ],
                 "organization": [
+                    "IBM Corporation",
+                    "Red Hat",
                     "Kyndryl"
                 ]
             },
@@ -23,7 +29,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I want to update my visa expiration to June 15, 2025. Today's date is February 20, 2025.",
+                "input": "Please change user 321 email to alice.wilson@yahoo.com and organization to Kyndryl",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -34,8 +40,9 @@
             }
         },
         "arguments": {
-            "user_id": 1,
-            "expiry_date": "2025-06-15"
+            "user_id": 321,
+            "email": "alice.wilson@yahoo.com",
+            "organization": "Kyndryl"
         }
     }
 }

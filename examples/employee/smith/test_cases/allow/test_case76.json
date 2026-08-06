@@ -2,17 +2,23 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "update_visa",
+        "name": "set_passport",
         "extensions": {
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
                 "user_id": 1,
                 "department": [
-                    "HR"
+                    "Corporate Leadership",
+                    "Engineering",
+                    "Product",
+                    "HR",
+                    "Finance"
                 ],
                 "organization": [
-                    "Red Hat"
+                    "IBM Corporation",
+                    "Red Hat",
+                    "Kyndryl"
                 ]
             },
             "headers": {
@@ -23,7 +29,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please change my visa expiry to August 20, 2025. The update is being made on January 10, 2025.",
+                "input": "Please create passport record for user 1 with passport number B98765432, country Canada, and expiration 2026-01-20",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -35,7 +41,9 @@
         },
         "arguments": {
             "user_id": 1,
-            "expiry_date": "2025-08-20"
+            "passport_number": "B98765432",
+            "issuing_country": "Canada",
+            "expiry_date": "2026-01-20"
         }
     }
 }

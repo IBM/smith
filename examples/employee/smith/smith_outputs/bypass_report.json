@@ -1,0 +1,52 @@
+{
+  "vectors": [
+    {
+      "category": "omitted_field",
+      "direction": "guidance_deny_policy_allow",
+      "guidance_rule": "Only HR may add a new employee",
+      "rules_involved": [
+        "deny[\"Only HR department users may add a new employee\"]"
+      ],
+      "field": "subject.department",
+      "reason": "Policy checks 'not \"HR\" in subject.department' but subject.department could be null/undefined",
+      "exploit_strategy": "Send add_employee request with subject.department omitted or null",
+      "severity": "high"
+    },
+    {
+      "category": "type_confusion",
+      "direction": "guidance_deny_policy_allow",
+      "guidance_rule": "When an employee's salary is set or updated, it must be a positive amount (greater than zero)",
+      "rules_involved": [
+        "deny[\"Salary must be greater than zero\"]"
+      ],
+      "field": "args.salary",
+      "reason": "Policy uses numeric comparison 'args.salary <= 0' without type check, allowing string bypass",
+      "exploit_strategy": "Send add_employee with salary as string '0' or negative string '-1'",
+      "severity": "medium"
+    },
+    {
+      "category": "malformed_value",
+      "direction": "guidance_deny_policy_allow",
+      "guidance_rule": "A new or updated employee's work email must use their organization's corporate domain",
+      "rules_involved": [
+        "deny[\"Email domain does not match the corporate domain for the provided organization\"]"
+      ],
+      "field": "args.email",
+      "reason": "Policy uses endswith() check which can be bypassed with malformed email containing the domain as substring",
+      "exploit_strategy": "Send add_employee with email like 'user@evil.com@ibm.com' or 'user@ibm.com.evil.com'",
+      "severity": "medium"
+    },
+    {
+      "category": "omitted_field",
+      "direction": "guidance_allow_policy_deny",
+      "guidance_rule": "A new or updated employee's work email must use their organization's corporate domain: IBM Corporation → @ibm.com, Red Hat → @redhat.com, Kyndryl → @kyndryl.com. This applies when the organization is provided in the same call.",
+      "rules_involved": [
+        "deny[\"Email domain does not match the corporate domain for the provided organization\"]"
+      ],
+      "field": "args.organization",
+      "reason": "Policy enforces email domain check even when organization is not provided, but guidance says rule only applies when organization is provided",
+      "exploit_strategy": "Send add_employee with valid email but no organization field",
+      "severity": "low"
+    }
+  ]
+}

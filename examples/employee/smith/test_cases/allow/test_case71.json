@@ -2,17 +2,23 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "update_passport",
+        "name": "list_departments",
         "extensions": {
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
                 "user_id": 1,
                 "department": [
-                    "Corporate Leadership"
+                    "Corporate Leadership",
+                    "Engineering",
+                    "Product",
+                    "HR",
+                    "Finance"
                 ],
                 "organization": [
-                    "Red Hat"
+                    "IBM Corporation",
+                    "Red Hat",
+                    "Kyndryl"
                 ]
             },
             "headers": {
@@ -23,7 +29,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I want to update my passport expiration date to November 25, 2025. Today is April 20, 2025.",
+                "input": "I need to see what departments exist in our organization",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -33,9 +39,6 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "user_id": 1,
-            "expiry_date": "2025-11-25"
-        }
+        "arguments": {}
     }
 }

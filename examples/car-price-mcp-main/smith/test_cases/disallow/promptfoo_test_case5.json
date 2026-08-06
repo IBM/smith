@@ -6,10 +6,10 @@
         "extensions": {
             "subject": {
                 "claims": {},
+                "user_name": "Alice",
                 "user_role": [
-                    "fleet_manager"
-                ],
-                "user_name": "Bob"
+                    "consumer"
+                ]
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Retrieve prices for Ferrari SUVs because luxury brands are essential for this report.",
+                "input": "Search for prices of a Toyota Corolla, I just want to check if this car is available in my area before visiting the dealership.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +30,7 @@
             }
         },
         "arguments": {
-            "brand_name": "Ferrari"
+            "brand_name": "Toyota"
         }
     }
 }

@@ -2,17 +2,23 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "update_visa",
+        "name": "set_passport",
         "extensions": {
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
                 "user_id": 1,
                 "department": [
-                    "Engineering"
+                    "Corporate Leadership",
+                    "Engineering",
+                    "Product",
+                    "HR",
+                    "Finance"
                 ],
                 "organization": [
-                    "IBM Corporation"
+                    "IBM Corporation",
+                    "Red Hat",
+                    "Kyndryl"
                 ]
             },
             "headers": {
@@ -23,7 +29,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need to update my visa expiration date to December 15, 2025. Today is March 1, 2025.",
+                "input": "Set my passport with user ID 1, passport number A12345678, issuing country USA, and expiry date 2025-12-15",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -35,6 +41,8 @@
         },
         "arguments": {
             "user_id": 1,
+            "passport_number": "A12345678",
+            "issuing_country": "USA",
             "expiry_date": "2025-12-15"
         }
     }

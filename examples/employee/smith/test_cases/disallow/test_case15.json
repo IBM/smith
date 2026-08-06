@@ -1,0 +1,36 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "set_emergency_contact",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "user_id": 1
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Can you set emergency contact for user 1: David Wilson as Sibling, phone 555-3456? I'm in Washington but he's in Oregon.",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "user_id": 1,
+            "name": "David Wilson",
+            "relationship": "Sibling",
+            "phone": "555-3456"
+        }
+    }
+}

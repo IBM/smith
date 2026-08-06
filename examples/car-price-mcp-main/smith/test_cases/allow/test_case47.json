@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can I get a list of all carros?",
+                "input": "Please fetch the carros from the vehicle database",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +30,7 @@
             }
         },
         "arguments": {
-            "vehicle_type": "carros"
+            "vehicle_type": "cars"
         }
     }
 }

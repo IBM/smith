@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please retrieve all vehicles of type motorcycles",
+                "input": "Show me the motorcycles in our vehicle inventory",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +30,7 @@
             }
         },
         "arguments": {
-            "vehicle_type": "moto"
+            "vehicle_type": "motorcycles"
         }
     }
 }

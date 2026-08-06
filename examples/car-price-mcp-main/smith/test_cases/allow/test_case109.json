@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you find Hyundai car prices?",
+                "input": "Can you search for pricing information on Caoa Chery vehicles?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +30,7 @@
             }
         },
         "arguments": {
-            "brand_name": "Hyundai"
+            "brand_name": "Caoa Chery"
         }
     }
 }

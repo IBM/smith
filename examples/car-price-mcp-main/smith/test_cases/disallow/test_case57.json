@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I want to look up Honda car pricing",
+                "input": "I want to search for Mazda car prices for my story",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +30,7 @@
             }
         },
         "arguments": {
-            "brand_name": "Honda"
+            "brand_name": "Mazda"
         }
     }
 }

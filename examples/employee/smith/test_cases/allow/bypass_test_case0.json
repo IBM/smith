@@ -1,0 +1,46 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "add_employee",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "user_name": "Bob",
+                "user_id": 1,
+                "department": [
+                    "HR"
+                ],
+                "organization": [
+                    "IBM Corporation"
+                ]
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Add new employee Lisa Chen with email lisa.chen@gmail.com, role Consultant, title External Advisor, address 321 Elm St, country US",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "first_name": "Lisa",
+            "last_name": "Chen",
+            "email": "lisa.chen@gmail.com",
+            "role": "Consultant",
+            "title": "External Advisor",
+            "home_address": "321 Elm St",
+            "country_code": "US"
+        }
+    }
+}

@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please show me all available cars",
+                "input": "I need to browse all cars in the system",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

@@ -1,0 +1,38 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "set_visa",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "user_id": 1
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Set my visa information with number V123456789, issued by United States, H1B type, issue date 2022-04-01, expiry date 2025-04-01",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "user_id": 1,
+            "visa_number": "V123456789",
+            "issuing_country": "US",
+            "visa_type": "H1B",
+            "issue_date": "2022-04-01",
+            "expiry_date": "2025-04-01"
+        }
+    }
+}

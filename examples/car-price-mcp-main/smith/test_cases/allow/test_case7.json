@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need to see all the trucks you have available.",
+                "input": "Can you retrieve motorcycles from the vehicle database?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +30,7 @@
             }
         },
         "arguments": {
-            "vehicle_type": "trucks"
+            "vehicle_type": "motos"
         }
     }
 }

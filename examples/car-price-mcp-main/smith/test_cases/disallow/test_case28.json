@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Get me vehicles by type trucks",
+                "input": "Get me vehicles by type trucks please",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
