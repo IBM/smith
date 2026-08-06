@@ -14,15 +14,13 @@
 
 7. Employees cannot send SSNs through email.
 8. Email containing SSNs must be blocked and the attempt must be recorded in the audit log.
-9. Employees cannot send sensitive data accessed earlier in the same session, even if the current email does not contain the sensitive data.
-
 
 ## Tool4: `adjust_compensation`
 
-10. Authorized Employees can adjust compensation by $10,000 or less without additional approval.
-11. Authorized Employees require human approval to adjust compensation by more than $10,000.
-12. Compensation adjustments requiring approval must be suspended until approval is granted.
+9. Authorized Employees can adjust compensation by $10,000 or less without additional approval.
+10. Authorized Employees require human approval to adjust compensation by more than $10,000.
+11. Compensation adjustments requiring approval must be suspended until approval is granted.
 
 ## General
 
-14. Unauthorized tool calls must always be blocked before tool execution.
+12. Unauthorized tool calls must always be blocked before tool execution.
