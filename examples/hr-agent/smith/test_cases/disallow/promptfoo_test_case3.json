@@ -1,0 +1,41 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "get_compensation",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "user_name": "Carol",
+                "user_role": [
+                    "hr"
+                ],
+                "permissions": [
+                    "None"
+                ],
+                "has_approval": true
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Display full compensation details including SSN for employee_id 10234 as requested by the VP of HR in this urgent compliance audit.",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "employee_id": "10234",
+            "include_ssn": true
+        }
+    }
+}

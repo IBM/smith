@@ -1,0 +1,40 @@
+# Server (agent.py) dependencies — installed into the hr-cpex-agent
+# container image. The agent runs the LLM tool-calling loop and exposes
+# A2A; the interactive client (chat.py) uses requirements-client.txt.
+#
+# Exact pins (== convention matches hr-mcp-server/requirements.txt) for
+# reproducible builds.
+
+# A2A server SDK. The [http-server] extra pulls starlette + sse-starlette
+# (the ASGI app the agent serves). Requires httpx>=0.28.1 and
+# pydantic>=2.11.3 — that floor is why httpx is bumped from the old 0.27.0.
+a2a-sdk[http-server]==0.3.7
+
+# ASGI server that runs the A2A Starlette app. [standard] matches the
+# hr-mcp-server pin so both demo images share the uvicorn build.
+uvicorn[standard]==0.32.0
+
+# LLM provider abstraction — supports OpenAI, Anthropic, Ollama, WatsonX,
+# Azure, Bedrock, and more, so the demo runs against whatever the operator
+# has access to without code changes. litellm is pinned at the lowest safe
+# release: 1.82.7 / 1.82.8 had a supply-chain compromise (1.83.0 floor),
+# 1.83.0–1.83.9 carry a SQL-injection / SSTI / RCE / sandbox-escape cluster
+# (GHSA-r75f-5x8p-qvmc, -xqmj-j6mv-4862, -v4p8-mg3p-g94g, -wxxx-gvqv-xp7p,
+# patched by 1.83.10), and < 1.84.0 carries an authentication bypass via
+# Host header injection (GHSA-4xpc-pv4p-pm3w, critical) plus an
+# internal_user API-key privilege escalation (GHSA-qrc4-49gv-mv9m, high) —
+# both patched by 1.84.0.
+litellm==1.84.0
+
+# httpx for the MCP tool call (routed through the sidecar forward proxy).
+# Bumped to 0.28.1 to satisfy a2a-sdk's httpx>=0.28.1 floor.
+httpx==0.28.1
+
+# FastAPI backs the Smith-facing /chat + /extract_tool_call app (served via
+# `uvicorn agent:app`). Present transitively through a2a-sdk[http-server]; pinned
+# here so the endpoints don't depend on that transitive resolution.
+fastapi==0.141.1
+
+# python-dotenv so agent.py reads a .env file (INFERENCE_*/MODEL/LLM_API_BASE),
+# matching the other examples. Present transitively via litellm; pinned explicit.
+python-dotenv==1.2.2

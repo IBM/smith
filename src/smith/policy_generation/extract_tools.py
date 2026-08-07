@@ -2,11 +2,15 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """
-Extract tool definitions from an MCP server via list_tools().
+Extract tool definitions from an MCP server (or a tool-exposing agent).
 
-Supports two transport modes:
+Supports three transport modes:
 - SSE: connects to a running MCP server (e.g., http://localhost:8000/sse)
 - stdio: launches the MCP server as a subprocess (e.g., python server.py)
+- http: GETs an agent's /tool_definitions endpoint over plain HTTP (e.g.
+        http://localhost:9000/tool_definitions). The agent returns the final
+        tool-definitions structure directly, so no MCP server is required;
+        optional headers are forwarded (e.g. an agent behind a gateway).
 
 Usage (SSE - server must be running):
     python src/smith/policy_generation/extract_tools.py \
@@ -18,6 +22,12 @@ Usage (stdio - launches server.py directly):
         --transport stdio --command python --args server.py \
         --cwd examples/call-for-papers-mcp \
         --output examples/call-for-papers-mcp/smith/tool_definitions.json
+
+Usage (http - agent /tool_definitions endpoint, optional headers):
+    python src/smith/policy_generation/extract_tools.py \
+        --transport http --url http://localhost:9000/tool_definitions \
+        --header "Authorization: Bearer <token>" \
+        --output examples/hr-agent/smith/tool_definitions.json
 """
 
 import json
@@ -39,6 +49,22 @@ async def fetch_tools_sse(url: str) -> list:
         await session.initialize()
         tools_response = await session.list_tools()
         return tools_response.tools
+
+
+def fetch_tools_http(url: str, headers: dict = None) -> dict:
+    """GET an agent's /tool_definitions endpoint over plain HTTP.
+
+    The agent exposes its tool definitions already in the final structure
+    ({"tools": [...], "source", "transport"} — the same shape tool_to_dict
+    produces), so this returns the parsed JSON as-is (no per-tool conversion
+    and no MCP handshake). ``headers`` are forwarded on the request for agents
+    that sit behind an auth/identity gateway.
+    """
+    import httpx
+
+    resp = httpx.get(url, headers=headers or None, timeout=30)
+    resp.raise_for_status()
+    return resp.json()
 
 
 async def fetch_tools_stdio(command: str, args: list, cwd: str = None) -> list:
@@ -94,6 +120,7 @@ async def extract_tools(
     command: str = None,
     cmd_args: list = None,
     cwd: str = None,
+    headers: dict = None,
 ) -> dict:
     """Fetch tools from MCP server and return structured result."""
     if transport == "sse":
@@ -102,6 +129,10 @@ async def extract_tools(
     elif transport == "stdio":
         tools = await fetch_tools_stdio(command, cmd_args or [], cwd)
         source = f"{command} {' '.join(cmd_args or [])}"
+    elif transport == "http":
+        # The agent's /tool_definitions endpoint already returns the final
+        # structure (tools in tool_to_dict shape), so return it verbatim.
+        return fetch_tools_http(url, headers)
     else:
         raise ValueError(f"Unknown transport: {transport}")
 
@@ -114,12 +145,22 @@ def main():
         description="Extract MCP tool definitions from a server"
     )
     parser.add_argument(
-        "--transport", default="sse", choices=["sse", "stdio"], help="Transport type"
+        "--transport",
+        default="sse",
+        choices=["sse", "stdio", "http"],
+        help="Transport type",
     )
     parser.add_argument(
         "--url",
         default="http://localhost:8000/sse",
-        help="MCP server SSE endpoint URL (for sse transport)",
+        help="MCP server endpoint URL (for sse and http transports)",
+    )
+    parser.add_argument(
+        "--header",
+        action="append",
+        default=[],
+        metavar="NAME: VALUE",
+        help="HTTP header to send (repeatable; for http transport, e.g. auth/identity)",
     )
     parser.add_argument(
         "--command",
@@ -138,6 +179,12 @@ def main():
     parser.add_argument("--output", required=True, help="Output JSON file path")
     args = parser.parse_args()
 
+    headers = {}
+    for h in args.header:
+        name, sep, value = h.partition(":")
+        if sep:
+            headers[name.strip()] = value.strip()
+
     result = asyncio.run(
         extract_tools(
             transport=args.transport,
@@ -145,6 +192,7 @@ def main():
             command=args.command,
             cmd_args=args.args,
             cwd=args.cwd,
+            headers=headers,
         )
     )
 

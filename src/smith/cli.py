@@ -6,6 +6,7 @@ import asyncio
 import importlib.resources as resources
 import json
 import os
+import re
 import sys
 
 from dotenv import load_dotenv
@@ -147,7 +148,9 @@ def _load_session_config(base_url):
     return {}
 
 
-def get_tool_definitions(transport, mcp_url, mcp_command, mcp_args, mcp_cwd):
+def get_tool_definitions(
+    transport, mcp_url, mcp_command, mcp_args, mcp_cwd, mcp_headers=None
+):
     """Extract tool definitions from the MCP server."""
     tool_definitions = asyncio.run(
         extract_tools(
@@ -156,6 +159,7 @@ def get_tool_definitions(transport, mcp_url, mcp_command, mcp_args, mcp_cwd):
             command=mcp_command,
             cmd_args=mcp_args,
             cwd=mcp_cwd,
+            headers=mcp_headers,
         )
     )
     print(f"Extracted {len(tool_definitions['tools'])} tools from MCP server")
@@ -450,6 +454,14 @@ def main():
     mcp_command = os.getenv("MCP_COMMAND", "python")
     mcp_args = os.getenv("MCP_ARGS", "").split() if os.getenv("MCP_ARGS") else []
     mcp_cwd = base_url + os.getenv("MCP_CWD") if os.getenv("MCP_CWD") else None
+    # Optional HTTP headers for the http transport (e.g. an MCP server behind an
+    # identity gateway). Format: "Name: Value" entries separated by newlines or
+    # ";;" (e.g. MCP_HEADERS="Authorization: Bearer x;;X-User-Token: y").
+    mcp_headers = {}
+    for _h in re.split(r"[\n;]{1,2}", os.getenv("MCP_HEADERS", "")):
+        _name, _sep, _val = _h.partition(":")
+        if _sep and _name.strip():
+            mcp_headers[_name.strip()] = _val.strip()
     target_agent_path = os.getenv("TARGET_AGENT_PATH")
     agent_url = os.getenv("AGENT_URL", "http://localhost:9000")
 
@@ -467,7 +479,7 @@ def main():
         results = agent.get_red_feedback()
     if args.flag == "test_generation":
         tool_definitions = get_tool_definitions(
-            transport, mcp_url, mcp_command, mcp_args, mcp_cwd
+            transport, mcp_url, mcp_command, mcp_args, mcp_cwd, mcp_headers
         )
         generate_test(
             base_url,
@@ -498,7 +510,7 @@ def main():
 
     if args.flag == "bypass_case_generation":
         tool_definitions = get_tool_definitions(
-            transport, mcp_url, mcp_command, mcp_args, mcp_cwd
+            transport, mcp_url, mcp_command, mcp_args, mcp_cwd, mcp_headers
         )
         generate_bypass_cases(
             api_key,
@@ -520,7 +532,7 @@ def main():
         target_agent_path = base_url + target_agent_path
         output_file = os.path.join(target_agent_path, "smith", "tool_definitions.json")
         result = get_tool_definitions(
-            transport, mcp_url, mcp_command, mcp_args, mcp_cwd
+            transport, mcp_url, mcp_command, mcp_args, mcp_cwd, mcp_headers
         )
         os.makedirs(os.path.dirname(output_file), exist_ok=True)
         with open(output_file, "w") as f:
@@ -535,7 +547,7 @@ def main():
             "PROMPTFOO_CONFIG_TEMPLATE", "references/promptfoo_config_template.yaml"
         )
         tool_definitions = get_tool_definitions(
-            transport, mcp_url, mcp_command, mcp_args, mcp_cwd
+            transport, mcp_url, mcp_command, mcp_args, mcp_cwd, mcp_headers
         )
         generate_promptfoo_config(
             api_key,
