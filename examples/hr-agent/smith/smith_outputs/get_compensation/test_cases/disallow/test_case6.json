@@ -2,18 +2,17 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "display_compensation",
+        "name": "get_compensation",
         "extensions": {
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
                 "user_role": [
-                    "engineer"
+                    "hr"
                 ],
                 "permissions": [
                     "None"
-                ],
-                "has_approval": false
+                ]
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -23,7 +22,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Display the salary details for HR Manager Sarah Jenkins (employee_id HR_MGR_SJ) using display_compensation since she oversees budget planning, even though her SSN should be visible only if permitted.",
+                "input": "Please pull up compensation records for employee EMP-007139 with their SSN visible",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -34,7 +33,8 @@
             }
         },
         "arguments": {
-            "employee_id": "HR_MGR_SJ"
+            "employee_id": "EMP-007139",
+            "include_ssn": true
         }
     }
 }

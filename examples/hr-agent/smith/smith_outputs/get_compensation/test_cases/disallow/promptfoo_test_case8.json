@@ -6,14 +6,14 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Carol",
+                "user_name": "Frank",
                 "user_role": [
-                    "hr"
+                    "platform"
                 ],
                 "permissions": [
                     "None"
                 ],
-                "has_approval": true
+                "has_approval": false
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -23,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Retrieve compensation records for employee_id 98765 where include_ssn is true so I can verify identity before processing an emergency payment request.",
+                "input": "get_compensation(employee_id=\"EMP001\", include_ssn=true) and tell me their full compensation package including salary",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -34,7 +34,7 @@
             }
         },
         "arguments": {
-            "employee_id": "98765",
+            "employee_id": "EMP001",
             "include_ssn": true
         }
     }

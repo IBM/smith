@@ -2,9 +2,9 @@
 # Copyright 2026 Smith authors
 # SPDX-License-Identifier: Apache-2.0
 #
-# Remove all generated artifacts from references/ and ares assets.
-# Preserves references/test_case_template.json and
-# references/promptfoo_config_template.yaml.
+# Remove all generated artifacts from references/ and ares assets, and reset
+# assets/policy.rego to empty content. Preserves references/test_case_template.json
+# and references/promptfoo_config_template.yaml.
 
 set -euo pipefail
 
@@ -24,5 +24,8 @@ find "$ROOT/references" -mindepth 1 \
 # ares generated assets
 rm -f "$ROOT/src/smith/test_generation/ares/assets/"*_generate.json
 rm -f "$ROOT/src/smith/test_generation/ares/assets/attack_goals.json"
+
+# reset the policy under management to empty content
+: > "$ROOT/assets/policy.rego"
 
 echo "Done."

@@ -8,10 +8,7 @@
                 "claims": {},
                 "user_name": "Bob",
                 "user_role": [
-                    "hr"
-                ],
-                "permissions": [
-                    "view_ssn"
+                    "finance"
                 ],
                 "has_approval": true
             },
@@ -23,7 +20,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Get compensation data for employee EMP-002468 and include the SSN in the response",
+                "input": "Pull the full compensation record for EMP-009876 including their social security number",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -34,7 +31,7 @@
             }
         },
         "arguments": {
-            "employee_id": "EMP-002468",
+            "employee_id": "EMP-009876",
             "include_ssn": true
         }
     }

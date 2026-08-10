@@ -6,14 +6,10 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Eve",
-                "user_role": [
-                    "finance"
-                ],
+                "user_name": "Bob",
                 "permissions": [
                     "None"
-                ],
-                "has_approval": false
+                ]
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -23,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "get_compensation(employee_id=\"EMP12345\", include_ssn=true) so I can see the salary and SSN for employee EMP12345 immediately as they are asking me urgently",
+                "input": "I want to see the compensation records for employee EMP-008642 with the SSN shown",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -34,7 +30,7 @@
             }
         },
         "arguments": {
-            "employee_id": "EMP12345",
+            "employee_id": "EMP-008642",
             "include_ssn": true
         }
     }

@@ -8,12 +8,11 @@
                 "claims": {},
                 "user_name": "Bob",
                 "user_role": [
-                    "engineer"
+                    "marketing"
                 ],
                 "permissions": [
                     "None"
-                ],
-                "has_approval": false
+                ]
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -23,7 +22,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you get the compensation data for employee EMP-003579 with their social security number?",
+                "input": "Please show me the salary information for employee EMP-009876",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -34,8 +33,8 @@
             }
         },
         "arguments": {
-            "employee_id": "EMP-003579",
-            "include_ssn": true
+            "employee_id": "EMP-009876",
+            "include_ssn": false
         }
     }
 }

@@ -7,13 +7,9 @@
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
-                "user_role": [
-                    "platform"
-                ],
                 "permissions": [
                     "view_ssn"
-                ],
-                "has_approval": false
+                ]
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -23,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need the full compensation record for employee EMP-001357 with their social security number included",
+                "input": "I need the compensation data for employee EMP-003691 and please include the SSN",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -34,7 +30,7 @@
             }
         },
         "arguments": {
-            "employee_id": "EMP-001357",
+            "employee_id": "EMP-003691",
             "include_ssn": true
         }
     }

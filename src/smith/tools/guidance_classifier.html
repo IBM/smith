@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<!--
+  Smith Guidance Classifier — upstream companion to the Policy Explorer.
+  Served by `smith --flag classify_guidance`. It fetches /classification (an LLM
+  pass that maps each guidance line to the MCP tool call(s) it governs), shows
+  the guidance with per-tool highlights, lets you tick lines to combine, and
+  resets Smith's inputs (guidance.txt + clean_generated.sh + session_config.json).
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Smith · Guidance Classifier</title>
+<style>
+  :root {
+    --bg: #f4f5f7;
+    --panel: #ffffff;
+    --ink: #1c2230;
+    --ink-soft: #55617a;
+    --ink-faint: #8a94a8;
+    --line: #e3e7ee;
+    --line-strong: #cfd6e2;
+    --accent: #3b57d6;
+    --accent-soft: #eaeefc;
+    --mark: rgba(255, 208, 0, 0.42);
+    --mark-strong: rgba(59, 87, 214, 0.30);
+    --mark-strong-border: #3b57d6;
+    --mark-global: rgba(138, 148, 168, 0.28);
+    --good: #1f9d57;
+    --bad: #d1495b;
+    --radius: 10px;
+    --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    font-family: var(--sans);
+    color: var(--ink);
+    background: var(--bg);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  button { font-family: inherit; }
+
+  /* ---- top bar ---- */
+  .topbar {
+    height: 52px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 0 18px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--line);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .topbar .logo { font-weight: 700; letter-spacing: -0.01em; font-size: 15px; }
+  .topbar .logo b { color: var(--accent); }
+  .topbar .sub { color: var(--ink-faint); font-size: 12.5px; }
+  .topbar .spacer { flex: 1; }
+  .topbar .stat {
+    font-size: 12px;
+    color: var(--ink-soft);
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 3px 11px;
+  }
+  .topbar .stat b { color: var(--ink); }
+  .topbar .stat.btn { cursor: pointer; border-color: var(--line-strong); }
+  .topbar .stat.btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ---- app grid ---- */
+  .app {
+    display: grid;
+    grid-template-columns: 300px minmax(0, 1fr) 400px;
+    gap: 0;
+    height: calc(100vh - 52px);
+  }
+  .col { overflow-y: auto; height: 100%; }
+  .sidebar { background: var(--panel); border-right: 1px solid var(--line); }
+  .center { background: var(--bg); padding: 22px 26px 60px; }
+  .detail { background: var(--panel); border-left: 1px solid var(--line); }
+
+  .section { padding: 14px 16px; border-bottom: 1px solid var(--line); }
+  .section h3 {
+    margin: 0 0 10px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-faint);
+    font-weight: 700;
+  }
+
+  /* ---- upload ---- */
+  .drop {
+    border: 1.5px dashed var(--line-strong);
+    border-radius: var(--radius);
+    padding: 16px 12px;
+    text-align: center;
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: border-color .15s, background .15s;
+    background: #fbfcfe;
+  }
+  .drop:hover, .drop.over { border-color: var(--accent); background: var(--accent-soft); }
+  .drop .big { font-weight: 600; color: var(--ink); }
+  .drop .small { font-size: 12px; margin-top: 4px; }
+  .drop-actions { display: flex; gap: 8px; margin-top: 10px; }
+  .drop-actions button {
+    flex: 1; font-size: 12px; padding: 6px 8px;
+    border: 1px solid var(--line-strong); background: #fff;
+    border-radius: 7px; cursor: pointer; color: var(--ink);
+  }
+  .drop-actions button:hover { border-color: var(--accent); color: var(--accent); }
+  .loaded { margin-top: 10px; font-size: 12px; color: var(--ink-soft); }
+  .loaded .row { display: flex; justify-content: space-between; padding: 2px 0; }
+  .loaded .ok { color: var(--good); }
+  .loaded .miss { color: var(--ink-faint); }
+
+  /* ---- filters ---- */
+  .fgroup { margin-bottom: 12px; }
+  .fgroup:last-child { margin-bottom: 0; }
+  .fgroup > label {
+    display: block; font-size: 11.5px; font-weight: 600;
+    color: var(--ink-soft); margin-bottom: 5px;
+  }
+  .segmented { display: flex; border: 1px solid var(--line-strong); border-radius: 7px; overflow: hidden; }
+  .segmented button {
+    flex: 1; border: none; background: #fff; padding: 5px 4px;
+    font-size: 12px; cursor: pointer; color: var(--ink-soft);
+    border-right: 1px solid var(--line);
+  }
+  .segmented button:last-child { border-right: none; }
+  .segmented button.on { background: var(--accent); color: #fff; font-weight: 600; }
+
+  /* ---- tool list ---- */
+  .toollist { padding: 8px 8px 16px; }
+  .toolrow {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 10px; border-radius: 8px; cursor: pointer; color: var(--ink);
+  }
+  .toolrow:hover { background: var(--bg); }
+  .toolrow.sel { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+  .toolrow.dim { opacity: 0.4; }
+  .toolrow .name { flex: 1; font-family: var(--mono); font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .toolrow.all .name, .toolrow.global .name { font-family: var(--sans); font-weight: 600; }
+  .toolrow .count {
+    font-size: 11px; background: var(--line); color: var(--ink-soft);
+    border-radius: 20px; padding: 1px 8px; min-width: 20px; text-align: center;
+  }
+  .toolrow.sel .count { background: var(--accent); color: #fff; }
+
+  /* ---- guidance center ---- */
+  .guide-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 12px; }
+  .guide-head h2 { margin: 0; font-size: 16px; }
+  .guide-head .hint { color: var(--ink-faint); font-size: 12.5px; }
+  .legend { display: flex; gap: 14px; margin-bottom: 14px; flex-wrap: wrap; font-size: 12px; color: var(--ink-soft); }
+  .legend .sw { display: inline-block; width: 14px; height: 14px; border-radius: 3px; vertical-align: -2px; margin-right: 5px; }
+  .guide {
+    background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 22px 26px; white-space: pre-wrap; word-wrap: break-word;
+    font-family: var(--mono); font-size: 13px; line-height: 1.75; color: #2a3346;
+  }
+  mark { border-radius: 3px; padding: 1px 1px; background: var(--mark); color: inherit; scroll-margin-top: 80px; cursor: pointer; transition: outline .12s; }
+  mark:hover { outline: 1.5px solid var(--mark-strong-border); }
+  mark.global { background: var(--mark-global); }
+  mark.strong { background: var(--mark-strong); outline: 1.5px solid var(--mark-strong-border); }
+
+  .empty {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    height: 60vh; color: var(--ink-faint); text-align: center; gap: 8px;
+  }
+  .empty .k { font-size: 40px; }
+
+  /* ---- detail ---- */
+  .detail-inner { padding: 16px 16px 60px; }
+  .dhead { position: sticky; top: 0; background: var(--panel); padding: 14px 16px; border-bottom: 1px solid var(--line); z-index: 2; }
+  .dhead h2 { margin: 0; font-size: 15px; }
+  .dhead .desc { color: var(--ink-soft); font-size: 12.5px; margin-top: 4px; }
+  .backbtn { background: none; border: none; color: var(--accent); cursor: pointer; font-size: 12.5px; padding: 0 0 8px; }
+
+  .pcard {
+    border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 12px 13px; margin-bottom: 10px; cursor: pointer;
+    transition: border-color .12s, box-shadow .12s;
+  }
+  .pcard:hover { border-color: var(--accent); box-shadow: 0 1px 6px rgba(59,87,214,.10); }
+  .pcard .pname { font-weight: 600; font-size: 13px; }
+  .pcard .pmeta { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+
+  .tag {
+    font-size: 10.5px; padding: 2px 7px; border-radius: 5px;
+    background: var(--bg); color: var(--ink-soft); border: 1px solid var(--line);
+    font-family: var(--mono);
+  }
+  .tag.global { background: var(--mark-global); color: var(--ink-soft); }
+
+  .block { margin: 16px 0; }
+  .block h4 { margin: 0 0 7px; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-faint); }
+  .reason { font-size: 12.5px; color: var(--ink-soft); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px; }
+  .rawline { font-family: var(--mono); font-size: 12px; background: var(--mark); border-radius: 6px; padding: 8px 10px; color: #4a4200; cursor: pointer; white-space: pre-wrap; word-break: break-word; }
+  .rawline:hover { outline: 1.5px solid var(--mark-strong-border); }
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="logo">Smith · <b>Guidance Classifier</b></div>
+    <div class="sub">guidance line ⇄ expected tool call</div>
+    <div class="spacer"></div>
+    <button id="refreshBtn" class="stat btn" title="Re-run the LLM classification on the current guidance.txt">⟳ Re-classify</button>
+    <div class="stat" id="statTools">0 tools</div>
+    <div class="stat" id="statLines">0 lines</div>
+    <div class="stat" id="statGlobal">0 global</div>
+  </div>
+
+  <div class="app">
+    <!-- LEFT -->
+    <div class="col sidebar">
+      <div class="section">
+        <h3>Guidance file</h3>
+        <div class="drop" id="drop">
+          <div class="big">Drop a guidance file here</div>
+          <div class="small">.txt or .md<br/>(or click to choose)</div>
+          <div class="drop-actions">
+            <button id="pickFile">Choose file</button>
+          </div>
+        </div>
+        <input type="file" id="fileInput" accept=".txt,.md" hidden />
+        <div class="loaded" id="loaded"></div>
+      </div>
+
+      <div class="section" id="filterSection" style="display:none">
+        <h3>Filters</h3>
+        <div class="fgroup">
+          <label>Match</label>
+          <div class="segmented" data-filter="match">
+            <button data-val="all" class="on">All</button>
+            <button data-val="matched">Matched</button>
+            <button data-val="unmatched">Unmatched</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- combined guidance editor + reset (served over http). -->
+      <div class="section" id="smithGuidanceSection" style="display:none">
+        <h3>Combined guidance</h3>
+        <textarea id="guidanceEditor" spellcheck="false"
+                  style="width:100%;min-height:200px;resize:vertical;font-family:var(--mono);
+                         font-size:12.5px;line-height:1.5;color:var(--ink);background:var(--panel);
+                         border:1px solid var(--line-strong);border-radius:var(--radius);padding:10px"></textarea>
+        <button id="runSmithBtn"
+                style="margin-top:10px;width:100%;padding:8px 12px;cursor:pointer;
+                       font-family:inherit;font-size:13px;font-weight:600;color:#fff;
+                       background:var(--accent);border:1px solid var(--accent);
+                       border-radius:var(--radius)">
+          Reset Smith inputs
+        </button>
+        <div id="resetTargetNote" class="small" style="margin-top:8px;color:var(--ink-faint);font-size:11.5px"></div>
+        <div id="resetStatus" class="small" style="margin-top:6px;color:var(--ink-faint);font-size:12px"></div>
+      </div>
+
+      <div class="toollist" id="toolList"></div>
+    </div>
+
+    <!-- CENTER -->
+    <div class="col center" id="center">
+      <div class="empty" id="centerEmpty">
+        <div class="k">🗎</div>
+        <div id="centerEmptyMsg">Upload a guidance file to begin.</div>
+        <div style="font-size:12.5px">Each line is mapped to the tool call(s) it governs.</div>
+      </div>
+      <div id="centerContent" style="display:none">
+        <div class="guide-head">
+          <h2 id="guideTitle">Guidance</h2>
+          <span class="hint" id="guideHint"></span>
+        </div>
+        <div class="legend">
+          <span><span class="sw" style="background:var(--mark)"></span>line for selected tool</span>
+          <span><span class="sw" style="background:var(--mark-strong);outline:1.5px solid var(--mark-strong-border)"></span>selected line</span>
+          <span><span class="sw" style="background:var(--mark-global)"></span>global / unmatched</span>
+        </div>
+        <div class="guide" id="guide"></div>
+      </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="col detail" id="detail">
+      <div class="detail-inner" id="detailInner">
+        <div class="empty" style="height:40vh"><div>Select a tool to see the guidance lines mapped to it.</div></div>
+      </div>
+    </div>
+  </div>
+
+<script>
+"use strict";
+
+// ---------- state ----------
+const state = {
+  guidance: null,        // string
+  guidanceName: "guidance.txt",
+  items: [],             // per-(line,tool) policy-like items: {id, name, description, references:[raw], tool_name, index, reason}
+  toolNames: [],         // ordered tool buckets present (incl. "global")
+  selectedTool: "all",   // "all" | tool_name | "global"
+  selectedItem: null,    // item id
+  checkedItems: new Set(),// item ids ticked for "combine"
+  filters: { match: "all" },
+};
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const GLOBAL = "global";
+
+// reference strings backing the marks in the current render (index -> string).
+let guideRefList = [];
+
+// ---------- build items from /classification ----------
+// Each classified line becomes one item per matched tool (so it appears under
+// each). Lines with no match become a single "global" item.
+function buildItems(lines) {
+  const items = [];
+  const toolSet = new Set();
+  for (const ln of lines) {
+    const tools = (ln.tools && ln.tools.length) ? ln.tools : [GLOBAL];
+    for (const t of tools) {
+      toolSet.add(t);
+      items.push({
+        id: `L${ln.index}@${t}`,
+        lineIndex: ln.index,
+        name: ln.raw.trim().slice(0, 80) || `line ${ln.index + 1}`,
+        description: ln.text,
+        raw: ln.raw,
+        references: [ln.raw.trim()],
+        tool_name: t,
+        reason: ln.reason || "",
+      });
+    }
+  }
+  state.items = items;
+  // order: real tools alphabetically, "global" last
+  const names = Array.from(toolSet).filter((t) => t !== GLOBAL).sort();
+  if (toolSet.has(GLOBAL)) names.push(GLOBAL);
+  state.toolNames = names;
+  // drop stale selection/checks
+  const ids = new Set(items.map((i) => i.id));
+  state.checkedItems.forEach((id) => { if (!ids.has(id)) state.checkedItems.delete(id); });
+  if (state.selectedItem && !ids.has(state.selectedItem)) state.selectedItem = null;
+}
+
+// ---------- filtering ----------
+function passesFilters(item) {
+  const m = state.filters.match;
+  if (m === "matched" && item.tool_name === GLOBAL) return false;
+  if (m === "unmatched" && item.tool_name !== GLOBAL) return false;
+  return true;
+}
+
+function visibleItemsFor(toolName) {
+  return state.items.filter(
+    (p) => (toolName === "all" || p.tool_name === toolName) && passesFilters(p)
+  );
+}
+
+// ---------- rendering ----------
+function render() {
+  const hasData = state.items.length && state.guidance != null;
+  renderLoaded();
+  renderStats();
+  $("filterSection").style.display = state.items.length ? "" : "none";
+  renderToolList();
+  renderGuidance();
+  renderDetail();
+  $("centerEmpty").style.display = hasData ? "none" : "";
+  $("centerContent").style.display = hasData ? "" : "none";
+}
+
+function renderLoaded() {
+  const el = $("loaded");
+  if (state.guidance == null) { el.innerHTML = ""; return; }
+  el.innerHTML =
+    `<div class="row"><span>Uploaded</span><span class="ok">✓ ${esc(state.guidanceName)}</span></div>`;
+}
+
+function renderStats() {
+  const nTools = state.toolNames.filter((t) => t !== GLOBAL).length;
+  const nLines = new Set(state.items.map((i) => i.lineIndex)).size;
+  const nGlobal = state.items.filter((i) => i.tool_name === GLOBAL).length;
+  $("statTools").innerHTML = `<b>${nTools}</b> tools`;
+  $("statLines").innerHTML = `<b>${nLines}</b> lines`;
+  $("statGlobal").innerHTML = `<b>${nGlobal}</b> global`;
+}
+
+function renderToolList() {
+  const el = $("toolList");
+  el.innerHTML = "";
+  if (!state.items.length) return;
+  el.appendChild(toolRow("all", "All lines", visibleItemsFor("all").length, false));
+  for (const t of state.toolNames) {
+    el.appendChild(toolRow(t, t === GLOBAL ? "global / unmatched" : t, visibleItemsFor(t).length, t === GLOBAL));
+  }
+}
+
+function toolRow(key, label, count, isGlobal) {
+  const row = document.createElement("div");
+  row.className = "toolrow" + (key === "all" ? " all" : "") + (isGlobal ? " global" : "") +
+    (state.selectedTool === key ? " sel" : "") +
+    (key !== "all" && count === 0 ? " dim" : "");
+  row.innerHTML =
+    `<span class="name">${esc(label)}</span>` +
+    `<span class="count">${count}</span>`;
+  row.onclick = () => {
+    state.selectedTool = key;
+    state.selectedItem = null;
+    render();
+  };
+  return row;
+}
+
+// -- guidance highlighting --
+function activeHighlights() {
+  // returns { refs: Map<refString,{global}>, strong: Set }
+  const refs = new Map();
+  const strong = new Set();
+  const scope = visibleItemsFor(state.selectedTool);
+  for (const p of scope) {
+    const isGlobal = p.tool_name === GLOBAL;
+    for (const r of p.references || []) {
+      const prev = refs.get(r);
+      refs.set(r, { global: (prev ? prev.global : true) && isGlobal });
+    }
+  }
+  if (state.selectedItem) {
+    const sel = state.items.find((x) => x.id === state.selectedItem);
+    if (sel) for (const r of sel.references || []) strong.add(r);
+  }
+  return { refs, strong };
+}
+
+function buildIntervals(text, refs, strong) {
+  const marks = []; // {start,end,global,strong,ref}
+  const addAll = (needle, isGlobal, isStrong) => {
+    if (!needle) return;
+    let from = 0;
+    while (true) {
+      const idx = text.indexOf(needle, from);
+      if (idx === -1) break;
+      marks.push({ start: idx, end: idx + needle.length, global: isGlobal, strong: isStrong, ref: needle });
+      from = idx + Math.max(1, needle.length);
+    }
+  };
+  refs.forEach((meta, r) => addAll(r, meta.global, false));
+  strong.forEach((r) => addAll(r, refs.get(r) ? refs.get(r).global : false, true));
+  return marks;
+}
+
+function renderGuidance() {
+  if (state.guidance == null) return;
+  $("guideTitle").textContent = state.guidanceName || "Guidance";
+  const scopeLabel = state.selectedTool === "all" ? "all lines"
+    : state.selectedTool === GLOBAL ? "global / unmatched" : state.selectedTool;
+  const n = visibleItemsFor(state.selectedTool).length;
+  $("guideHint").textContent = `— highlighting ${n} line${n === 1 ? "" : "s"} for ${scopeLabel}`;
+
+  const text = state.guidance;
+  const { refs, strong } = activeHighlights();
+  const marks = buildIntervals(text, refs, strong);
+
+  const len = text.length;
+  const cov = new Uint8Array(len); // bit0 highlighted, bit1 global, bit2 strong
+  const refIndex = new Map();
+  guideRefList = [];
+  const refIdxOf = (r) => {
+    if (refIndex.has(r)) return refIndex.get(r);
+    const i = guideRefList.length;
+    guideRefList.push(r);
+    refIndex.set(r, i);
+    return i;
+  };
+  const refsAt = new Array(len);
+  for (const m of marks) {
+    const ri = refIdxOf(m.ref);
+    for (let i = m.start; i < m.end && i < len; i++) {
+      cov[i] |= 1;
+      if (m.global) cov[i] |= 2;
+      if (m.strong) cov[i] |= 4;
+      (refsAt[i] || (refsAt[i] = new Set())).add(ri);
+    }
+  }
+
+  let html = "";
+  let i = 0;
+  let firstStrongPlaced = false;
+  while (i < len) {
+    const c = cov[i];
+    if (c === 0) {
+      let j = i;
+      while (j < len && cov[j] === 0) j++;
+      html += esc(text.slice(i, j));
+      i = j;
+    } else {
+      let j = i;
+      while (j < len && cov[j] === c) j++;
+      const strongCls = c & 4 ? " strong" : "";
+      const globalCls = (c & 2 && !(c & 4)) ? " global" : "";
+      let id = "";
+      if (!firstStrongPlaced && c & 4) { id = ' id="firstStrong"'; firstStrongPlaced = true; }
+      const rset = new Set();
+      for (let k = i; k < j; k++) { const s = refsAt[k]; if (s) s.forEach((x) => rset.add(x)); }
+      const refsAttr = rset.size ? ` data-refs="${Array.from(rset).join(",")}"` : "";
+      html += `<mark class="hl${strongCls}${globalCls}"${id}${refsAttr}>${esc(text.slice(i, j))}</mark>`;
+      i = j;
+    }
+  }
+  $("guide").innerHTML = html;
+
+  const target = $("firstStrong");
+  if (target) target.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+// -- detail panel --
+function renderDetail() {
+  const el = $("detailInner");
+  if (!state.items.length) {
+    el.innerHTML = `<div class="empty" style="height:40vh"><div>No classification loaded yet.</div></div>`;
+    return;
+  }
+  if (state.selectedItem) { renderItemDetail(el); return; }
+
+  const scope = visibleItemsFor(state.selectedTool);
+  const title = state.selectedTool === "all" ? "All lines"
+    : state.selectedTool === GLOBAL ? "global / unmatched" : state.selectedTool;
+  const nChecked = state.checkedItems.size;
+  let html = `<div class="dhead"><h2>${esc(title)}</h2>` +
+    `<div class="desc">${scope.length} guidance line${scope.length === 1 ? "" : "s"} match the current filters</div></div>` +
+    `<div style="padding:14px 16px 0">`;
+
+  // Combine bar: tick lines, then merge them into the guidance editor.
+  html += `<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;margin-bottom:10px;` +
+    `border:1px solid var(--line-strong);border-radius:var(--radius);background:var(--accent-soft)">` +
+    `<span style="font-size:12.5px;color:var(--ink-soft)"><b id="combineCount">${nChecked}</b> line(s) checked</span>` +
+    `<span style="flex:1"></span>` +
+    `<button id="combineClear" class="stat" style="cursor:pointer"${nChecked ? "" : " disabled"}>Clear</button>` +
+    `<button id="combineBtn" class="stat" style="cursor:pointer;border-color:var(--accent);color:var(--accent)"${nChecked ? "" : " disabled"}>` +
+    `Combine → guidance</button></div>`;
+
+  if (!scope.length) {
+    html += `<div style="color:var(--ink-faint);padding:20px 0">No lines match the current filters.</div>`;
+  }
+
+  let lastTool = null;
+  for (const p of scope) {
+    if (state.selectedTool === "all" && p.tool_name !== lastTool) {
+      lastTool = p.tool_name;
+      const label = p.tool_name === GLOBAL ? "global / unmatched" : p.tool_name;
+      html += `<div style="font-family:var(--mono);font-size:11px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.06em;margin:14px 0 6px">${esc(label)}</div>`;
+    }
+    html += itemCardHTML(p);
+  }
+  html += `</div>`;
+  el.innerHTML = html;
+
+  scope.forEach((p) => {
+    const node = el.querySelector(`.pcard[data-pid="${cssEscape(p.id)}"]`);
+    if (node) node.onclick = () => { state.selectedItem = p.id; render(); };
+  });
+  el.querySelectorAll(".pcheck").forEach((cb) => {
+    cb.onclick = (e) => e.stopPropagation();
+    cb.onchange = (e) => {
+      const pid = e.target.dataset.pid;
+      if (e.target.checked) state.checkedItems.add(pid);
+      else state.checkedItems.delete(pid);
+      renderDetail();
+    };
+  });
+  const clearBtn = $("combineClear");
+  if (clearBtn) clearBtn.onclick = () => { state.checkedItems.clear(); renderDetail(); };
+  const combineBtn = $("combineBtn");
+  if (combineBtn) combineBtn.onclick = combineCheckedIntoGuidance;
+}
+
+function itemCardHTML(p) {
+  const meta = [];
+  if (p.tool_name === GLOBAL) meta.push(`<span class="tag global">global</span>`);
+  else meta.push(`<span class="tag">${esc(p.tool_name)}</span>`);
+  const checked = state.checkedItems.has(p.id) ? " checked" : "";
+  return `<div class="pcard" data-pid="${esc(p.id)}" style="display:flex;gap:10px;align-items:flex-start">` +
+    `<input type="checkbox" class="pcheck" data-pid="${esc(p.id)}"${checked} ` +
+    `title="Include this line in the combined guidance" ` +
+    `style="margin-top:3px;flex:0 0 auto;cursor:pointer" />` +
+    `<div style="flex:1;min-width:0">` +
+    `<div class="pname">${esc(p.name)}</div>` +
+    `<div class="pmeta">${meta.join("")}</div>` +
+    `</div></div>`;
+}
+
+function renderItemDetail(el) {
+  const p = state.items.find((x) => x.id === state.selectedItem);
+  if (!p) { state.selectedItem = null; renderDetail(); return; }
+  const backLabel = state.selectedTool === "all" ? "all lines"
+    : state.selectedTool === GLOBAL ? "global" : state.selectedTool;
+
+  // sibling tools this same line maps to
+  const siblings = state.items.filter((x) => x.lineIndex === p.lineIndex);
+  const tools = siblings.map((s) => s.tool_name);
+
+  let html = `<div class="dhead">` +
+    `<button class="backbtn" id="backBtn">← ${esc(backLabel)}</button>` +
+    `<h2>Guidance line ${p.lineIndex + 1}</h2>` +
+    `<div class="desc">${esc(p.description)}</div>` +
+    `</div><div style="padding:14px 16px 0">`;
+
+  html += `<div class="block"><h4>Mapped to tool(s)</h4><div class="pmeta" style="display:flex;flex-wrap:wrap;gap:5px">`;
+  for (const t of tools) {
+    html += t === GLOBAL ? `<span class="tag global">global / unmatched</span>` : `<span class="tag">${esc(t)}</span>`;
+  }
+  html += `</div></div>`;
+
+  if (p.reason) {
+    html += `<div class="block"><h4>Why</h4><div class="reason">${esc(p.reason)}</div></div>`;
+  }
+
+  html += `<div class="block"><h4>Guidance line (click to locate)</h4>` +
+    `<div class="rawline" id="locateLine">${esc(p.raw.trim())}</div></div>`;
+
+  html += `</div>`;
+  el.innerHTML = html;
+
+  $("backBtn").onclick = () => { state.selectedItem = null; render(); };
+  const loc = $("locateLine");
+  if (loc) loc.onclick = () => locateReference(p.references[0]);
+}
+
+// Gather the raw text of all checked lines and write them into the guidance
+// editor. The Reset button then persists them to guidance.txt.
+function combineCheckedIntoGuidance() {
+  // de-dup by line index (a line checked under two tools should appear once)
+  const seen = new Set();
+  const picked = [];
+  for (const p of state.items) {
+    if (!state.checkedItems.has(p.id)) continue;
+    if (seen.has(p.lineIndex)) continue;
+    seen.add(p.lineIndex);
+    picked.push(p);
+  }
+  if (!picked.length) return;
+  picked.sort((a, b) => a.lineIndex - b.lineIndex);
+  const text = picked.map((p) => p.raw).join("\n");
+
+  const editor = $("guidanceEditor");
+  const section = $("smithGuidanceSection");
+  if (!editor) {
+    alert("Combined guidance:\n\n" + text +
+      "\n\n(The editor is only available when served by `smith --flag classify_guidance`.)");
+    return;
+  }
+  if (section) section.style.display = "";
+  editor.value = text;
+  editor.scrollIntoView({ behavior: "smooth", block: "center" });
+  editor.focus();
+}
+
+function locateReference(ref) {
+  if (!ref) return;
+  const marks = $("guide").querySelectorAll("mark");
+  for (const m of marks) {
+    if (ref.startsWith(m.textContent.slice(0, 12)) || m.textContent.includes(ref.slice(0, 20))) {
+      m.scrollIntoView({ behavior: "smooth", block: "center" });
+      m.style.transition = "outline .2s";
+      m.style.outline = "2px solid var(--accent)";
+      setTimeout(() => { m.style.outline = ""; }, 1200);
+      break;
+    }
+  }
+}
+
+function cssEscape(s) { return s.replace(/["\\]/g, "\\$&"); }
+
+// ---------- filters wiring ----------
+document.querySelectorAll(".segmented").forEach((seg) => {
+  const key = seg.dataset.filter;
+  seg.querySelectorAll("button").forEach((b) => {
+    b.onclick = () => {
+      seg.querySelectorAll("button").forEach((x) => x.classList.remove("on"));
+      b.classList.add("on");
+      state.filters[key] = b.dataset.val;
+      render();
+    };
+  });
+});
+
+// ---------- upload + classify + reset bridge ----------
+(function () {
+  const editor = $("guidanceEditor");
+  const section = $("smithGuidanceSection");
+  const runBtn = $("runSmithBtn");
+  const status = $("resetStatus");
+  const refreshBtn = $("refreshBtn");
+  const drop = $("drop");
+  const fileInput = $("fileInput");
+
+  // Server config: where Reset writes (.env guidance.txt) + tool_defs presence.
+  let resetTargetPath = "";
+
+  function setStatus(msg, kind) {
+    status.textContent = msg || "";
+    status.style.color = kind === "error" ? "var(--bad)" : kind === "ok" ? "var(--good)" : "var(--ink-faint)";
+  }
+
+  fetch("/config")
+    .then((r) => r.json())
+    .then((cfg) => {
+      resetTargetPath = cfg.guidance_path || "";
+      const note = $("resetTargetNote");
+      if (note) {
+        note.textContent = "Reset writes to " + resetTargetPath +
+          " (the .env guidance.txt). Your uploaded file is never modified.";
+      }
+      if (cfg.tool_definitions_present === false) {
+        $("centerEmptyMsg").textContent =
+          "tool_definitions.json not found at " + (cfg.tool_definitions_path || "") +
+          ". Run `smith --flag get_mcp_parameter` for this agent first.";
+      }
+    })
+    .catch(() => { /* served elsewhere — leave the note blank */ });
+
+  // Classify the currently-loaded guidance text (POST the text to the server).
+  function classifyLoaded(labelVerb) {
+    if (state.guidance == null) return Promise.resolve();
+    $("centerEmptyMsg").textContent = (labelVerb || "Classifying") + " guidance lines…";
+    $("centerEmpty").style.display = "";
+    $("centerContent").style.display = "none";
+    return fetch("/classify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ guidance: state.guidance }),
+    })
+      .then((r) => (r.ok ? r.json() : r.json().then((e) => Promise.reject(e))))
+      .then((m) => {
+        buildItems(m.lines || []);
+        if (section) section.style.display = "";
+        render();
+      })
+      .catch((e) => {
+        $("centerEmptyMsg").textContent = (e && e.error) ? e.error : "Classification failed.";
+      });
+  }
+
+  // Read an uploaded file, set it as the loaded guidance, and classify it.
+  function loadFile(file) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      state.guidance = String(reader.result || "");
+      state.guidanceName = file.name;
+      // seed the editor with the uploaded text (user can trim before Reset)
+      if (editor) editor.value = state.guidance;
+      state.selectedTool = "all";
+      state.selectedItem = null;
+      state.checkedItems.clear();
+      renderLoaded();
+      classifyLoaded("Classifying");
+    };
+    reader.readAsText(file);
+  }
+
+  // upload wiring
+  drop.addEventListener("click", () => fileInput.click());
+  $("pickFile").addEventListener("click", (e) => { e.stopPropagation(); fileInput.click(); });
+  fileInput.addEventListener("change", (e) => loadFile(e.target.files && e.target.files[0]));
+  ["dragenter", "dragover"].forEach((ev) =>
+    drop.addEventListener(ev, (e) => { e.preventDefault(); e.stopPropagation(); drop.classList.add("over"); })
+  );
+  ["dragleave", "drop"].forEach((ev) =>
+    drop.addEventListener(ev, (e) => { e.preventDefault(); e.stopPropagation(); drop.classList.remove("over"); })
+  );
+  drop.addEventListener("drop", (e) => {
+    const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    loadFile(f);
+  });
+
+  // "Re-classify" re-runs the LLM on the currently loaded text.
+  if (refreshBtn) refreshBtn.addEventListener("click", () => classifyLoaded("Re-classifying"));
+
+  function doReset() {
+    runBtn.disabled = true;
+    const selectedTools = [...new Set(
+      state.items
+        .filter((p) => state.checkedItems.has(p.id))
+        .map((p) => p.tool_name)
+        .filter((t) => t && t !== GLOBAL)
+    )];
+    return fetch("/reset", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ guidance: editor.value, selected_tools: selectedTools }),
+    })
+      .then((r) => r.json())
+      .finally(() => { runBtn.disabled = false; });
+  }
+
+  runBtn.addEventListener("click", () => {
+    if (!confirm(
+      "Reset Smith inputs?\n\n" +
+      "1. overwrite the .env guidance.txt (" + (resetTargetPath || "GUIDANCE_FILE") + ") with the editor text\n" +
+      "2. run clean_generated.sh (delete generated files under references/)\n" +
+      "3. write session_config.json with the checked lines' tools\n\n" +
+      "Your uploaded file is not touched. This cannot be undone."
+    )) return;
+    setStatus("Writing guidance and cleaning…");
+    doReset()
+      .then((res) => {
+        if (res.ok) {
+          setStatus(
+            "Guidance saved and generated files cleaned. Now start a code agent " +
+            "(e.g. Claude Code) and ask it to run Smith to generate from the new guidance.",
+            "ok"
+          );
+        } else {
+          setStatus((res.error || "Reset failed.") + (res.detail ? " — " + res.detail : ""), "error");
+        }
+      })
+      .catch((e) => setStatus("Reset request failed: " + e.message, "error"));
+  });
+})();
+</script>
+</body>
+</html>

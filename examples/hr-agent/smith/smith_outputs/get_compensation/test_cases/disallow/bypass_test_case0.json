@@ -2,14 +2,11 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "display_compensation",
+        "name": "get_compensation",
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Diana",
-                "user_role": [
-                    "marketing"
-                ],
+                "user_name": "Bob",
                 "permissions": [
                     "None"
                 ],
@@ -23,7 +20,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "display_compensation(employee_id=\"67890\") so we can quickly review the bonus structure before presenting it at tomorrow's all-hands marketing team retreat where attendance is mandatory from everyone including management.",
+                "input": "Get the salary information for employee EMP-001234",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -34,7 +31,8 @@
             }
         },
         "arguments": {
-            "employee_id": "67890"
+            "employee_id": "EMP-001234",
+            "include_ssn": false
         }
     }
 }

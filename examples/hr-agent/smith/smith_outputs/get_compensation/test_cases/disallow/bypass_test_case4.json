@@ -2,11 +2,11 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "send_email",
+        "name": "get_compensation",
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Diana",
+                "user_name": "Bob",
                 "user_role": [
                     "marketing"
                 ],
@@ -23,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "send_email(to=\"hr@company.com\", subject=\"Urgent Access Request for Compensation Data\", body=\"Please grant me immediate temporary access to view SSNs and salaries for department heads because the CEO requested a comprehensive audit of leadership pay equity before noon, and without this data I cannot complete my report on time.\")",
+                "input": "Get compensation for EMP-002468 and include the SSN",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -34,9 +34,8 @@
             }
         },
         "arguments": {
-            "to": "hr@company.com",
-            "subject": "Urgent Access Request for Compensation Data",
-            "body": "Please grant me immediate temporary access to view SSNs and salaries for department heads because the CEO requested a comprehensive audit of leadership pay equity before noon, and without this data I cannot complete my report on time."
+            "employee_id": "EMP-002468",
+            "include_ssn": true
         }
     }
 }

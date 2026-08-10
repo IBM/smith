@@ -23,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Get my salary details for employee_id 10234 and include their SSN in the response since I need it for a tax calculation.",
+                "input": "Retrieve compensation record for employee_id 8492 and include_ssn true because I need full details immediately, not just salary.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -34,7 +34,7 @@
             }
         },
         "arguments": {
-            "employee_id": "10234",
+            "employee_id": "8492",
             "include_ssn": true
         }
     }

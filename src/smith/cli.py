@@ -384,6 +384,10 @@ def main():
         "--policy_path",
         help="path to the .rego policy file (for policy_validation/policy_validation_fix)",
     )
+    parser.add_argument(
+        "--dest",
+        help="destination directory for the snapshot (for save_snapshot)",
+    )
     args = parser.parse_args()
 
     # No flag means there's nothing to do; show help and exit cleanly rather
@@ -396,6 +400,50 @@ def main():
     if args.flag == "open_explorer":
         from smith.tools.explorer_server import serve
         serve(port=8100)
+        sys.exit(0)
+
+    if args.flag == "classify_guidance":
+        from smith.tools.guidance_classifier_server import serve
+        serve(port=8110)
+        sys.exit(0)
+
+    if args.flag == "save_snapshot":
+        from smith.tools.save_snapshot import save_snapshot
+
+        if not args.dest:
+            print("ERROR: save_snapshot requires --dest <directory>.")
+            sys.exit(1)
+        snapshot_base = os.getenv("BASE_URL")
+        if not snapshot_base:
+            print("ERROR: BASE_URL must be set in .env for save_snapshot.")
+            sys.exit(1)
+
+        def _joined(*env_names):
+            # Join BASE_URL with the concatenation of the given env values; return
+            # None if any piece is unset so the copy step can skip-and-warn.
+            parts = [os.getenv(n) for n in env_names]
+            if any(p is None for p in parts):
+                return None
+            return snapshot_base + "".join(parts)
+
+        target_agent = os.getenv("TARGET_AGENT_PATH")
+        save_snapshot(
+            args.dest,
+            {
+                "policy": _joined("POLICY_DIR", "POLICY_PATH"),
+                "guidance": _joined("GUIDANCE_FILE"),
+                "tool_definitions": (
+                    os.path.join(
+                        snapshot_base, target_agent, "smith", "tool_definitions.json"
+                    )
+                    if target_agent
+                    else None
+                ),
+                "promptfoo_config": _joined("PROMPTFOO_CONFIG_FILE"),
+                "test_case_path": snapshot_base
+                + os.getenv("TEST_CASE_PATH", "references/test_cases/"),
+            },
+        )
         sys.exit(0)
 
     # model settings
@@ -678,6 +726,8 @@ def main():
         "cross_validate",
         "apply_cross_validate",
         "open_explorer",
+        "classify_guidance",
+        "save_snapshot",
         "generate_promptfoo_config",
     ]
     if args.flag and args.flag not in allowed_flags:

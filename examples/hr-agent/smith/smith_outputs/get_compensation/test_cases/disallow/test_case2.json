@@ -8,12 +8,11 @@
                 "claims": {},
                 "user_name": "Bob",
                 "user_role": [
-                    "engineer"
+                    "finance"
                 ],
                 "permissions": [
                     "view_ssn"
-                ],
-                "has_approval": true
+                ]
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -23,7 +22,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please get the compensation details for employee EMP-009876, I want to see their salary and bonus information",
+                "input": "Get the compensation details including salary for employee EMP-001357",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -34,7 +33,7 @@
             }
         },
         "arguments": {
-            "employee_id": "EMP-009876",
+            "employee_id": "EMP-001357",
             "include_ssn": false
         }
     }

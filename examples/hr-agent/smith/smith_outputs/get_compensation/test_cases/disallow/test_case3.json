@@ -7,13 +7,9 @@
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
-                "user_role": [
-                    "hr"
-                ],
                 "permissions": [
                     "None"
-                ],
-                "has_approval": false
+                ]
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -23,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you pull up the salary information for employee EMP-005678? I need to review their compensation package",
+                "input": "Please retrieve compensation data for employee EMP-004826 and include their SSN",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -34,8 +30,8 @@
             }
         },
         "arguments": {
-            "employee_id": "EMP-005678",
-            "include_ssn": false
+            "employee_id": "EMP-004826",
+            "include_ssn": true
         }
     }
 }

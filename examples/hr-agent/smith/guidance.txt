@@ -1,2 +1,2 @@
-Only HR employee can access compensation records (e.g., salary)
-Only employees with `view_ssn` permission can view SSNs in compensation records. SSNs must be redacted if the HR does not have view_ssn.
+All employees can only access internal repositories.
+All employees cannot access other teams' repositories.

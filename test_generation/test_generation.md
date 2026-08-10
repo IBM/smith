@@ -12,6 +12,8 @@ Ask: "What kind of test cases would you like? (1) Guidance-targeted cases, (2) p
 
 Based on the answer, run the generation command(s) below, then proceed to Translation and Evaluation, which are the same regardless of which kind was generated.
 
+Before generating, print this reminder to the user: "If you're using promptfoo, make sure your promptfoo config is up to date (You can use `smith --flag generate_promptfoo_config` to auto generate it, make sure to double check the generated file)."
+
 ## Generation
 
 ### Guidance-targeted cases

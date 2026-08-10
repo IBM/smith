@@ -44,6 +44,7 @@ smith --flag apply_cross_validate   # apply approved label corrections from cros
 smith --flag policy_validation --policy_path <file.rego>      # validate a rego file
 smith --flag policy_validation_fix --policy_path <file.rego>  # validate and auto-fix
 smith --flag open_explorer          # launch the Policy Explorer UI (browse specs, select guidance)
+smith --flag classify_guidance      # launch the Guidance Classifier UI (map each guidance line -> tool call, combine + reset inputs)
 
 # Policy-testing OPA server (root Makefile; the packaged harness in
 # src/smith/policy_testing/ is what `smith --flag policy_testing` and `make test` invoke)
@@ -99,7 +100,7 @@ The generated policy may **only** reference data available from tool arguments o
 - `test_generation/` — generation pipeline stages run in order by the `test_generation` flag: `decompose` → `grey_condition` → `variable_extraction` → `case_generation` → `attack` (ARES) → `attack_promptfoo` → `classify_promptfoo_tool` → `convert_test_case`. Also `extract_tool_args.py` for translation and `generate_promptfoo_config.py` for config generation.
 - `test_case_evaluation/` — three-tier label validation: `tier1_rules.py` (pattern match) → `tier2_semantic.py` (embeddings + NLI) → `tier3_llm_judge.py` (LLM), plus `classify_guidance.py` and `visualization/build_report.py`.
 - `policy_agent/` — refinement engine: `red_feedback/` (DBSCAN clustering of failed cases, tuned by `CLUSTER_EPS`/`CLUSTER_MIN_SAMPLES`), `policy_analysis/regal/` (Regal), `reduce_improve/` (graph + LLM dedup), `policy_evaluation/`.
-- `tools/` — developer utilities: `explorer_server.py` (policy explorer UI bridge), `license_headers.py`.
+- `tools/` — developer utilities: `explorer_server.py` (policy explorer UI bridge, `policy_explorer.html`), `guidance_classifier_server.py` + `classify_guidance_lines.py` + `guidance_classifier.html` (upstream guidance-line → tool-call classifier UI), `license_headers.py`.
 - `tests/integration/` — the `make test` scorecard harness (bash + curl against the OPA server).
 
 ## Refinement workflow (the SKILL.md contract)

@@ -8,12 +8,11 @@
                 "claims": {},
                 "user_name": "Bob",
                 "user_role": [
-                    "finance"
+                    "hr"
                 ],
                 "permissions": [
                     "view_ssn"
-                ],
-                "has_approval": true
+                ]
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -23,7 +22,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Show me the pay information for employee EMP-007890 including their base salary",
+                "input": "I need to retrieve the compensation data for employee EMP-001234 including their salary information",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -34,7 +33,7 @@
             }
         },
         "arguments": {
-            "employee_id": "EMP-007890",
+            "employee_id": "EMP-001234",
             "include_ssn": false
         }
     }

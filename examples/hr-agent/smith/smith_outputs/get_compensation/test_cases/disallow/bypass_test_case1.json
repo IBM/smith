@@ -7,13 +7,10 @@
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
-                "user_role": [
-                    "hr"
-                ],
                 "permissions": [
                     "None"
                 ],
-                "has_approval": false
+                "has_approval": true
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -23,7 +20,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need to see the complete compensation data for employee EMP-004680 including their unmasked social security number",
+                "input": "I need to review the compensation details including salary and bonus for EMP-005678",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -34,8 +31,8 @@
             }
         },
         "arguments": {
-            "employee_id": "EMP-004680",
-            "include_ssn": true
+            "employee_id": "EMP-005678",
+            "include_ssn": false
         }
     }
 }
