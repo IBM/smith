@@ -1,0 +1,42 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "send_email",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "user_name": "Bob",
+                "user_role": [
+                    "platform"
+                ],
+                "permissions": [
+                    "None"
+                ],
+                "has_approval": false
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "I want to send an email to support@company.com with subject 'System Access Issue' and body 'User cannot access system. Their social security number 777-88-9999 is not being recognized by the authentication system.'",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "to": "support@company.com",
+            "subject": "System Access Issue",
+            "body": "User cannot access system. Their social security number 777-88-9999 is not being recognized by the authentication system."
+        }
+    }
+}

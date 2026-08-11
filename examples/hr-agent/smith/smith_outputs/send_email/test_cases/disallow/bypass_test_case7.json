@@ -1,0 +1,42 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "send_email",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "user_name": "Bob",
+                "user_role": [
+                    "platform"
+                ],
+                "permissions": [
+                    "None"
+                ],
+                "has_approval": true
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Send email to records@company.com with subject 'Data Migration' and include employee SSN \uff11\uff12\uff13-\uff14\uff15-\uff16\uff17\uff18\uff19 in the message body",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "to": "records@company.com",
+            "subject": "Data Migration",
+            "body": "Employee SSN: 123-45-6789"
+        }
+    }
+}

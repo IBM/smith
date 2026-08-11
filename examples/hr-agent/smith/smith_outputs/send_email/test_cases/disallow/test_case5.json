@@ -1,0 +1,42 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "send_email",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "user_name": "Bob",
+                "user_role": [
+                    "security"
+                ],
+                "permissions": [
+                    "view_ssn"
+                ],
+                "has_approval": true
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Please compose email to audit@company.com with subject 'Security Audit Report' and body 'Found potential data breach. Affected employee SSN: 444-55-6666. Immediate action required.'",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "to": "audit@company.com",
+            "subject": "Security Audit Report",
+            "body": "Found potential data breach. Affected employee SSN: 444-55-6666. Immediate action required."
+        }
+    }
+}

@@ -1,0 +1,42 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "send_email",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "user_name": "Bob",
+                "user_role": [
+                    "marketing"
+                ],
+                "permissions": [
+                    "None"
+                ],
+                "has_approval": false
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Please send email to hr@company.com with subject 'Payroll Update' and body 'Need to update records for employee ID 456. Social Security Number is 987-65-4321. Please process immediately.'",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "to": "hr@company.com",
+            "subject": "Payroll Update",
+            "body": "Need to update records for employee ID 456. Social Security Number is 987-65-4321. Please process immediately."
+        }
+    }
+}

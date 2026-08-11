@@ -1,7 +1,7 @@
 Only HR employee can access compensation records (e.g., salary)
 Only employees with `view_ssn` permission can view SSNs in compensation records. SSNs must be redacted if the HR does not have view_ssn.
-All employees can only access internal repositories.
-All employees cannot access other teams' repositories.
-Employees cannot send SSNs through email. 
+Employees does not have visibility to external repositories.
+Only employees in engineer or security team can search repositories.
+Employees cannot send SSNs through email. Email containing SSNs must be blocked
 HR can adjust compensation by $10,000 or less without additional approval.
 HR requires human approval to adjust compensation by more than $10,000.

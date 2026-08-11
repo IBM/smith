@@ -1,0 +1,2 @@
+Employees does not have visibility to external repositories.
+Only employees in engineer or security team can search repositories.
