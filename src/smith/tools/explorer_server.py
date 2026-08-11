@@ -84,7 +84,10 @@ def make_handler(base_url: str, guidance_path: str, clean_script: str):
                 self._send(
                     500,
                     json.dumps(
-                        {"ok": False, "error": f"clean script not found: {clean_script}"}
+                        {
+                            "ok": False,
+                            "error": f"clean script not found: {clean_script}",
+                        }
                     ),
                 )
                 return
@@ -141,7 +144,9 @@ def make_handler(base_url: str, guidance_path: str, clean_script: str):
             except OSError as exc:
                 self._send(
                     500,
-                    json.dumps({"ok": False, "error": f"write session_config failed: {exc}"}),
+                    json.dumps(
+                        {"ok": False, "error": f"write session_config failed: {exc}"}
+                    ),
                 )
                 return
 

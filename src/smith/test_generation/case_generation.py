@@ -109,8 +109,13 @@ Output example:
             return ""
         actions = {item["action"] for item in items if "action" in item}
         relevant = [
-            {"name": t["name"], "description": t["description"], "parameters": t["parameters"]}
-            for t in tools if t["name"] in actions
+            {
+                "name": t["name"],
+                "description": t["description"],
+                "parameters": t["parameters"],
+            }
+            for t in tools
+            if t["name"] in actions
         ]
         if not relevant:
             return ""

@@ -3,7 +3,6 @@
 
 import argparse
 import asyncio
-import importlib.resources as resources
 import json
 import os
 import re
@@ -141,7 +140,9 @@ VALID_ATTACK_TOOLS = {"ares", "promptfoo", "none"}
 
 def _load_session_config(base_url):
     """Load session config from the path specified by SESSION_CONFIG_FILE."""
-    config_path = base_url + os.getenv("SESSION_CONFIG_FILE", "references/session_config.json")
+    config_path = base_url + os.getenv(
+        "SESSION_CONFIG_FILE", "references/session_config.json"
+    )
     if os.path.exists(config_path):
         with open(config_path, "r") as f:
             return json.load(f)
@@ -396,14 +397,16 @@ def main():
     if not args.flag:
         parser.print_help()
         sys.exit(0)
-        
+
     if args.flag == "open_explorer":
         from smith.tools.explorer_server import serve
+
         serve(port=8100)
         sys.exit(0)
 
     if args.flag == "classify_guidance":
         from smith.tools.guidance_classifier_server import serve
+
         serve(port=8110)
         sys.exit(0)
 

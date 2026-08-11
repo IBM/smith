@@ -54,7 +54,9 @@ def translate_case(
         test_cases = [tc for tc in test_cases if tc.get("action") in selected_tools]
         filtered = before_count - len(test_cases)
         if filtered:
-            print(f"Filtered {filtered} test cases not targeting selected tools: {sorted(selected_tools)}")
+            print(
+                f"Filtered {filtered} test cases not targeting selected tools: {sorted(selected_tools)}"
+            )
 
     for test_case in test_cases:
         filled = _fill_template(test_case, test_case_template_file, system_vars)
