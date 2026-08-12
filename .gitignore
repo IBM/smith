@@ -6,6 +6,9 @@ smith.egg-info/
 build/
 dist/
 .eggs/
+policy_generation/
+!opa_policy/policy_generation/
+!src/smith/policy_generation/
 
 # ---- Virtual environments ----
 venv*/

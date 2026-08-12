@@ -18,6 +18,9 @@ If the user asks to create an OPA policy, you should strictly follow instruction
 
 After completion, remind the user: “The policy has been created. Next steps you can take: (1) generate test cases, (2) if you already have test cases, you can ask me to test the policy.”
 
+## OWASP Policy Generation
+If the user asks to generate an OPA policy using the OWASP pipeline, or to run OWASP policy generation for an MCP server: strictly follow `./opa_policy/policy_generation/policy_foundation.md` without stopping for human confirmation at any step. Ask for the target MCP server directory if not provided, then run all steps A through the pipeline handoff autonomously. Auto-fill any questionnaire blanks from available files (guidance.txt, system_vars.json, tool_definitions.json, architecture.md) — do not leave blanks and do not ask the user to fill them in.
+
 ## Test Case Generation
 If the user asks to generate test cases, you should strictly follow instructions in `./test_generation/test_generation.md` in the skill directory.
 
@@ -32,6 +35,9 @@ After reporting results, remind the user of next steps based on the outcome:
 - If all tests pass: “All tests passed. You can proceed to generate more test cases, or ask me to check for formatting/duplication issues.”
 - If 0 test cases were evaluated OR 100% of test cases are rejected: follow `./opa_policy/policy_cross_validation/policy_cross_validation.md` to diagnose and fix structural/syntax issues before proceeding.
 - If tests fail (mixed pass/fail): “Some tests failed. Next steps: consider cross-validating test cases first (labels may be wrong), then ask me to improve/patch the policy.”
+
+## Automated Policy Fix Loop
+If the user asks to run the automated fix loop, policy delta fix, or to automatically improve the policy until 100% pass rate: run `smith --flag policy_delta_fix` with the appropriate `--policy_path`, `--test_cases_dir`, `--max_iter`, and `--stall_limit` options. The loop diagnoses failing test cases, applies targeted LLM-generated fixes, validates with OPA, and repeats until 100% pass rate or a stopping condition is hit.
 
 ## Cross-Validate Failed Test Cases
 If the user asks to cross-validate failed test cases, follow the instructions in `./test_generation/cross_validate.md` in the skill directory.

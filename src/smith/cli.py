@@ -48,6 +48,7 @@ from smith.policy_generation.validate_policy import (
     validate_policy,
     fix_and_validate_policy,
 )
+from smith.policy_generation.policy_delta_test import run as run_delta_test
 from smith.test_case_evaluation.cross_validate import cross_validate_failed_cases
 from smith.test_case_evaluation.apply_cross_validate import apply_cross_validate_results
 from smith.test_generation.extract_tool_args import run_extract_tool_args
@@ -389,6 +390,13 @@ def main():
         "--dest",
         help="destination directory for the snapshot (for save_snapshot)",
     )
+    parser.add_argument("--test_cases_dir", help="path to test cases directory (overrides TEST_CASE_PATH for policy_delta)")
+    parser.add_argument("--previous", help="path to previous policy_delta JSON output")
+    parser.add_argument("--target", type=float, help="target pass rate (0.0–1.0)")
+    parser.add_argument("--delta_json", help="path to save policy_delta JSON output")
+    parser.add_argument("--verbose", action="store_true", help="verbose per-case output")
+    parser.add_argument("--max_iter", type=int, default=10, help="max fix iterations (policy_delta_fix)")
+    parser.add_argument("--stall_limit", type=int, default=3, help="consecutive no-improvement iterations before stopping (policy_delta_fix)")
     args = parser.parse_args()
 
     # No flag means there's nothing to do; show help and exit cleanly rather
@@ -680,6 +688,38 @@ def main():
         if not fix_and_validate_policy(args.policy_path):
             sys.exit(1)
 
+    if args.flag == "policy_delta":
+        policy_path = args.policy_path or agent.policy_path
+        opa_url = os.getenv("SMITH_OPA_URL", "http://localhost:8181")
+        run_delta_test(
+            policy_path=policy_path,
+            test_cases_dir=args.test_cases_dir or test_case_path,
+            opa_url=opa_url,
+            target=args.target,
+            previous_path=args.previous,
+            json_out=args.delta_json,
+            verbose=args.verbose,
+        )
+
+    if args.flag == "policy_delta_fix":
+        from smith.policy_generation.policy_delta_fix import run as run_delta_fix
+        policy_path = args.policy_path or agent.policy_path
+        opa_url = os.getenv("SMITH_OPA_URL", "http://localhost:8181")
+        run_delta_fix(
+            policy_path=policy_path,
+            test_cases_dir=args.test_cases_dir or test_case_path,
+            opa_url=opa_url,
+            previous_path=args.previous,
+            max_iter=args.max_iter,
+            stall_limit=args.stall_limit,
+            api_key=api_key,
+            openai_base_url=openai_base_url,
+            model=model,
+            temp=temp,
+            top_p=top_p,
+            verbose=args.verbose,
+        )
+
     if args.flag == "cross_validate":
         print("Running policy testing first to identify failed cases...")
         agent.policy_checking_results()
@@ -726,6 +766,8 @@ def main():
         "test_case_evaluation",
         "policy_validation",
         "policy_validation_fix",
+        "policy_delta",
+        "policy_delta_fix",
         "cross_validate",
         "apply_cross_validate",
         "open_explorer",
