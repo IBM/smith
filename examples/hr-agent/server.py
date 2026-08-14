@@ -1,7 +1,8 @@
 """HR Demo MCP Server — HTTP/JSON-RPC variant.
 
-A small FastAPI app that speaks MCP-shaped JSON-RPC over HTTP so a
-gateway can route to it.
+A small FastAPI app that speaks MCP-shaped JSON-RPC over HTTP so
+Praxis can route to it. Adapted from `apl-plugins/demo/hr_demo_server.py`
+(which speaks stdio); the tool fixtures + logic are the same.
 
 The headline log line is intentional: every inbound request prints
 the Authorization header (so audiences can see the IdP-minted token,
@@ -179,12 +180,34 @@ def tool_search_repos(args: dict[str, Any]) -> dict[str, Any]:
     return {"matches": matches, "query": {"repo_name": repo_name, "visibility": visibility}}
 
 
+def tool_adjust_compensation(args: dict[str, Any]) -> dict[str, Any]:
+    # Mutating, sensitive action. The interesting demo property: large
+    # adjustments require a manager's out-of-band approval, enforced by
+    # the gateway's `require_approval(...)` policy BEFORE this code runs.
+    # By the time we get here, the approval (if required) already landed —
+    # the tool just applies the change.
+    employee_id = args.get("employee_id", "")
+    amount = int(args.get("amount", 0))
+    employee = EMPLOYEES.get(employee_id)
+    if not employee:
+        return {"error": f"Employee {employee_id} not found"}
+    employee["salary"] += amount
+    return {
+        "status": "applied",
+        "employee_id": employee["employee_id"],
+        "name": employee["name"],
+        "adjustment": amount,
+        "new_salary": employee["salary"],
+    }
+
+
 TOOLS = {
     "get_compensation": tool_get_compensation,
     "send_email": tool_send_email,
     "display_compensation": tool_display_compensation,
     "get_directory": tool_get_directory,
     "search_repos": tool_search_repos,
+    "adjust_compensation": tool_adjust_compensation,
 }
 
 # ---------------------------------------------------------------------------
@@ -200,14 +223,6 @@ def _redact_token(value: str) -> str:
     return value
 
 
-def _log_safe(value: Any) -> str:
-    """Neutralize a user-controlled value for single-line logging: coerce to
-    str and replace CR/LF and other control characters with spaces so a
-    crafted request field can't forge or split log entries (CWE-117)."""
-    s = value if isinstance(value, str) else str(value)
-    return "".join(ch if ch.isprintable() else " " for ch in s)
-
-
 @app.post("/mcp")
 async def mcp_endpoint(request: Request) -> JSONResponse:
     body_bytes = await request.body()
@@ -218,6 +233,7 @@ async def mcp_endpoint(request: Request) -> JSONResponse:
     logger.info("INBOUND REQUEST  (this is what reached the MCP server)")
     interesting_headers = [
         "authorization", "x-user-token", "x-cpex-violation",
+        "x-praxis-mcp-method", "x-praxis-mcp-name",
     ]
     for name in interesting_headers:
         v = request.headers.get(name)
@@ -225,13 +241,10 @@ async def mcp_endpoint(request: Request) -> JSONResponse:
             logger.info("  %-25s = %s", name, _redact_token(v))
     try:
         rpc = json.loads(body_bytes)
-        logger.info("  body.method               = %s", _log_safe(rpc.get("method")))
+        logger.info("  body.method               = %s", rpc.get("method"))
         params = rpc.get("params", {})
-        logger.info("  body.params.name          = %s", _log_safe(params.get("name")))
-        logger.info(
-            "  body.params.arguments     = %s",
-            _log_safe(json.dumps(params.get("arguments", {}))),
-        )
+        logger.info("  body.params.name          = %s", params.get("name"))
+        logger.info("  body.params.arguments     = %s", json.dumps(params.get("arguments", {})))
     except Exception as e:
         logger.warning("body is not JSON-RPC: %s", e)
         return JSONResponse(
@@ -263,21 +276,19 @@ async def mcp_endpoint(request: Request) -> JSONResponse:
 
     try:
         out = impl(args)
-    except Exception:
-        # Full detail (including the stack trace) goes to the server log;
-        # the client gets a generic message so internal state isn't exposed.
-        logger.exception("tool '%s' failed", _log_safe(tool_name))
+    except Exception as e:
+        logger.exception("tool '%s' failed", tool_name)
         return JSONResponse(
             {
                 "jsonrpc": "2.0",
-                "error": {"code": -32000, "message": "internal tool error"},
+                "error": {"code": -32000, "message": str(e)},
                 "id": rpc_id,
             },
             status_code=500,
         )
 
     logger.info("OUTBOUND RESPONSE")
-    logger.info("  tool                      = %s", _log_safe(tool_name))
+    logger.info("  tool                      = %s", tool_name)
     logger.info("  payload                   = %s", json.dumps(out)[:200])
     return JSONResponse(
         {

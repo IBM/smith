@@ -263,6 +263,32 @@ TOOLS = [
             },
         },
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "adjust_compensation",
+            "description": (
+                "Adjust an employee's salary by a dollar amount (a raise). "
+                "Adjustments over $10,000 require the requester's manager to "
+                "approve out-of-band before they apply — the gateway handles "
+                "that; you just make the call and relay the outcome."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "employee_id": {
+                        "type": "string",
+                        "description": "Employee identifier (e.g., EMP-001234)",
+                    },
+                    "amount": {
+                        "type": "integer",
+                        "description": "Dollar amount to add to the salary (e.g. 25000).",
+                    },
+                },
+                "required": ["employee_id", "amount"],
+            },
+        },
+    },
 ]
 
 
