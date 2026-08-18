@@ -7,13 +7,9 @@
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
-                "user_role": [
-                    "engineering"
-                ],
-                "permissions": [
-                    "None"
-                ],
-                "has_approval": false
+                "role": [
+                    "engineer"
+                ]
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -23,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Send an email to john@company.com with subject 'Employee Information' and body 'Hi John, here is the employee data you requested: Name: Sarah Johnson, SSN: 123-45-6789, Department: Marketing'",
+                "input": "Please send an email to john.doe@company.com with subject 'Employee Records' and body 'Hi John, here is the SSN for the new hire: 123-45-6789. Please update the records accordingly.'",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -33,10 +29,10 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "to": "john@company.com",
-            "subject": "Employee Information",
-            "body": "Hi John, here is the employee data you requested: Name: Sarah Johnson, SSN: 123-45-6789, Department: Marketing"
+        "args": {
+            "to": "john.doe@company.com",
+            "subject": "Employee Records",
+            "body": "Hi John, here is the SSN for the new hire: 123-45-6789. Please update the records accordingly."
         }
     }
 }

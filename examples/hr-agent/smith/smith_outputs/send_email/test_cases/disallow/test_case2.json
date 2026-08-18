@@ -7,13 +7,9 @@
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
-                "user_role": [
+                "role": [
                     "finance"
-                ],
-                "permissions": [
-                    "None"
-                ],
-                "has_approval": true
+                ]
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -23,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need to email manager@company.com with subject 'Tax Documents' and include in the body 'Attached are the tax forms. Employee SSN: 555-12-3456 for reference.'",
+                "input": "Can you send an email to manager@company.com, subject 'Verification Needed', body 'The social security number on file is 321-54-9876. Please verify this matches your records.'?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -33,10 +29,10 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
+        "args": {
             "to": "manager@company.com",
-            "subject": "Tax Documents",
-            "body": "Attached are the tax forms. Employee SSN: 555-12-3456 for reference."
+            "subject": "Verification Needed",
+            "body": "The social security number on file is 321-54-9876. Please verify this matches your records."
         }
     }
 }

@@ -7,13 +7,9 @@
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
-                "user_role": [
-                    "hr"
-                ],
-                "permissions": [
-                    "view_ssn"
-                ],
-                "has_approval": true
+                "role": [
+                    "marketing"
+                ]
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -23,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Send email to legal@company.com with subject 'Legal Review Required' and body 'Please review this case. Employee details: Name: Mike Davis, SSN: 111-22-3333, Issue: Compensation dispute'",
+                "input": "Draft and send an email to compliance@company.com with subject 'Compliance Check' and body 'Attached are the SSN details: 111-22-3333 and 444-55-6666 for the two contractors we discussed.'",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -33,10 +29,10 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "to": "legal@company.com",
-            "subject": "Legal Review Required",
-            "body": "Please review this case. Employee details: Name: Mike Davis, SSN: 111-22-3333, Issue: Compensation dispute"
+        "args": {
+            "to": "compliance@company.com",
+            "subject": "Compliance Check",
+            "body": "Attached are the SSN details: 111-22-3333 and 444-55-6666 for the two contractors we discussed."
         }
     }
 }

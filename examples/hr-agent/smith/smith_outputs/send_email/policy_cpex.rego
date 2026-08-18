@@ -1,10 +1,10 @@
 # SPDX-License-Identifier: Apache-2.0
-package mcp.policies
+package authz
 
 default allow := false
 
 # === Input Accessors ===
-subject := input.extensions.subject
+subject := input
 args := object.get(input, "args", {})
 
 # === Constants ===
@@ -14,14 +14,12 @@ ssn_pattern := `\b\d{3}-\d{2}-\d{4}\b`
 
 # Block send_email calls whose subject contains an SSN
 deny contains msg if {
-	input.name == "send_email"
 	regex.match(ssn_pattern, object.get(args, "subject", ""))
 	msg := "Email subject must not contain a Social Security Number (SSN)"
 }
 
 # Block send_email calls whose body contains an SSN
 deny contains msg if {
-	input.name == "send_email"
 	regex.match(ssn_pattern, object.get(args, "body", ""))
 	msg := "Email body must not contain a Social Security Number (SSN)"
 }

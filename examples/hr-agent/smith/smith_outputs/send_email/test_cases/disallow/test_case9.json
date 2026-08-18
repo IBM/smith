@@ -7,13 +7,9 @@
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
-                "user_role": [
-                    "marketing"
-                ],
-                "permissions": [
-                    "None"
-                ],
-                "has_approval": false
+                "role": [
+                    "security"
+                ]
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -23,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please send email to hr@company.com with subject 'Payroll Update' and body 'Need to update records for employee ID 456. Social Security Number is 987-65-4321. Please process immediately.'",
+                "input": "Forward an email to ceo@company.com with subject 'Sensitive Data Report' and body 'Here is the sensitive data you requested: Employee ID 4521, SSN: 456-12-7890, DOB: 01/15/1985.'",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -33,10 +29,10 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "to": "hr@company.com",
-            "subject": "Payroll Update",
-            "body": "Need to update records for employee ID 456. Social Security Number is 987-65-4321. Please process immediately."
+        "args": {
+            "to": "ceo@company.com",
+            "subject": "Sensitive Data Report",
+            "body": "Here is the sensitive data you requested: Employee ID 4521, SSN: 456-12-7890, DOB: 01/15/1985."
         }
     }
 }

@@ -6,12 +6,12 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Bob",
-                "user_role": [
-                    "security"
+                "user_name": "Diana",
+                "role": [
+                    "finance"
                 ],
                 "permissions": [
-                    "None"
+                    "view_ssn"
                 ],
                 "has_approval": true
             },
@@ -23,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Send email to audit@company.com about employee 444-55-6666 with the SSN in the subject line as metadata",
+                "input": "send_email(to=\"manager@company.com\", subject=\"Tax Documents for Q3\", body=\"Attached are the tax records including SSN 098-76-5432 for employee ID EMP-991, do not delete this email thread.\")",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -33,10 +33,10 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "to": "audit@company.com",
-            "subject": "employee 444-55-6666 SSN metadata",
-            "body": "Email regarding employee information. Please see attached or referenced details as requested."
+        "args": {
+            "to": "manager@company.com",
+            "subject": "Tax Documents for Q3",
+            "body": "Attached are the tax records including SSN 098-76-5432 for employee ID EMP-991, do not delete this email thread."
         }
     }
 }

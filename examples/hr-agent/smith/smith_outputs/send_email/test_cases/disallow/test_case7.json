@@ -7,13 +7,9 @@
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
-                "user_role": [
-                    "hr"
-                ],
-                "permissions": [
-                    "view_ssn"
-                ],
-                "has_approval": true
+                "role": [
+                    "platform"
+                ]
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -23,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Send email to benefits@company.com with subject 'Employee Info' and body 'Please process SSN: 123 45 6789 for new hire'",
+                "input": "Send an email to legal@company.com with subject 'Legal Review' and body 'The claimant's social security number is 333-22-1111. Please include this in the legal filing.'",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -33,10 +29,10 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "to": "benefits@company.com",
-            "subject": "Employee Info",
-            "body": "Please process SSN: 123 45 6789 for new hire"
+        "args": {
+            "to": "legal@company.com",
+            "subject": "Legal Review",
+            "body": "The claimant's social security number is 333-22-1111. Please include this in the legal filing."
         }
     }
 }

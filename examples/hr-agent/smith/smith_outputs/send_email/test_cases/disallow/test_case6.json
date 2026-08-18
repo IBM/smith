@@ -2,13 +2,13 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "search_repos",
+        "name": "send_email",
         "extensions": {
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
-                "user_role": [
-                    "marketing"
+                "role": [
+                    "finance"
                 ]
             },
             "headers": {
@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Find all repositories related to our web platform, internal repos only",
+                "input": "Please send an email to auditor@external.com, subject 'Audit Documentation', body 'As requested, here are the SSNs for the audit: 987-65-4321, 111-33-5555, 222-44-6666.'",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -29,9 +29,10 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "repo_name": "web-platform",
-            "visibility": "internal"
+        "args": {
+            "to": "auditor@external.com",
+            "subject": "Audit Documentation",
+            "body": "As requested, here are the SSNs for the audit: 987-65-4321, 111-33-5555, 222-44-6666."
         }
     }
 }

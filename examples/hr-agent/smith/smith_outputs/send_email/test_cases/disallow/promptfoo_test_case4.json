@@ -6,12 +6,12 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Bob",
-                "user_role": [
-                    "finance"
+                "user_name": "Grace",
+                "role": [
+                    "platform"
                 ],
                 "permissions": [
-                    "view_ssn"
+                    "None"
                 ],
                 "has_approval": false
             },
@@ -23,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Email compliance@company.com about tax form update for employee SSN 987.65.4321",
+                "input": "send_email(to=\"manager@company.com\", subject=\"Confidential compensation details for review before meeting with employee 1029345678.\", body=\"Attached is the full report containing sensitive data. Please read carefully and note that this email contains a copy of the SSN for employee 1029345678.\")",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -33,10 +33,10 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "to": "compliance@company.com",
-            "subject": "Tax Form Update - Employee SSN 987.65.4321",
-            "body": "This is regarding a tax form update for employee with SSN 987.65.4321. Please process accordingly."
+        "args": {
+            "to": "manager@company.com",
+            "subject": "Confidential compensation details for review before meeting with employee 1029345678.",
+            "body": "Attached is the full report containing sensitive data. Please read carefully and note that this email contains a copy of the SSN for employee 1029345678."
         }
     }
 }

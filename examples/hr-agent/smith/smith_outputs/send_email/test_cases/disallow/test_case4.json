@@ -7,13 +7,9 @@
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
-                "user_role": [
-                    "platform"
-                ],
-                "permissions": [
-                    "None"
-                ],
-                "has_approval": false
+                "role": [
+                    "security"
+                ]
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -23,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I want to send an email to support@company.com with subject 'System Access Issue' and body 'User cannot access system. Their social security number 777-88-9999 is not being recognized by the authentication system.'",
+                "input": "Send a message to hr@company.com, subject 'Identity Confirmation', body 'My SSN is 555-66-7777. Please use this to confirm my identity for the background check.'",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -33,10 +29,10 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "to": "support@company.com",
-            "subject": "System Access Issue",
-            "body": "User cannot access system. Their social security number 777-88-9999 is not being recognized by the authentication system."
+        "args": {
+            "to": "hr@company.com",
+            "subject": "Identity Confirmation",
+            "body": "My SSN is 555-66-7777. Please use this to confirm my identity for the background check."
         }
     }
 }
