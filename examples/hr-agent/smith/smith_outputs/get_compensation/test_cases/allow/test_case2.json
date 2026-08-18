@@ -7,9 +7,13 @@
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
+                "role": [
+                    "hr"
+                ],
                 "permissions": [
-                    "view_ssn"
-                ]
+                    "None"
+                ],
+                "has_approval": "true|false"
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -19,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need the compensation data for employee EMP-003691 and please include the SSN",
+                "input": "I'd like to look at the compensation data for EMP-009999, including their department and bonus.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -29,9 +33,9 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "employee_id": "EMP-003691",
-            "include_ssn": true
+        "args": {
+            "employee_id": "EMP-009999",
+            "include_ssn": false
         }
     }
 }

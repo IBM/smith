@@ -72,7 +72,6 @@ def flatten_guidance(
             {"role": "user", "content": user_instruction},
         ],
         temperature=temp,
-        top_p=top_p,
     )
 
     llm_output = response.choices[0].message.content.strip()
@@ -184,7 +183,6 @@ def decompose_guidance(
                     {"role": "user", "content": user_instruction},
                 ],
                 temperature=temp,
-                top_p=top_p,
             )
 
             llm_output = response.choices[0].message.content.strip()
@@ -233,7 +231,6 @@ def decompose_guidance(
                 {"role": "user", "content": user_instruction},
             ],
             temperature=temp,
-            top_p=top_p,
         )
 
         llm_output = response.choices[0].message.content.strip()

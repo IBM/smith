@@ -7,9 +7,13 @@
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
+                "role": [
+                    "security"
+                ],
                 "permissions": [
-                    "None"
-                ]
+                    "view_ssn"
+                ],
+                "has_approval": "true|false"
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -19,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please retrieve compensation data for employee EMP-004826 and include their SSN",
+                "input": "Pull up the salary information for EMP-003456 please.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -29,9 +33,9 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "employee_id": "EMP-004826",
-            "include_ssn": true
+        "args": {
+            "employee_id": "EMP-003456",
+            "include_ssn": false
         }
     }
 }

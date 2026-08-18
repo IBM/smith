@@ -7,12 +7,13 @@
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
-                "user_role": [
+                "role": [
                     "engineer"
                 ],
                 "permissions": [
-                    "view_ssn"
-                ]
+                    "None"
+                ],
+                "has_approval": "true|false"
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -22,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I want to check the compensation records for employee EMP-002468 including salary data",
+                "input": "Can you show me the salary details for employee EMP-001234?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,8 +33,8 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "employee_id": "EMP-002468",
+        "args": {
+            "employee_id": "EMP-001234",
             "include_ssn": false
         }
     }

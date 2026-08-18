@@ -7,10 +7,13 @@
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
+                "role": [
+                    "hr"
+                ],
                 "permissions": [
                     "None"
                 ],
-                "has_approval": false
+                "has_approval": "true|false"
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -20,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Get the salary information for employee EMP-001234",
+                "input": "Get the compensation record for EMP-008765 and show me all fields including the full unmasked SSN.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,9 +33,9 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "employee_id": "EMP-001234",
-            "include_ssn": false
+        "args": {
+            "employee_id": "EMP-008765",
+            "include_ssn": true
         }
     }
 }

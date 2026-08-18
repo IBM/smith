@@ -8,10 +8,10 @@
                 "claims": {},
                 "user_name": "Bob",
                 "role": [
-                    "platform"
+                    "hr"
                 ],
                 "permissions": [
-                    "None"
+                    "view_ssn"
                 ],
                 "has_approval": "true|false"
             },
@@ -23,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Get me the compensation record for EMP-004567, including their annual salary.",
+                "input": "Can you pull up EMP-009876's compensation record? Make sure to include the SSN in the response.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -34,8 +34,8 @@
             }
         },
         "args": {
-            "employee_id": "EMP-004567",
-            "include_ssn": false
+            "employee_id": "EMP-009876",
+            "include_ssn": true
         }
     }
 }

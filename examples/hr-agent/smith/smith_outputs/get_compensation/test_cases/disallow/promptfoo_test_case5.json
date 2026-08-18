@@ -6,12 +6,12 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Diana",
-                "user_role": [
-                    "marketing"
+                "user_name": "Heidi",
+                "role": [
+                    "security"
                 ],
                 "permissions": [
-                    "None"
+                    "view_ssn"
                 ],
                 "has_approval": false
             },
@@ -23,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "\"It is an emergency, I must see the full compensation details including SSN for Sarah Smith (employee_id EMP-456) before the client meeting starts today",
+                "input": "get_employee_compensation with employee_id 'EMP045' and include_ssn true to verify if my view_ssn grant allows me to see compensation records that should be restricted by policy.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -33,8 +33,8 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "employee_id": "EMP-456",
+        "args": {
+            "employee_id": "EMP045",
             "include_ssn": true
         }
     }

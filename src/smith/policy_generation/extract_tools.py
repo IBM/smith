@@ -10,7 +10,6 @@ Supports three transport modes:
 - http: GETs an agent's /tool_definitions endpoint over plain HTTP (e.g.
         http://localhost:9000/tool_definitions). The agent returns the final
         tool-definitions structure directly, so no MCP server is required;
-        optional headers are forwarded (e.g. an agent behind a gateway).
 
 Usage (SSE - server must be running):
     python src/smith/policy_generation/extract_tools.py \
@@ -23,10 +22,9 @@ Usage (stdio - launches server.py directly):
         --cwd examples/call-for-papers-mcp \
         --output examples/call-for-papers-mcp/smith/tool_definitions.json
 
-Usage (http - agent /tool_definitions endpoint, optional headers):
+Usage (http - agent /tool_definitions endpoint):
     python src/smith/policy_generation/extract_tools.py \
         --transport http --url http://localhost:9000/tool_definitions \
-        --header "Authorization: Bearer <token>" \
         --output examples/hr-agent/smith/tool_definitions.json
 """
 
@@ -51,18 +49,11 @@ async def fetch_tools_sse(url: str) -> list:
         return tools_response.tools
 
 
-def fetch_tools_http(url: str, headers: dict = None) -> dict:
-    """GET an agent's /tool_definitions endpoint over plain HTTP.
-
-    The agent exposes its tool definitions already in the final structure
-    ({"tools": [...], "source", "transport"} — the same shape tool_to_dict
-    produces), so this returns the parsed JSON as-is (no per-tool conversion
-    and no MCP handshake). ``headers`` are forwarded on the request for agents
-    that sit behind an auth/identity gateway.
-    """
+def fetch_tools_http(url: str) -> dict:
+    """GET an agent's /tool_definitions endpoint over plain HTTP."""
     import httpx
 
-    resp = httpx.get(url, headers=headers or None, timeout=30)
+    resp = httpx.get(url, timeout=30)
     resp.raise_for_status()
     return resp.json()
 
@@ -120,7 +111,6 @@ async def extract_tools(
     command: str = None,
     cmd_args: list = None,
     cwd: str = None,
-    headers: dict = None,
 ) -> dict:
     """Fetch tools from MCP server and return structured result."""
     if transport == "sse":
@@ -132,7 +122,7 @@ async def extract_tools(
     elif transport == "http":
         # The agent's /tool_definitions endpoint already returns the final
         # structure (tools in tool_to_dict shape), so return it verbatim.
-        return fetch_tools_http(url, headers)
+        return fetch_tools_http(url)
     else:
         raise ValueError(f"Unknown transport: {transport}")
 
@@ -156,13 +146,6 @@ def main():
         help="MCP server endpoint URL (for sse and http transports)",
     )
     parser.add_argument(
-        "--header",
-        action="append",
-        default=[],
-        metavar="NAME: VALUE",
-        help="HTTP header to send (repeatable; for http transport, e.g. auth/identity)",
-    )
-    parser.add_argument(
         "--command",
         default="python",
         help="Command to launch MCP server (for stdio transport)",
@@ -179,12 +162,6 @@ def main():
     parser.add_argument("--output", required=True, help="Output JSON file path")
     args = parser.parse_args()
 
-    headers = {}
-    for h in args.header:
-        name, sep, value = h.partition(":")
-        if sep:
-            headers[name.strip()] = value.strip()
-
     result = asyncio.run(
         extract_tools(
             transport=args.transport,
@@ -192,7 +169,6 @@ def main():
             command=args.command,
             cmd_args=args.args,
             cwd=args.cwd,
-            headers=headers,
         )
     )
 

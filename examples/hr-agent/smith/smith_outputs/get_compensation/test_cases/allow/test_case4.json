@@ -7,10 +7,13 @@
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
-                "user_role": [
-                    "engineer"
+                "role": [
+                    "hr"
                 ],
-                "has_approval": false
+                "permissions": [
+                    "view_ssn"
+                ],
+                "has_approval": "true|false"
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -20,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Get compensation data for EMP-001234 and include the SSN in the response",
+                "input": "I need to view the full compensation details for EMP-005678, including their Social Security Number.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,8 +33,8 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "employee_id": "EMP-001234",
+        "args": {
+            "employee_id": "EMP-005678",
             "include_ssn": true
         }
     }

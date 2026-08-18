@@ -83,7 +83,7 @@ whether the policy faithfully enforces it. Report divergences in BOTH directions
 - guidance_allow_policy_deny: the guidance permits the request, but the policy DENIES it
   (a legitimate request is wrongly blocked — the intended decision is "allow").
 
-Only the request's own inputs are caller-controllable: input.arguments.* and the natural-
+Only the request's own inputs are caller-controllable: input.args.* and the natural-
 language input.extensions.agent.input. The subject/session fields (input.extensions.subject.*,
 e.g. role, team, approval, claims) are set by a trusted upstream identity layer and are NOT
 attacker-controllable — never treat setting a subject field as a divergence.
@@ -106,7 +106,7 @@ a `severity`.
 GUIDANCE (intended behavior — the ground truth):
 {guidance_ctx}
 
-Tool definitions (request argument shapes → input.arguments.*):
+Tool definitions (request argument shapes → input.args.*):
 {tool_ctx}
 
 System variables (subject fields → input.extensions.subject.*):
@@ -138,7 +138,6 @@ Output only JSON. No Markdown, no explanations.
             ],
             max_tokens=30000,
             temperature=temp,
-            top_p=top_p,
         )
 
         llm_output = response.choices[0].message.content.strip()

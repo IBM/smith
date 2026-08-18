@@ -717,10 +717,10 @@ document.querySelectorAll(".segmented").forEach((seg) => {
         note.textContent = "Reset writes to " + resetTargetPath +
           " (the .env guidance.txt). Your uploaded file is never modified.";
       }
-      if (cfg.tool_definitions_present === false) {
+      if (cfg.tool_count === 0) {
         $("centerEmptyMsg").textContent =
-          "tool_definitions.json not found at " + (cfg.tool_definitions_path || "") +
-          ". Run `smith --flag get_mcp_parameter` for this agent first.";
+          "No tools were extracted from the MCP server. Check MCP_* settings in .env " +
+          "and that the target agent's MCP server is reachable.";
       }
     })
     .catch(() => { /* served elsewhere — leave the note blank */ });

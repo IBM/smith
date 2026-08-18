@@ -41,29 +41,9 @@ def _find_clean_script(base_url: str) -> str:
     return os.path.join(base_url, "scripts", "clean_generated.sh")
 
 
-def _resolve_tool_definitions_path(base_url: str) -> str:
-    """Locate the target agent's ``tool_definitions.json``.
-
-    Preferred: ``BASE_URL + TARGET_AGENT_PATH + "smith/tool_definitions.json"``
-    (the path convention used by ``get_mcp_parameter``). Falls back to the
-    directory holding ``guidance.txt`` if TARGET_AGENT_PATH is unset.
-    """
-    target = os.getenv("TARGET_AGENT_PATH")
-    if target:
-        return os.path.join(base_url, target, "smith", "tool_definitions.json")
-    guidance_file = os.getenv("GUIDANCE_FILE", "")
-    guidance_path = _resolve_guidance_path(base_url, guidance_file)
-    return os.path.join(os.path.dirname(guidance_path), "tool_definitions.json")
-
-
-def make_handler(base_url, guidance_path, clean_script, tool_defs_path, model_cfg):
+def make_handler(base_url, guidance_path, clean_script, tool_definitions, model_cfg):
     def _classify_text(guidance):
         """Run the LLM classification over a guidance string uploaded by the UI."""
-        if not os.path.exists(tool_defs_path):
-            return None, (
-                f"tool_definitions.json not found at {tool_defs_path}. "
-                "Run `smith --flag get_mcp_parameter` for this agent first."
-            )
         try:
             lines = classify_guidance_lines(
                 model_cfg["api_key"],
@@ -72,7 +52,7 @@ def make_handler(base_url, guidance_path, clean_script, tool_defs_path, model_cf
                 model_cfg["temp"],
                 model_cfg["top_p"],
                 guidance,
-                tool_defs_path,
+                tool_definitions,
             )
         except Exception as exc:  # noqa: BLE001 - surface any LLM/IO error to the UI
             return None, f"classification failed: {exc}"
@@ -103,14 +83,13 @@ def make_handler(base_url, guidance_path, clean_script, tool_defs_path, model_cf
                 return
             if path == "/config":
                 # The UI needs to know where Reset writes (the .env guidance.txt)
-                # and whether tool_definitions.json is present before classifying.
+                # and how many tools were extracted from the live MCP server.
                 self._send(
                     200,
                     json.dumps(
                         {
                             "guidance_path": guidance_path,
-                            "tool_definitions_path": tool_defs_path,
-                            "tool_definitions_present": os.path.exists(tool_defs_path),
+                            "tool_count": len(tool_definitions.get("tools", [])),
                         }
                     ),
                 )
@@ -133,9 +112,7 @@ def make_handler(base_url, guidance_path, clean_script, tool_defs_path, model_cf
                     return
                 self._send(
                     200,
-                    json.dumps(
-                        {"tool_definitions_path": tool_defs_path, "lines": lines}
-                    ),
+                    json.dumps({"lines": lines}),
                 )
                 return
 
@@ -236,7 +213,7 @@ def make_handler(base_url, guidance_path, clean_script, tool_defs_path, model_cf
     return Handler
 
 
-def serve(port: int = 8110, host: str = "127.0.0.1") -> None:
+def serve(tool_definitions, port: int = 8110, host: str = "127.0.0.1") -> None:
     base_url = os.getenv("BASE_URL")
     guidance_file = os.getenv("GUIDANCE_FILE")
     if not base_url or not guidance_file:
@@ -247,7 +224,6 @@ def serve(port: int = 8110, host: str = "127.0.0.1") -> None:
 
     guidance_path = _resolve_guidance_path(base_url, guidance_file)
     clean_script = _find_clean_script(base_url)
-    tool_defs_path = _resolve_tool_definitions_path(base_url)
     model_cfg = {
         "api_key": os.getenv("OPENAI_API_KEY"),
         "base_url": os.getenv("OPENAI_BASE_URL"),
@@ -257,13 +233,13 @@ def serve(port: int = 8110, host: str = "127.0.0.1") -> None:
     }
 
     handler = make_handler(
-        base_url, guidance_path, clean_script, tool_defs_path, model_cfg
+        base_url, guidance_path, clean_script, tool_definitions, model_cfg
     )
     httpd = ThreadingHTTPServer((host, port), handler)
     url = f"http://{host}:{port}/"
     print(f"Guidance Classifier serving at: {url}")
     print(f"  reset target      : {guidance_path}  (.env GUIDANCE_FILE)")
-    print(f"  tool_definitions  : {tool_defs_path}")
+    print(f"  tools extracted   : {len(tool_definitions.get('tools', []))}")
     print(f"  clean script      : {clean_script}")
     print("Open the URL above in VS Code's Simple Browser (Cmd+Shift+P →")
     print('  "Simple Browser: Show"), then upload a guidance file to classify it.')

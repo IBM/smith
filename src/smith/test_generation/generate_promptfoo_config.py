@@ -25,6 +25,11 @@ import httpx
 import yaml
 from openai import OpenAI
 
+# Smith-internal system variables used only during decomposition. They must not
+# leak into generated test cases (regular cases drop them in variable_extraction),
+# so they are excluded from the promptfoo config's redteam.vars and contexts[].vars.
+SMITH_INTERNAL_VARS = {"action_list", "action_description"}
+
 
 class _LiteralStr(str):
     """String that YAML dumps with literal block style (|)."""
@@ -117,10 +122,9 @@ def _extract_vars_from_system_vars(system_vars):
     Skips action_list and action_description (internal to Smith).
     Returns a LiteralStr so YAML renders with | style.
     """
-    skip_keys = {"action_list", "action_description"}
     lines = []
     for key, value in system_vars.items():
-        if key in skip_keys:
+        if key in SMITH_INTERNAL_VARS:
             continue
         if isinstance(value, list):
             lines.append(f'"{key}": {json.dumps(value)}')
@@ -139,7 +143,6 @@ def _call_llm(api_key, openai_base_url, model, temp, top_p, system_prompt, user_
             {"role": "user", "content": user_prompt},
         ],
         temperature=temp,
-        top_p=top_p,
     )
 
     raw = response.choices[0].message.content.strip()
@@ -188,8 +191,24 @@ def _validate_contexts(contexts):
     return len(contexts) > 0
 
 
+def _strip_internal_context_vars(contexts):
+    """Drop Smith-internal vars from each context's `vars`.
+
+    The LLM builds contexts from the full system_vars JSON (which still carries
+    action_list/action_description), so those keys can appear in contexts[].vars
+    and would then flow into every generated test case. Remove them here.
+    """
+    for ctx in contexts:
+        ctx_vars = ctx.get("vars")
+        if isinstance(ctx_vars, dict):
+            for key in SMITH_INTERNAL_VARS:
+                ctx_vars.pop(key, None)
+    return contexts
+
+
 def _format_contexts(contexts):
     """Wrap each context's purpose in LiteralStr for | style output."""
+    contexts = _strip_internal_context_vars(contexts)
     for ctx in contexts:
         purpose = ctx["purpose"]
         if not purpose.endswith("\n"):

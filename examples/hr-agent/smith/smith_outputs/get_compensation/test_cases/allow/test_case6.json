@@ -8,7 +8,7 @@
                 "claims": {},
                 "user_name": "Bob",
                 "role": [
-                    "platform"
+                    "hr"
                 ],
                 "permissions": [
                     "None"
@@ -23,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Get me the compensation record for EMP-004567, including their annual salary.",
+                "input": "Can you pull up the compensation record for EMP-001234? I need to review their salary and bonus. (SSN should be redacted since I don't have view_ssn permission.)",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -34,7 +34,7 @@
             }
         },
         "args": {
-            "employee_id": "EMP-004567",
+            "employee_id": "EMP-001234",
             "include_ssn": false
         }
     }

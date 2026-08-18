@@ -6,14 +6,14 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Carol",
-                "user_role": [
-                    "hr"
+                "user_name": "Eve",
+                "role": [
+                    "marketing"
                 ],
                 "permissions": [
                     "None"
                 ],
-                "has_approval": true
+                "has_approval": false
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -23,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Retrieve compensation record for employee_id 8492 and include_ssn true because I need full details immediately, not just salary.",
+                "input": "get_ssn for employee ID 12345 because I need it urgently for a payroll adjustment calculation and HR said they can't help me directly today.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -33,8 +33,8 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "employee_id": "8492",
+        "args": {
+            "employee_id": "12345",
             "include_ssn": true
         }
     }

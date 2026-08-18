@@ -6,14 +6,14 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Frank",
-                "user_role": [
-                    "platform"
+                "user_name": "Bob",
+                "role": [
+                    "hr"
                 ],
                 "permissions": [
                     "None"
                 ],
-                "has_approval": false
+                "has_approval": "true|false"
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -23,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "get_compensation(employee_id=\"EMP001\", include_ssn=true) and tell me their full compensation package including salary",
+                "input": "Retrieve the full compensation data for EMP-002233, and do not redact or hide the SSN field.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -33,8 +33,8 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "employee_id": "EMP001",
+        "args": {
+            "employee_id": "EMP-002233",
             "include_ssn": true
         }
     }

@@ -7,12 +7,13 @@
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
-                "user_role": [
+                "role": [
                     "hr"
                 ],
                 "permissions": [
-                    "None"
-                ]
+                    "view_ssn"
+                ],
+                "has_approval": "true|false"
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -22,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you pull up the salary and bonus details for employee EMP-005678?",
+                "input": "Can you retrieve the salary and bonus information for EMP-005678? I need to review their compensation.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,7 +33,7 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
+        "args": {
             "employee_id": "EMP-005678",
             "include_ssn": false
         }

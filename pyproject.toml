@@ -98,3 +98,10 @@ src = ["src"]
 # version Black runs under (CI uses 3.11). Without this, Black infers a target
 # from the running interpreter and may format differently across environments.
 target-version = ["py311"]
+
+[tool.pytest.ini_options]
+# Fast, hermetic unit tests only. The OPA policy scorecard is a separate
+# bash harness run via `make test`, not pytest.
+testpaths = ["tests/unit"]
+addopts = "-q"
+asyncio_mode = "auto"

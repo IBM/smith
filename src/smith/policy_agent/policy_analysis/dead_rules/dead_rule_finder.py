@@ -67,7 +67,6 @@ Output only JSON. Do NOT include explanations, Markdown, or extra text.
             {"role": "user", "content": rego_policy},
         ],
         temperature=temp,
-        top_p=top_p,
     )
 
     llm_output = response.choices[0].message.content.strip()

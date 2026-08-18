@@ -48,6 +48,7 @@ from smith.policy_generation.validate_policy import (
     validate_policy,
     fix_and_validate_policy,
 )
+from smith.policy_generation.translate_cpex import translate_policy_to_cpex
 from smith.test_case_evaluation.cross_validate import cross_validate_failed_cases
 from smith.test_case_evaluation.apply_cross_validate import apply_cross_validate_results
 from smith.test_generation.extract_tool_args import run_extract_tool_args
@@ -149,9 +150,7 @@ def _load_session_config(base_url):
     return {}
 
 
-def get_tool_definitions(
-    transport, mcp_url, mcp_command, mcp_args, mcp_cwd, mcp_headers=None
-):
+def get_tool_definitions(transport, mcp_url, mcp_command, mcp_args, mcp_cwd):
     """Extract tool definitions from the MCP server."""
     tool_definitions = asyncio.run(
         extract_tools(
@@ -160,7 +159,6 @@ def get_tool_definitions(
             command=mcp_command,
             cmd_args=mcp_args,
             cwd=mcp_cwd,
-            headers=mcp_headers,
         )
     )
     print(f"Extracted {len(tool_definitions['tools'])} tools from MCP server")
@@ -376,9 +374,6 @@ def generate_bypass_cases(
 
 def main():
 
-    # Parse CLI args first so `--help` and argument errors work without a
-    # populated .env. The env-derived paths assembled below assume real
-    # values, so they must not run before argparse can short-circuit on --help.
     parser = argparse.ArgumentParser()
     parser.add_argument("--flag", help="what advices you want to generate?")
     parser.add_argument(
@@ -391,9 +386,6 @@ def main():
     )
     args = parser.parse_args()
 
-    # No flag means there's nothing to do; show help and exit cleanly rather
-    # than falling through to the env-derived path assembly below (which would
-    # raise on an unpopulated .env).
     if not args.flag:
         parser.print_help()
         sys.exit(0)
@@ -402,12 +394,6 @@ def main():
         from smith.tools.explorer_server import serve
 
         serve(port=8100)
-        sys.exit(0)
-
-    if args.flag == "classify_guidance":
-        from smith.tools.guidance_classifier_server import serve
-
-        serve(port=8110)
         sys.exit(0)
 
     if args.flag == "save_snapshot":
@@ -505,16 +491,17 @@ def main():
     mcp_command = os.getenv("MCP_COMMAND", "python")
     mcp_args = os.getenv("MCP_ARGS", "").split() if os.getenv("MCP_ARGS") else []
     mcp_cwd = base_url + os.getenv("MCP_CWD") if os.getenv("MCP_CWD") else None
-    # Optional HTTP headers for the http transport (e.g. an MCP server behind an
-    # identity gateway). Format: "Name: Value" entries separated by newlines or
-    # ";;" (e.g. MCP_HEADERS="Authorization: Bearer x;;X-User-Token: y").
-    mcp_headers = {}
-    for _h in re.split(r"[\n;]{1,2}", os.getenv("MCP_HEADERS", "")):
-        _name, _sep, _val = _h.partition(":")
-        if _sep and _name.strip():
-            mcp_headers[_name.strip()] = _val.strip()
     target_agent_path = os.getenv("TARGET_AGENT_PATH")
     agent_url = os.getenv("AGENT_URL", "http://localhost:9000")
+
+    if args.flag == "classify_guidance":
+        from smith.tools.guidance_classifier_server import serve
+
+        tool_definitions = get_tool_definitions(
+            transport, mcp_url, mcp_command, mcp_args, mcp_cwd
+        )
+        serve(tool_definitions, port=8110)
+        sys.exit(0)
 
     agent = BlueAgent()
 
@@ -530,7 +517,7 @@ def main():
         results = agent.get_red_feedback()
     if args.flag == "test_generation":
         tool_definitions = get_tool_definitions(
-            transport, mcp_url, mcp_command, mcp_args, mcp_cwd, mcp_headers
+            transport, mcp_url, mcp_command, mcp_args, mcp_cwd
         )
         generate_test(
             base_url,
@@ -561,7 +548,7 @@ def main():
 
     if args.flag == "bypass_case_generation":
         tool_definitions = get_tool_definitions(
-            transport, mcp_url, mcp_command, mcp_args, mcp_cwd, mcp_headers
+            transport, mcp_url, mcp_command, mcp_args, mcp_cwd
         )
         generate_bypass_cases(
             api_key,
@@ -583,8 +570,20 @@ def main():
         target_agent_path = base_url + target_agent_path
         output_file = os.path.join(target_agent_path, "smith", "tool_definitions.json")
         result = get_tool_definitions(
-            transport, mcp_url, mcp_command, mcp_args, mcp_cwd, mcp_headers
+            transport, mcp_url, mcp_command, mcp_args, mcp_cwd
         )
+        # If a session config selected a subset of tools, keep only those.
+        session_config = _load_session_config(base_url)
+        if session_config.get("use_ir", False):
+            selected = set(session_config.get("selected_tools", []))
+            if selected:
+                kept = [t for t in result["tools"] if t.get("name") in selected]
+                dropped = len(result["tools"]) - len(kept)
+                result["tools"] = kept
+                print(
+                    f"Session config: keeping {len(kept)} selected tool(s), "
+                    f"dropped {dropped} not in config"
+                )
         os.makedirs(os.path.dirname(output_file), exist_ok=True)
         with open(output_file, "w") as f:
             json.dump(result, f, indent=2)
@@ -598,7 +597,7 @@ def main():
             "PROMPTFOO_CONFIG_TEMPLATE", "references/promptfoo_config_template.yaml"
         )
         tool_definitions = get_tool_definitions(
-            transport, mcp_url, mcp_command, mcp_args, mcp_cwd, mcp_headers
+            transport, mcp_url, mcp_command, mcp_args, mcp_cwd
         )
         generate_promptfoo_config(
             api_key,
@@ -680,6 +679,17 @@ def main():
         if not fix_and_validate_policy(args.policy_path):
             sys.exit(1)
 
+    if args.flag == "cpex_translate":
+        src = args.policy_path or policy_path
+        if args.dest:
+            dest = args.dest
+        else:
+            dest = re.sub(r"\.rego$", "_cpex.rego", src) or (src + "_cpex")
+            if dest == src:
+                dest = src + "_cpex"
+        if not translate_policy_to_cpex(src, dest):
+            sys.exit(1)
+
     if args.flag == "cross_validate":
         print("Running policy testing first to identify failed cases...")
         agent.policy_checking_results()
@@ -726,6 +736,7 @@ def main():
         "test_case_evaluation",
         "policy_validation",
         "policy_validation_fix",
+        "cpex_translate",
         "cross_validate",
         "apply_cross_validate",
         "open_explorer",

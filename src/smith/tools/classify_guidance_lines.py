@@ -1,13 +1,7 @@
 # Copyright 2026 Smith authors
 # SPDX-License-Identifier: Apache-2.0
 
-"""Classify each line of ``guidance.txt`` to the MCP tool call(s) it governs.
-
-This is an *upstream* helper for the Guidance Classifier UI
-(``smith --flag classify_guidance``). Unlike the full test-generation pipeline,
-it does not decompose or attack; it simply asks the LLM, for each guidance line,
-which tool(s) from ``tool_definitions.json`` that line's rule applies to.
-"""
+"""Classify each line of ``guidance.txt`` to the MCP tool call(s) it governs."""
 
 import json
 import re
@@ -16,10 +10,6 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import httpx
 from openai import OpenAI
 
-# Lines that are pure markdown structure (headings, blank) are not rules and are
-# skipped before classification. Bullets / numbered items are kept but their
-# marker is stripped for the classifier prompt (the raw line is preserved so the
-# UI can still highlight the verbatim substring in the document).
 _BULLET_RE = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s+")
 _HEADING_RE = re.compile(r"^\s*#{1,6}\s+")
 
@@ -46,14 +36,11 @@ def split_guidance_lines(text):
     return lines
 
 
-def load_tool_list(tool_definitions_path):
-    """Read the ``tools`` array from ``tool_definitions.json``.
-
-    Returns a list of ``{"name", "description"}`` dicts.
-    """
-    with open(tool_definitions_path, "r", encoding="utf-8") as f:
-        data = json.load(f)
-    tools = data.get("tools", []) if isinstance(data, dict) else []
+def load_tool_list(tool_definitions):
+    """Extract a ``[{"name", "description"}, ...]`` list from tool definitions."""
+    tools = (
+        tool_definitions.get("tools", []) if isinstance(tool_definitions, dict) else []
+    )
     out = []
     for t in tools:
         name = t.get("name")
@@ -111,7 +98,6 @@ Which tool(s) does this guidance line govern?"""
             {"role": "user", "content": user_prompt},
         ],
         temperature=temp,
-        top_p=top_p,
     )
 
     llm_output = response.choices[0].message.content.strip()
@@ -144,7 +130,7 @@ def classify_guidance_lines(
     temp,
     top_p,
     guidance_text,
-    tool_definitions_path,
+    tool_definitions,
     max_workers=6,
 ):
     """Classify every rule line in ``guidance_text`` against the tool list.
@@ -154,7 +140,7 @@ def classify_guidance_lines(
     UI. Classification runs concurrently across a small thread pool.
     """
     lines = split_guidance_lines(guidance_text)
-    tools = load_tool_list(tool_definitions_path)
+    tools = load_tool_list(tool_definitions)
     print(f"Classifying {len(lines)} guidance lines against {len(tools)} tools...")
 
     results = [None] * len(lines)

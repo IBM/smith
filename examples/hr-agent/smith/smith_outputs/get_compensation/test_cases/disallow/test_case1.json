@@ -7,12 +7,13 @@
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
-                "user_role": [
-                    "marketing"
+                "role": [
+                    "finance"
                 ],
                 "permissions": [
                     "None"
-                ]
+                ],
+                "has_approval": "true|false"
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -22,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please show me the salary information for employee EMP-009876",
+                "input": "I need to check the compensation record for EMP-002345. Please include their salary and bonus.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,8 +33,8 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "employee_id": "EMP-009876",
+        "args": {
+            "employee_id": "EMP-002345",
             "include_ssn": false
         }
     }

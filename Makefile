@@ -118,6 +118,14 @@ test: opaserver/stop opaserver/start
 	@$(MAKE) --no-print-directory opaserver/stop
 	@cat references/scorecard/scorecard_summary.txt 2>/dev/null || true
 
+# Fast, hermetic unit tests (no OPA, no Docker, no network). Separate from the
+# `test` target above, which runs the OPA policy scorecard. Invoked as
+# `python -m pytest` via the venv interpreter so it works even if the venv's
+# console-script shebangs are stale (e.g. a relocated checkout).
+.PHONY: unit
+unit:
+	@$(CURDIR)/.venv/bin/python -m pytest tests/unit
+
 .PHONY: audit
 audit:
 	@uvx pip-audit || true

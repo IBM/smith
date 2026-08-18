@@ -107,7 +107,6 @@ Guidance items: {str(batch_dict)}
                     {"role": "user", "content": user_instruction},
                 ],
                 temperature=temp,
-                top_p=top_p,
             )
 
             llm_output = response.choices[0].message.content.strip()
@@ -141,7 +140,6 @@ Guidance items: {str(guidances)}
                 {"role": "user", "content": user_instruction},
             ],
             temperature=temp,
-            top_p=top_p,
         )
 
         llm_output = response.choices[0].message.content.strip()

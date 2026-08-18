@@ -7,12 +7,13 @@
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
-                "user_role": [
+                "role": [
                     "hr"
                 ],
                 "permissions": [
                     "None"
-                ]
+                ],
+                "has_approval": "true|false"
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -22,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Get the compensation data for employee EMP-005284 and include the SSN",
+                "input": "Please get the compensation record for EMP-001234 and include the SSN.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,8 +33,8 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "employee_id": "EMP-005284",
+        "args": {
+            "employee_id": "EMP-001234",
             "include_ssn": true
         }
     }

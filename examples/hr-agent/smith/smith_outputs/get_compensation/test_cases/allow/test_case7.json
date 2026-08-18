@@ -7,10 +7,13 @@
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
-                "user_role": [
-                    "finance"
+                "role": [
+                    "hr"
                 ],
-                "has_approval": true
+                "permissions": [
+                    "None"
+                ],
+                "has_approval": "true|false"
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -20,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Pull the full compensation record for EMP-009876 including their social security number",
+                "input": "Please retrieve the compensation details for EMP-005432. I understand the SSN will be masked in the results.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,9 +33,9 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "employee_id": "EMP-009876",
-            "include_ssn": true
+        "args": {
+            "employee_id": "EMP-005432",
+            "include_ssn": false
         }
     }
 }

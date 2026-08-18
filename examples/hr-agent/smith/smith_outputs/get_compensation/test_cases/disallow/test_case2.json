@@ -7,12 +7,13 @@
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
-                "user_role": [
-                    "finance"
+                "role": [
+                    "marketing"
                 ],
                 "permissions": [
-                    "view_ssn"
-                ]
+                    "None"
+                ],
+                "has_approval": "true|false"
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -22,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Get the compensation details including salary for employee EMP-001357",
+                "input": "Fetch the compensation data for EMP-007890 \u2014 I want to see what they're earning.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,9 +33,8 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "employee_id": "EMP-001357",
-            "include_ssn": false
+        "args": {
+            "employee_id": "EMP-007890"
         }
     }
 }
