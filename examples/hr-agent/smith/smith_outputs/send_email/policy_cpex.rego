@@ -4,7 +4,7 @@ package authz
 default allow := false
 
 # === Input Accessors ===
-subject := input
+subject := input.subject
 args := object.get(input, "args", {})
 
 # === Constants ===

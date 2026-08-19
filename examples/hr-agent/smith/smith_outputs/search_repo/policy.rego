@@ -20,14 +20,14 @@ deny contains msg if {
 }
 
 any_allowed_search_role if {
-    some r in subject.role
+    some r in subject.roles
     r in allowed_search_roles
 }
 
 # Engineers may only search internal repos
 deny contains msg if {
     input.name == "search_repos"
-    "engineer" in subject.role
+    "engineer" in subject.roles
     args.visibility != "internal"
     msg := sprintf("Engineers may only search internal repositories, not '%v'", [args.visibility])
 }

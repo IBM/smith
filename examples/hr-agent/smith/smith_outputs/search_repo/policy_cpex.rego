@@ -4,7 +4,7 @@ package authz
 default allow := false
 
 # === Input Accessors ===
-subject := input
+subject := input.subject
 args := object.get(input, "args", {})
 
 # === Constants ===
@@ -19,13 +19,13 @@ deny contains msg if {
 }
 
 any_allowed_search_role if {
-	some r in subject.role
+	some r in subject.roles
 	r in allowed_search_roles
 }
 
 # Engineers may only search internal repos
 deny contains msg if {
-	"engineer" in subject.role
+	"engineer" in subject.roles
 	args.visibility != "internal"
 	msg := sprintf("Engineers may only search internal repositories, not '%v'", [args.visibility])
 }

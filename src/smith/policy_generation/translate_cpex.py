@@ -5,9 +5,9 @@
 Translate an OPA (Rego) policy into a CPEX-compatible input shape.
 
 CPEX expects a flatter input than the policies Smith generates:
-  - the `subject` IS the input root; both `extensions` and `subject` are dropped:
-        input.extensions.subject        -> input
-        input.extensions.subject.role   -> input.role
+  - the `extensions` layer is dropped, but `subject` is kept under the input root:
+        input.extensions.subject        -> input.subject
+        input.extensions.subject.role   -> input.subject.role
   - every other field under `extensions` collapses one level:
         input.extensions.agent          -> input.agent
   - tool arguments already live under `args` (Smith's native input shape uses
@@ -16,7 +16,7 @@ CPEX expects a flatter input than the policies Smith generates:
 Both direct references (e.g. `subject := input.extensions.subject`) and the
 indirect `object.get(...)` forms are handled:
         object.get(input, "extensions", {})              -> input
-        object.get(object.get(input,"extensions",{}),"subject",{}) -> input
+        object.get(object.get(input,"extensions",{}),"subject",{}) -> input.subject
 
 CPEX also drops several OPA-envelope constructs that do not apply:
   - Package: `package mcp.policies` -> `package authz`.
@@ -54,10 +54,10 @@ from smith.policy_generation.validate_policy import (
     run_opa_fmt_write,
 )
 
-# Order matters. The `subject` path is special (it IS the input root, so both
-# `extensions` and `subject` are dropped), so its rules must run BEFORE the
-# generic `extensions.<tail>` collapse. Within each group the indirect
-# `object.get` forms run before the direct dotted forms.
+# Order matters. The `subject` path is special (only `extensions` is dropped;
+# `subject` is kept, so `input.extensions.subject` -> `input.subject`), so its
+# rules must run BEFORE the generic `extensions.<tail>` collapse. Within each
+# group the indirect `object.get` forms run before the direct dotted forms.
 # Tool arguments are already under `input.args` natively, so there is no
 # arguments->args transform here.
 _TRANSFORMS = [
@@ -67,29 +67,29 @@ _TRANSFORMS = [
         re.compile(r"^package\s+mcp\.policies\b", re.MULTILINE),
         "package authz",
     ),
-    # --- subject: collapse `extensions.subject` all the way to `input` ---
+    # --- subject: drop the `extensions` layer but keep `subject` ---
     # 1a. Indirect subject via nested object.get:
-    #     object.get(object.get(input,"extensions",{}),"subject",{}) -> input
+    #     object.get(object.get(input,"extensions",{}),"subject",{}) -> input.subject
     (
-        "indirect extensions.subject (object.get) -> input",
+        "indirect extensions.subject (object.get) -> input.subject",
         re.compile(
             r'object\.get\(\s*object\.get\(\s*input\s*,\s*"extensions"\s*,\s*[^)]*\)'
             r'\s*,\s*"subject"\s*,\s*[^)]*\)'
         ),
-        "input",
+        "input.subject",
     ),
     # 1b. Direct dotted subject with a member tail:
-    #     input.extensions.subject.<tail> -> input.<tail>
+    #     input.extensions.subject.<tail> -> input.subject.<tail>
     (
-        "direct input.extensions.subject. prefix -> input.",
+        "direct input.extensions.subject. prefix -> input.subject.",
         re.compile(r"\binput\.extensions\.subject\."),
-        "input.",
+        "input.subject.",
     ),
-    # 1c. Direct dotted subject as a leaf: input.extensions.subject -> input
+    # 1c. Direct dotted subject as a leaf: input.extensions.subject -> input.subject
     (
-        "direct input.extensions.subject leaf -> input",
+        "direct input.extensions.subject leaf -> input.subject",
         re.compile(r"\binput\.extensions\.subject\b"),
-        "input",
+        "input.subject",
     ),
     # --- other extensions fields: collapse the extensions layer one level ---
     # 2a. Indirect extensions via object.get:

@@ -43,7 +43,7 @@ smith --flag cross_validate         # LLM cross-check failed cases → reference
 smith --flag apply_cross_validate   # apply approved label corrections from cross_validate report
 smith --flag policy_validation --policy_path <file.rego>      # validate a rego file
 smith --flag policy_validation_fix --policy_path <file.rego>  # validate and auto-fix
-smith --flag cpex_translate         # translate policy to CPEX input shape (extensions.subject->subject; args stays args); writes <policy>_cpex.rego (override with --policy_path/--dest)
+smith --flag cpex_translate         # translate policy to CPEX input shape (extensions.subject->subject i.e. input.extensions.subject->input.subject; args stays args); writes <policy>_cpex.rego (override with --policy_path/--dest)
 smith --flag open_explorer          # launch the Policy Explorer UI (browse specs, select guidance)
 smith --flag classify_guidance      # launch the Guidance Classifier UI (map each guidance line -> tool call, combine + reset inputs)
 

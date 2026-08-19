@@ -10,7 +10,7 @@ args := object.get(input, "args", {})
 # === DENY: Only HR role may call get_compensation ===
 deny contains msg if {
     input.name == "get_compensation"
-    not "hr" in subject.role
+    not "hr" in subject.roles
     msg := "Access denied: only HR employees may access compensation records."
 }
 

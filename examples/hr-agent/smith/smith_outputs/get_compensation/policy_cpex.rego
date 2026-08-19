@@ -4,12 +4,12 @@ package authz
 default allow := false
 
 # === Input Accessors ===
-subject := input
+subject := input.subject
 args := object.get(input, "args", {})
 
 # === DENY: Only HR role may call get_compensation ===
 deny contains msg if {
-	not "hr" in subject.role
+	not "hr" in subject.roles
 	msg := "Access denied: only HR employees may access compensation records."
 }
 
