@@ -105,7 +105,18 @@ Strictly follow `./owasp/enforcement_mapping.md`.
 
 - Input: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/architecture.md`
 - Input: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/threat_model.md`
+- Input: `src/smith/data/owasp_10_ai_catalog.json` — repo-relative, not
+  per-target-agent. Source of the `mitigations` this step grounds its
+  policy-rule requirements in.
+- Input (optional): `<TARGET_AGENT_PATH>/smith/guidance.txt` — the same
+  existing per-target-agent guidance file already read in Step B, not a
+  new file. Used here only to check which of this step's OPA-scope rules
+  are not yet represented in it. If it does not exist, skip that check.
 - Output: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/owasp_policy_guidelines.md`
+- Output: `<TARGET_AGENT_PATH>/smith/guidance_updated.txt` — written next
+  to `guidance.txt` itself (not under `guidelines-security-analysis/`):
+  the existing guidance plus any OPA-scope rules this step found that
+  `guidance.txt` is missing.
 - Gate: if the confirmation mode is Gated, do not proceed to Completion
   until the human confirms the output. If Autonomous, proceed to
   Completion immediately and present all four step outputs together for
