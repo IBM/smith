@@ -1,0 +1,41 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "search_repos",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "user_name": "Bob",
+                "role": [
+                    "security"
+                ],
+                "permissions": [
+                    "view_ssn"
+                ],
+                "has_approval": "true|false"
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "I'd like to look up all external repos matching 'third-party-sdk'. Please search with visibility external.",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "repo_name": "third-party-sdk",
+            "visibility": "external"
+        }
+    }
+}
