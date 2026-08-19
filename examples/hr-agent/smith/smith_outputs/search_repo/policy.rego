@@ -16,7 +16,7 @@ allowed_search_roles := {"engineer", "security"}
 deny contains msg if {
     input.name == "search_repos"
     not any_allowed_search_role
-    msg := sprintf("Role '%v' is not permitted to search repositories", [subject.role])
+    msg := sprintf("Role '%v' is not permitted to search repositories", [subject.roles])
 }
 
 any_allowed_search_role if {
