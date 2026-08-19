@@ -1,7 +1,9 @@
 ## Enforcement Mapping 
 
 Maps each threat from `threat_model.md` to the layer that can enforce a
-control, determines OPA scope, and produces `owasp_policy_guidelines.md`.
+control, determines OPA scope, produces `owasp_policy_guidelines.md`, and
+reconciles the resulting OPA-scope rules against the target's existing
+`guidance.txt` to surface guidance gaps in `guidance_updated.txt`.
 Requires `architecture.md` and `threat_model.md` in the target directory.
 
 ### Authoritative Paths
@@ -14,7 +16,14 @@ not substitute one from elsewhere.
 - Input 3: `src/smith/data/owasp_10_ai_catalog.json` — repo-relative, not
   per-target-agent. Source of the `mitigations` used to ground STEP 5's
   rule proposals for each ASI category.
-- Output: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/owasp_policy_guidelines.md`
+- Input 4 (optional): `<TARGET_AGENT_PATH>/smith/guidance.txt` — the
+  target's existing natural-language guidance, if present. Used only in
+  STEP 7 to check which OPA-scope rules from STEP 5 are not yet
+  represented in it. If absent, note the gap and skip STEP 7's comparison
+  (write `guidance_updated.txt` containing only the newly derived rules).
+- Output 1: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/owasp_policy_guidelines.md`
+- Output 2: `<TARGET_AGENT_PATH>/smith/guidance_updated.txt` — written next
+  to `guidance.txt`, not under `guidelines-security-analysis/`
 
 ### OPA Enforcement Boundary (non-negotiable)
 
@@ -196,8 +205,44 @@ specification for policy generation, not an implementation.
 
 ---
 
-#### STEP 7 — Human review
+#### STEP 7 — Reconcile against guidance.txt
 
-Present the summary table and the list of violation codes.
+Read `<TARGET_AGENT_PATH>/smith/guidance.txt` if it exists. If it does not
+exist, skip the comparison below and write `guidance_updated.txt`
+containing only the rules derived here, numbered starting from 1.
 
-Log the summary table and violation code list, then continue automatically to the policy_writing skill.
+For each rule written under "Policy Rules (OPA scope only)" in STEP 6,
+check whether an existing numbered rule in `guidance.txt` already covers
+the same condition on the same field — matching OWASP category alone is
+not enough. A rule counts as missing only if no existing `guidance.txt`
+rule already enforces that specific structured-field check.
+
+For every missing rule, write a new `guidance.txt`-style line:
+- Continue the existing numbering in `guidance.txt`; do not renumber
+  existing rules
+- Phrase it as a plain-English guidance rule, not as OPA/Rego syntax
+- Tag it with its source in brackets, e.g. `[ASI04 / VIOLATION_CODE]`, so
+  it stays traceable back to this file
+
+Write `<TARGET_AGENT_PATH>/smith/guidance_updated.txt` containing:
+1. Every existing rule from `guidance.txt`, unchanged, in its original order
+2. Every missing rule identified above, appended after them, continuing
+   the numbering
+
+Overwrite `guidance_updated.txt` in full on every run rather than
+appending to a prior run's file — this keeps it consistent with the
+current threat model instead of accumulating stale entries from earlier
+iterations.
+
+Do NOT modify `guidance.txt` itself. `guidance_updated.txt` is a proposal
+for the human to review and merge in manually.
+
+---
+
+#### STEP 8 — Human review
+
+Present the summary table, the list of violation codes, and the list of
+newly proposed guidance rules from STEP 7 (or "none — guidance.txt already
+covers all OPA-scope rules" / "none — no guidance.txt found").
+
+Log these, then continue automatically to the policy_writing skill.
