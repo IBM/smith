@@ -18,6 +18,17 @@ integrates the actual `policy.rego`. This skill does not write any Rego.
 The target MCP server directory is provided by the user at invocation time.
 If not provided, ask before starting Step A.
 
+Before starting Step A, also ask the user how they want the four steps to
+run:
+- **Gated** — pause after each step and wait for the human to confirm the
+  output before starting the next step.
+- **Autonomous** — run Step A through Step D back-to-back with no pauses,
+  then present all four outputs together at the end for one final review.
+
+Use the answer for the entire run; do not ask again per step, and do not
+switch modes mid-run unless the user explicitly asks to change it. Each
+step below refers to this as "the confirmation mode."
+
 All generated artifacts live under:
 ```
 <TARGET_AGENT_PATH>/smith/guidelines-security-analysis/
@@ -41,7 +52,9 @@ Strictly follow `./owasp/architecture_analysis.md`.
 
 - Input: MCP server directory (e.g. `examples/call-for-papers-mcp/`)
 - Output: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/architecture.md`
-- Gate: do not proceed to Step B until the human confirms the output.
+- Gate: if the confirmation mode is Gated, do not proceed to Step B until
+  the human confirms the output. If Autonomous, continue to Step B
+  immediately.
 
 ---
 
@@ -56,8 +69,10 @@ Strictly follow `./owasp/policy_guidance_questionnaire.md`.
 - Input (optional): `<TARGET_AGENT_PATH>/smith/system_vars.json`
 - Input (optional): `<TARGET_AGENT_PATH>/smith/tool_definitions.json`
 - Output: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/policy_guidance_questionnaire.md`
-- Gate: do not proceed to Step C until the human confirms the questionnaire
-  is complete.
+- Gate: if the confirmation mode is Gated, do not proceed to Step C until
+  the human confirms the questionnaire is complete. If Autonomous,
+  continue to Step C immediately — fill any remaining blanks per STEP 3
+  of `policy_guidance_questionnaire.md` rather than pausing to ask.
 
 ---
 
@@ -70,7 +85,9 @@ Strictly follow `./owasp/threat_model.md`.
 - Input: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/architecture.md`
 - Input: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/policy_guidance_questionnaire.md`
 - Output: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/threat_model.md`
-- Gate: do not proceed to Step D until the human confirms the output.
+- Gate: if the confirmation mode is Gated, do not proceed to Step D until
+  the human confirms the output. If Autonomous, continue to Step D
+  immediately.
 
 ---
 
@@ -83,7 +100,10 @@ Strictly follow `./owasp/enforcement_mapping.md`.
 - Input: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/architecture.md`
 - Input: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/threat_model.md`
 - Output: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/owasp_policy_guidelines.md`
-- Gate: do not proceed until the human confirms the output.
+- Gate: if the confirmation mode is Gated, do not proceed to Completion
+  until the human confirms the output. If Autonomous, proceed to
+  Completion immediately and present all four step outputs together for
+  one final review.
 
 ---
 
@@ -99,9 +119,12 @@ When Step D is complete, inform the user:
 ## General Rules
 
 - Never skip a step.
-- Run all steps autonomously without stopping for human confirmation.
+- Follow the confirmation mode (Gated or Autonomous) chosen before Step A
+  for every step's Gate — do not stop for confirmation in Autonomous mode,
+  and do not skip a confirmation pause in Gated mode.
 - If any input file is missing, stop and tell the user exactly which
-  file is needed and which step produces it.
+  file is needed and which step produces it — this applies regardless of
+  confirmation mode.
 - Do not modify any existing file other than writing the designated
   output for each step.
 - All writes go to `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/`. Never write
