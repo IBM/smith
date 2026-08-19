@@ -84,6 +84,12 @@ Strictly follow `./owasp/threat_model.md`.
 
 - Input: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/architecture.md`
 - Input: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/policy_guidance_questionnaire.md`
+- Input: `src/smith/data/owasp_10_ai_catalog.json` — repo-relative, not
+  per-target-agent. The OWASP Top 10 for Agentic AI Security catalog
+  (ASI01–ASI10). This step evaluates all 10 catalog categories against
+  the tool's architecture and questionnaire answers to produce the
+  concrete threat vectors written into `threat_model.md` — it is not
+  optional context, it is the taxonomy the whole step is structured around.
 - Output: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/threat_model.md`
 - Gate: if the confirmation mode is Gated, do not proceed to Step D until
   the human confirms the output. If Autonomous, continue to Step D
