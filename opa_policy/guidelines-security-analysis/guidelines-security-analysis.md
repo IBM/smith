@@ -108,10 +108,16 @@ Strictly follow `./owasp/enforcement_mapping.md`.
 - Input: `src/smith/data/owasp_10_ai_catalog.json` — repo-relative, not
   per-target-agent. Source of the `mitigations` this step grounds its
   policy-rule requirements in.
+- Input: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/policy_guidance_questionnaire.md`
+  — the same file produced in Step B, not a new file. This step also
+  pulls Sections 3-6's answers in directly as a second, independent
+  source of candidate rules (they don't need to map to an OWASP category
+  to be worth enforcing).
 - Input (optional): `<TARGET_AGENT_PATH>/smith/guidance.txt` — the same
   existing per-target-agent guidance file already read in Step B, not a
-  new file. Used here only to check which of this step's OPA-scope rules
-  are not yet represented in it. If it does not exist, skip that check.
+  new file. Used here only to check which of this step's candidate rules
+  (from both sources above) are not yet represented in it. If it does not
+  exist, skip that check.
 - Output: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/owasp_policy_guidelines.md`
 - Output: `<TARGET_AGENT_PATH>/smith/guidance_updated.txt` — written next
   to `guidance.txt` itself (not under `guidelines-security-analysis/`):
