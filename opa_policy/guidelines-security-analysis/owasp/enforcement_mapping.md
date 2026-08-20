@@ -133,6 +133,15 @@ them to justify the condition. Each rule must state:
 - The severity (Hard block / Soft block)
 - The matching semantics (exact / case-insensitive substring / numeric comparison)
 
+**Violation codes.** Before minting a new code, check
+`policy_guidance_questionnaire.md` Section 7 Q22. If it lists a
+pre-existing violation-code scheme, reuse those codes for any rule they
+apply to — do not rename them. Mint a new code (following the same
+naming shape as the existing scheme, if any) only when no listed code
+covers the rule. When a new code is minted, add it to the violation-code
+reference in STEP 6's output; the questionnaire's Q22 table is not
+edited.
+
 Group rules by OWASP category. Do not write Rego — write requirements.
 
 ---
@@ -208,20 +217,69 @@ Categories flowing into the OPA policy: <comma-separated list>
 ...
 ```
 
-Do NOT include Rego code. Do NOT include OPA hints. The output is a
-specification for policy generation, not an implementation.
+The output is a specification for policy generation, not an
+implementation. It is expected to name OPA-native field paths
+(`input.name`, `input.arguments.*`, `input.extensions.*`) because those
+are the interception surface. What it must NOT contain:
+
+- Rego syntax — no `package`, no rule blocks, no `default allow := ...`,
+  no `some x in ...`
+- Concrete Rego helper choices or built-in names (e.g. `regex.match`,
+  `net.cidr_contains`) — describe the matching semantics instead
+  (exact / case-insensitive substring / regex / numeric comparison /
+  CIDR membership)
+- Any hint about how a downstream policy-authoring workflow should
+  organise files, helpers, or test cases
 
 ---
 
-#### STEP 7 — Reconcile against guidance.txt
+#### STEP 6b — Verify citations
 
-This step builds one combined candidate-rule list from two independent
-sources, then checks both against `guidance.txt`. The two sources do not
-depend on each other — a candidate from either one is checked and
-included on its own merits.
+Before continuing, walk every rule in `owasp_policy_guidelines.md` and
+confirm each cited identifier exists in its source. This is the same
+principle as `threat_model.md`'s STEP 4 verification, extended to the
+rule specifications this step produces.
+
+For every rule under "Policy Rules (OPA scope only)":
+
+1. **Fields.** Every `input.arguments.<x>` must appear in
+   `tool_definitions.json`. Every `input.extensions.subject.<x>` (or any
+   other `input.extensions.*`) must appear in `system_vars.json` or in
+   `architecture.md`'s Trust Boundaries table. A rule that checks a
+   field that does not exist at invocation time cannot be enforced.
+2. **Mitigation grounding.** The mitigation cited from the catalog for
+   the rule's ASI category must be present verbatim (or as a clear
+   paraphrase) in that catalog entry's `mitigations` array. Do not
+   invent mitigations to justify a rule.
+3. **Threat linkage.** Every rule must trace back to at least one threat
+   instance in `threat_model.md` — either its evidence line, or its
+   threat-instance text. A rule with no upstream threat instance is a
+   sign that STEP 2's decision logic was skipped; remove it or add the
+   missing threat instance to `threat_model.md` (and re-run STEP 2 for
+   that category).
+4. **Questionnaire-sourced values.** If a rule's value set was pulled
+   from a questionnaire answer, that answer must not be tagged
+   `[inferred — low confidence]`. If it is, either drop the rule or
+   mark the value set as `TBD — requires human confirmation` and treat
+   the rule as pending rather than active.
+
+Any rule that fails verification: fix the citation, or remove the rule
+from `owasp_policy_guidelines.md`. Log a one-line result
+(e.g. `Citations verified: 9/9` or
+`Citations verified: 7/9 — 2 rules dropped for missing fields`).
+
+---
+
+#### STEP 7 — Build the combined candidate-rule list
+
+Assemble one deduplicated list of candidate rules from two independent
+sources. This step does NOT touch `guidance.txt`; that comparison is
+STEP 8. Keeping these two concerns split makes it possible to attribute
+a wrong `guidance_updated.txt` output to either "the candidate list was
+wrong" or "the coverage check was wrong."
 
 **Source 1 — OWASP-derived.** Every rule written under "Policy Rules (OPA
-scope only)" in STEP 6.
+scope only)" in STEP 6 (post-verification per STEP 6b).
 
 **Source 2 — questionnaire-derived.** Read
 `policy_guidance_questionnaire.md` Sections 3-6 (Q9-Q19: role scoping,
@@ -230,25 +288,69 @@ limits, response filtering). These answers do not need to map to any
 OWASP category to be worth enforcing. For each answer, apply the same OPA
 Enforcement Boundary test from the top of this file (is the condition
 visible at invocation time as `input.name`/`input.arguments.*`/
-`input.extensions.*`?). Keep only the answers that pass; an answer that
-fails is out of OPA scope here for the same reason it would be in STEP 2
-— note it in the gap register (STEP 4) instead if it isn't there already.
+`input.extensions.*`?). Keep only the answers that pass. Skip any answer
+tagged `[inferred — low confidence]` — those are not eligible to become
+candidate rules on their own (STEP 6b already applied this to Source 1).
+An answer that fails the boundary test is out of OPA scope for the same
+reason it would be in STEP 2 — note it in the gap register (STEP 4)
+instead if it isn't there already.
 
-**Deduplicate before comparing to guidance.txt.** If a Source 2 candidate
-describes the same condition on the same field as a Source 1 rule (this
-happens when a questionnaire answer and an OWASP threat instance both
-surfaced the same control), keep it once, tagged with both sources — do
-not list it twice.
+**Deduplicate.** If a Source 2 candidate describes the same condition on
+the same field as a Source 1 rule (this happens when a questionnaire
+answer and an OWASP threat instance both surfaced the same control),
+keep it once, tagged with both sources — do not list it twice. Use the
+same three-criteria test as STEP 8 (same field, same operator,
+overlapping value set) to decide whether two candidates are the same.
+
+Produce a numbered list of candidates. For each candidate record: source
+tags (`[ASI04 / VIOLATION_CODE]`, `[from questionnaire Q12]`, or both),
+the structured field, the operator, and the value set. Log this list —
+STEP 8 consumes it as input, and STEP 9 references it in the summary.
+
+---
+
+#### STEP 8 — Reconcile candidates against guidance.txt
 
 Read `<TARGET_AGENT_PATH>/smith/guidance.txt` if it exists. If it does
-not exist, skip the comparison below and write `guidance_updated.txt`
-containing only the deduplicated candidate list, numbered starting from 1.
+not exist, skip the coverage check and write `guidance_updated.txt`
+containing only STEP 7's candidate list, numbered starting from 1, with
+their source tags preserved.
 
-For each candidate in the deduplicated list, check whether an existing
-numbered rule in `guidance.txt` already covers the same condition on the
-same field — matching OWASP category, or matching questionnaire section,
-alone is not enough. A candidate counts as missing only if no existing
-`guidance.txt` rule already enforces that specific structured-field check.
+If `guidance.txt` exists, for each candidate from STEP 7, check whether
+an existing numbered rule in `guidance.txt` already covers the same
+condition on the same field. A candidate counts as covered only when an
+existing rule matches the candidate on ALL THREE of the following:
+
+1. **Same structured field.** The `input.*` path the candidate would
+   check must correspond to the field the guidance.txt rule constrains
+   (e.g. both talk about the `amount` argument, or both talk about the
+   caller's role). Different fields → not covered, even if the rule
+   sounds thematically similar.
+2. **Same operator / matching semantics.** Exact-equality, substring,
+   numeric threshold, set-membership, and regex are distinct. A
+   guidance.txt rule that says "block `.exe` files" does not cover a
+   candidate that says "block requests where the extension is not in
+   {pdf, csv, json}" — the operators are opposite polarities.
+3. **Overlapping value set.** For value-based conditions, the guidance.txt
+   rule's allowed/blocked set must overlap the candidate's set on the
+   value that would trigger the rule. A guidance.txt rule capping
+   purchases at 500 does not cover a candidate capping purchases at 200
+   for the `employee` role — the values differ AND the scoping differs.
+
+Matching OWASP category, matching questionnaire section, or similar
+natural-language phrasing alone is NOT enough. If even one of the three
+criteria above fails, the candidate is missing.
+
+For every candidate, write out the coverage decision explicitly in a
+scratch table before producing `guidance_updated.txt`, so a reviewer can
+audit the call:
+
+| Candidate | Field | Operator | Value set | Matching guidance.txt rule # | Covered? |
+|---|---|---|---|---|---|
+| <one-line candidate> | <input.*> | <exact / substring / ...> | <values> | <rule # or "—"> | Yes / No |
+
+Do NOT include this scratch table in `guidance_updated.txt`; log it
+alongside the STEP 9 summary.
 
 For every missing candidate, write a new `guidance.txt`-style line:
 - Continue the existing numbering in `guidance.txt`; do not renumber
@@ -274,11 +376,15 @@ and merge in manually.
 
 ---
 
-#### STEP 8 — Human review
+#### STEP 9 — Human review
 
-Present the summary table, the list of violation codes, and the list of
-newly proposed guidance rules from STEP 7 (or "none — guidance.txt
-already covers every OWASP-derived and questionnaire-derived candidate" /
-"none — no guidance.txt found, all candidates written fresh").
+Present the summary table, the list of violation codes, the STEP 7
+candidate list (with source tags), and the list of newly proposed
+guidance rules from STEP 8 (or "none — guidance.txt already covers every
+OWASP-derived and questionnaire-derived candidate" / "none — no
+guidance.txt found, all candidates written fresh").
 
-Log these, then continue automatically to the policy_writing skill.
+Log these, then hand control back to the top-level workflow, which
+decides (per confirmation mode) whether to proceed to Completion. This
+workflow ends at Completion; downstream policy authoring is out of
+scope here.
