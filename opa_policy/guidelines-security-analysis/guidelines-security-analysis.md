@@ -11,9 +11,10 @@ Each step produces an artifact under `<TARGET_AGENT_PATH>/smith/guidelines-secur
 That subfolder is created automatically on first write. Do not skip steps
 or reorder them.
 
-Step D's output (`owasp_policy_guidelines.md`) is the handoff point to the
-`policy_build` skill (`./policy_build.md`), which writes, tests, and
-integrates the actual `policy.rego`. This skill does not write any Rego.
+This workflow terminates at Step D. Its outputs
+(`owasp_policy_guidelines.md` and `guidance_updated.txt`) are the final
+artifacts; this workflow does not write any Rego and does not hand off
+to any specific downstream skill.
 
 The target MCP server directory is provided by the user at invocation time.
 If not provided, ask before starting Step A.
@@ -72,7 +73,9 @@ Strictly follow `./owasp/policy_guidance_questionnaire.md`.
 - Gate: if the confirmation mode is Gated, do not proceed to Step C until
   the human confirms the questionnaire is complete. If Autonomous,
   continue to Step C immediately — fill any remaining blanks per STEP 3
-  of `policy_guidance_questionnaire.md` rather than pausing to ask.
+  of `policy_guidance_questionnaire.md` using its confidence markers
+  (never guess without an `[inferred — low confidence]` tag) rather than
+  pausing to ask.
 
 ---
 
@@ -109,10 +112,13 @@ Strictly follow `./owasp/enforcement_mapping.md`.
   per-target-agent. Source of the `mitigations` this step grounds its
   policy-rule requirements in.
 - Input: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/policy_guidance_questionnaire.md`
-  — the same file produced in Step B, not a new file. This step also
-  pulls Sections 3-6's answers in directly as a second, independent
-  source of candidate rules (they don't need to map to an OWASP category
-  to be worth enforcing).
+  — the same file produced in Step B, not a new file. Step D's STEP 7
+  (Build the combined candidate-rule list) pulls Sections 3-6's answers
+  in directly as a second, independent source of candidate rules (they
+  don't need to map to an OWASP category to be worth enforcing).
+  Low-confidence questionnaire answers are excluded from the candidate
+  list. Step D's STEP 8 (Reconcile candidates against guidance.txt) is
+  the only step that touches guidance.txt.
 - Input (optional): `<TARGET_AGENT_PATH>/smith/guidance.txt` — the same
   existing per-target-agent guidance file already read in Step B, not a
   new file. Used here only to check which of this step's candidate rules
@@ -134,10 +140,16 @@ Strictly follow `./owasp/enforcement_mapping.md`.
 
 When Step D is complete, inform the user:
 
-> `smith/guidelines-security-analysis/owasp_policy_guidelines.md` is ready — architecture,
-> guidance questionnaire, threat model, and enforcement mapping are all
-> confirmed. Run the `policy_build` skill (`./policy_build.md`) to write,
-> test, and integrate `policy.rego`.
+> This workflow is finished. Two artifacts are ready for review:
+>
+> 1. `smith/guidelines-security-analysis/owasp_policy_guidelines.md` —
+>    the enforcement specification (architecture + questionnaire +
+>    threat model + enforcement mapping), all confirmed.
+> 2. `smith/guidance_updated.txt` — the existing `guidance.txt` plus
+>    any OPA-scope rules Step D found missing. This is a proposal;
+>    review it and merge into `guidance.txt` by hand before running any
+>    downstream policy-authoring workflow, or the resulting policy will
+>    be written against stale intent.
 
 ## General Rules
 

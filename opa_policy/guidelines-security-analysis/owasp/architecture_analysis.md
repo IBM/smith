@@ -11,6 +11,13 @@ other folders. If a required file is missing here, stop and ask; do not
 substitute one from elsewhere.
 - `agent.py`, `server.py`, `app.py`, `README.md`, `SYSTEM_VARIABLES.md` — read if present
 - `smith/system_vars.json` — authoritative source for subject fields, if present
+- `smith/tool_definitions.json` — read if present. Used to confirm which
+  tool arguments are visible at invocation time when identifying
+  enforcement points.
+- `smith/guidance.txt` — read if present. Used ONLY in STEP 4 to make
+  sure the fields guidance.txt cares about are surfaced as available
+  enforcement points; do not carry guidance.txt content into the
+  descriptive layers/trust-boundaries/data-flow sections.
 - Any other `.py` files in the target directory
 - Output file: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/architecture.md`
 
@@ -31,6 +38,11 @@ Read the following files from the target MCP server directory if they exist:
   authoritative source for subject field names and types; it takes precedence
   over what is inferred from source code. If absent, note this gap — the
   enforcement_mapping skill will need to rely on source code inference instead.
+- `smith/tool_definitions.json` — if present, the authoritative source
+  for `input.arguments.*` field names and types.
+- `smith/guidance.txt` — if present, the existing policy intent for this
+  tool. Used only in STEP 4 to cross-check available enforcement points;
+  do not merge its contents into any other section.
 - Any other `.py` files present
 
 Do NOT proceed until you have read all available files.
@@ -88,6 +100,17 @@ OPA can only enforce at a point where:
 (b) the relevant fields (tool name, arguments, caller identity) are present
     as structured data
 
+If `smith/guidance.txt` was read in STEP 1, do a coverage sweep before
+finalising the "Available (OPA-interceptable)" list: for each numbered
+rule in guidance.txt, name the specific field(s) it would need at
+invocation time (e.g. `input.arguments.amount`,
+`input.extensions.subject.role`) and confirm those fields appear in
+this section's list. Any guidance.txt rule whose fields are NOT visible
+at any interception point goes into "Blind Spots" with a one-line
+explanation. This surfaces underenumeration early — do NOT rewrite the
+rule or restate guidance.txt's intent; just record the field-visibility
+result.
+
 ---
 
 #### STEP 5 — Write architecture.md
@@ -143,4 +166,5 @@ Present a one-paragraph summary of the key findings:
 - Where OPA can be placed
 - What the main blind spots are
 
-Log the summary and continue automatically to the threat_model skill.
+Log the summary and hand control back to the top-level workflow, which
+decides (per confirmation mode) whether to proceed to the next step.

@@ -55,10 +55,19 @@ available files are read:
 | Prompt injection / keyword blocks | Section 4, Q13–Q14 |
 | Format or value enumerations (CSV/PDF/JSON) | Section 4, Q12 |
 
-Pre-fill every answer you can derive from these files. Mark each
-pre-filled answer with `[derived from guidance.txt]` when it comes from
-guidance.txt, or `[derived from architecture]` when inferred from source
-files. Leave genuinely unknown answers blank.
+Pre-fill every answer you can derive from these files. Tag each answer
+with exactly one confidence marker so Step C knows what it can rely on:
+
+- `[derived from guidance.txt]` — an explicit rule in guidance.txt states
+  this answer. High confidence.
+- `[derived from architecture]` — a specific file, function, or field in
+  the source directly supports this answer. High confidence.
+- `[inferred — low confidence]` — the answer is a plausible guess from
+  partial signals (naming conventions, similar tools, generic patterns)
+  without a direct source. Downstream steps MUST NOT cite this answer as
+  evidence.
+- Leave the answer blank only in Gated mode when nothing supports even a
+  low-confidence inference.
 
 ---
 
@@ -251,9 +260,16 @@ user receive an explanation?**
 ---
 
 **Q22. Do you need to log which rule was violated, or just that a
-request was denied?**
+request was denied? Does an existing violation-code scheme need to be
+reused (e.g. codes already emitted by the calling application or by
+another policy)?**
 
 > <log specific rule / log denial only>
+>
+> If — and only if — a violation-code scheme already exists that the
+> policy must reuse, list it here. Do NOT invent new codes; those are
+> generated in Step D (enforcement_mapping) alongside the rules they
+> attach to. Leave the table empty if there is no pre-existing scheme.
 >
 > | Code | Meaning |
 > |------|---------|
@@ -262,9 +278,16 @@ request was denied?**
 
 ---
 
-#### STEP 3 — Finalise and continue
+#### STEP 3 — Finalise
 
-Fill in any remaining blanks using best inference from available files — do not
-leave any answer empty. Log which answers were derived from `guidance.txt`,
-which from architecture/source files, and which were inferred. Continue
-automatically to the threat_model skill.
+Fill in any remaining blanks using the confidence markers defined in
+STEP 1. In Autonomous mode, do not leave answers empty — use
+`[inferred — low confidence]` when a real basis is missing rather than
+guessing without a tag. In Gated mode, leaving an answer blank is
+preferred over a low-confidence guess.
+
+Log a one-line breakdown at the end: how many answers are
+`[derived from guidance.txt]`, `[derived from architecture]`,
+`[inferred — low confidence]`, and blank. Then hand control back to the
+top-level workflow, which decides (per confirmation mode) whether to
+proceed to Step C.

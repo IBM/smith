@@ -94,7 +94,38 @@ Rules for writing threat instances:
 
 ---
 
-#### STEP 4 — Human review
+#### STEP 4 — Verify citations
+
+Before presenting the summary, walk every citation in `threat_model.md`
+and confirm it exists in its source. This catches fabricated fields and
+misattributed evidence before they propagate into Step D.
+
+For every threat instance and every "Evidence:" line:
+
+1. If it names an `input.arguments.<x>`, an `input.extensions.subject.<x>`,
+   or any other structured field, confirm that exact field appears in
+   `tool_definitions.json` (for `input.arguments.*`) or
+   `system_vars.json` / architecture.md's Trust Boundaries table (for
+   `input.extensions.*` and other subject fields).
+2. If it cites `architecture.md` (a layer, file, or behaviour),
+   confirm the citation matches text actually present in
+   `architecture.md`.
+3. If it cites a questionnaire answer (e.g. "per Q9"), confirm that
+   question is answered — not blank, and not `[inferred — low
+   confidence]`. Low-confidence answers must NOT be cited as evidence;
+   remove or rewrite the threat instance if that is its only support.
+
+Any citation that fails verification: either fix the citation
+(pointing to a real field/section) or delete the threat instance.
+Cite-and-hope is not acceptable — the enforcement_mapping step will
+turn these citations into policy rules.
+
+Log a one-line verification result (e.g. `Citations verified: 14/14`
+or `Citations verified: 12/14 — 2 fabricated fields removed`).
+
+---
+
+#### STEP 5 — Human review
 
 Present a summary table:
 
@@ -103,4 +134,6 @@ Present a summary table:
 | ASI01 | Yes/Partial/No | N |
 ...
 
-Log the summary table and continue automatically to the enforcement_mapping skill.
+Log the summary table and hand control back to the top-level workflow,
+which decides (per confirmation mode) whether to proceed to the next
+step.
