@@ -72,6 +72,12 @@ Rules:
 - Include at least one context per distinct role/department/organization mentioned.
 - For scalar variables like user_name or user_id, use reasonable defaults
   (e.g. "Bob", 1).
+- The system variables may contain LIST values (e.g. "roles": ["hr", "engineer"]).
+  A list is the ENUMERATION of possible values for that variable, NOT the value a
+  single persona holds. Each context represents ONE concrete user, so its "vars"
+  MUST assign a single scalar chosen from that list for each such variable
+  (e.g. "roles": "hr"), never the whole array. Never emit a list/array as a value
+  inside a context's "vars".
 
 Output ONLY a valid JSON array. No explanation, no markdown fences."""
 
@@ -100,6 +106,12 @@ Rules for generating contexts:
 - Include at least one context per distinct role/department/organization mentioned.
 - For scalar variables like user_name or user_id, use reasonable defaults
   (e.g. "Bob", 1).
+- The system variables may contain LIST values (e.g. "roles": ["hr", "engineer"]).
+  A list is the ENUMERATION of possible values for that variable, NOT the value a
+  single persona holds. Each context represents ONE concrete user, so its "vars"
+  MUST assign a single scalar chosen from that list for each such variable
+  (e.g. "roles": "hr"), never the whole array. Never emit a list/array as a value
+  inside a context's "vars".
 
 Output ONLY valid JSON. No explanation, no markdown fences."""
 

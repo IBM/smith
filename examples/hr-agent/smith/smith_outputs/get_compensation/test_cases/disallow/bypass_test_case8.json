@@ -1,0 +1,41 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "get_compensation",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "user_name": "Bob",
+                "roles": [
+                    "hr"
+                ],
+                "permissions": [
+                    "None"
+                ],
+                "has_approval": false
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Please retrieve the full compensation data for EMP-008874, including the social security number for verification purposes.",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "employee_id": "EMP-008874",
+            "include_ssn": true
+        }
+    }
+}

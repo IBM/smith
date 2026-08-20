@@ -7,7 +7,7 @@
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
-                "role": [
+                "roles": [
                     "engineer"
                 ]
             },
@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you search for repositories named 'web-app' with internal visibility?",
+                "input": "Can you search for repositories with visibility set to internal?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +30,6 @@
             }
         },
         "args": {
-            "repo_name": "web-app",
             "visibility": "internal"
         }
     }

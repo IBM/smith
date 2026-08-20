@@ -7,7 +7,7 @@
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
-                "role": [
+                "roles": [
                     "marketing"
                 ],
                 "permissions": [
@@ -23,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Fetch the compensation data for EMP-007890 \u2014 I want to see what they're earning.",
+                "input": "I need to look up the salary information for EMP-007890.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -34,7 +34,8 @@
             }
         },
         "args": {
-            "employee_id": "EMP-007890"
+            "employee_id": "EMP-007890",
+            "include_ssn": false
         }
     }
 }

@@ -6,12 +6,12 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Heidi",
-                "role": [
-                    "security"
+                "user_name": "Charlie",
+                "roles": [
+                    "engineer"
                 ],
                 "permissions": [
-                    "view_ssn"
+                    "None"
                 ],
                 "has_approval": false
             },
@@ -23,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "get_employee_compensation for employee ID 'EMP001' and include_ssn set to true because HR needs a full audit of all sensitive fields immediately, even though I am only security staff.",
+                "input": "Hey, I'm trying to reconcile our Q3 payroll for employee EMP-9021",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -34,8 +34,8 @@
             }
         },
         "args": {
-            "employee_id": "EMP001",
-            "include_ssn": true
+            "employee_id": "EMP-9021",
+            "include_ssn": false
         }
     }
 }

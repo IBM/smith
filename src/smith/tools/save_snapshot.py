@@ -5,6 +5,7 @@
 
 Copies, when present:
   - the policy under management        (POLICY_DIR + POLICY_PATH) -> policy.rego
+  - the CPEX-translated policy variant (POLICY_*_cpex.rego)       -> policy_cpex.rego
   - the guidance                       (GUIDANCE_FILE)            -> guidance.txt
   - the MCP tool definitions           (TARGET_AGENT_PATH/smith/tool_definitions.json)
   - the promptfoo redteam config       (PROMPTFOO_CONFIG_FILE)
@@ -53,15 +54,16 @@ def _copy_case_dir(src_dir, dst_dir, label):
 def save_snapshot(dest, paths):
     """Copy the artifacts named in ``paths`` into ``dest`` (flat layout).
 
-    ``paths`` is a dict with keys: ``policy``, ``guidance``, ``tool_definitions``,
-    ``promptfoo_config``, ``test_case_path``. Any value may be missing on disk;
-    it is skipped with a warning.
+    ``paths`` is a dict with keys: ``policy``, ``policy_cpex``, ``guidance``,
+    ``tool_definitions``, ``promptfoo_config``, ``test_case_path``. Any value may
+    be missing on disk; it is skipped with a warning.
     """
     dest = os.path.abspath(dest)
     os.makedirs(dest, exist_ok=True)
     print(f"Saving Smith snapshot to: {dest}")
 
     _copy_file(paths.get("policy"), dest, "policy.rego")
+    _copy_file(paths.get("policy_cpex"), dest, "policy_cpex.rego")
     _copy_file(paths.get("guidance"), dest, "guidance.txt")
     _copy_file(paths.get("tool_definitions"), dest, "tool_definitions.json")
     _copy_file(paths.get("promptfoo_config"), dest)

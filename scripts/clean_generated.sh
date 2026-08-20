@@ -28,4 +28,7 @@ rm -f "$ROOT/src/smith/test_generation/ares/assets/attack_goals.json"
 # reset the policy under management to empty content
 : > "$ROOT/assets/policy.rego"
 
+# remove the CPEX-translated policy variant if it was generated
+rm -f "$ROOT/assets/policy_cpex.rego"
+
 echo "Done."

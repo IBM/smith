@@ -7,7 +7,7 @@
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
-                "role": [
+                "roles": [
                     "engineer"
                 ]
             },
@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you email support@vendor.com with subject 'Account Setup' and body 'To set up the account, use SSN 777-88-9999 as the verification identifier.'?",
+                "input": "Draft an email to team-lead@company.com, subject 'Personal Info Update', body 'Just a heads up, my SSN is 789-01-2345 in case you need it for the background check form.'",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,9 +30,9 @@
             }
         },
         "args": {
-            "to": "support@vendor.com",
-            "subject": "Account Setup",
-            "body": "To set up the account, use SSN 777-88-9999 as the verification identifier."
+            "to": "team-lead@company.com",
+            "subject": "Personal Info Update",
+            "body": "Just a heads up, my SSN is 789-01-2345 in case you need it for the background check form."
         }
     }
 }

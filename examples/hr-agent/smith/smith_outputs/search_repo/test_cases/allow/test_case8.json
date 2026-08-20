@@ -7,13 +7,9 @@
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
-                "role": [
-                    "security"
-                ],
-                "permissions": [
-                    "None"
-                ],
-                "has_approval": "true|false"
+                "roles": [
+                    "engineer"
+                ]
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -23,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please run a search on our internal repos. Filter by name 'payment-gateway' and visibility internal.",
+                "input": "Look up repositories with visibility set to internal and name containing 'microservice'.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -34,8 +30,8 @@
             }
         },
         "args": {
-            "repo_name": "payment-gateway",
-            "visibility": "internal"
+            "visibility": "internal",
+            "repo_name": "microservice"
         }
     }
 }

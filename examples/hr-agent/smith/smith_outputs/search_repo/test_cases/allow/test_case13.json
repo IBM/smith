@@ -7,13 +7,13 @@
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
-                "role": [
+                "roles": [
                     "security"
                 ],
                 "permissions": [
-                    "view_ssn"
+                    "None"
                 ],
-                "has_approval": "true|false"
+                "has_approval": false
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -23,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I'd like to look up all external repos matching 'third-party-sdk'. Please search with visibility external.",
+                "input": "Search for external repositories with the name substring 'threat-intel'. Visibility should be external.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -34,7 +34,7 @@
             }
         },
         "args": {
-            "repo_name": "third-party-sdk",
+            "repo_name": "threat-intel",
             "visibility": "external"
         }
     }

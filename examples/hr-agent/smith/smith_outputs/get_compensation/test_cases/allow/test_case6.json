@@ -7,7 +7,7 @@
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
-                "role": [
+                "roles": [
                     "hr"
                 ],
                 "permissions": [
@@ -23,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you pull up the compensation record for EMP-001234? I need to review their salary and bonus. (SSN should be redacted since I don't have view_ssn permission.)",
+                "input": "Please retrieve the compensation record for EMP-001234. The SSN should be redacted before showing it to me.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

@@ -7,7 +7,7 @@
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
-                "role": [
+                "roles": [
                     "hr"
                 ]
             },
@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Search for repositories named 'payroll-system' with internal visibility.",
+                "input": "Can you search for internal repositories named 'payroll-system'?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,8 +30,8 @@
             }
         },
         "args": {
-            "repo_name": "payroll-system",
-            "visibility": "internal"
+            "visibility": "internal",
+            "repo_name": "payroll-system"
         }
     }
 }

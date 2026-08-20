@@ -7,7 +7,7 @@
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
-                "role": [
+                "roles": [
                     "engineer"
                 ]
             },
@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please look up all internal repos matching the name 'backend-service'.",
+                "input": "Please look up all internal repos matching the name 'web-app'.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -31,7 +31,7 @@
         },
         "args": {
             "visibility": "internal",
-            "repo_name": "backend-service"
+            "repo_name": "web-app"
         }
     }
 }

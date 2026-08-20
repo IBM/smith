@@ -7,13 +7,13 @@
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
-                "role": [
+                "roles": [
                     "security"
                 ],
                 "permissions": [
-                    "view_ssn"
+                    "None"
                 ],
-                "has_approval": "true|false"
+                "has_approval": false
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -23,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need to find all internal repositories matching the name substring 'firewall'. Could you search for those?",
+                "input": "Can you search for internal repositories matching the name 'auth-service'? Set visibility to internal.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -34,8 +34,8 @@
             }
         },
         "args": {
-            "visibility": "internal",
-            "repo_name": "firewall"
+            "repo_name": "auth-service",
+            "visibility": "internal"
         }
     }
 }

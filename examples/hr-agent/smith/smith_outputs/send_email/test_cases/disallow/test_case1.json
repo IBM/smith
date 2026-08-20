@@ -1,0 +1,38 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "send_email",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "user_name": "Bob",
+                "roles": [
+                    "hr"
+                ]
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Please send an email to payroll@company.com with subject 'Tax Information' and body 'SSN: 987-65-4321 for employee Alice Smith. Needed for year-end processing.'",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "to": "payroll@company.com",
+            "subject": "Tax Information",
+            "body": "SSN: 987-65-4321 for employee Alice Smith. Needed for year-end processing."
+        }
+    }
+}

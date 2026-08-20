@@ -90,6 +90,7 @@ def convert_bypass_case(
     test_case_template_file,
     output_file_ready_cases,
     system_vars=None,
+    selected_tools=None,
 ):
     """Convert only bypass cases into ``bypass_test_case*.json`` files. Independent of ``translate_case``"""
     if system_vars is None:
@@ -97,6 +98,17 @@ def convert_bypass_case(
 
     with open(bypass_cases_file, "r") as f:
         bypass_cases = json.load(f)
+
+    # When a session config restricts the run to a subset of tools, drop bypass
+    # cases targeting other tool calls -- same rule as ``translate_case``.
+    if selected_tools:
+        before_count = len(bypass_cases)
+        bypass_cases = [tc for tc in bypass_cases if tc.get("action") in selected_tools]
+        filtered = before_count - len(bypass_cases)
+        if filtered:
+            print(
+                f"Filtered {filtered} bypass case(s) not targeting selected tools: {sorted(selected_tools)}"
+            )
 
     test_cases_translated = {"bypass_malicious": [], "bypass_benign": []}
     for test_case in bypass_cases:

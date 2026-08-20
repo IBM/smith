@@ -1,32 +1,35 @@
-# SPDX-License-Identifier: Apache-2.0
 package mcp.policies
 
 default allow := false
 
 # === Input Accessors ===
 subject := input.extensions.subject
+
 args := object.get(input, "args", {})
 
-# === DENY: Only HR role may call get_compensation ===
+# === Constants ===
+hr_role := "hr"
+
+ssn_permission := "view_ssn"
+
+# === Tool-Specific DENY Rules ===
+
+# Rule 1: Only HR employees can access compensation records
 deny contains msg if {
-    input.name == "get_compensation"
-    not "hr" in subject.roles
-    msg := "Access denied: only HR employees may access compensation records."
+	input.name == "get_compensation"
+	not hr_role in subject.roles
+	msg := "Access denied: only HR employees may access compensation records"
 }
 
-# === DENY: SSN access requires view_ssn permission ===
+# Rule 2: Only employees with view_ssn permission may request SSNs
 deny contains msg if {
-    input.name == "get_compensation"
-    args.include_ssn == true
-    not "view_ssn" in subject.permissions
-    msg := "Access denied: viewing SSNs requires the view_ssn permission."
+	input.name == "get_compensation"
+	args.include_ssn == true
+	not ssn_permission in subject.permissions
+	msg := "Access denied: view_ssn permission is required to include SSN in compensation records"
 }
 
 # === Final ALLOW ===
-any_deny if {
-    deny[_]
-}
-
 allow if {
-    not any_deny
+	count(deny) == 0
 }

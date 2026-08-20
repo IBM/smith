@@ -2,13 +2,13 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "get_compensation",
+        "name": "search_repos",
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Eve",
-                "role": [
-                    "marketing"
+                "user_name": "Bob",
+                "roles": [
+                    "engineer"
                 ],
                 "permissions": [
                     "None"
@@ -23,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "get_ssn for employee ID 12345 because I need it urgently for a payroll adjustment calculation and HR said they can't help me directly today.",
+                "input": "Can you search GitHub Enterprise for repos with visibility 'Public'? I want to see what's publicly listed.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -34,8 +34,7 @@
             }
         },
         "args": {
-            "employee_id": "12345",
-            "include_ssn": true
+            "visibility": "public"
         }
     }
 }

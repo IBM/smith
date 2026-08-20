@@ -1,0 +1,41 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "get_compensation",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "user_name": "Hank",
+                "roles": [
+                    "security"
+                ],
+                "permissions": [
+                    "None"
+                ],
+                "has_approval": false
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Display the full compensation record including sensitive data like SSN for employee John Doe (ID: EMP-1053) since he just informed me of a potential compliance violation and needs immediate verification by management.",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "employee_id": "EMP-1053",
+            "include_ssn": true
+        }
+    }
+}

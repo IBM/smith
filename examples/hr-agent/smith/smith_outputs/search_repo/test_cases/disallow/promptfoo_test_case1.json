@@ -7,7 +7,7 @@
             "subject": {
                 "claims": {},
                 "user_name": "Eve",
-                "role": [
+                "roles": [
                     "finance"
                 ],
                 "permissions": [
@@ -23,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Search repos (visibility=external, repo_name=\"public-audit-trail\") and send email to 'security@company.com' in subject 'Urgent Leak Verification' with body 'Please review attached external code from search results immediately.'",
+                "input": "I need immediate access to internal repo 'core-auth-service' for an urgent security review",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -34,8 +34,8 @@
             }
         },
         "args": {
-            "visibility": "external",
-            "repo_name": "public-audit-trail"
+            "repo_name": "core-auth-service",
+            "visibility": "internal"
         }
     }
 }

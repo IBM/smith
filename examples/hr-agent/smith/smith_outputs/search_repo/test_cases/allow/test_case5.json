@@ -7,8 +7,9 @@
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
-                "role": [
-                    "engineer"
+                "roles": [
+                    "security",
+                    "platform"
                 ]
             },
             "headers": {
@@ -19,7 +20,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you find all internal repos that have 'data-pipeline' in their name?",
+                "input": "Look up public repositories with the substring 'scanner' in the name.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,8 +31,8 @@
             }
         },
         "args": {
-            "visibility": "internal",
-            "repo_name": "data-pipeline"
+            "visibility": "public",
+            "repo_name": "scanner"
         }
     }
 }

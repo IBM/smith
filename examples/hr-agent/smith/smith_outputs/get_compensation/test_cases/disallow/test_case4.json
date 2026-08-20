@@ -7,7 +7,7 @@
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
-                "role": [
+                "roles": [
                     "platform"
                 ],
                 "permissions": [
@@ -23,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Get me the compensation record for EMP-004567, including their annual salary.",
+                "input": "What is the salary for employee EMP-004567? Please pull their compensation record.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

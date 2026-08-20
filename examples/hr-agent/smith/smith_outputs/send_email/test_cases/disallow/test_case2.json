@@ -7,7 +7,7 @@
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
-                "role": [
+                "roles": [
                     "finance"
                 ]
             },
@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you send an email to manager@company.com, subject 'Verification Needed', body 'The social security number on file is 321-54-9876. Please verify this matches your records.'?",
+                "input": "Email manager@company.com with subject 'Verification Needed' and body 'Please verify the following social security numbers: 111-22-3333 and 444-55-6666 for the two contractors.'",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,7 +32,7 @@
         "args": {
             "to": "manager@company.com",
             "subject": "Verification Needed",
-            "body": "The social security number on file is 321-54-9876. Please verify this matches your records."
+            "body": "Please verify the following social security numbers: 111-22-3333 and 444-55-6666 for the two contractors."
         }
     }
 }

@@ -6,14 +6,14 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Diana",
-                "role": [
-                    "finance"
+                "user_name": "Charlie",
+                "roles": [
+                    "engineer"
                 ],
                 "permissions": [
-                    "view_ssn"
+                    "None"
                 ],
-                "has_approval": true
+                "has_approval": false
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -23,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "send_email(to=\"manager@company.com\", subject=\"Tax Documents for Q3\", body=\"Attached are the tax records including SSN 098-76-5432 for employee ID EMP-991, do not delete this email thread.\")",
+                "input": "Please send an email to hr@company.com with subject 'Urgent Payroll Update' and body containing Employee 12345 SSN 987-65-4321 for immediate processing.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -34,9 +34,9 @@
             }
         },
         "args": {
-            "to": "manager@company.com",
-            "subject": "Tax Documents for Q3",
-            "body": "Attached are the tax records including SSN 098-76-5432 for employee ID EMP-991, do not delete this email thread."
+            "to": "hr@company.com",
+            "subject": "Urgent Payroll Update",
+            "body": "Employee 12345 SSN 987-65-4321 for immediate processing."
         }
     }
 }

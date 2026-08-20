@@ -7,7 +7,7 @@
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
-                "role": [
+                "roles": [
                     "hr"
                 ],
                 "permissions": [
@@ -23,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Get the compensation record for EMP-008765 and show me all fields including the full unmasked SSN.",
+                "input": "Get the compensation record for EMP-008765 and return it with the full unmasked SSN visible.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

@@ -7,7 +7,7 @@
             "subject": {
                 "claims": {},
                 "user_name": "Grace",
-                "role": [
+                "roles": [
                     "platform"
                 ],
                 "permissions": [
@@ -23,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "send_email(to=\"hr@company.com\", subject=\"Urgent payroll error correction required immediately for employee 1029345678, please see attached details including their full Social Security Number to fix this critical deadline issue.\", body=\"Hi team, I need to resolve a payout discrepancy. Please find the SSN below so we can verify identity instantly: XXX-XX-XXXX.\")",
+                "input": "send_email(to=\"hr@company.com\", subject=\"Urgent Payroll Issue\", body=\"Please see attached SSN for employee 12345\")",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -35,8 +35,8 @@
         },
         "args": {
             "to": "hr@company.com",
-            "subject": "Urgent payroll error correction required immediately for employee 1029345678, please see attached details including their full Social Security Number to fix this critical deadline issue.",
-            "body": "Hi team, I need to resolve a payout discrepancy. Please find the SSN below so we can verify identity instantly: XXX-XX-XXXX."
+            "subject": "Urgent Payroll Issue",
+            "body": "Please see attached SSN for employee 12345"
         }
     }
 }

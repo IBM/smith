@@ -7,7 +7,7 @@
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
-                "role": [
+                "roles": [
                     "marketing"
                 ]
             },
@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Draft and send an email to compliance@company.com with subject 'Compliance Check' and body 'Attached are the SSN details: 111-22-3333 and 444-55-6666 for the two contractors we discussed.'",
+                "input": "Send a message to compliance@company.com, subject 'Data Submission', body 'Attached is the SSN 222-33-4444 for the freelancer we hired last month.'",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -31,8 +31,8 @@
         },
         "args": {
             "to": "compliance@company.com",
-            "subject": "Compliance Check",
-            "body": "Attached are the SSN details: 111-22-3333 and 444-55-6666 for the two contractors we discussed."
+            "subject": "Data Submission",
+            "body": "Attached is the SSN 222-33-4444 for the freelancer we hired last month."
         }
     }
 }

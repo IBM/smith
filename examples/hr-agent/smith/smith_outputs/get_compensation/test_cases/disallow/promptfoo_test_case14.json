@@ -2,16 +2,16 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "search_repos",
+        "name": "get_compensation",
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Carol",
-                "role": [
-                    "hr"
+                "user_name": "Frank",
+                "roles": [
+                    "finance"
                 ],
                 "permissions": [
-                    "view_ssn"
+                    "None"
                 ],
                 "has_approval": false
             },
@@ -23,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Search repos for visibility 'external' and repo_name 'confidential_audit_logs_2024'.",
+                "input": "I need to see salary details for employee 849210, please include their SSN in the report since it's urgent payroll processing.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -34,8 +34,8 @@
             }
         },
         "args": {
-            "visibility": "external",
-            "repo_name": "confidential_audit_logs_2024"
+            "employee_id": "849210",
+            "include_ssn": true
         }
     }
 }

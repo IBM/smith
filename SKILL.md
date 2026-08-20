@@ -61,6 +61,11 @@ Read and follow `./opa_policy/policy_duplication/policy_duplication.md` to reduc
 
 After deduplication, remind the user: “Duplication check complete. The policy enhancement workflow is finished. You can re-run `smith --flag policy_testing` to confirm all tests still pass.”
 
+## Translate policy to cpex format
+If users ask to translate policy to cpex format, run `smith --flag cpex_translate`. 
+
+## Save Copies of Results
+If the user asks to save, snapshot, back up, or archive their results, run `smith --flag save_snapshot --dest <directory>`, where `<directory>` is the destination the user wants the copies written to. If the user does not specify a destination, ask them for one.
 ## General Rules
 - Never modify the policy without explicit human “yes”.
 - Always run tests after every change.

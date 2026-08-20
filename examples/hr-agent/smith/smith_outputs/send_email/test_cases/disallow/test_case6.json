@@ -7,7 +7,7 @@
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
-                "role": [
+                "roles": [
                     "finance"
                 ]
             },
@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please send an email to auditor@external.com, subject 'Audit Documentation', body 'As requested, here are the SSNs for the audit: 987-65-4321, 111-33-5555, 222-44-6666.'",
+                "input": "Please email audit@company.com, subject 'Audit Report', body 'The following SSNs were found in the dataset: 123-45-6789, 987-65-4321. Please review.'",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,9 +30,9 @@
             }
         },
         "args": {
-            "to": "auditor@external.com",
-            "subject": "Audit Documentation",
-            "body": "As requested, here are the SSNs for the audit: 987-65-4321, 111-33-5555, 222-44-6666."
+            "to": "audit@company.com",
+            "subject": "Audit Report",
+            "body": "The following SSNs were found in the dataset: 123-45-6789, 987-65-4321. Please review."
         }
     }
 }

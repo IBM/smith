@@ -7,7 +7,7 @@
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
-                "role": [
+                "roles": [
                     "security"
                 ]
             },
@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Send a message to hr@company.com, subject 'Identity Confirmation', body 'My SSN is 555-66-7777. Please use this to confirm my identity for the background check.'",
+                "input": "Compose an email to it-support@company.com with subject 'Identity Confirmation' and body 'My SSN is 555-66-7777, please use it to verify my identity for the system access request.'",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,9 +30,9 @@
             }
         },
         "args": {
-            "to": "hr@company.com",
+            "to": "it-support@company.com",
             "subject": "Identity Confirmation",
-            "body": "My SSN is 555-66-7777. Please use this to confirm my identity for the background check."
+            "body": "My SSN is 555-66-7777, please use it to verify my identity for the system access request."
         }
     }
 }

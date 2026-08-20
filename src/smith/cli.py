@@ -150,6 +150,20 @@ def _load_session_config(base_url):
     return {}
 
 
+def _selected_tools(base_url):
+    """Return the session's selected-tool set, or None if IR mode is off/empty.
+
+    When the Policy Explorer / Guidance Classifier restricts a run to a subset
+    of tools (``use_ir``), every stage that emits or filters test cases keys off
+    this set. Returning None means "no restriction".
+    """
+    session_config = _load_session_config(base_url)
+    if not session_config.get("use_ir", False):
+        return None
+    tools_list = session_config.get("selected_tools", [])
+    return set(tools_list) if tools_list else None
+
+
 def get_tool_definitions(transport, mcp_url, mcp_command, mcp_args, mcp_cwd):
     """Extract tool definitions from the MCP server."""
     tool_definitions = asyncio.run(
@@ -289,12 +303,7 @@ def generate_test(
             output_file_attack_promptfoo,
         )
 
-    session_config = _load_session_config(base_url)
-    selected_tools = None
-    if session_config.get("use_ir", False):
-        tools_list = session_config.get("selected_tools", [])
-        if tools_list:
-            selected_tools = set(tools_list)
+    selected_tools = _selected_tools(base_url)
 
     translate_case(
         output_file_cases,
@@ -322,6 +331,7 @@ def generate_bypass_cases(
     output_file_ready_cases,
     bypass_report_dir,
     bypass_cases_file,
+    base_url,
 ):
     """Find guidance-vs-policy divergences and generate adversarial cases."""
     if not os.path.exists(policy_path):
@@ -362,6 +372,7 @@ def generate_bypass_cases(
         test_case_template_file,
         output_file_ready_cases,
         system_variables,
+        _selected_tools(base_url),
     )
     print(
         f"Bypass case generation complete: {len(bypass_report.vectors)} "
@@ -396,6 +407,14 @@ def main():
         serve(port=8100)
         sys.exit(0)
 
+    if args.flag == "get_current_agent":
+        # Read-only: print the current target-agent path and guidance path,
+        agent_base = os.getenv("BASE_URL", "")
+        guidance = os.getenv("GUIDANCE_FILE")
+        print(f"target_agent: {os.getenv('TARGET_AGENT_PATH') or '(unset)'}")
+        print(f"guidance_file: {agent_base + guidance if guidance else '(unset)'}")
+        sys.exit(0)
+
     if args.flag == "save_snapshot":
         from smith.tools.save_snapshot import save_snapshot
 
@@ -416,10 +435,18 @@ def main():
             return snapshot_base + "".join(parts)
 
         target_agent = os.getenv("TARGET_AGENT_PATH")
+        snapshot_policy = _joined("POLICY_DIR", "POLICY_PATH")
+        # CPEX-translated sibling, named like cpex_translate: policy.rego -> policy_cpex.rego.
+        snapshot_policy_cpex = (
+            re.sub(r"\.rego$", "_cpex.rego", snapshot_policy)
+            if snapshot_policy
+            else None
+        )
         save_snapshot(
             args.dest,
             {
-                "policy": _joined("POLICY_DIR", "POLICY_PATH"),
+                "policy": snapshot_policy,
+                "policy_cpex": snapshot_policy_cpex,
                 "guidance": _joined("GUIDANCE_FILE"),
                 "tool_definitions": (
                     os.path.join(
@@ -564,6 +591,7 @@ def main():
             output_file_ready_cases,
             bypass_report_dir,
             bypass_cases_file,
+            base_url,
         )
 
     if args.flag == "get_mcp_parameter":
@@ -573,17 +601,15 @@ def main():
             transport, mcp_url, mcp_command, mcp_args, mcp_cwd
         )
         # If a session config selected a subset of tools, keep only those.
-        session_config = _load_session_config(base_url)
-        if session_config.get("use_ir", False):
-            selected = set(session_config.get("selected_tools", []))
-            if selected:
-                kept = [t for t in result["tools"] if t.get("name") in selected]
-                dropped = len(result["tools"]) - len(kept)
-                result["tools"] = kept
-                print(
-                    f"Session config: keeping {len(kept)} selected tool(s), "
-                    f"dropped {dropped} not in config"
-                )
+        selected = _selected_tools(base_url)
+        if selected:
+            kept = [t for t in result["tools"] if t.get("name") in selected]
+            dropped = len(result["tools"]) - len(kept)
+            result["tools"] = kept
+            print(
+                f"Session config: keeping {len(kept)} selected tool(s), "
+                f"dropped {dropped} not in config"
+            )
         os.makedirs(os.path.dirname(output_file), exist_ok=True)
         with open(output_file, "w") as f:
             json.dump(result, f, indent=2)
@@ -743,6 +769,7 @@ def main():
         "classify_guidance",
         "save_snapshot",
         "generate_promptfoo_config",
+        "get_current_agent",
     ]
     if args.flag and args.flag not in allowed_flags:
         print(f"ERROR: '{args.flag}' is not a valid flag.")

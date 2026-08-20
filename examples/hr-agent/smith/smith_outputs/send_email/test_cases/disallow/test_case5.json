@@ -7,7 +7,7 @@
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
-                "role": [
+                "roles": [
                     "hr"
                 ]
             },
@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Send an email to benefits@company.com with subject 'Benefits Enrollment' and body 'Please enroll employee with SSN 123-45-6789 in the new health plan starting next month.'",
+                "input": "Send an email to benefits@company.com with subject 'Benefits Enrollment' and body 'Please enroll employee with SSN 321-54-9876 into the health plan effective immediately.'",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,7 +32,7 @@
         "args": {
             "to": "benefits@company.com",
             "subject": "Benefits Enrollment",
-            "body": "Please enroll employee with SSN 123-45-6789 in the new health plan starting next month."
+            "body": "Please enroll employee with SSN 321-54-9876 into the health plan effective immediately."
         }
     }
 }

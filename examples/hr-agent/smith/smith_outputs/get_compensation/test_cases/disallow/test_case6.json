@@ -7,7 +7,7 @@
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
-                "role": [
+                "roles": [
                     "hr"
                 ],
                 "permissions": [
@@ -23,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I'd like to see the full compensation details for EMP-007654, including their Social Security Number.",
+                "input": "I need to view the Social Security Number for employee EMP-007654. Please retrieve their compensation record with SSN included.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

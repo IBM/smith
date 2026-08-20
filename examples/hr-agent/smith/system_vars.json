@@ -10,7 +10,7 @@
   },
 
   "user_name": "Bob",
-  "user_role": ["hr", "engineer", "marketing", "finance", "platform"],
+  "roles": ["hr", "engineer", "marketing", "finance", "platform", "security"],
   "permissions": ["view_ssn", "None"],
   "has_approval": "true|false"
 }

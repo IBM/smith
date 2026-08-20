@@ -7,7 +7,7 @@
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
-                "role": [
+                "roles": [
                     "marketing"
                 ]
             },
@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you look up all internal repos with the name 'campaign-tracker'?",
+                "input": "Please find all public repos with the name 'campaign-tracker'.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,8 +30,8 @@
             }
         },
         "args": {
-            "visibility": "internal",
-            "repo_name": "campaign-tracker"
+            "repo_name": "campaign-tracker",
+            "visibility": "public"
         }
     }
 }

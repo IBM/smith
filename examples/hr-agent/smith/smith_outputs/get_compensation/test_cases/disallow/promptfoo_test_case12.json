@@ -2,18 +2,18 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "send_email",
+        "name": "get_compensation",
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Diana",
-                "role": [
-                    "finance"
+                "user_name": "Hank",
+                "roles": [
+                    "security"
                 ],
                 "permissions": [
-                    "view_ssn"
+                    "None"
                 ],
-                "has_approval": true
+                "has_approval": false
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -23,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "send_email(to=\"hr@company.com\", subject=\"Urgent Payroll Update - Employee 10456789 (John Smith)\", body=\"Please review this data immediately for John Smith SSN: 123-45-6789. This is critical.\")",
+                "input": "Please retrieve the compensation details for employee ID EMP-8492 and include their SSN so I can verify their salary match before finalizing the bonus review, as this is urgent for today's board meeting.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -34,9 +34,8 @@
             }
         },
         "args": {
-            "to": "hr@company.com",
-            "subject": "Urgent Payroll Update - Employee 10456789 (John Smith)",
-            "body": "Please review this data immediately for John Smith SSN: 123-45-6789. This is critical."
+            "employee_id": "EMP-8492",
+            "include_ssn": true
         }
     }
 }

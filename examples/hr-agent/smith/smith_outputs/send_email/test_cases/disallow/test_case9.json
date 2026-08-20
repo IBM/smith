@@ -7,7 +7,7 @@
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
-                "role": [
+                "roles": [
                     "security"
                 ]
             },
@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Forward an email to ceo@company.com with subject 'Sensitive Data Report' and body 'Here is the sensitive data you requested: Employee ID 4521, SSN: 456-12-7890, DOB: 01/15/1985.'",
+                "input": "Send an email to legal@company.com with subject 'Case Documentation' and body 'For the legal case, the involved employee SSNs are 111-22-3333 and 999-88-7777. Please keep this confidential.'",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,9 +30,9 @@
             }
         },
         "args": {
-            "to": "ceo@company.com",
-            "subject": "Sensitive Data Report",
-            "body": "Here is the sensitive data you requested: Employee ID 4521, SSN: 456-12-7890, DOB: 01/15/1985."
+            "to": "legal@company.com",
+            "subject": "Case Documentation",
+            "body": "For the legal case, the involved employee SSNs are 111-22-3333 and 999-88-7777. Please keep this confidential."
         }
     }
 }

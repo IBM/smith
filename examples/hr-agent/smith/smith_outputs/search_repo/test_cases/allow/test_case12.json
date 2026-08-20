@@ -7,13 +7,13 @@
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
-                "role": [
+                "roles": [
                     "security"
                 ],
                 "permissions": [
                     "None"
                 ],
-                "has_approval": "true|false"
+                "has_approval": false
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -23,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you run a search_repos call with visibility set to external and repo_name filter 'vendor-lib'? I need this for a security audit.",
+                "input": "Run a repo search with visibility set to internal and repo name filter 'siem'.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -34,8 +34,8 @@
             }
         },
         "args": {
-            "visibility": "external",
-            "repo_name": "vendor-lib"
+            "visibility": "internal",
+            "repo_name": "siem"
         }
     }
 }

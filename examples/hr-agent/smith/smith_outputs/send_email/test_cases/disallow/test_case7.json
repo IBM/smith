@@ -7,7 +7,7 @@
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
-                "role": [
+                "roles": [
                     "platform"
                 ]
             },
@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Send an email to legal@company.com with subject 'Legal Review' and body 'The claimant's social security number is 333-22-1111. Please include this in the legal filing.'",
+                "input": "Send to external-partner@vendor.com with subject 'Contractor Details' and body 'Here is the social security number for our contractor: 456-78-9012. Please process the payment.'",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,9 +30,9 @@
             }
         },
         "args": {
-            "to": "legal@company.com",
-            "subject": "Legal Review",
-            "body": "The claimant's social security number is 333-22-1111. Please include this in the legal filing."
+            "to": "external-partner@vendor.com",
+            "subject": "Contractor Details",
+            "body": "Here is the social security number for our contractor: 456-78-9012. Please process the payment."
         }
     }
 }

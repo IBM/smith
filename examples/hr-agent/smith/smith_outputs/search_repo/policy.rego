@@ -1,42 +1,46 @@
-# SPDX-License-Identifier: Apache-2.0
 package mcp.policies
 
 default allow := false
 
 # === Input Accessors ===
 subject := input.extensions.subject
+
 args := object.get(input, "args", {})
 
 # === Constants ===
-allowed_search_roles := {"engineer", "security"}
+allowed_teams := {"engineer", "security"}
+
+engineer_allowed_visibilities := {"internal"}
+
+security_allowed_visibilities := {"internal", "external", "public"}
 
 # === Tool-Specific DENY Rules ===
 
-# Only engineer or security team may call search_repos
-deny contains msg if {
-    input.name == "search_repos"
-    not any_allowed_search_role
-    msg := sprintf("Role '%v' is not permitted to search repositories", [subject.roles])
+# Rule 1: Only engineer or security team members can call search_repos
+deny["unauthorized_team_search_repos"] if {
+	input.name == "search_repos"
+	not allowed_teams & {r | some r in subject.roles} != set()
 }
 
-any_allowed_search_role if {
-    some r in subject.roles
-    r in allowed_search_roles
+# Rule 2: Engineers can only search internal repos
+deny["engineer_external_repo_denied"] if {
+	input.name == "search_repos"
+	"engineer" in subject.roles
+	not "security" in subject.roles
+	not args.visibility in engineer_allowed_visibilities
 }
 
-# Engineers may only search internal repos
-deny contains msg if {
-    input.name == "search_repos"
-    "engineer" in subject.roles
-    args.visibility != "internal"
-    msg := sprintf("Engineers may only search internal repositories, not '%v'", [args.visibility])
+# Rule 3: Security team can search internal, external, and public repos
+deny["security_invalid_visibility"] if {
+	input.name == "search_repos"
+	"security" in subject.roles
+	not args.visibility in security_allowed_visibilities
+}
+
+# === any_deny helper ===
+any_deny if {
+	some _ in deny
 }
 
 # === Final ALLOW ===
-allow if {
-    not any_deny
-}
-
-any_deny if {
-    deny[_]
-}
+allow if not any_deny

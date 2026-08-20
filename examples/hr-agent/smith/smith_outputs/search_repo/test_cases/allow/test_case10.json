@@ -7,13 +7,13 @@
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
-                "role": [
+                "roles": [
                     "security"
                 ],
                 "permissions": [
                     "None"
                 ],
-                "has_approval": "true|false"
+                "has_approval": false
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -23,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Search GitHub Enterprise for repos with visibility 'internal'. No name filter needed, just show me everything internal.",
+                "input": "Please look up all internal repos with 'firewall' in the name. Visibility should be internal.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -34,6 +34,7 @@
             }
         },
         "args": {
+            "repo_name": "firewall",
             "visibility": "internal"
         }
     }

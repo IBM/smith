@@ -7,7 +7,7 @@
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
-                "role": [
+                "roles": [
                     "finance"
                 ]
             },
@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please search for repositories matching 'budget-tool' with visibility internal.",
+                "input": "Search for repositories with visibility internal and name 'budget-tool'.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,8 +30,8 @@
             }
         },
         "args": {
-            "repo_name": "budget-tool",
-            "visibility": "internal"
+            "visibility": "internal",
+            "repo_name": "budget-tool"
         }
     }
 }

@@ -7,8 +7,8 @@
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
-                "role": [
-                    "engineer"
+                "roles": [
+                    "security"
                 ]
             },
             "headers": {
@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Search for repositories with visibility 'internal' and name containing 'api-gateway'.",
+                "input": "Search repos with visibility internal and name containing 'firewall'.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -31,7 +31,7 @@
         },
         "args": {
             "visibility": "internal",
-            "repo_name": "api-gateway"
+            "repo_name": "firewall"
         }
     }
 }

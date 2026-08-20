@@ -7,13 +7,9 @@
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
-                "role": [
-                    "security"
-                ],
-                "permissions": [
-                    "None"
-                ],
-                "has_approval": "true|false"
+                "roles": [
+                    "engineer"
+                ]
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -23,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you search for repositories with visibility set to internal? I'm looking for anything related to 'auth-service'.",
+                "input": "Can you find all internal repos matching the substring 'data-pipeline'?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -35,7 +31,7 @@
         },
         "args": {
             "visibility": "internal",
-            "repo_name": "auth-service"
+            "repo_name": "data-pipeline"
         }
     }
 }

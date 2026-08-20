@@ -2,7 +2,16 @@
 
 ## Overview
 
-This skill generates an OPA policy for an MCP-based agent. The target <TARGET_AGENT_PATH> and <GUIDANCE_FILE> are specified in the `.env` file.
+This skill generates an OPA policy for an MCP-based agent. Do NOT read `.env` to
+discover the target agent or its guidance. Instead run:
+
+```bash
+smith --flag get_current_agent
+```
+
+It prints the active `target_agent:` (the `<TARGET_AGENT_PATH>`) and
+`guidance_file:` (the resolved `<GUIDANCE_FILE>` path). Use those two values
+everywhere `<TARGET_AGENT_PATH>` and `<GUIDANCE_FILE>` appear below.
 
 **Inputs (all located in `<TARGET_AGENT_PATH>/smith/`):** Use ONLY these exact files. Do NOT read similarly-named files from other folders. If a required file is missing here, stop and ask; do not substitute one from elsewhere.
 1. `guidance.txt` — natural language policy rules, located in `<GUIDANCE_FILE>`.
@@ -18,7 +27,10 @@ This skill generates an OPA policy for an MCP-based agent. The target <TARGET_AG
 
 ## Prerequisites
 
-Run `smith --flag get_mcp_parameter` first to generate `tool_definitions.json`. This connects to the MCP server and extracts all tool names, parameters, types, and descriptions. You always need to run this command to get up to date tool information, even a `tool_definitions.json` already exists. 
+Run `smith --flag get_current_agent` to confirm the active target agent path and
+guidance file path (do not read `.env` for these).
+
+Then run `smith --flag get_mcp_parameter` to generate `tool_definitions.json`. This connects to the MCP server and extracts all tool names, parameters, types, and descriptions. You always need to run this command to get up to date tool information, even a `tool_definitions.json` already exists. 
 
 ---
 

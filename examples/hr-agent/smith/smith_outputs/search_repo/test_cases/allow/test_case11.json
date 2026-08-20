@@ -7,13 +7,13 @@
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
-                "role": [
+                "roles": [
                     "security"
                 ],
                 "permissions": [
-                    "None"
+                    "view_ssn"
                 ],
-                "has_approval": "true|false"
+                "has_approval": true
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -23,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please search for external repositories. I'm investigating a potential dependency issue and need to look at repos with visibility 'external'.",
+                "input": "I'd like to search internal repositories for anything related to 'vulnerability-scanner'. Use visibility=internal.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -34,7 +34,8 @@
             }
         },
         "args": {
-            "visibility": "external"
+            "repo_name": "vulnerability-scanner",
+            "visibility": "internal"
         }
     }
 }

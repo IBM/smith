@@ -7,7 +7,7 @@
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
-                "role": [
+                "roles": [
                     "engineer"
                 ]
             },
@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please find all external repositories with 'vendor-integration' in their name.",
+                "input": "Please look up external repositories with name 'third-party-integration'.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,8 +30,8 @@
             }
         },
         "args": {
-            "repo_name": "vendor-integration",
-            "visibility": "external"
+            "visibility": "external",
+            "repo_name": "third-party-integration"
         }
     }
 }

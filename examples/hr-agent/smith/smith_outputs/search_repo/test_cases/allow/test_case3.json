@@ -7,7 +7,7 @@
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
-                "role": [
+                "roles": [
                     "security"
                 ]
             },
@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need to find all internal repos related to 'vulnerability-scanner'. Can you run a search?",
+                "input": "Find all internal repositories related to 'auth-service'.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,8 +30,8 @@
             }
         },
         "args": {
-            "visibility": "internal",
-            "repo_name": "vulnerability-scanner"
+            "repo_name": "auth-service",
+            "visibility": "internal"
         }
     }
 }

@@ -7,7 +7,7 @@
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
-                "role": [
+                "roles": [
                     "platform"
                 ]
             },
@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Find all repos named 'infra-config' with internal visibility.",
+                "input": "I'd like to look up internal repositories matching 'infra-config'.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,8 +30,8 @@
             }
         },
         "args": {
-            "repo_name": "infra-config",
-            "visibility": "internal"
+            "visibility": "internal",
+            "repo_name": "infra-config"
         }
     }
 }

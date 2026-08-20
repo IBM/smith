@@ -7,13 +7,13 @@
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
-                "role": [
+                "roles": [
                     "security"
                 ],
                 "permissions": [
                     "None"
                 ],
-                "has_approval": "true|false"
+                "has_approval": false
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -23,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Search the GitHub Enterprise instance for repositories with external visibility. No specific name filter \u2014 I want to see all external repos available.",
+                "input": "I need to find external repos related to 'malware-analysis'. Please set visibility to external.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -34,6 +34,7 @@
             }
         },
         "args": {
+            "repo_name": "malware-analysis",
             "visibility": "external"
         }
     }
