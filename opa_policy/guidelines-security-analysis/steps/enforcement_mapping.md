@@ -237,7 +237,7 @@ are the interception surface. What it must NOT contain:
 
 Before continuing, walk every rule in `owasp_policy_guidelines.md` and
 confirm each cited identifier exists in its source. This is the same
-principle as `threat_model.md`'s STEP 4 verification, extended to the
+principle as `threat_model.md`'s STEP 6 citation verification, extended to the
 rule specifications this step produces.
 
 For every rule under "Policy Rules (OPA scope only)":
