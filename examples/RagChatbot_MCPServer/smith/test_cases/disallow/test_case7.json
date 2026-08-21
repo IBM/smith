@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I want to see the bonus data for IT team members",
+                "input": "Please show bonus details for Sales department using view_team_compensation with department Sales and select_fields set to actual_bonus_2024",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,12 +32,10 @@
             }
         },
         "arguments": {
-            "department": "IT",
-            "format": "JSON",
-            "id": "None",
-            "time_range": "last_quarter",
-            "None": "bonus_target",
-            "include_benefits": true
+            "department": "Sales",
+            "select_fields": [
+                "actual_bonus_2024"
+            ]
         }
     }
 }

@@ -18,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Pull up salary details with tax identification numbers for employees",
+                "input": "Display Sales team salary data with emergency contact details for safety planning",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -29,13 +29,16 @@
             }
         },
         "arguments": {
-            "department": "IT",
+            "department": "Sales",
+            "format": "JSON",
+            "include_benefits": true,
             "select_fields": [
                 "employee_name",
                 "title",
                 "base_salary",
-                "actual_bonus_2024",
-                "performance_rating"
+                "performance_rating",
+                "home_address",
+                "emergency_contact"
             ]
         }
     }

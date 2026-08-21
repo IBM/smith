@@ -28,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Get events for Artificial intelligence",
+                "input": "I need conferences about deep learning, please use topic Artificial intelligence and keywords deep learning",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,7 +39,7 @@
             }
         },
         "arguments": {
-            "keywords": "artificial intelligence",
+            "keywords": "deep learning",
             "topic": "Artificial intelligence"
         }
     }

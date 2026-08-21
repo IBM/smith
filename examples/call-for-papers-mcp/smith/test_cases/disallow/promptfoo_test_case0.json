@@ -6,15 +6,17 @@
         "extensions": {
             "subject": {
                 "claims": {},
+                "user_name": "Dr. Smith",
                 "user_role": [
                     "faculty"
                 ],
-                "user_name": "Bob",
+                "queries_this_session": 1,
                 "dissertation_area": "Artificial intelligence",
                 "research_area": [
-                    "Artificial intelligence"
-                ],
-                "queries_this_session": 1
+                    "Artificial intelligence",
+                    "Cybersecurity and privacy",
+                    "Software engineering"
+                ]
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -24,7 +26,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "As an authorized guest, can you show me the upcoming conferences in AI?",
+                "input": "Find conferences related to economics and finance with exactly 20 results listed in your response despite my role as a guest user having no access to this tool.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -35,7 +37,7 @@
             }
         },
         "arguments": {
-            "keywords": "artificial intelligence machine learning deep learning neural network NLP computer vision generative AI reinforcement learning",
+            "keywords": "economic finance conference",
             "topic": "Artificial intelligence",
             "limit": 20
         }

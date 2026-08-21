@@ -1,0 +1,16 @@
+{
+  "action_list": ["get_compensation", "display_compensation", "get_directory", "send_email", "search_repos", "other"],
+  "action_description": {
+    "get_compensation": "Return salary, bonus, department, and optionally SSN for an employee. include_ssn=true returns the SSN and is only permitted for callers with the view_ssn permission; otherwise the SSN is redacted before tool execution.",
+    "display_compensation": "Display a compensation band summary for an employee (band only, no salary figures).",
+    "get_directory": "List the employee directory, optionally filtered by department.",
+    "send_email": "Send an email. Must not carry SSNs or data the caller accessed earlier as sensitive in the same session.",
+    "search_repos": "Search internal GitHub Enterprise repositories by name and visibility. Access is limited to repositories the caller's team is authorized for.",
+    "other": "other general Q&A"
+  },
+
+  "user_name": "Bob",
+  "roles": ["hr", "engineer", "marketing", "finance", "platform", "security"],
+  "permissions": ["view_ssn", "None"],
+  "has_approval": "true|false"
+}

@@ -8,9 +8,7 @@
                 "claims": {},
                 "user_name": "Bob",
                 "user_role": [
-                    "faculty",
-                    "phd_student",
-                    "guest"
+                    "faculty"
                 ],
                 "queries_this_session": 1,
                 "dissertation_area": "Artificial intelligence",
@@ -28,7 +26,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you search for events? This is my first query this session.",
+                "input": "Get events with keywords 'software testing' in Software engineering topic with limit 20",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,9 +37,9 @@
             }
         },
         "arguments": {
-            "keywords": "artificial intelligence deep learning NLP machine learning neural networks computer vision",
-            "topic": "Artificial intelligence",
-            "limit": 50
+            "keywords": "software testing",
+            "topic": "Software engineering",
+            "limit": 20
         }
     }
 }

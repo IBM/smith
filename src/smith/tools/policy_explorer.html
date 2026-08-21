@@ -405,6 +405,12 @@
     <div class="logo">Smith · <b>Policy Explorer</b></div>
     <div class="sub">guidance ⇄ per-tool policies</div>
     <div class="spacer"></div>
+    <!-- Shown only when hosted inside the VS Code extension (acquireVsCodeApi present). -->
+    <button id="resetSmithBtn" class="stat"
+            style="display:none;cursor:pointer;border-color:var(--line-strong)"
+            title="Run the clean script and overwrite guidance.txt from the editor below">
+      ⟳ Reset Smith config
+    </button>
     <div class="stat" id="statTools">0 tools</div>
     <div class="stat" id="statPolicies">0 policies</div>
     <div class="stat" id="statPending">0 pending</div>
@@ -427,6 +433,23 @@
         <input type="file" id="fileInput" multiple accept=".json,.txt,.md" hidden />
         <input type="file" id="folderInput" webkitdirectory hidden />
         <div class="loaded" id="loaded"></div>
+      </div>
+
+      <!-- Served over http: edit guidance.txt and reset Smith's generated state. -->
+      <div class="section" id="smithGuidanceSection" style="display:none">
+        <h3>guidance.txt</h3>
+        <textarea id="guidanceEditor" spellcheck="false"
+                  style="width:100%;min-height:220px;resize:vertical;font-family:var(--mono);
+                         font-size:12.5px;line-height:1.5;color:var(--ink);background:var(--panel);
+                         border:1px solid var(--line-strong);border-radius:var(--radius);padding:10px"></textarea>
+        <button id="runSmithBtn"
+                style="margin-top:10px;width:100%;padding:8px 12px;cursor:pointer;
+                       font-family:inherit;font-size:13px;font-weight:600;color:#fff;
+                       background:var(--accent);border:1px solid var(--accent);
+                       border-radius:var(--radius)">
+          Run Smith
+        </button>
+        <div id="resetStatus" class="small" style="margin-top:8px;color:var(--ink-faint)"></div>
       </div>
 
       <div class="section" id="filterSection" style="display:none">
@@ -532,6 +555,7 @@ const state = {
   selectedTool: "all",   // "all" | tool_name
   selectedPolicy: null,  // policy id
   selectedConflict: null,// conflict id
+  checkedPolicies: new Set(), // policy ids ticked for "combine → guidance"
   filters: { pending: "all", msg: "all", tool: "all", trigger: "all", vars: new Set(), pendingType: new Set() },
   allVars: [],
   allPendingTypes: [],
@@ -1030,9 +1054,21 @@ function renderDetail() {
   // list policies for scope
   const scope = visiblePoliciesFor(state.selectedTool);
   const title = state.selectedTool === "all" ? "All tools" : state.selectedTool;
+  const nChecked = state.checkedPolicies.size;
   let html = `<div class="dhead"><h2>${esc(title)}</h2>` +
     `<div class="desc">${scope.length} policy item${scope.length === 1 ? "" : "s"} match the current filters</div></div>` +
     `<div style="padding:14px 16px 0">`;
+
+  // Combine bar: tick rules, then merge their descriptions into the guidance editor.
+  html += `<div id="combineBar" style="display:flex;align-items:center;gap:10px;` +
+    `padding:8px 10px;margin-bottom:10px;border:1px solid var(--line-strong);` +
+    `border-radius:var(--radius);background:var(--accent-soft)">` +
+    `<span style="font-size:12.5px;color:var(--ink-soft)"><b id="combineCount">${nChecked}</b> rule(s) checked</span>` +
+    `<span style="flex:1"></span>` +
+    `<button id="combineClear" class="stat" style="cursor:pointer"${nChecked ? "" : " disabled"}>Clear</button>` +
+    `<button id="combineBtn" class="stat" style="cursor:pointer;border-color:var(--accent);color:var(--accent)"${nChecked ? "" : " disabled"}>` +
+    `Combine → guidance</button>` +
+    `</div>`;
 
   if (!scope.length) {
     html += `<div style="color:var(--ink-faint);padding:20px 0">No policies match the current filters.</div>`;
@@ -1049,9 +1085,51 @@ function renderDetail() {
   html += `</div>`;
   el.innerHTML = html;
   scope.forEach((p) => {
-    const node = el.querySelector(`[data-pid="${cssEscape(p.id)}"]`);
+    const node = el.querySelector(`.pcard[data-pid="${cssEscape(p.id)}"]`);
     if (node) node.onclick = () => { state.selectedPolicy = p.id; render(); };
   });
+  // Checkbox handlers: toggle membership without opening the policy detail.
+  el.querySelectorAll(".pcheck").forEach((cb) => {
+    cb.onclick = (e) => e.stopPropagation();
+    cb.onchange = (e) => {
+      const pid = e.target.dataset.pid;
+      if (e.target.checked) state.checkedPolicies.add(pid);
+      else state.checkedPolicies.delete(pid);
+      renderDetail(); // refresh the combine bar count / button state
+    };
+  });
+  const clearBtn = $("combineClear");
+  if (clearBtn) clearBtn.onclick = () => { state.checkedPolicies.clear(); renderDetail(); };
+  const combineBtn = $("combineBtn");
+  if (combineBtn) combineBtn.onclick = combineCheckedIntoGuidance;
+}
+
+// Gather the descriptions of all checked policy items and write them into the
+// guidance editor (the panel served over http). The Reset/Confirm button then
+// persists them to guidance.txt.
+function combineCheckedIntoGuidance() {
+  const picked = state.policies.filter((p) => state.checkedPolicies.has(p.id));
+  if (!picked.length) return;
+  const lines = picked
+    .map((p) => ({ tool: p.tool_name || "", desc: (p.description || "").trim() }))
+    .filter((x) => x.desc)
+    .map((x, i) => `${i + 1}. (target tool: ${x.tool}) ${x.desc}`);
+  const text = lines.join("\n");
+
+  const editor = $("guidanceEditor");
+  const section = $("smithGuidanceSection");
+  if (!editor) {
+    alert(
+      "Combined guidance:\n\n" + text +
+      "\n\n(The guidance editor is only available when the page is served by " +
+      "`smith --flag open_explorer`. Copy the text above.)"
+    );
+    return;
+  }
+  if (section) section.style.display = "";
+  editor.value = text;
+  editor.scrollIntoView({ behavior: "smooth", block: "center" });
+  editor.focus();
 }
 
 function policyCardHTML(p) {
@@ -1065,10 +1143,16 @@ function policyCardHTML(p) {
   (req.system_vars || []).forEach((v) => meta.push(`<span class="tag">${esc(v)}</span>`));
   if (req.tool_history) meta.push(`<span class="tag">tool_history</span>`);
   if (req.message_history) meta.push(`<span class="tag">message_history</span>`);
-  return `<div class="pcard" data-pid="${esc(p.id)}">` +
+  const checked = state.checkedPolicies.has(p.id) ? " checked" : "";
+  return `<div class="pcard" data-pid="${esc(p.id)}" style="display:flex;gap:10px;align-items:flex-start">` +
+    `<input type="checkbox" class="pcheck" data-pid="${esc(p.id)}"${checked} ` +
+    `title="Include this rule's description in the combined guidance" ` +
+    `style="margin-top:3px;flex:0 0 auto;cursor:pointer" />` +
+    `<div style="flex:1;min-width:0">` +
     `<div class="pname">${esc(p.name || p.id)}</div>` +
     `<div class="pid">${esc(p.id)}</div>` +
     `<div class="pmeta">${meta.join("")}</div>` +
+    `</div>` +
     `</div>`;
 }
 
@@ -1347,6 +1431,107 @@ window.addEventListener("scroll", (e) => {
   hideRefPopover();
 }, true);
 window.addEventListener("resize", hideRefPopover);
+
+// ---------- Smith local-server bridge (active only when served over http) ----------
+// When this page is served by `smith --flag open_explorer` (a local HTTP
+// server), it can (a) load guidance.txt from GET /guidance and (b) POST the
+// edited guidance to /reset, which runs the clean script and overwrites
+// guidance.txt. When the file is opened directly (file://), fetch to /guidance
+// fails and the upload-driven UX is left unchanged.
+(function () {
+  if (location.protocol !== "http:" && location.protocol !== "https:") return;
+  const editor = $("guidanceEditor");
+  const section = $("smithGuidanceSection");
+  const resetBtn = $("resetSmithBtn");
+  const runBtn = $("runSmithBtn");
+  const status = $("resetStatus");
+
+  function setStatus(msg, kind) {
+    status.textContent = msg || "";
+    status.style.color =
+      kind === "error" ? "var(--bad)" : kind === "ok" ? "var(--good)" : "var(--ink-faint)";
+  }
+
+  // Load guidance.txt from the server; only reveal the panel if it responds.
+  fetch("/guidance")
+    .then((r) => (r.ok ? r.json() : Promise.reject()))
+    .then((m) => {
+      section.style.display = "";
+      resetBtn.style.display = "";
+      editor.value = m.guidance || "";
+      if (m.path) setStatus("Editing: " + m.path);
+      // Also feed the loaded guidance into the explorer's own view.
+      classifyAndStore("guidance.txt", editor.value);
+      rebuildDerived();
+      render();
+    })
+    .catch(() => {
+      /* not served by Smith (e.g. plain preview) — keep upload-only UX */
+    });
+
+  // Shared action: overwrite guidance.txt with the editor text, then run the
+  // clean script (server-side). Returns the server's JSON result (or throws).
+  function doReset() {
+    resetBtn.disabled = true;
+    runBtn.disabled = true;
+    const selectedTools = [...new Set(
+      state.policies
+        .filter((p) => state.checkedPolicies.has(p.id))
+        .map((p) => p.tool_name)
+        .filter(Boolean)
+    )];
+    return fetch("/reset", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ guidance: editor.value, selected_tools: selectedTools }),
+    })
+      .then((r) => r.json())
+      .finally(() => {
+        resetBtn.disabled = false;
+        runBtn.disabled = false;
+      });
+  }
+
+  resetBtn.addEventListener("click", () => {
+    if (!confirm(
+      "Reset Smith configuration?\n\n" +
+      "1. overwrite guidance.txt with the text in the editor\n" +
+      "2. run clean_generated.sh (delete generated files under references/)\n\n" +
+      "This cannot be undone."
+    )) return;
+    setStatus("Resetting…");
+    doReset()
+      .then((res) => {
+        if (res.ok) setStatus(res.message || "Reset complete.", "ok");
+        else setStatus((res.error || "Reset failed.") + (res.detail ? " — " + res.detail : ""), "error");
+      })
+      .catch((e) => setStatus("Reset request failed: " + e.message, "error"));
+  });
+
+  runBtn.addEventListener("click", () => {
+    if (!confirm(
+      "Run Smith?\n\n" +
+      "1. overwrite guidance.txt with the text in the editor\n" +
+      "2. run clean_generated.sh (delete generated files under references/)\n\n" +
+      "This cannot be undone."
+    )) return;
+    setStatus("Writing guidance and cleaning…");
+    doReset()
+      .then((res) => {
+        if (res.ok) {
+          setStatus(
+            "Guidance saved and generated files cleaned. " +
+            "Now start a code agent (e.g. Claude Code) and ask it to run Smith " +
+            "to generate test cases / policy from the new guidance.",
+            "ok"
+          );
+        } else {
+          setStatus((res.error || "Run Smith failed.") + (res.detail ? " — " + res.detail : ""), "error");
+        }
+      })
+      .catch((e) => setStatus("Run Smith request failed: " + e.message, "error"));
+  });
+})();
 </script>
 </body>
 </html>

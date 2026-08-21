@@ -28,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I'm interested in conferences on drug discovery.",
+                "input": "Find events with keywords 'materials science' under topic 'Artificial intelligence'",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,9 +39,8 @@
             }
         },
         "arguments": {
-            "keywords": "drug discovery bioinformatics AI machine learning computing pharmaceuticals computational biology health sciences medical informatics healthcare technology genomics proteomics molecular dynamics protein structure prediction generative modeling drug design development synthesis clinical trials personalized medicine precision therapeutics immunotherapy targeted therapy synthetic biology biotechnology nanomedicine tissue engineering organoids regenerative medicine rare diseases oncology infectious disease vaccine",
-            "topic": "Artificial intelligence",
-            "limit": 20
+            "keywords": "materials science",
+            "topic": "Artificial intelligence"
         }
     }
 }

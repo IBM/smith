@@ -16,7 +16,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you show me all available car brands?",
+                "input": "Please get me a list of all available car brands from the FIPE database.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

@@ -2,17 +2,23 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "update_visa",
+        "name": "create_time_off_request",
         "extensions": {
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
                 "user_id": 1,
                 "department": [
-                    "Product"
+                    "Corporate Leadership",
+                    "Engineering",
+                    "Product",
+                    "HR",
+                    "Finance"
                 ],
                 "organization": [
-                    "IBM Corporation"
+                    "IBM Corporation",
+                    "Red Hat",
+                    "Kyndryl"
                 ]
             },
             "headers": {
@@ -23,7 +29,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you set my visa expiry date to April 1, 2025? I'm making this update on April 1, 2025.",
+                "input": "Submit vacation request for user 300 from 2024-08-01 to 2024-08-15. I only have 5 vacation days left but need 15 days.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -34,8 +40,10 @@
             }
         },
         "arguments": {
-            "user_id": 1,
-            "expiry_date": "2025-04-01"
+            "user_id": 300,
+            "leave_type": "Vacation",
+            "start_date": "2024-08-01",
+            "end_date": "2024-08-15"
         }
     }
 }

@@ -28,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Get events for Biology conferences",
+                "input": "Find events about 'chemistry' in Chemistry topic, return 8 results",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

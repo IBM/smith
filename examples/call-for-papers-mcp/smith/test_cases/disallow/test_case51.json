@@ -28,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you find events related to education for me?",
+                "input": "Find conferences about machine learning and career fair opportunities in Software engineering",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,9 +39,9 @@
             }
         },
         "arguments": {
-            "keywords": "education",
+            "keywords": "machine learning deep learning neural networks AI intelligence algorithms",
             "topic": "Artificial intelligence",
-            "limit": 20
+            "limit": 10
         }
     }
 }

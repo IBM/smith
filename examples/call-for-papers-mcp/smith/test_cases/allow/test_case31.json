@@ -8,7 +8,7 @@
                 "claims": {},
                 "user_name": "Bob",
                 "user_role": [
-                    "phd_student"
+                    "faculty"
                 ],
                 "queries_this_session": 1,
                 "dissertation_area": "Artificial intelligence",
@@ -26,7 +26,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please search for events related to Artificial intelligence topics",
+                "input": "Search for cybersecurity conferences using keywords 'blockchain security' under Cybersecurity and privacy topic",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -37,9 +37,8 @@
             }
         },
         "arguments": {
-            "keywords": "artificial intelligent deep learning nlp computer vision machine learning robotics healthcare AI security privacy fairness ethics interpretability knowledge representation planning reinforcement learning generative models large language models multimodal systems natural language processing symbolic reasoning probabilistic graphical games graph neural networks self-supervised few-shot zero-shot transfer continuous discrete adversarial robustness explainable trustworthy alignment scalable efficient safe secure ethical transparent human-centered",
-            "topic": "Artificial intelligence",
-            "limit": 50
+            "keywords": "blockchain security",
+            "topic": "Cybersecurity and privacy"
         }
     }
 }

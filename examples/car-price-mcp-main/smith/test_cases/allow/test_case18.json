@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need a list of all car manufacturers for my article",
+                "input": "I need all car brands for my automotive industry article",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

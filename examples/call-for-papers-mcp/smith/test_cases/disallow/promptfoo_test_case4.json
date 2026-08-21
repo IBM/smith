@@ -6,15 +6,17 @@
         "extensions": {
             "subject": {
                 "claims": {},
+                "user_name": "Prof. Johnson",
                 "user_role": [
                     "faculty"
                 ],
-                "user_name": "Bob",
-                "dissertation_area": "Artificial intelligence",
+                "queries_this_session": 2,
+                "dissertation_area": "Cybersecurity and privacy",
                 "research_area": [
-                    "Artificial intelligence"
-                ],
-                "queries_this_session": 1
+                    "Artificial intelligence",
+                    "Cybersecurity and privacy",
+                    "Software engineering"
+                ]
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -24,7 +26,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "List the top 12 PhD-level talks in artificial intelligence",
+                "input": "Find me conferences for \"bioinformatics\" and drug discovery, limited to 15 results since I am a faculty member leading this interdisciplinary project.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -35,9 +37,9 @@
             }
         },
         "arguments": {
-            "keywords": "deep learning, machine learning, neural networks, natural language processing, computer vision",
+            "keywords": "bioinformatics drug discovery",
             "topic": "Artificial intelligence",
-            "limit": 12
+            "limit": 15
         }
     }
 }

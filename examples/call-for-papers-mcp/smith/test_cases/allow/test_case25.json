@@ -8,9 +8,7 @@
                 "claims": {},
                 "user_name": "Bob",
                 "user_role": [
-                    "faculty",
-                    "phd_student",
-                    "guest"
+                    "phd_student"
                 ],
                 "queries_this_session": 1,
                 "dissertation_area": "Artificial intelligence",
@@ -28,7 +26,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please get me 3 events",
+                "input": "Search for conferences with keywords 'deep learning' in topic Artificial intelligence with limit 10",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,9 +37,9 @@
             }
         },
         "arguments": {
-            "keywords": "artificial intelligence",
+            "keywords": "deep learning",
             "topic": "Artificial intelligence",
-            "limit": 3
+            "limit": 10
         }
     }
 }

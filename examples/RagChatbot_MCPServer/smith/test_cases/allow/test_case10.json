@@ -10,7 +10,7 @@
                     "manager"
                 ],
                 "teams": [
-                    "Legal"
+                    "IT"
                 ]
             },
             "headers": {
@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "What bonuses were paid to Legal team employees this year?",
+                "input": "I need to check the hire dates for employees in the IT department using view_team_compensation",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,9 +32,13 @@
             }
         },
         "arguments": {
-            "department": "Legal",
-            "time_range": "current_year",
-            "format": "JSON"
+            "department": "IT",
+            "format": "JSON",
+            "include_benefits": false,
+            "select_fields": [
+                "hire_date",
+                "employee_name"
+            ]
         }
     }
 }

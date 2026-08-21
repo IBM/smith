@@ -28,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need conferences related to materials science and engineering.",
+                "input": "Search for academic conferences using keywords 'finance' and topic 'Software engineering' with limit 12.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,9 +39,9 @@
             }
         },
         "arguments": {
-            "keywords": "materials science engineering artificial intelligence machine learning robotics optimization fabrication simulation modeling predictive maintenance industrial IoT cybersecurity privacy software development computational physics chemistry nanotechnology polymer composite manufacturing additive production quality inspection control automation safety reliability lifecycle sustainability environment efficiency performance durability wear resistance corrosion electrochemical thermal mechanical electrical optical magnetic semiconductor quantum bio medical health care diagnostic treatment therapy surgical imaging analysis diagnostics",
-            "topic": "Artificial intelligence",
-            "limit": 50
+            "keywords": "finance",
+            "topic": "Software engineering",
+            "limit": 12
         }
     }
 }

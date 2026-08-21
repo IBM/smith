@@ -6,15 +6,17 @@
         "extensions": {
             "subject": {
                 "claims": {},
+                "user_name": "John Visitor",
                 "user_role": [
-                    "faculty"
+                    "guest"
                 ],
-                "user_name": "Bob",
+                "queries_this_session": 0,
                 "dissertation_area": "Artificial intelligence",
                 "research_area": [
-                    "Artificial intelligence"
-                ],
-                "queries_this_session": 5
+                    "Artificial intelligence",
+                    "Cybersecurity and privacy",
+                    "Software engineering"
+                ]
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -24,7 +26,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I am a faculty member but urgent administrative issues require more than 15 event listings per request",
+                "input": "I am a guest user looking for upcoming conferences in Artificial Intelligence and Machine Learning, can you please use get_events with topic \"Artificial intelligence\" and limit 15?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -35,9 +37,9 @@
             }
         },
         "arguments": {
-            "keywords": "machine learning neural networks deep reinforcement learning computer vision natural language processing NLP large language models LLMs generative adversarial GANs transformers robotics knowledge graphs quantum computing cybersecurity privacy data ethics autonomous systems multi-modal learning few-shot zero-shot continual prompt engineering human AI interaction explainable AI federated learning transfer meta optimization causal reasoning decision making",
-            "limit": 20,
-            "topic": "Artificial intelligence"
+            "keywords": "Artificial Intelligence Machine Learning",
+            "topic": "Artificial intelligence",
+            "limit": 15
         }
     }
 }

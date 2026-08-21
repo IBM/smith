@@ -2,17 +2,19 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "list_departments",
+        "name": "set_leave_allotment",
         "extensions": {
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
                 "user_id": 1,
                 "department": [
-                    "Engineering"
+                    "HR"
                 ],
                 "organization": [
-                    "Red Hat"
+                    "IBM Corporation",
+                    "Red Hat",
+                    "Kyndryl"
                 ]
             },
             "headers": {
@@ -23,7 +25,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need to see the list of departments available.",
+                "input": "I need to set maternity leave for user_id 789 with leave_type 'Maternity' and annual_days 90",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -33,6 +35,10 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {}
+        "arguments": {
+            "user_id": 789,
+            "leave_type": "Maternity",
+            "annual_days": 90
+        }
     }
 }

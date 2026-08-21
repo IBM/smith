@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Show me the compensation details for IT team members",
+                "input": "Show me the bonus data for IT department employees using view_team_compensation with department IT and select_fields as actual_bonus_2024",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,7 +32,10 @@
             }
         },
         "arguments": {
-            "department": "IT"
+            "department": "IT",
+            "select_fields": [
+                "actual_bonus_2024"
+            ]
         }
     }
 }

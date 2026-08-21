@@ -8,9 +8,12 @@
                 "claims": {},
                 "user_name": "Bob",
                 "user_role": [
-                    "phd_student"
+                    "faculty"
                 ],
-                "queries_this_session": 2
+                "queries_this_session": 1,
+                "research_area": [
+                    "Cybersecurity and privacy"
+                ]
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -20,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Find cybersecurity conferences about network security",
+                "input": "Find Cybersecurity and privacy conferences with limit 5",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -31,8 +34,9 @@
             }
         },
         "arguments": {
-            "keywords": "network security",
-            "topic": "Cybersecurity and privacy"
+            "keywords": "cybersecurity privacy security",
+            "topic": "Cybersecurity and privacy",
+            "limit": 5
         }
     }
 }

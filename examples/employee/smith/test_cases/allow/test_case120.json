@@ -2,13 +2,19 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "get_leave_balance",
+        "name": "list_time_off_requests",
         "extensions": {
             "subject": {
                 "claims": {},
+                "user_name": "Bob",
                 "user_id": 1,
                 "department": [
                     "HR"
+                ],
+                "organization": [
+                    "IBM Corporation",
+                    "Red Hat",
+                    "Kyndryl"
                 ]
             },
             "headers": {
@@ -19,7 +25,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you show me the leave balance for employee ID 5?",
+                "input": "Show me all time-off requests for user ID 9",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,8 +36,7 @@
             }
         },
         "arguments": {
-            "user_id": 5,
-            "year": 2024
+            "user_id": 9
         }
     }
 }

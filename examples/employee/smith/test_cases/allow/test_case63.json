@@ -2,17 +2,19 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "list_departments",
+        "name": "set_leave_allotment",
         "extensions": {
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
                 "user_id": 1,
                 "department": [
-                    "Corporate Leadership"
+                    "HR"
                 ],
                 "organization": [
-                    "IBM Corporation"
+                    "IBM Corporation",
+                    "Red Hat",
+                    "Kyndryl"
                 ]
             },
             "headers": {
@@ -23,7 +25,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you show me all the departments in the company?",
+                "input": "Please configure sick leave for employee 456 with 15 days annually",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -33,6 +35,10 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {}
+        "arguments": {
+            "user_id": 456,
+            "leave_type": "Sick Leave",
+            "annual_days": 15
+        }
     }
 }

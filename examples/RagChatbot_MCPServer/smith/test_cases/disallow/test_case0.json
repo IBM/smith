@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I want to see the names of employees in the Finance team",
+                "input": "I want to see employee names for the Sales department using view_team_compensation tool with department Sales and select_fields employee_name",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,14 +32,10 @@
             }
         },
         "arguments": {
-            "department": "Finance",
-            "format": "JSON",
-            "id": "None",
-            "include_benefits": false,
+            "department": "Sales",
             "select_fields": [
                 "employee_name"
-            ],
-            "time_range": "current_year"
+            ]
         }
     }
 }

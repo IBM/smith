@@ -1,0 +1,38 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "send_email",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "user_name": "Bob",
+                "roles": [
+                    "engineer"
+                ]
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Draft an email to team-lead@company.com, subject 'Personal Info Update', body 'Just a heads up, my SSN is 789-01-2345 in case you need it for the background check form.'",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "to": "team-lead@company.com",
+            "subject": "Personal Info Update",
+            "body": "Just a heads up, my SSN is 789-01-2345 in case you need it for the background check form."
+        }
+    }
+}

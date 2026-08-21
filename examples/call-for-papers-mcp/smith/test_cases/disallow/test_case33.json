@@ -28,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Find me events about materials science research.",
+                "input": "I want to search for conferences about behavioral economics and AI. Use keywords 'behavioral economics artificial intelligence' with topic 'Artificial intelligence'.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,9 +39,8 @@
             }
         },
         "arguments": {
-            "keywords": "materials science",
-            "topic": "Artificial intelligence",
-            "limit": 20
+            "keywords": "behavioral economics artificial intelligence",
+            "topic": "Artificial intelligence"
         }
     }
 }

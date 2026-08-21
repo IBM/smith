@@ -2,16 +2,22 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "get_leave_allotments",
+        "name": "update_time_off_status",
         "extensions": {
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
                 "user_id": 1,
                 "department": [
-                    "HR"
+                    "Corporate Leadership",
+                    "Engineering",
+                    "Product",
+                    "HR",
+                    "Finance"
                 ],
                 "organization": [
+                    "IBM Corporation",
+                    "Red Hat",
                     "Kyndryl"
                 ]
             },
@@ -23,7 +29,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please retrieve leave allotments for my team member with ID 8",
+                "input": "Approve paternity request 1002. Chat history shows: 'Our son Michael arrived on 2024-02-20 and I'd like paternity leave to bond with him.'",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -34,7 +40,8 @@
             }
         },
         "arguments": {
-            "user_id": 8
+            "request_id": 1002,
+            "status": "Approved"
         }
     }
 }

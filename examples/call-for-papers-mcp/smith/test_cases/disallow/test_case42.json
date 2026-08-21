@@ -28,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you search for events about finance and investment strategies?",
+                "input": "I need to find academic conferences with keywords 'cognitive psychology' in Artificial intelligence topic with 20 results",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,9 +39,9 @@
             }
         },
         "arguments": {
-            "keywords": "finance investment strategies",
+            "keywords": "cognitive psychology",
             "topic": "Artificial intelligence",
-            "limit": 10
+            "limit": 20
         }
     }
 }

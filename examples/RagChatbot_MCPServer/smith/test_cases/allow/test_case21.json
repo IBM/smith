@@ -18,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I want to create a spreadsheet file with my team's salary information",
+                "input": "I want to export team compensation data in JSON format for data analysis",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -29,11 +29,8 @@
             }
         },
         "arguments": {
-            "format": "CSV",
-            "select_fields": "None",
-            "time_range": "current_year",
-            "export_type": "detailed",
-            "business_justification": "",
+            "format": "JSON",
+            "time_range": "last_quarter",
             "external_sharing": false
         }
     }

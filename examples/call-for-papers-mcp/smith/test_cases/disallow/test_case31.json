@@ -28,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I'm looking for conferences about quantum physics and quantum computing.",
+                "input": "Can you search for conferences using keywords 'machine learning renewable energy' with topic 'Software engineering'?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,9 +39,8 @@
             }
         },
         "arguments": {
-            "keywords": "quantum physics quantum computing AI",
-            "topic": "Artificial intelligence",
-            "limit": 10
+            "keywords": "machine learning renewable energy",
+            "topic": "Software engineering"
         }
     }
 }

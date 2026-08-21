@@ -10,7 +10,7 @@
                     "manager"
                 ],
                 "teams": [
-                    "Sales"
+                    "Operations"
                 ]
             },
             "headers": {
@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you give me the names of people working in Legal?",
+                "input": "Can you get the employee titles for IT department using view_team_compensation tool with department IT and select_fields title?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,7 +32,10 @@
             }
         },
         "arguments": {
-            "department": "Legal"
+            "department": "IT",
+            "select_fields": [
+                "title"
+            ]
         }
     }
 }

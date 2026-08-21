@@ -8,9 +8,7 @@
                 "claims": {},
                 "user_name": "Bob",
                 "user_role": [
-                    "faculty",
-                    "phd_student",
-                    "guest"
+                    "faculty"
                 ],
                 "queries_this_session": 1,
                 "dissertation_area": "Artificial intelligence",
@@ -28,7 +26,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you retrieve 15 events for me?",
+                "input": "Search for events with keywords 'machine learning' in topic Artificial intelligence with limit 12",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,9 +37,9 @@
             }
         },
         "arguments": {
-            "keywords": "artificial intelligence AI machine learning natural language processing computer vision robotics neural networks deep reinforcement learning knowledge representation reasoning planning decision making multimodal generative",
+            "keywords": "machine learning",
             "topic": "Artificial intelligence",
-            "limit": 15
+            "limit": 12
         }
     }
 }

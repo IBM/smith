@@ -5,11 +5,11 @@
       "direction": "guidance_deny_policy_allow",
       "guidance_rule": "3",
       "rules_involved": [
-        "Rule 3: Managers cannot request sensitive PII fields via view_team_compensation"
+        "deny[\"Managers cannot access sensitive fields: ssn, home_address, bank_account, emergency_contact\"]"
       ],
       "field": "args.select_fields",
-      "reason": "When select_fields is omitted (null/undefined), the policy doesn't block access to sensitive fields",
-      "exploit_strategy": "Manager calls view_team_compensation without select_fields parameter to access all fields including SSN, home_address, etc.",
+      "reason": "Rule checks 'some field in args.select_fields' but allows request when select_fields is null/omitted",
+      "exploit_strategy": "Manager calls view_team_compensation with select_fields=null, gets all fields including sensitive PII",
       "severity": "high"
     },
     {
@@ -17,11 +17,11 @@
       "direction": "guidance_deny_policy_allow",
       "guidance_rule": "9",
       "rules_involved": [
-        "Rule 9: Employee purchases >= $200 require manager approval"
+        "deny[\"Employee purchases of $200 or more require manager approval\"]"
       ],
       "field": "args.amount",
-      "reason": "Numeric comparison without type check allows string amounts to bypass the >= 200 restriction",
-      "exploit_strategy": "Employee sends purchase request with amount as string '500' instead of integer 500",
+      "reason": "Numeric comparison args.amount >= 200 without type check allows string bypass",
+      "exploit_strategy": "Employee sends purchase request with amount=\"199\" (string) to evade >= 200 check",
       "severity": "medium"
     },
     {
@@ -29,11 +29,11 @@
       "direction": "guidance_deny_policy_allow",
       "guidance_rule": "10",
       "rules_involved": [
-        "Rule 10: Managers cannot make purchases >= $1000"
+        "deny[\"Managers cannot make purchases of $1,000 or more\"]"
       ],
       "field": "args.amount",
-      "reason": "Numeric comparison without type check allows string amounts to bypass the >= 1000 restriction",
-      "exploit_strategy": "Manager sends purchase request with amount as string '1500' instead of integer 1500",
+      "reason": "Numeric comparison args.amount >= 1000 without type check allows string bypass",
+      "exploit_strategy": "Manager sends purchase request with amount=\"999\" (string) to evade >= 1000 check",
       "severity": "medium"
     },
     {
@@ -41,71 +41,24 @@
       "direction": "guidance_deny_policy_allow",
       "guidance_rule": "8",
       "rules_involved": [
-        "Rule 8: Block send_email to personal/blocked domains"
+        "deny[\"Sending emails to blocked personal domains is not allowed\"]",
+        "deny[\"Sending compensation reports to blocked personal domains is not allowed\"]"
       ],
-      "field": "args.recipient_email",
-      "reason": "When recipient_email is omitted, email_domain returns undefined and bypasses blocked domain check",
-      "exploit_strategy": "Call send_email without recipient_email parameter to bypass domain restrictions",
+      "field": "args.recipient_email / args.destination",
+      "reason": "email_domain function requires @ symbol but no validation for malformed emails",
+      "exploit_strategy": "Send email with recipient_email=\"user\" (no @) to bypass domain blocking",
       "severity": "medium"
-    },
-    {
-      "category": "omitted_field",
-      "direction": "guidance_deny_policy_allow",
-      "guidance_rule": "7",
-      "rules_involved": [
-        "Rule 7: No compensation data to non-@ibm.com addresses"
-      ],
-      "field": "args.destination",
-      "reason": "When destination is omitted, email_domain returns undefined and bypasses external domain check",
-      "exploit_strategy": "Call email_compensation_report without destination parameter to bypass external sharing restrictions",
-      "severity": "high"
-    },
-    {
-      "category": "malformed_value",
-      "direction": "guidance_deny_policy_allow",
-      "guidance_rule": "8",
-      "rules_involved": [
-        "Rule 8: Block emails to blocked domains"
-      ],
-      "field": "args.recipient_email",
-      "reason": "Malformed email addresses without @ symbol bypass domain extraction and blocking",
-      "exploit_strategy": "Send email to 'user.gmail.com' (no @) to bypass gmail.com domain blocking",
-      "severity": "medium"
-    },
-    {
-      "category": "malformed_value",
-      "direction": "guidance_deny_policy_allow",
-      "guidance_rule": "7",
-      "rules_involved": [
-        "Rule 7: No compensation data to non-@ibm.com addresses"
-      ],
-      "field": "args.destination",
-      "reason": "Malformed email addresses without @ symbol bypass domain extraction and external blocking",
-      "exploit_strategy": "Send compensation report to 'external.company.com' (no @) to bypass external domain restrictions",
-      "severity": "high"
     },
     {
       "category": "keyword_evasion",
       "direction": "guidance_deny_policy_allow",
-      "guidance_rule": "11",
+      "guidance_rule": "11-14",
       "rules_involved": [
-        "Rules 11-14: Block prompt injection attempts"
+        "deny[\"Prompt injection detected: forbidden phrase in agent input\"]"
       ],
       "field": "agent_input",
-      "reason": "Case-sensitive exact match allows evasion through capitalization changes",
-      "exploit_strategy": "Use 'IGNORE ALL POLICIES' or 'Ignore All Policies' instead of 'ignore all policies'",
-      "severity": "high"
-    },
-    {
-      "category": "keyword_evasion",
-      "direction": "guidance_deny_policy_allow",
-      "guidance_rule": "12",
-      "rules_involved": [
-        "Rules 11-14: Block prompt injection attempts"
-      ],
-      "field": "agent_input",
-      "reason": "Exact substring match allows evasion through spacing or character insertion",
-      "exploit_strategy": "Use 'bypass  security' (double space) or 'by-pass security' to evade detection",
+      "reason": "Exact string matching on blocked_phrases allows case/spacing variations",
+      "exploit_strategy": "Use \"Ignore All Policies\" or \"bypass  security\" (extra space) to evade detection",
       "severity": "high"
     }
   ]

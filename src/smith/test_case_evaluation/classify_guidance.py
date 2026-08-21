@@ -76,7 +76,6 @@ Which guidance item is this user input most relevant to?"""
             {"role": "user", "content": user_prompt},
         ],
         temperature=temp,
-        top_p=top_p,
     )
 
     llm_output = response.choices[0].message.content.strip()

@@ -2,7 +2,7 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "list_time_off_requests",
+        "name": "get_leave_allotments",
         "extensions": {
             "subject": {
                 "claims": {},
@@ -12,7 +12,9 @@
                     "HR"
                 ],
                 "organization": [
-                    "IBM Corporation"
+                    "IBM Corporation",
+                    "Red Hat",
+                    "Kyndryl"
                 ]
             },
             "headers": {
@@ -23,7 +25,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need to review time-off requests for employee 15",
+                "input": "Please show me the leave allotments for employee with user ID 5",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -34,8 +36,7 @@
             }
         },
         "arguments": {
-            "user_id": 15,
-            "status": ""
+            "user_id": 5
         }
     }
 }

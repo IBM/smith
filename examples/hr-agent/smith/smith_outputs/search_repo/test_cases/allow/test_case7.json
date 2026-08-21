@@ -1,0 +1,37 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "search_repos",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "user_name": "Bob",
+                "roles": [
+                    "engineer"
+                ]
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Can you find all internal repos matching the substring 'data-pipeline'?",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "visibility": "internal",
+            "repo_name": "data-pipeline"
+        }
+    }
+}

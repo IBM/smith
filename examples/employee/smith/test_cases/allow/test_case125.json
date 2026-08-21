@@ -2,11 +2,24 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "get_leave_balance",
+        "name": "list_time_off_requests",
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_id": 1
+                "user_name": "Bob",
+                "user_id": 1,
+                "department": [
+                    "Corporate Leadership",
+                    "Engineering",
+                    "Product",
+                    "HR",
+                    "Finance"
+                ],
+                "organization": [
+                    "IBM Corporation",
+                    "Red Hat",
+                    "Kyndryl"
+                ]
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -16,7 +29,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "What's my current time-off balance?",
+                "input": "Please display my leave requests for user ID 1",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -27,8 +40,7 @@
             }
         },
         "arguments": {
-            "user_id": 1,
-            "year": 2024
+            "user_id": 1
         }
     }
 }

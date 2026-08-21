@@ -28,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you get me 5 upcoming events?",
+                "input": "Find machine learning conferences with keywords 'supervised learning' in Artificial intelligence topic",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,9 +39,8 @@
             }
         },
         "arguments": {
-            "keywords": "artificial intelligence machine learning deep learning NLP computer vision neural networks data science robotics natural language processing generative AI reinforcement learning multi-modal systems edge computing healthcare AI autonomous agents knowledge representation uncertainty reasoning explainable AI fairness bias interpretability human-centered design safety trust ethics security privacy scalable efficient algorithms theoretical foundations emergent behaviors synthetic datasets self-supervised learning contrastive learning diffusion models transformers attention mechanisms large language models pretrained fine-tuning in-context few-shot zero-shot prompting alignment reward modeling",
-            "topic": "Artificial intelligence",
-            "limit": 5
+            "keywords": "supervised learning",
+            "topic": "Artificial intelligence"
         }
     }
 }

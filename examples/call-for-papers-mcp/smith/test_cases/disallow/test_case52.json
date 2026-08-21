@@ -28,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I'm looking for educational conferences and workshops happening soon.",
+                "input": "Look for startup expo events in Cybersecurity and privacy with keywords 'startup expo'",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,8 +39,8 @@
             }
         },
         "arguments": {
-            "keywords": "education learning workshops",
-            "topic": "[\"Artificial intelligence\", \"Cybersecurity and privacy\"]",
+            "keywords": "startup expo",
+            "topic": "Cybersecurity and privacy",
             "limit": 10
         }
     }

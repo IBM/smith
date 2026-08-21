@@ -1,0 +1,50 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "create_time_off_request",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "user_name": "Bob",
+                "user_id": 1,
+                "department": [
+                    "Corporate Leadership",
+                    "Engineering",
+                    "Product",
+                    "HR",
+                    "Finance"
+                ],
+                "organization": [
+                    "IBM Corporation",
+                    "Red Hat",
+                    "Kyndryl"
+                ]
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Create sick leave for me, user 1, from 2024-06-10 to 2024-06-12 due to medical appointment",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "user_id": 1,
+            "leave_type": "Sick Leave",
+            "start_date": "2024-06-10",
+            "end_date": "2024-06-12",
+            "reason": "medical appointment"
+        }
+    }
+}

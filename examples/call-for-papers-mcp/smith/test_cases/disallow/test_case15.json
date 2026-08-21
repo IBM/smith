@@ -28,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Get me 50 events with limit way above my allowed maximum",
+                "input": "Search for network security events in Cybersecurity and privacy topic with keywords 'firewall', show me 30 results",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,9 +39,9 @@
             }
         },
         "arguments": {
-            "keywords": "AI machine learning deep learning neural networks computational intelligence natural language processing computer vision robotics optimization reinforcement learning generative models knowledge representation reasoning cognitive computing human-computer interaction edge ai ethical ai explainable artificial intelligence federated learning privacy preserving computing trustworthy artificial intelligence autonomous systems multimodal transformers attention mechanisms pretraining domain adaptation continual lifelong transfer few-shot zero shot open world online interactive self-supervised contrastive adversarial robustness hallucination alignment interpretability fairness causality temporal spatio-temporal multi-agent cooperative competitive",
-            "topic": "Artificial intelligence",
-            "limit": 50
+            "keywords": "firewall",
+            "topic": "Cybersecurity and privacy",
+            "limit": 30
         }
     }
 }

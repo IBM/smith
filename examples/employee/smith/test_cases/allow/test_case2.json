@@ -9,9 +9,15 @@
                 "user_name": "Bob",
                 "user_id": 1,
                 "department": [
-                    "Product"
+                    "Corporate Leadership",
+                    "Engineering",
+                    "Product",
+                    "HR",
+                    "Finance"
                 ],
                 "organization": [
+                    "IBM Corporation",
+                    "Red Hat",
                     "Kyndryl"
                 ]
             },
@@ -23,7 +29,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please retrieve my employee details",
+                "input": "Please retrieve my employee record with user ID 1",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

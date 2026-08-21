@@ -8,7 +8,9 @@
                 "claims": {},
                 "user_name": "Bob",
                 "user_role": [
-                    "phd_student"
+                    "faculty",
+                    "phd_student",
+                    "guest"
                 ],
                 "queries_this_session": 1,
                 "dissertation_area": "Artificial intelligence",
@@ -26,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Show me the event calendar please.",
+                "input": "Find AI conferences using topic Artificial intelligence with keywords neural networks",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -37,8 +39,7 @@
             }
         },
         "arguments": {
-            "keywords": "AI artificial intelligence machine learning neural networks deep learning computer vision natural language processing generative models robotics optimization reinforcement learning",
-            "limit": 30,
+            "keywords": "neural network",
             "topic": "Artificial intelligence"
         }
     }

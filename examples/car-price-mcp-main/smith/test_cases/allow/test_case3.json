@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I want to find the price of a Toyota Camry.",
+                "input": "I need to search for Toyota car prices for our fleet budget planning",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

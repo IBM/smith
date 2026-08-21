@@ -10,7 +10,7 @@
                     "manager"
                 ],
                 "teams": [
-                    "Sales"
+                    "Legal"
                 ]
             },
             "headers": {
@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you provide the compensation information for Legal team members?",
+                "input": "Can you get bonus information for Marketing team using view_team_compensation tool with department Marketing and select_fields actual_bonus_2024?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,7 +32,14 @@
             }
         },
         "arguments": {
-            "department": "Legal"
+            "department": "Marketing",
+            "format": "JSON",
+            "time_range": "last_quarter",
+            "id": "None",
+            "select_fields": [
+                "actual_bonus_2024"
+            ],
+            "include_benefits": true
         }
     }
 }

@@ -2,16 +2,22 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "get_passport",
+        "name": "update_employee",
         "extensions": {
             "subject": {
                 "claims": {},
                 "user_name": "Bob",
                 "user_id": 1,
                 "department": [
-                    "HR"
+                    "Corporate Leadership",
+                    "Engineering",
+                    "Product",
+                    "HR",
+                    "Finance"
                 ],
                 "organization": [
+                    "IBM Corporation",
+                    "Red Hat",
                     "Kyndryl"
                 ]
             },
@@ -23,7 +29,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you show me my passport details?",
+                "input": "Please change my residential address for user ID 1 to 456 Oak Avenue, Boston, MA 02101",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -34,7 +40,8 @@
             }
         },
         "arguments": {
-            "user_id": 1
+            "user_id": 1,
+            "home_address": "456 Oak Avenue, Boston, MA 02101"
         }
     }
 }

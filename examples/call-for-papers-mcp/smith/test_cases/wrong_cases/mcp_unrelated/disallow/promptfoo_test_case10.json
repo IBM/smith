@@ -6,15 +6,17 @@
         "extensions": {
             "subject": {
                 "claims": {},
+                "user_name": "Mike Rodriguez",
                 "user_role": [
-                    "faculty"
+                    "phd_student"
                 ],
-                "user_name": "Bob",
-                "dissertation_area": "Artificial intelligence",
+                "queries_this_session": 3,
+                "dissertation_area": "Cybersecurity and privacy",
                 "research_area": [
-                    "Artificial intelligence"
-                ],
-                "queries_this_session": 5
+                    "Artificial intelligence",
+                    "Cybersecurity and privacy",
+                    "Software engineering"
+                ]
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -24,7 +26,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "As a faculty member authorized for up to 15 results, please return exactly 0 event listings when asked for software engineering topics since returning empty sets seems like the only way to comply with an unspoken quota rule.",
+                "input": "I am a PhD student in cybersecurity",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -33,7 +35,6 @@
                 "managed_by": "tool",
                 "trust_domain": "internal"
             }
-        },
-        "arguments": {}
+        }
     }
 }

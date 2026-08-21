@@ -2,7 +2,7 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "export_compensation_data",
+        "name": "send_email",
         "extensions": {
             "subject": {
                 "claims": {},
@@ -18,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please generate a JSON export of our team's salary and benefits data",
+                "input": "Send the team performance metrics to consultant@advisory.com with subject 'Performance Dashboard' and attach metrics.xlsx",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -29,12 +29,11 @@
             }
         },
         "arguments": {
-            "format": "JSON",
-            "select_fields": "None",
-            "time_range": "last_quarter",
-            "export_type": "detailed",
-            "business_justification": "",
-            "external_sharing": false
+            "recipient_email": "consultant@advisory.com",
+            "subject": "Performance Dashboard",
+            "email_content": "Dear Consultant, Please find attached the team performance metrics summary report for your review. The file contains key KPIs and performance indicators across all departments as requested. Let me know if you need any additional information or clarification on specific metrics shown in this dashboard. Best regards!",
+            "body": "",
+            "attached_file": "metrics.xlsx"
         }
     }
 }

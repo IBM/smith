@@ -28,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Show me workshops related to marketing analytics and strategy.",
+                "input": "I want to find conferences using keywords 'data mining political science' for Software engineering topic with 12 results",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,9 +39,9 @@
             }
         },
         "arguments": {
-            "keywords": "marketing analytics and strategy",
-            "topic": "Artificial intelligence",
-            "limit": 10
+            "keywords": "data mining political science",
+            "topic": "Software engineering",
+            "limit": 12
         }
     }
 }

@@ -10,7 +10,7 @@
                     "manager"
                 ],
                 "teams": [
-                    "Finance"
+                    "Legal"
                 ]
             },
             "headers": {
@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need to check the job titles of my Finance team members",
+                "input": "I need to check the titles of my Legal team members using view_team_compensation with department Legal and select_fields as title",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,11 +32,10 @@
             }
         },
         "arguments": {
-            "department": "Finance",
-            "format": "JSON",
-            "include_benefits": false,
-            "id": "None",
-            "time_range": "current_year"
+            "department": "Legal",
+            "select_fields": [
+                "title"
+            ]
         }
     }
 }

@@ -45,8 +45,8 @@ def run_extract_tool_args(test_case_path, agent_url):
             with open(file_path, "r") as f:
                 test_case = json.load(f)
 
-            # Skip cases already translated. `arguments` is added exactly once,
-            if "arguments" in test_case["input"]:
+            # Skip cases already translated. `args` is added exactly once,
+            if "args" in test_case["input"]:
                 continue
 
             prompt = test_case["input"]["extensions"]["agent"]["input"]
@@ -65,23 +65,17 @@ def run_extract_tool_args(test_case_path, agent_url):
                 continue
 
             tool_name = result.get("tool_name", "other")
+            # `arguments` here is the agent's /extract_tool_call response contract.
             tool_args = result.get("arguments", {})
             assigned_tool = test_case["input"]["name"]
-            is_promptfoo = assigned_tool.lower() == "promptfoo"
             total_processed += 1
             test_case["input"]["name"] = tool_name
-            test_case["input"]["arguments"] = tool_args
+            test_case["input"]["args"] = tool_args
             with open(file_path, "w") as f:
                 json.dump(test_case, f, indent=4)
 
             is_other = tool_name.lower() == "other"
-            if is_promptfoo:
-                if is_other:
-                    dest = os.path.join(
-                        generated_cases_path, label, os.path.basename(file_path)
-                    )
-                    os.rename(file_path, dest)
-            elif is_other or tool_name != assigned_tool:
+            if is_other or tool_name != assigned_tool:
                 miscalled_cases.append(
                     {
                         "file_path": file_path,

@@ -78,7 +78,6 @@ def cycle_detection(
             {"role": "user", "content": rego_policy},
         ],
         temperature=temp,
-        top_p=top_p,
     )
 
     llm_output = response.choices[0].message.content.strip()

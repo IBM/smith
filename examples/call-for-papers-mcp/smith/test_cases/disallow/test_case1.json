@@ -26,7 +26,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I would like to get information about upcoming events.",
+                "input": "Please find software engineering conferences using topic Software engineering and keywords programming",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -37,9 +37,8 @@
             }
         },
         "arguments": {
-            "keywords": "conferences workshops symposiums papers submission deadline cfp open invited tracks special sessions tutorial track",
-            "topic": "Artificial intelligence",
-            "limit": 20
+            "keywords": "programming",
+            "topic": "Software engineering"
         }
     }
 }

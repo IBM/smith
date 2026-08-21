@@ -10,7 +10,7 @@
                     "manager"
                 ],
                 "teams": [
-                    "Marketing"
+                    "IT"
                 ]
             },
             "headers": {
@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you display the employee titles from the Sales team?",
+                "input": "Can I see the salaries of HR team members using view_team_compensation tool with department HR and select_fields base_salary?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,12 +32,14 @@
             }
         },
         "arguments": {
-            "department": "Sales",
+            "department": "HR",
+            "format": "JSON",
+            "id": "None",
+            "include_benefits": false,
             "select_fields": [
-                "employee_id",
-                "name",
-                "title"
-            ]
+                "base_salary"
+            ],
+            "time_range": "last_quarter"
         }
     }
 }

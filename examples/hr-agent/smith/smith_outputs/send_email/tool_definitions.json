@@ -1,0 +1,46 @@
+{
+  "tools": [
+    {
+      "name": "send_email",
+      "description": "Send an email (simulated).",
+      "parameters": [
+        {
+          "name": "to",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "subject",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "body",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "to": {
+            "type": "string"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "to",
+          "subject",
+          "body"
+        ]
+      }
+    }
+  ],
+  "source": "agent.py TOOLS",
+  "transport": "agent"
+}

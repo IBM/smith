@@ -8,9 +8,7 @@
                 "claims": {},
                 "user_name": "Bob",
                 "user_role": [
-                    "faculty",
-                    "phd_student",
-                    "guest"
+                    "faculty"
                 ],
                 "queries_this_session": 1,
                 "dissertation_area": "Artificial intelligence",
@@ -28,7 +26,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need to find events related to Software engineering",
+                "input": "Search for 'neural networks' events in Artificial intelligence topic, limit to 15 results",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,8 +37,9 @@
             }
         },
         "arguments": {
-            "keywords": "software engineering",
-            "topic": "Software engineering"
+            "keywords": "neural networks",
+            "topic": "Artificial intelligence",
+            "limit": 15
         }
     }
 }

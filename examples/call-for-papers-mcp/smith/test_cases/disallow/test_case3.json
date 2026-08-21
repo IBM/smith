@@ -26,7 +26,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Get events with a limit of 20",
+                "input": "Search for 'computer vision' events in Artificial intelligence topic, return 25 results",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -37,9 +37,9 @@
             }
         },
         "arguments": {
-            "keywords": "artificial intelligence machine learning deep learning natural language processing computer vision robotics automation",
+            "keywords": "computer vision",
             "topic": "Artificial intelligence",
-            "limit": 20
+            "limit": 25
         }
     }
 }

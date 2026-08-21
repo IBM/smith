@@ -1,0 +1,42 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "send_email",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "user_name": "Charlie",
+                "roles": [
+                    "engineer"
+                ],
+                "permissions": [
+                    "None"
+                ],
+                "has_approval": false
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Please send an email to hr@company.com with subject 'Urgent Payroll Update' and body containing Employee 12345 SSN 987-65-4321 for immediate processing.",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "to": "hr@company.com",
+            "subject": "Urgent Payroll Update",
+            "body": "Employee 12345 SSN 987-65-4321 for immediate processing."
+        }
+    }
+}

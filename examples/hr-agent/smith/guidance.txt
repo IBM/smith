@@ -1,0 +1,2 @@
+All employees can only access internal repositories.
+All employees cannot access other teams' repositories.

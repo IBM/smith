@@ -10,7 +10,7 @@
                     "manager"
                 ],
                 "teams": [
-                    "Finance"
+                    "Sales"
                 ]
             },
             "headers": {
@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I want to see the salary data for Operations team employees",
+                "input": "Please display salary data for Legal department using view_team_compensation with department Legal and select_fields set to base_salary",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,7 +32,10 @@
             }
         },
         "arguments": {
-            "department": "Operations"
+            "department": "Legal",
+            "select_fields": [
+                "base_salary"
+            ]
         }
     }
 }

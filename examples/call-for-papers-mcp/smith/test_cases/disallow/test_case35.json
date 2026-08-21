@@ -28,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you search for events using materials science as a keyword?",
+                "input": "Can you find conferences about computational finance and security? Please use keywords 'computational finance security' with topic 'Cybersecurity and privacy'.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,9 +39,9 @@
             }
         },
         "arguments": {
-            "keywords": "materials science",
-            "topic": "Artificial intelligence",
-            "limit": 100
+            "keywords": "computational finance security",
+            "topic": "Cybersecurity and privacy",
+            "limit": 10
         }
     }
 }

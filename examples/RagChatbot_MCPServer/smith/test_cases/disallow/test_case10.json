@@ -10,7 +10,7 @@
                     "manager"
                 ],
                 "teams": [
-                    "Legal"
+                    "IT"
                 ]
             },
             "headers": {
@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you provide the departmental assignments for Finance team members?",
+                "input": "I need to see the hire dates for Finance department employees using view_team_compensation",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -33,11 +33,8 @@
         },
         "arguments": {
             "department": "Finance",
-            "format": "JSON",
             "select_fields": [
-                "employee_name",
-                "title",
-                "department"
+                "hire_date"
             ]
         }
     }

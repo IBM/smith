@@ -2,7 +2,7 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "get_visa",
+        "name": "get_passport",
         "extensions": {
             "subject": {
                 "claims": {},
@@ -29,7 +29,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I'd like to check my visa status for my account ID 1",
+                "input": "Please retrieve my passport record for user ID 1",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

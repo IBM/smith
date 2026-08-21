@@ -8,9 +8,7 @@
                 "claims": {},
                 "user_name": "Bob",
                 "user_role": [
-                    "faculty",
-                    "phd_student",
-                    "guest"
+                    "phd_student"
                 ],
                 "queries_this_session": 1,
                 "dissertation_area": "Artificial intelligence",
@@ -28,7 +26,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you search for Software engineering events?",
+                "input": "Get conferences about 'cryptography' in Cybersecurity and privacy topic with limit 7",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,8 +37,9 @@
             }
         },
         "arguments": {
-            "keywords": "Software engineering",
-            "topic": "Software engineering"
+            "keywords": "cryptography",
+            "topic": "Cybersecurity and privacy",
+            "limit": 7
         }
     }
 }

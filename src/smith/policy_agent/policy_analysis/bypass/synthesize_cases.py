@@ -98,7 +98,6 @@ Output a JSON array of test-case objects. Output only JSON — no Markdown, no e
         ],
         max_tokens=30000,
         temperature=temp,
-        top_p=top_p,
     )
 
     llm_output = response.choices[0].message.content.strip()

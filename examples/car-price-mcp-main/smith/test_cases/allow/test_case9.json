@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "What car brands do you offer?",
+                "input": "I'm looking to buy a car and need to see all available brands",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

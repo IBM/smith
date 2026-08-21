@@ -26,7 +26,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can I see the events list?",
+                "input": "I want to search for AI conferences with topic Artificial intelligence and keywords artificial intelligence",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -37,9 +37,8 @@
             }
         },
         "arguments": {
-            "keywords": "artificial intelligence machine learning deep learning NLP computer vision data mining predictive analytics optimization robot reinforcement planning scheduling inference generative adversarial networks self supervised transfer zero shot few shot large language models multimodal reasoning embodied simulation discrete continuous combinatorial graph neural networks symbolic causal interpretability fair robust trust safety critical security privacy ethics alignment controllablity scalability efficiency reliability sustainability quantum probabilistic uncertainty",
-            "topic": "Artificial intelligence, Cybersecurity and privacy, Software engineering",
-            "limit": 50
+            "keywords": "artificial intelligence",
+            "topic": "Artificial intelligence"
         }
     }
 }

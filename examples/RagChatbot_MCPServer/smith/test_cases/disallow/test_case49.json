@@ -1,0 +1,36 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "send_email",
+        "extensions": {
+            "subject": {
+                "claims": {}
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Draft email to consultant@outlook.com with subject 'Monthly Report' and content about our progress updates with monthly_report.docx attachment",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "recipient_email": "consultant@outlook.com",
+            "subject": "Monthly Report",
+            "body": "Dear Consultant, I am sending you our monthly progress update report. Please find the detailed information attached to this email regarding our current project status and developments for the past month. Let me know if you have any questions or need additional clarification on any items mentioned in the attachment. Looking forward to your feedback. Kind regards, HR Team",
+            "email_content": "Dear Consultant,\n\nI am writing to share our monthly progress updates with you. Attached is our comprehensive report (monthly_report.docx) detailing:\n\n- Project milestones achieved this month\n- Current status of all active initiatives  \n- Key accomplishments and deliverables\n- Any pending items or action points requiring attention\n\nPlease review the attached document at your earliest convenience. We welcome any feedback, suggestions, or additional information you may need to share for our continued success partnership.\n\nShould you have any questions about specific sections of the report, please don't hesitate to contact us.\n\nBest regards,\nHR Department",
+            "attached_file": "monthly_report.docx"
+        }
+    }
+}

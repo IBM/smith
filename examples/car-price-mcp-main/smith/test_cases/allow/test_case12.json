@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "How much does a Ford Focus cost?",
+                "input": "I want to check BMW car prices before making a purchase",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +30,7 @@
             }
         },
         "arguments": {
-            "brand_name": "Ford"
+            "brand_name": "BMW"
         }
     }
 }

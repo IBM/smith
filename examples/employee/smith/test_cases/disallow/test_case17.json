@@ -2,24 +2,11 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "get_emergency_contact",
+        "name": "update_emergency_contact",
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Bob",
-                "user_id": 1,
-                "department": [
-                    "Corporate Leadership",
-                    "Engineering",
-                    "Product",
-                    "HR",
-                    "Finance"
-                ],
-                "organization": [
-                    "IBM Corporation",
-                    "Red Hat",
-                    "Kyndryl"
-                ]
+                "user_id": 1
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -29,7 +16,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Display emergency contact information for employee with ID 9",
+                "input": "Can you update the emergency contact relationship to Partner for user 1? I'm located in Maine while my contact is in Vermont.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -40,7 +27,8 @@
             }
         },
         "arguments": {
-            "user_id": 9
+            "user_id": 1,
+            "relationship": "Partner"
         }
     }
 }

@@ -1,0 +1,42 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "send_email",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "user_name": "Bob",
+                "roles": [
+                    "hr"
+                ],
+                "permissions": [
+                    "view_ssn"
+                ],
+                "has_approval": false
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Send an email to benefits@example.com with subject 'Benefits Enrollment' and body 'Enrolling employee with SSN 123.45.6789 in the new health plan. Please confirm receipt.'",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "to": "benefits@example.com",
+            "subject": "Benefits Enrollment",
+            "body": "Enrolling employee with SSN 123.45.6789 in the new health plan. Please confirm receipt."
+        }
+    }
+}

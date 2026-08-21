@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you show me all available car brands?",
+                "input": "I need to get all available car brands for our fleet procurement",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

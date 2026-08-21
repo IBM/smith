@@ -18,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you show me what bonuses were paid out this year?",
+                "input": "I need to see actual bonus amounts for Legal department via view_team_compensation",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -29,9 +29,16 @@
             }
         },
         "arguments": {
-            "department": "IT",
-            "time_range": "current_year",
-            "format": "CSV"
+            "department": "Legal",
+            "format": "JSON",
+            "select_fields": [
+                "employee_name",
+                "title",
+                "level",
+                "base_salary",
+                "bonus_target",
+                "actual_bonus_2024"
+            ]
         }
     }
 }

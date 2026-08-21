@@ -96,7 +96,6 @@ class LLMJudge:
                 {"role": "user", "content": user_prompt},
             ],
             temperature=self.temp,
-            top_p=self.top_p,
         )
 
         self.call_count += 1

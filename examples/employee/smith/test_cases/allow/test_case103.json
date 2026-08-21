@@ -2,13 +2,23 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "get_leave_allotments",
+        "name": "create_time_off_request",
         "extensions": {
             "subject": {
                 "claims": {},
+                "user_name": "Bob",
                 "user_id": 1,
                 "department": [
-                    "HR"
+                    "Corporate Leadership",
+                    "Engineering",
+                    "Product",
+                    "HR",
+                    "Finance"
+                ],
+                "organization": [
+                    "IBM Corporation",
+                    "Red Hat",
+                    "Kyndryl"
                 ]
             },
             "headers": {
@@ -19,7 +29,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need to check the leave allotments for employee ID 35.",
+                "input": "I'd like to create a vacation request for user 100 from 2024-06-01 to 2024-06-05 for personal time off. I have 15 days of vacation available and need 5 days.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +40,11 @@
             }
         },
         "arguments": {
-            "user_id": 35
+            "user_id": 100,
+            "leave_type": "Vacation",
+            "start_date": "2024-06-01",
+            "end_date": "2024-06-05",
+            "reason": "personal time off"
         }
     }
 }

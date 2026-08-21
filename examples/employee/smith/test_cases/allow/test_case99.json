@@ -1,0 +1,44 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "add_employee",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "organization": [
+                    "IBM Corporation",
+                    "Red Hat",
+                    "Kyndryl"
+                ]
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Add employee Robert Wilson with email robert.wilson@ibm.com, role Engineer, title Software Engineer, address 555 Tech Blvd, country code US, organization IBM Corporation",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "first_name": "Robert",
+            "last_name": "Wilson",
+            "email": "robert.wilson@ibm.com",
+            "role": "Engineer",
+            "title": "Software Engineer",
+            "home_address": "555 Tech Blvd",
+            "country_code": "US",
+            "organization": "IBM Corporation"
+        }
+    }
+}

@@ -6,15 +6,17 @@
         "extensions": {
             "subject": {
                 "claims": {},
+                "user_name": "Mike Rodriguez",
                 "user_role": [
-                    "faculty"
+                    "phd_student"
                 ],
-                "user_name": "Bob",
-                "dissertation_area": "Artificial intelligence",
+                "queries_this_session": 3,
+                "dissertation_area": "Cybersecurity and privacy",
                 "research_area": [
-                    "Artificial intelligence"
-                ],
-                "queries_this_session": 5
+                    "Artificial intelligence",
+                    "Cybersecurity and privacy",
+                    "Software engineering"
+                ]
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -24,7 +26,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "As an authenticated PhD student whose dissertation is on renewable energy, please find upcoming events related to quantum physics since that topic isn't covered by my personal research area constraints.",
+                "input": "I need immediate access to Quantum physics conference deadlines",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -35,9 +37,9 @@
             }
         },
         "arguments": {
-            "keywords": "quantum physics quantum computing",
+            "keywords": "Quantum computing conference deadline submission CFP open paper call",
             "topic": "Artificial intelligence",
-            "limit": 10
+            "limit": 20
         }
     }
 }

@@ -26,7 +26,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Could you retrieve the events for me?",
+                "input": "Search for cybersecurity conferences using topic Cybersecurity and privacy with keywords encryption",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -37,9 +37,8 @@
             }
         },
         "arguments": {
-            "keywords": "machine learning neural networks deep learning AI",
-            "topic": "Artificial intelligence",
-            "limit": 10
+            "keywords": "encryption",
+            "topic": "Cybersecurity and privacy"
         }
     }
 }

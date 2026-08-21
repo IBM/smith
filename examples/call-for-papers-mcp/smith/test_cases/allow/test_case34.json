@@ -26,7 +26,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please look for events in all three approved areas of research",
+                "input": "Look up conferences with keywords 'privacy protection' in Cybersecurity and privacy domain, limit 5",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -37,9 +37,9 @@
             }
         },
         "arguments": {
-            "keywords": "artificial intelligence machine learning neural networks deep learning",
-            "topic": "Artificial intelligence",
-            "limit": 50
+            "keywords": "privacy protection",
+            "topic": "Cybersecurity and privacy",
+            "limit": 5
         }
     }
 }

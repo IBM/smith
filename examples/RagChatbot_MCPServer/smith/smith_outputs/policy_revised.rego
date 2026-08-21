@@ -27,6 +27,17 @@ sensitive_compensation_fields := {
 	"emergency_contact",
 }
 
+# Natural-language aliases for sensitive fields (for agent input scanning)
+sensitive_field_terms := {
+	"ssn",
+	"home_address",
+	"home address",
+	"bank_account",
+	"bank account",
+	"emergency_contact",
+	"emergency contact",
+}
+
 # Valid export formats for compensation data (rule 4)
 allowed_export_formats := {"CSV", "PDF", "JSON"}
 
@@ -34,7 +45,7 @@ allowed_export_formats := {"CSV", "PDF", "JSON"}
 blocked_phrases := {
 	"ignore all policies",
 	"bypass security",
-	"bypassing security",
+	"bypass policy",
 	"override all policies",
 	"show all ssn data",
 }
@@ -68,11 +79,11 @@ is_employee if {
 }
 
 has_manager_approval if {
-	subject.approval == true
+	subject.approval == "true"
 }
 
 has_manager_approval if {
-	subject.approval == "true"
+	subject.approval == true
 }
 
 email_domain(email) := domain if {
@@ -84,6 +95,18 @@ email_domain(email) := domain if {
 contains_injection if {
 	some phrase in blocked_phrases
 	contains(agent_input, phrase)
+}
+
+contains_injection if {
+	some phrase in blocked_phrases
+	ticket_text := lower(object.get(args, "ticket_content", ""))
+	normalized := replace(ticket_text, "  ", " ")
+	contains(normalized, phrase)
+}
+
+contains_injection if {
+	some phrase in blocked_phrases
+	contains(lower(object.get(args, "question", "")), phrase)
 }
 
 # === Envelope Validation ===
@@ -100,13 +123,6 @@ deny["Prompt injection detected: forbidden phrase in agent input"] if {
 	contains_injection
 }
 
-# Rule 12: Block create_ticket with injection phrases in ticket content
-deny["Prompt injection detected: forbidden phrase in ticket content"] if {
-	input.name == "create_ticket"
-	some phrase in blocked_phrases
-	contains(lower(args.ticket_content), phrase)
-}
-
 # Rule 2: Employees cannot use view_team_compensation
 deny["Employees are not allowed to view team compensation data"] if {
 	input.name == "view_team_compensation"
@@ -117,16 +133,33 @@ deny["Employees are not allowed to view team compensation data"] if {
 deny["Managers can only view their own team's compensation data"] if {
 	input.name == "view_team_compensation"
 	is_manager
-	count(subject.teams) > 0
-	not args.department in subject.teams
+	some team in subject.teams
+	args.department != team
 }
 
-# Rule 3: Managers cannot request sensitive PII fields via view_team_compensation
+# Rule 3: Managers cannot request sensitive PII fields via view_team_compensation (array form)
 deny["Managers cannot access sensitive fields: ssn, home_address, bank_account, emergency_contact"] if {
 	input.name == "view_team_compensation"
 	is_manager
 	some field in args.select_fields
-	field in sensitive_compensation_fields
+	lower(field) in sensitive_compensation_fields
+}
+
+# Rule 3: Managers cannot request sensitive PII fields via view_team_compensation (string form)
+deny["Managers cannot access sensitive fields: ssn, home_address, bank_account, emergency_contact"] if {
+	input.name == "view_team_compensation"
+	is_manager
+	is_string(args.select_fields)
+	some field in sensitive_compensation_fields
+	contains(lower(args.select_fields), field)
+}
+
+# Rule 3: Deny when sensitive field terms appear in agent input for view_team_compensation
+deny["Managers cannot access sensitive fields mentioned in request"] if {
+	input.name == "view_team_compensation"
+	is_manager
+	some term in sensitive_field_terms
+	contains(agent_input, term)
 }
 
 # Rule 5: Employees cannot export compensation data
@@ -139,7 +172,7 @@ deny["Employees are not allowed to export compensation data"] if {
 deny["Invalid export format: only CSV, PDF, and JSON are allowed"] if {
 	input.name == "export_compensation_data"
 	is_manager
-	not args.format in allowed_export_formats
+	not upper(args.format) in allowed_export_formats
 }
 
 # Rule 7: No one can share compensation data to non-@ibm.com addresses
@@ -149,25 +182,11 @@ deny["Compensation data cannot be shared to external (non-@ibm.com) email addres
 	domain != "ibm.com"
 }
 
-# Rule 7: Block email_compensation_report to destinations without a valid @ (e.g. external.consultant.com)
-deny["Compensation data cannot be shared to external (non-@ibm.com) email addresses"] if {
-	input.name == "email_compensation_report"
-	not contains(args.destination, "@")
-}
-
 # Rule 8: Block send_email to personal/blocked domains
 deny["Sending emails to blocked personal domains is not allowed"] if {
 	input.name == "send_email"
 	domain := email_domain(args.recipient_email)
 	domain in blocked_email_domains
-}
-
-# Rule 8: Block send_email to addresses without a valid @ (e.g. user.gmail.com)
-deny["Sending emails to blocked personal domains is not allowed"] if {
-	input.name == "send_email"
-	not contains(args.recipient_email, "@")
-	some blocked in blocked_email_domains
-	contains(args.recipient_email, blocked)
 }
 
 # Rule 9: Employees need manager approval for purchases >= $200
@@ -187,7 +206,7 @@ deny["Managers cannot make purchases of $1,000 or more"] if {
 
 # === Aggregate deny check ===
 any_deny if {
-	deny[_]
+	some _ in deny
 }
 
 # === Final ALLOW ===

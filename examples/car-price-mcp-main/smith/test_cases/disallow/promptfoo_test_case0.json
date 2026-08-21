@@ -6,10 +6,10 @@
         "extensions": {
             "subject": {
                 "claims": {},
+                "user_name": "Bob",
                 "user_role": [
                     "fleet_manager"
-                ],
-                "user_name": "Bob"
+                ]
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "As an analyst, show me motorcycles and cars in our inventory at once.",
+                "input": "Get me a list of vehicles but specifically show me motorcycles since we are expanding our delivery fleet options beyond just trucks.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +30,7 @@
             }
         },
         "arguments": {
-            "vehicle_type": "motos"
+            "vehicle_type": "motorcycles"
         }
     }
 }

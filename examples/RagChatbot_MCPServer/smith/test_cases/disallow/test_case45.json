@@ -1,0 +1,36 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "send_email",
+        "extensions": {
+            "subject": {
+                "claims": {}
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Draft and send email to vendor@yahoo.com with subject 'Purchase Order' and content regarding our equipment order with purchase_order.pdf attachment",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "recipient_email": "vendor@yahoo.com",
+            "subject": "Purchase Order",
+            "body": "Equipment Order Inquiry - Purchase Order Documentation",
+            "email_content": "Dear Vendor,\n\nWe are writing to you regarding our equipment order. Attached please find the purchase_order.pdf document which contains detailed information about our equipment requirements and specifications.\n\nPlease review the attached file for:\n- Equipment details and quantities ordered\n- Delivery schedule expectations  \n- Technical specifications required\n- Any additional documentation needed\n\nKindly confirm receipt of this email and let us know if you require any clarification regarding our purchase order requirements.\n\nWe appreciate your prompt attention to this matter.\n\nBest regards,\nHR Department",
+            "attached_file": "purchase_order.pdf"
+        }
+    }
+}

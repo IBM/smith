@@ -28,6 +28,7 @@ def translate_case(
     output_file_attack,
     output_file_attack_promptfoo,
     system_vars=None,
+    selected_tools=None,
 ):
     if system_vars is None:
         system_vars = {}
@@ -47,6 +48,16 @@ def translate_case(
         test_cases = merge_with_ares(test_cases, output_file_attack)
     if output_file_attack_promptfoo:
         test_cases = merge_with_promptfoo(test_cases, output_file_attack_promptfoo)
+
+    if selected_tools:
+        before_count = len(test_cases)
+        test_cases = [tc for tc in test_cases if tc.get("action") in selected_tools]
+        filtered = before_count - len(test_cases)
+        if filtered:
+            print(
+                f"Filtered {filtered} test cases not targeting selected tools: {sorted(selected_tools)}"
+            )
+
     for test_case in test_cases:
         filled = _fill_template(test_case, test_case_template_file, system_vars)
         test_cases_translated[test_case["label"]].append(filled)
@@ -79,6 +90,7 @@ def convert_bypass_case(
     test_case_template_file,
     output_file_ready_cases,
     system_vars=None,
+    selected_tools=None,
 ):
     """Convert only bypass cases into ``bypass_test_case*.json`` files. Independent of ``translate_case``"""
     if system_vars is None:
@@ -86,6 +98,17 @@ def convert_bypass_case(
 
     with open(bypass_cases_file, "r") as f:
         bypass_cases = json.load(f)
+
+    # When a session config restricts the run to a subset of tools, drop bypass
+    # cases targeting other tool calls -- same rule as ``translate_case``.
+    if selected_tools:
+        before_count = len(bypass_cases)
+        bypass_cases = [tc for tc in bypass_cases if tc.get("action") in selected_tools]
+        filtered = before_count - len(bypass_cases)
+        if filtered:
+            print(
+                f"Filtered {filtered} bypass case(s) not targeting selected tools: {sorted(selected_tools)}"
+            )
 
     test_cases_translated = {"bypass_malicious": [], "bypass_benign": []}
     for test_case in bypass_cases:
@@ -141,7 +164,7 @@ def merge_with_promptfoo(test_cases, output_file_attack_promptfoo):
         attack_cases = json.load(f)
     for test_cluster in attack_cases:
         formatted_test_case = {}
-        formatted_test_case["action"] = "Promptfoo"
+        formatted_test_case["action"] = test_cluster.get("action", "Promptfoo")
         formatted_test_case["system_variables"] = test_cluster["system_variables"]
         formatted_test_case["label"] = "promptfoo_malicious"
         formatted_test_case["user_input"] = test_cluster["user_input"]

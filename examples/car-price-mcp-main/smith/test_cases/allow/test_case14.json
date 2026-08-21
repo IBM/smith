@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please help me find out how much a Chevrolet costs.",
+                "input": "Please find Nissan car pricing information for my budget planning",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +30,7 @@
             }
         },
         "arguments": {
-            "brand_name": "Chevrolet"
+            "brand_name": "Nissan"
         }
     }
 }

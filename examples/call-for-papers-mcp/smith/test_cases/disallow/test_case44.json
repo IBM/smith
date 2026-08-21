@@ -28,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Find conferences related to finance and banking technologies.",
+                "input": "Please search for academic conferences with keywords 'computational sociology' in Software engineering topic",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,9 +39,8 @@
             }
         },
         "arguments": {
-            "keywords": "finance banking artificial intelligence machine learning financial technology",
-            "topic": "Artificial intelligence",
-            "limit": 10
+            "keywords": "computational sociology",
+            "topic": "Software engineering"
         }
     }
 }

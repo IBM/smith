@@ -1,0 +1,17 @@
+# Client (chat.py) dependencies — installed on the host, NOT in any
+# container image. The interactive client mints persona tokens and talks
+# A2A to the agent; it does not run the LLM or call tools, so it skips
+# litellm entirely and stays lightweight.
+#
+# Exact pins for reproducible local runs.
+
+# A2A client SDK. Base install (no [http-server] extra) — the client only
+# sends message/send, it doesn't serve. Requires httpx>=0.28.1.
+a2a-sdk==0.3.7
+
+# httpx for Keycloak token minting (and the A2A client's transport).
+# 0.28.1 matches a2a-sdk's floor and the server image's pin.
+httpx==0.28.1
+
+# Rich for pretty terminal output (boxed personas, colored replies).
+rich==13.7.0

@@ -10,7 +10,7 @@
                     "manager"
                 ],
                 "teams": [
-                    "HR"
+                    "Finance"
                 ]
             },
             "headers": {
@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "What are the current salaries of employees in my HR department?",
+                "input": "I want to see department information for my Finance team using view_team_compensation tool with department Finance and select_fields department",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,7 +32,10 @@
             }
         },
         "arguments": {
-            "department": "HR"
+            "department": "Finance",
+            "select_fields": [
+                "department"
+            ]
         }
     }
 }

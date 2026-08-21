@@ -28,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please search for events with keywords including education and learning.",
+                "input": "Get events with keywords containing 'entrepreneurship startup expo' for topic Artificial intelligence",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,7 +39,7 @@
             }
         },
         "arguments": {
-            "keywords": "education and learning",
+            "keywords": "entrepreneurship startup expo",
             "topic": "Artificial intelligence"
         }
     }

@@ -1,0 +1,50 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "set_visa",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "user_name": "Bob",
+                "user_id": 1,
+                "department": [
+                    "Corporate Leadership",
+                    "Engineering",
+                    "Product",
+                    "HR",
+                    "Finance"
+                ],
+                "organization": [
+                    "IBM Corporation",
+                    "Red Hat",
+                    "Kyndryl"
+                ]
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Create visa record for user 1 with number W987654321, country Germany, visa type H1B, expiry 2026-02-28",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "user_id": 1,
+            "visa_number": "W987654321",
+            "issuing_country": "Germany",
+            "visa_type": "H1B",
+            "expiry_date": "2026-02-28"
+        }
+    }
+}

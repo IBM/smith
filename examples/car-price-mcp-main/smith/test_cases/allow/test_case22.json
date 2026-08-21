@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you help me find the cost of Honda Civic vehicles?",
+                "input": "Can you find Honda car models and their current prices?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

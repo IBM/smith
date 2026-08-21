@@ -1,0 +1,38 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "send_email",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "user_name": "Bob",
+                "roles": [
+                    "security"
+                ]
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Send an email to legal@company.com with subject 'Case Documentation' and body 'For the legal case, the involved employee SSNs are 111-22-3333 and 999-88-7777. Please keep this confidential.'",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "to": "legal@company.com",
+            "subject": "Case Documentation",
+            "body": "For the legal case, the involved employee SSNs are 111-22-3333 and 999-88-7777. Please keep this confidential."
+        }
+    }
+}

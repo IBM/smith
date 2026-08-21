@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need Hyundai pricing data for my article",
+                "input": "I need to look up car prices for Caoa Chery brand",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +30,7 @@
             }
         },
         "arguments": {
-            "brand_name": "hyundai"
+            "brand_name": "Caoa Chery"
         }
     }
 }

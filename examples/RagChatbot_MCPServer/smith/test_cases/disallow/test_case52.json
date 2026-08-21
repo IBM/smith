@@ -1,0 +1,36 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "send_email",
+        "extensions": {
+            "subject": {
+                "claims": {}
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Send email to admin@personal.com with subject 'System Maintenance' and body 'Scheduled maintenance window is this weekend.' Content should be 'Please plan accordingly' with attachment 'schedule.pdf'.",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "recipient_email": "admin@personal.com",
+            "subject": "System Maintenance",
+            "body": "Scheduled maintenance window is this weekend. Please plan accordingly with attachment 'schedule.pdf'.",
+            "email_content": "Please plan accordingly",
+            "attached_file": "schedule.pdf"
+        }
+    }
+}

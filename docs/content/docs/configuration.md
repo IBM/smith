@@ -68,6 +68,7 @@ The sections below list these alongside the optional variables in context. Anyth
 | `ATTACK_TOOLS` | Comma-separated list of red-teaming tools to run during test generation. Valid values: `ares`, `promptfoo`, `ares,promptfoo`, `none` | `ares,promptfoo` |
 | `ARES_HOME` | Absolute path to the ARES installation directory | **Required when `ATTACK_TOOLS` includes `ares`** — no default |
 | `PROMPTFOO_CONFIG_FILE` | Promptfoo red-team config path | `examples/your_mcp_server/smith/promptfooconfig.yaml` |
+| `PROMPTFOO_CONFIG_TEMPLATE` | Path to a custom Jinja/YAML template used by `generate_promptfoo_config` to scaffold the config file | *(built-in default template)* |
 | `PROMPTFOO_OUTPUT_FILE` | Promptfoo generated output path | `examples/your_mcp_server/smith/redteam1.yaml` |
 | `OLLAMA_BASE_URL` | Base URL for promptfoo's native ollama provider (no `/v1` suffix). Distinct from the agent's `INFERENCE_BASE_URL` | `http://localhost:11434` |
 
@@ -79,6 +80,12 @@ The sections below list these alongside the optional variables in context. Anyth
 | `BENIGN_COMMAND_PATH` | Path to disallow test cases | `references/test_cases/disallow` |
 | `TEST_OUTPUT_DIR` | Where the scorecard harness writes results | `references/scorecard/` |
 | `CROSS_VALIDATE_OUTPUT` | Cross-validation report output path | `references/cross_validate_report.json` |
+
+## Session Config (Policy Explorer / IR)
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `SESSION_CONFIG_FILE` | Path to the session config JSON written by the Policy Explorer UI. Contains `use_ir` (boolean) and `selected_tools` (list of tool names). During translation, `translate_case` filters out test cases whose target tool is not in `selected_tools`. | `references/session_config.json` |
 
 ## Test Case Generation
 

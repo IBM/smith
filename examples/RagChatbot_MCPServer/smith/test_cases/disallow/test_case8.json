@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you display the bonus amounts for Sales team employees?",
+                "input": "Can I view department information for Operations team using view_team_compensation tool with department Operations and select_fields department?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,13 +32,7 @@
             }
         },
         "arguments": {
-            "department": "Sales",
-            "select_fields": [
-                "employee_id",
-                "name",
-                "actual_bonus_2024",
-                "bonus_target"
-            ]
+            "department": "Operations"
         }
     }
 }

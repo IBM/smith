@@ -1,0 +1,2 @@
+Only employees in engineer or security team can search repositories. 
+Engineers can only read internal repos. Security team member can search both internal and external repo.

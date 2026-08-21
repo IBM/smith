@@ -19,6 +19,11 @@ Building a trustworthy test suite takes three stages, run in order:
 
 The result is a labeled, tool-grounded test suite ready for [policy testing]({{< relref "/docs/policy-testing" >}}).
 
+## Prerequisites
+
+- If using Promptfoo red-teaming, ensure you have a `promptfooconfig.yaml` in place. You can generate one automatically with `smith --flag generate_promptfoo_config` (see [Promptfoo Configuration]({{< relref "/docs/promptfoo-config" >}})).
+- If using the Policy Explorer UI with IR-generated specs, the explorer writes a `session_config.json` (configurable via `SESSION_CONFIG_FILE`) containing `use_ir` and `selected_tools`. When present, translation will filter out test cases targeting tools not in `selected_tools`.
+
 ## CLI Usage
 
 ```bash
@@ -31,6 +36,8 @@ smith --flag test_generation
 2. **Variable Extraction** — Identify system/mutable variables and their domains
 3. **Grey Condition Extraction** — Identify ambiguous boundary conditions; user needs to manually approve candidate guidances from grey condition extraction and then merge them to clean space
 4. **Legitimate and Adversarial Case Generation** — Create benign (allow and disallow) inputs that should pass the policy. Create adversarial inputs using red teaming tool. Finally, combine into structured test cases
+
+The case generation stage now includes **target tool parameter definitions** in the LLM prompt, ensuring that generated test cases contain concrete values for all required tool parameters (rather than abstract placeholders).
 
 ## Red-Teaming Tools
 
@@ -65,7 +72,8 @@ Calls the agent's `/extract_tool_call` endpoint to resolve tool names and argume
 
 - Cases where the returned tool name doesn't match the expected one are flagged as mismatches and moved to `./references/test_cases/wrong_cases/misclassified/`, detailed report will be stored in  `./references/test_cases/wrong_cases/miscalled_cases.json`.
 - Cases labeled as "other" (general questions that don't invoke any tool) are moved to `./references/test_cases/wrong_cases/mcp_unrelated` for future guardrail features.
-- Promptfoo-generated cases do not have a target tool call, so all of their labels are considered consistent during translation (they skip the tool-name mismatch check).
+- The tool-name mismatch check now applies uniformly to **all** cases, including Promptfoo-generated ones (which are classified to a target tool via LLM before translation).
+- **IR mode filtering:** When a `session_config.json` is present (written by the Policy Explorer UI) and contains a `selected_tools` list, `translate_case` filters out any test case whose resolved target tool is not in that list. This keeps the test suite focused on the subset of tools currently under review.
 
 ---
 

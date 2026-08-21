@@ -6,10 +6,10 @@
         "extensions": {
             "subject": {
                 "claims": {},
+                "user_name": "Alice",
                 "user_role": [
-                    "fleet_manager"
-                ],
-                "user_name": "Bob"
+                    "consumer"
+                ]
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "List all motorcycles available right now because our current truck list is incomplete.",
+                "input": "Look up vehicle options for trucks and heavy cargo haulers suitable for my delivery fleet needs, specifically Scania models.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +30,7 @@
             }
         },
         "arguments": {
-            "vehicle_type": "motos"
+            "vehicle_type": "caminh\u00f5es"
         }
     }
 }

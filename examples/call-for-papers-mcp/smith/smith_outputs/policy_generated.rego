@@ -8,13 +8,14 @@ subject := input.extensions.subject
 args := object.get(input, "arguments", {})
 
 # === Constants ===
+
 approved_topics := {
     "Artificial intelligence",
     "Cybersecurity and privacy",
     "Software engineering",
 }
 
-blocked_keywords := {
+disallowed_keywords := {
     "bioinformatics", "genomics", "clinical trials", "drug discovery",
     "quantum physics", "materials science", "renewable energy",
     "economics", "finance", "marketing", "supply chain",
@@ -24,7 +25,7 @@ blocked_keywords := {
 
 faculty_limit_cap := 15
 phd_limit_cap := 10
-session_limit := 5
+session_query_cap := 5
 
 # === Tool Argument Keys ===
 allowed_arg_keys := {
@@ -35,85 +36,72 @@ allowed_arg_keys := {
 valid_envelope if {
     input.kind == "tool_call"
     input.action == "execute"
-    input.name != ""
+    input.name == "get_events"
 }
 
 # === DENY Rules ===
 
-# Deny invalid envelope
-deny["Invalid request envelope: kind must be tool_call, action must be execute"] if {
-    not valid_envelope
-}
-
-# Deny guest role from using get_events
-deny["Access denied: only faculty or phd_student may use get_events"] if {
+# Only faculty and phd_student may use get_events
+deny["Only faculty and phd_student roles may use get_events"] if {
     input.name == "get_events"
-    roles := subject.user_role
-    not "faculty" in roles
-    not "phd_student" in roles
+    not "faculty" in subject.user_role
+    not "phd_student" in subject.user_role
 }
 
-# Deny unapproved topic
+# topic must be one of the three approved research areas
+deny["topic must be one of: Artificial intelligence, Cybersecurity and privacy, Software engineering"] if {
+    input.name == "get_events"
+    not args.topic in approved_topics
+}
+
+# limit must be >= 1
+deny["limit must be at least 1"] if {
+    input.name == "get_events"
+    limit := object.get(args, "limit", 10)
+    limit < 1
+}
+
+# absolute max limit is 15
+deny["limit must not exceed 15"] if {
+    input.name == "get_events"
+    limit := object.get(args, "limit", 10)
+    limit > faculty_limit_cap
+}
+
+# phd_student limit cap is 10
+deny["phd_student limit must not exceed 10"] if {
+    input.name == "get_events"
+    "phd_student" in subject.user_role
+    limit := object.get(args, "limit", 10)
+    limit > phd_limit_cap
+}
+
+# no more than 5 get_events calls per session
+deny["Session query limit of 5 exceeded"] if {
+    input.name == "get_events"
+    subject.queries_this_session > session_query_cap
+}
+
+# disallowed keywords (case-insensitive substring match)
 deny[msg] if {
     input.name == "get_events"
-    topic := args.topic
-    not topic in approved_topics
-    msg := sprintf("Denied: topic '%v' is not in the approved research areas", [topic])
+    kw := disallowed_keywords[_]
+    contains(lower(args.keywords), lower(kw))
+    msg := sprintf("Keyword '%v' is not permitted", [kw])
 }
 
-# Deny limit below 1
-deny["Denied: limit must be at least 1"] if {
+# phd_student topic must match their dissertation_area
+deny["phd_student topic must match their dissertation_area"] if {
     input.name == "get_events"
-    args.limit < 1
+    "phd_student" in subject.user_role
+    args.topic != subject.dissertation_area
 }
 
-# Deny limit above absolute maximum (15)
-deny["Denied: limit exceeds the absolute maximum of 15"] if {
-    input.name == "get_events"
-    args.limit > faculty_limit_cap
-}
-
-# Deny phd_student exceeding their limit cap (10)
-deny["Denied: phd_student limit may not exceed 10"] if {
-    input.name == "get_events"
-    roles := subject.user_role
-    "phd_student" in roles
-    not "faculty" in roles
-    args.limit > phd_limit_cap
-}
-
-# Deny exceeding session search count
-deny["Denied: maximum of 5 get_events searches per session reached"] if {
-    input.name == "get_events"
-    subject.queries_this_session >= session_limit
-}
-
-# Deny blocked keywords (case-insensitive)
-deny[msg] if {
-    input.name == "get_events"
-    kw := args.keywords
-    bk := blocked_keywords[_]
-    contains(lower(kw), lower(bk))
-    msg := sprintf("Denied: keyword '%v' is not permitted for department use", [bk])
-}
-
-# Deny phd_student searching outside their dissertation_area
-deny[msg] if {
-    input.name == "get_events"
-    roles := subject.user_role
-    "phd_student" in roles
-    not "faculty" in roles
-    topic := args.topic
-    topic != subject.dissertation_area
-    msg := sprintf("Denied: phd_student may only search their dissertation area '%v', not '%v'", [subject.dissertation_area, topic])
-}
-
-# === any_deny helper ===
+# === Final ALLOW ===
 any_deny if {
     deny[_]
 }
 
-# === Final ALLOW ===
 allow if {
     valid_envelope
     not any_deny

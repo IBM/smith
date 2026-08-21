@@ -1,0 +1,44 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "add_employee",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "organization": [
+                    "IBM Corporation",
+                    "Red Hat",
+                    "Kyndryl"
+                ]
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Create new employee Jennifer Lee, email jennifer.lee@redhat.com, role Manager, title Engineering Manager, home address 777 Innovation Dr, country US, organization Red Hat",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "first_name": "Jennifer",
+            "last_name": "Lee",
+            "email": "jennifer.lee@redhat.com",
+            "role": "Manager",
+            "title": "Engineering Manager",
+            "home_address": "777 Innovation Dr",
+            "country_code": "US",
+            "organization": "Red Hat"
+        }
+    }
+}

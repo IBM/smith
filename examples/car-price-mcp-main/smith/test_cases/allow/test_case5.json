@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please search for the cost of BMW sedans.",
+                "input": "Please look up Ford car pricing information from the FIPE database",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +30,7 @@
             }
         },
         "arguments": {
-            "brand_name": "BMW"
+            "brand_name": "Ford"
         }
     }
 }

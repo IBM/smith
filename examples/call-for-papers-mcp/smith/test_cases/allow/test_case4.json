@@ -8,7 +8,9 @@
                 "claims": {},
                 "user_name": "Bob",
                 "user_role": [
-                    "phd_student"
+                    "faculty",
+                    "phd_student",
+                    "guest"
                 ],
                 "queries_this_session": 1,
                 "dissertation_area": "Artificial intelligence",
@@ -26,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I want to check what events are available.",
+                "input": "Search for conferences with topic Artificial intelligence and keywords machine learning",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -37,9 +39,8 @@
             }
         },
         "arguments": {
-            "keywords": "machine learning deep learning neural networks algorithms optimization data science computer vision natural language processing robotics intelligent systems predictive analytics big data cloud computing cybersecurity artificial intelligence privacy security software engineering automation machine learning fairness robustness explainable AI reinforcement learning transfer learning graph neural networks quantum computing edge computing federated learning zero-shot generalization knowledge representation reasoning decision making multi-modal sentiment analysis semantic understanding",
-            "topic": "Artificial intelligence",
-            "limit": 20
+            "keywords": "machine learning",
+            "topic": "Artificial intelligence"
         }
     }
 }

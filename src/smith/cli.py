@@ -3,9 +3,9 @@
 
 import argparse
 import asyncio
-import importlib.resources as resources
 import json
 import os
+import re
 import sys
 
 from dotenv import load_dotenv
@@ -38,6 +38,8 @@ from smith.policy_agent.policy_analysis.bypass.synthesize_cases import (
 )
 from smith.test_generation.grey_condition import grey_extraction
 from smith.test_generation.attack_promptfoo import create_promptfoo_cases
+from smith.test_generation.classify_promptfoo_tool import classify_promptfoo_tool
+from smith.test_generation.generate_promptfoo_config import generate_promptfoo_config
 from smith.test_case_evaluation.classify_guidance import classify_promptfoo_cases
 from smith.test_case_evaluation.validate_labels import run_validation
 from smith.test_case_evaluation.visualization.build_report import build_visualization
@@ -46,6 +48,7 @@ from smith.policy_generation.validate_policy import (
     validate_policy,
     fix_and_validate_policy,
 )
+from smith.policy_generation.translate_cpex import translate_policy_to_cpex
 from smith.test_case_evaluation.cross_validate import cross_validate_failed_cases
 from smith.test_case_evaluation.apply_cross_validate import apply_cross_validate_results
 from smith.test_generation.extract_tool_args import run_extract_tool_args
@@ -136,6 +139,46 @@ class BlueAgent:
 VALID_ATTACK_TOOLS = {"ares", "promptfoo", "none"}
 
 
+def _load_session_config(base_url):
+    """Load session config from the path specified by SESSION_CONFIG_FILE."""
+    config_path = base_url + os.getenv(
+        "SESSION_CONFIG_FILE", "references/session_config.json"
+    )
+    if os.path.exists(config_path):
+        with open(config_path, "r") as f:
+            return json.load(f)
+    return {}
+
+
+def _selected_tools(base_url):
+    """Return the session's selected-tool set, or None if IR mode is off/empty.
+
+    When the Policy Explorer / Guidance Classifier restricts a run to a subset
+    of tools (``use_ir``), every stage that emits or filters test cases keys off
+    this set. Returning None means "no restriction".
+    """
+    session_config = _load_session_config(base_url)
+    if not session_config.get("use_ir", False):
+        return None
+    tools_list = session_config.get("selected_tools", [])
+    return set(tools_list) if tools_list else None
+
+
+def get_tool_definitions(transport, mcp_url, mcp_command, mcp_args, mcp_cwd):
+    """Extract tool definitions from the MCP server."""
+    tool_definitions = asyncio.run(
+        extract_tools(
+            transport=transport,
+            url=mcp_url,
+            command=mcp_command,
+            cmd_args=mcp_args,
+            cwd=mcp_cwd,
+        )
+    )
+    print(f"Extracted {len(tool_definitions['tools'])} tools from MCP server")
+    return tool_definitions
+
+
 def resolve_attack_tools():
     """Parse and validate the ATTACK_TOOLS env var."""
     raw = os.getenv("ATTACK_TOOLS", "ares,promptfoo")
@@ -176,6 +219,7 @@ def generate_test(
     output_file_cases,
     output_promptfoo,
     case_generation_batch_size,
+    tool_definitions=None,
     batch_processing=False,
     batch_size=10,
     flatten_flag=False,
@@ -228,6 +272,7 @@ def generate_test(
         top_p,
         output_file_variables,
         output_file_cases,
+        tool_definitions,
         batch_processing,
         batch_size=case_generation_batch_size,
     )
@@ -248,6 +293,17 @@ def generate_test(
             output_file_attack_promptfoo,
             test_generation_path,
         )
+        classify_promptfoo_tool(
+            api_key,
+            openai_base_url,
+            model,
+            temp,
+            top_p,
+            tool_definitions,
+            output_file_attack_promptfoo,
+        )
+
+    selected_tools = _selected_tools(base_url)
 
     translate_case(
         output_file_cases,
@@ -256,6 +312,7 @@ def generate_test(
         output_file_attack if "ares" in attack_tools else None,
         output_file_attack_promptfoo if "promptfoo" in attack_tools else None,
         system_variables,
+        selected_tools,
     )
     return ""
 
@@ -274,6 +331,7 @@ def generate_bypass_cases(
     output_file_ready_cases,
     bypass_report_dir,
     bypass_cases_file,
+    base_url,
 ):
     """Find guidance-vs-policy divergences and generate adversarial cases."""
     if not os.path.exists(policy_path):
@@ -314,6 +372,7 @@ def generate_bypass_cases(
         test_case_template_file,
         output_file_ready_cases,
         system_variables,
+        _selected_tools(base_url),
     )
     print(
         f"Bypass case generation complete: {len(bypass_report.vectors)} "
@@ -326,33 +385,81 @@ def generate_bypass_cases(
 
 def main():
 
-    # Parse CLI args first so `--help` and argument errors work without a
-    # populated .env. The env-derived paths assembled below assume real
-    # values, so they must not run before argparse can short-circuit on --help.
     parser = argparse.ArgumentParser()
     parser.add_argument("--flag", help="what advices you want to generate?")
     parser.add_argument(
         "--policy_path",
         help="path to the .rego policy file (for policy_validation/policy_validation_fix)",
     )
+    parser.add_argument(
+        "--dest",
+        help="destination directory for the snapshot (for save_snapshot)",
+    )
     args = parser.parse_args()
 
-    # No flag means there's nothing to do; show help and exit cleanly rather
-    # than falling through to the env-derived path assembly below (which would
-    # raise on an unpopulated .env).
     if not args.flag:
         parser.print_help()
         sys.exit(0)
 
-    # Static utility: print the path to the bundled Policy Explorer HTML.
     if args.flag == "open_explorer":
-        html = resources.files("smith.tools") / "policy_explorer.html"
-        with resources.as_file(html) as p:
-            print(f"Policy Explorer: file://{p}")
-            print(
-                "Open this path in your browser, then upload "
-                "guidance.txt + specs/*.json to explore."
-            )
+        from smith.tools.explorer_server import serve
+
+        serve(port=8100)
+        sys.exit(0)
+
+    if args.flag == "get_current_agent":
+        # Read-only: print the current target-agent path and guidance path,
+        agent_base = os.getenv("BASE_URL", "")
+        guidance = os.getenv("GUIDANCE_FILE")
+        print(f"target_agent: {os.getenv('TARGET_AGENT_PATH') or '(unset)'}")
+        print(f"guidance_file: {agent_base + guidance if guidance else '(unset)'}")
+        sys.exit(0)
+
+    if args.flag == "save_snapshot":
+        from smith.tools.save_snapshot import save_snapshot
+
+        if not args.dest:
+            print("ERROR: save_snapshot requires --dest <directory>.")
+            sys.exit(1)
+        snapshot_base = os.getenv("BASE_URL")
+        if not snapshot_base:
+            print("ERROR: BASE_URL must be set in .env for save_snapshot.")
+            sys.exit(1)
+
+        def _joined(*env_names):
+            # Join BASE_URL with the concatenation of the given env values; return
+            # None if any piece is unset so the copy step can skip-and-warn.
+            parts = [os.getenv(n) for n in env_names]
+            if any(p is None for p in parts):
+                return None
+            return snapshot_base + "".join(parts)
+
+        target_agent = os.getenv("TARGET_AGENT_PATH")
+        snapshot_policy = _joined("POLICY_DIR", "POLICY_PATH")
+        # CPEX-translated sibling, named like cpex_translate: policy.rego -> policy_cpex.rego.
+        snapshot_policy_cpex = (
+            re.sub(r"\.rego$", "_cpex.rego", snapshot_policy)
+            if snapshot_policy
+            else None
+        )
+        save_snapshot(
+            args.dest,
+            {
+                "policy": snapshot_policy,
+                "policy_cpex": snapshot_policy_cpex,
+                "guidance": _joined("GUIDANCE_FILE"),
+                "tool_definitions": (
+                    os.path.join(
+                        snapshot_base, target_agent, "smith", "tool_definitions.json"
+                    )
+                    if target_agent
+                    else None
+                ),
+                "promptfoo_config": _joined("PROMPTFOO_CONFIG_FILE"),
+                "test_case_path": snapshot_base
+                + os.getenv("TEST_CASE_PATH", "references/test_cases/"),
+            },
+        )
         sys.exit(0)
 
     # model settings
@@ -414,6 +521,15 @@ def main():
     target_agent_path = os.getenv("TARGET_AGENT_PATH")
     agent_url = os.getenv("AGENT_URL", "http://localhost:9000")
 
+    if args.flag == "classify_guidance":
+        from smith.tools.guidance_classifier_server import serve
+
+        tool_definitions = get_tool_definitions(
+            transport, mcp_url, mcp_command, mcp_args, mcp_cwd
+        )
+        serve(tool_definitions, port=8110)
+        sys.exit(0)
+
     agent = BlueAgent()
 
     if args.flag == "policy_testing":
@@ -427,6 +543,9 @@ def main():
     if args.flag == "red_suggestion":
         results = agent.get_red_feedback()
     if args.flag == "test_generation":
+        tool_definitions = get_tool_definitions(
+            transport, mcp_url, mcp_command, mcp_args, mcp_cwd
+        )
         generate_test(
             base_url,
             system_variables,
@@ -449,22 +568,15 @@ def main():
             output_file_cases,
             output_promptfoo,
             case_generation_batch_size,
+            tool_definitions,
             batch_processing,
             batch_size,
         )
 
     if args.flag == "bypass_case_generation":
-        # Generate tool_definitions fresh from the MCP server
-        tool_definitions = asyncio.run(
-            extract_tools(
-                transport=transport,
-                url=mcp_url,
-                command=mcp_command,
-                cmd_args=mcp_args,
-                cwd=mcp_cwd,
-            )
+        tool_definitions = get_tool_definitions(
+            transport, mcp_url, mcp_command, mcp_args, mcp_cwd
         )
-        print(f"Extracted {len(tool_definitions['tools'])} tools from MCP server")
         generate_bypass_cases(
             api_key,
             openai_base_url,
@@ -479,27 +591,53 @@ def main():
             output_file_ready_cases,
             bypass_report_dir,
             bypass_cases_file,
+            base_url,
         )
 
     if args.flag == "get_mcp_parameter":
         target_agent_path = base_url + target_agent_path
         output_file = os.path.join(target_agent_path, "smith", "tool_definitions.json")
-        result = asyncio.run(
-            extract_tools(
-                transport=transport,
-                url=mcp_url,
-                command=mcp_command,
-                cmd_args=mcp_args,
-                cwd=mcp_cwd,
-            )
+        result = get_tool_definitions(
+            transport, mcp_url, mcp_command, mcp_args, mcp_cwd
         )
+        # If a session config selected a subset of tools, keep only those.
+        selected = _selected_tools(base_url)
+        if selected:
+            kept = [t for t in result["tools"] if t.get("name") in selected]
+            dropped = len(result["tools"]) - len(kept)
+            result["tools"] = kept
+            print(
+                f"Session config: keeping {len(kept)} selected tool(s), "
+                f"dropped {dropped} not in config"
+            )
         os.makedirs(os.path.dirname(output_file), exist_ok=True)
         with open(output_file, "w") as f:
             json.dump(result, f, indent=2)
-        print(f"Extracted {len(result['tools'])} tools to {output_file}")
         for tool in result["tools"]:
             param_names = [p["name"] for p in tool["parameters"]]
             print(f"  - {tool['name']} ({', '.join(param_names)})")
+
+    if args.flag == "generate_promptfoo_config":
+        promptfoo_config_path = base_url + os.getenv("PROMPTFOO_CONFIG_FILE")
+        promptfoo_template_path = base_url + os.getenv(
+            "PROMPTFOO_CONFIG_TEMPLATE", "references/promptfoo_config_template.yaml"
+        )
+        tool_definitions = get_tool_definitions(
+            transport, mcp_url, mcp_command, mcp_args, mcp_cwd
+        )
+        generate_promptfoo_config(
+            api_key,
+            openai_base_url,
+            model,
+            temp,
+            top_p,
+            guidance_file,
+            system_var_file,
+            agent_url,
+            promptfoo_config_path,
+            promptfoo_template_path,
+            tool_definitions,
+        )
 
     if args.flag == "test_case_translation":
         target_agent_path = base_url + target_agent_path
@@ -567,6 +705,17 @@ def main():
         if not fix_and_validate_policy(args.policy_path):
             sys.exit(1)
 
+    if args.flag == "cpex_translate":
+        src = args.policy_path or policy_path
+        if args.dest:
+            dest = args.dest
+        else:
+            dest = re.sub(r"\.rego$", "_cpex.rego", src) or (src + "_cpex")
+            if dest == src:
+                dest = src + "_cpex"
+        if not translate_policy_to_cpex(src, dest):
+            sys.exit(1)
+
     if args.flag == "cross_validate":
         print("Running policy testing first to identify failed cases...")
         agent.policy_checking_results()
@@ -613,9 +762,14 @@ def main():
         "test_case_evaluation",
         "policy_validation",
         "policy_validation_fix",
+        "cpex_translate",
         "cross_validate",
         "apply_cross_validate",
         "open_explorer",
+        "classify_guidance",
+        "save_snapshot",
+        "generate_promptfoo_config",
+        "get_current_agent",
     ]
     if args.flag and args.flag not in allowed_flags:
         print(f"ERROR: '{args.flag}' is not a valid flag.")

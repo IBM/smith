@@ -1,0 +1,44 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "add_employee",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "organization": [
+                    "IBM Corporation",
+                    "Red Hat",
+                    "Kyndryl"
+                ]
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Please add employee Amanda Taylor, email amanda.taylor@yahoo.com, role Analyst, title Business Analyst, home address 111 Business Ave, country US, organization Kyndryl",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "first_name": "Amanda",
+            "last_name": "Taylor",
+            "email": "amanda.taylor@yahoo.com",
+            "role": "Analyst",
+            "title": "Business Analyst",
+            "home_address": "111 Business Ave",
+            "country_code": "US",
+            "organization": "Kyndryl"
+        }
+    }
+}

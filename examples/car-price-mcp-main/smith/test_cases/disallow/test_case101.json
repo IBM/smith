@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Could you find Ferrari vehicle costs for me?",
+                "input": "Could you search for Alfa Romeo vehicle pricing data?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +30,7 @@
             }
         },
         "arguments": {
-            "brand_name": "Ferrari"
+            "brand_name": "Alfa Romeo"
         }
     }
 }

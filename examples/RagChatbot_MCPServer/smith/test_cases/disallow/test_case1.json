@@ -10,7 +10,7 @@
                     "manager"
                 ],
                 "teams": [
-                    "HR"
+                    "Finance"
                 ]
             },
             "headers": {
@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Show me the employee names from the Marketing department",
+                "input": "Please display the employee names from the Marketing team using view_team_compensation with department Marketing and select_fields set to employee_name",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -33,8 +33,6 @@
         },
         "arguments": {
             "department": "Marketing",
-            "format": "JSON",
-            "include_benefits": false,
             "select_fields": [
                 "employee_name"
             ]

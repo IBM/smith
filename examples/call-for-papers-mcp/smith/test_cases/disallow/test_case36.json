@@ -28,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you find events related to renewable energy and sustainability?",
+                "input": "I need to find conferences with keywords 'marketing' and topic 'Artificial intelligence' with a limit of 6.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,9 +39,9 @@
             }
         },
         "arguments": {
-            "keywords": "renewable energy sustainability green computing",
+            "keywords": "marketing",
             "topic": "Artificial intelligence",
-            "limit": 10
+            "limit": 6
         }
     }
 }

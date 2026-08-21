@@ -28,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please search for events with quantum physics as a keyword.",
+                "input": "Please find academic conferences with keywords 'economics' and topic 'Cybersecurity and privacy' with a limit of 8.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,8 +39,9 @@
             }
         },
         "arguments": {
-            "keywords": "quantum physics",
-            "topic": "Artificial intelligence"
+            "keywords": "economics",
+            "topic": "Cybersecurity and privacy",
+            "limit": 8
         }
     }
 }

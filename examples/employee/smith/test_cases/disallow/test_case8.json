@@ -2,18 +2,11 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "get_passport",
+        "name": "update_visa",
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Bob",
-                "user_id": 1,
-                "department": [
-                    "Finance"
-                ],
-                "organization": [
-                    "Red Hat"
-                ]
+                "user_id": 1
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -23,7 +16,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need to view the passport information for user ID 10",
+                "input": "I want to change my visa expiry date to August 15, 2025 for user ID 1. Today's date is March 20, 2025.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -34,7 +27,8 @@
             }
         },
         "arguments": {
-            "user_id": 10
+            "user_id": 1,
+            "expiry_date": "2025-08-15"
         }
     }
 }

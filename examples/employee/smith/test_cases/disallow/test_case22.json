@@ -1,0 +1,39 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "add_employee",
+        "extensions": {
+            "subject": {
+                "claims": {}
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Add employee Mike Davis with email mike.davis@company.com, role Analyst, title Data Analyst, address 789 Pine St, country code US, salary 0",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "first_name": "Mike",
+            "last_name": "Davis",
+            "email": "mike.davis@company.com",
+            "role": "Analyst",
+            "title": "Data Analyst",
+            "home_address": "789 Pine St",
+            "country_code": "US",
+            "salary": 0
+        }
+    }
+}

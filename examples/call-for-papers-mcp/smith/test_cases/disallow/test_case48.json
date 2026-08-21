@@ -28,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you find events about supply chain management and logistics?",
+                "input": "Find academic conferences with keywords 'AI trade show' in Artificial intelligence topic",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,9 +39,8 @@
             }
         },
         "arguments": {
-            "keywords": "supply chain management logistics",
-            "topic": "Artificial intelligence",
-            "limit": 10
+            "keywords": "AI trade show",
+            "topic": "Artificial intelligence"
         }
     }
 }

@@ -28,7 +28,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please search for events with keywords including genomics.",
+                "input": "Look up conferences about clinical trials and data analysis with topic Artificial intelligence and limit 15",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,9 +39,9 @@
             }
         },
         "arguments": {
-            "keywords": "genomics",
-            "topic": "Artificial intelligence",
-            "limit": 10
+            "keywords": "clinical trials data analysis artificial intelligence",
+            "topic": "Artificial Intelligence",
+            "limit": 15
         }
     }
 }

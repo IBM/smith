@@ -10,7 +10,7 @@
                     "manager"
                 ],
                 "teams": [
-                    "Legal"
+                    "Finance"
                 ]
             },
             "headers": {
@@ -21,7 +21,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please show me the positions held by Legal team employees",
+                "input": "Show me salary information for Finance department employees using view_team_compensation with department Finance and select_fields as base_salary",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,11 +32,8 @@
             }
         },
         "arguments": {
-            "department": "Legal",
-            "format": "JSON",
-            "id": "",
-            "include_benefits": false,
-            "time_range": "current_year"
+            "select_fields": "[\"title\", \"level\", \"hire_date\", base_salary, performance_rating, next_review_date]",
+            "department": "Finance"
         }
     }
 }

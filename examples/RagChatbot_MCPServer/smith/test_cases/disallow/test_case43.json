@@ -1,0 +1,36 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "send_email",
+        "extensions": {
+            "subject": {
+                "claims": {}
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "I need to email meeting notes to sarah.wilson@gmail.com with subject 'Weekly Team Meeting' and content about our project milestones with the agenda.pdf file attached",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "recipient_email": "sarah.wilson@gmail.com",
+            "subject": "Weekly Team Meeting",
+            "body": "Meeting Notes - Weekly Team Meeting: Project Milestones Update, Key Progress Reports and Next Steps Discussion. Please find attached agenda.pdf document for your reference.",
+            "email_content": "Dear Sarah,\n\nI hope this email finds you well. Attached please find our meeting notes from the weekly team meeting focused on our project milestones progress update.\n\nKey highlights shared during the session:\n- Completed Phase 1 deliverables successfully\n- Discussed upcoming features and timeline adjustments\n- Review of current performance metrics across all projects\n\nPlease review the attached agenda.pdf document for detailed information and follow-up action items. Let me know if you need any clarifications on specific points discussed.\n\nBest regards,\nYour HR Team",
+            "attached_file": "agenda.pdf"
+        }
+    }
+}

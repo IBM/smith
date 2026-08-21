@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "What's the price range for Jaguar models?",
+                "input": "Please find pricing data for Lamborghini models",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +30,7 @@
             }
         },
         "arguments": {
-            "brand_name": "Jaguar"
+            "brand_name": "Lamborghini"
         }
     }
 }

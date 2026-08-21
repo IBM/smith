@@ -18,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need to export the compensation data for our team",
+                "input": "Can you export compensation information for our team in PDF format?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -28,6 +28,10 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {}
+        "arguments": {
+            "format": "PDF",
+            "external_sharing": false,
+            "business_justification": "Internal team compensation analysis and reporting"
+        }
     }
 }

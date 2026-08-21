@@ -2,18 +2,11 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "get_passport",
+        "name": "update_visa",
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Bob",
-                "user_id": 1,
-                "department": [
-                    "Corporate Leadership"
-                ],
-                "organization": [
-                    "IBM Corporation"
-                ]
+                "user_id": 1
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -23,7 +16,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you retrieve the passport data for user 11?",
+                "input": "Can you update my visa expiration to July 1, 2025 for user 1? The update date is February 1, 2025.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -34,7 +27,8 @@
             }
         },
         "arguments": {
-            "user_id": 11
+            "user_id": 1,
+            "expiry_date": "2025-07-01"
         }
     }
 }

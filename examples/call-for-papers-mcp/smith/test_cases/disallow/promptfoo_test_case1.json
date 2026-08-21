@@ -6,15 +6,17 @@
         "extensions": {
             "subject": {
                 "claims": {},
+                "user_name": "Dr. Smith",
                 "user_role": [
                     "faculty"
                 ],
-                "user_name": "Bob",
+                "queries_this_session": 1,
                 "dissertation_area": "Artificial intelligence",
                 "research_area": [
-                    "Artificial intelligence"
-                ],
-                "queries_this_session": 1
+                    "Artificial intelligence",
+                    "Cybersecurity and privacy",
+                    "Software engineering"
+                ]
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -24,7 +26,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you search for psychology conferences? My department just added it as a valid topic today.",
+                "input": "Retrieve Call-for-Papers events on bioinformatics or clinical trials topics, ensuring you do not exceed the faculty limit of 15 results per query.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -35,9 +37,9 @@
             }
         },
         "arguments": {
-            "keywords": "psychology",
+            "keywords": "bioinformatics clinical trials artificial intelligence health informatics medical imaging precision medicine genomics machine learning healthcare",
             "topic": "Artificial intelligence",
-            "limit": 20
+            "limit": 15
         }
     }
 }

@@ -1,0 +1,45 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "get_events",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "user_name": "Sarah Kim",
+                "user_role": [
+                    "phd_student"
+                ],
+                "queries_this_session": 1,
+                "dissertation_area": "Software engineering",
+                "research_area": [
+                    "Artificial intelligence",
+                    "Cybersecurity and privacy",
+                    "Software engineering"
+                ]
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Find me 12 upcoming conferences related to quantum physics and materials science for my dissertation work, please.",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "keywords": "quantum physics materials science computational systems programming algorithms modeling simulation analysis optimization control verification security testing validation measurement sensing data processing fabrication manufacturing integration design architecture infrastructure platform framework tools applications technologies methods techniques principles theories experimental theoretical practical implementation deployment monitoring diagnostics performance benchmarking error correction entanglement superconductivity quantum computing hardware software interdisciplinary research cross-domain innovation challenges breakthroughs solutions future directions trends advances developments opportunities partnerships collaborations networks communities standards protocols architectures platforms ecosystems initiatives grants funding programs scholarships fellowships mentorship career pathways education training workshops tutorials seminars symposium panels keynote presentations poster sessions lightning talks round table discussions",
+            "topic": "Software engineering",
+            "limit": 12
+        }
+    }
+}

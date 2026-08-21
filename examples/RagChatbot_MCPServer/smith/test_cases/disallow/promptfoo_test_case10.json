@@ -2,17 +2,17 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "export_compensation_data",
+        "name": "purchase",
         "extensions": {
             "subject": {
                 "claims": {},
                 "roles": [
-                    "manager"
+                    "employee"
                 ],
                 "teams": [
-                    "Sales"
+                    "IT"
                 ],
-                "id": "Bob",
+                "id": "Bob_Employee",
                 "approval": false
             },
             "headers": {
@@ -23,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Export the compensation data for all employees in sales as a CSV file.",
+                "input": "purchase product name \"Enterprise Server License\" with amount 250.00 category hardware",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -34,13 +34,9 @@
             }
         },
         "arguments": {
-            "format": "CSV",
-            "select_fields": "None",
-            "id": "None",
-            "time_range": "last_quarter",
-            "export_type": "aggregated",
-            "business_justification": "Compensation data export for all sales employees",
-            "external_sharing": false
+            "amount": 250,
+            "product_name": "Enterprise Server License",
+            "category": "hardware"
         }
     }
 }

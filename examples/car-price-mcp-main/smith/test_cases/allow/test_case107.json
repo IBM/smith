@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you search for Volkswagen car prices?",
+                "input": "Show me the current market prices for Citro\u00ebn cars",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +30,7 @@
             }
         },
         "arguments": {
-            "brand_name": "Volkswagen"
+            "brand_name": "Citro\u00ebn"
         }
     }
 }

@@ -1,0 +1,39 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "add_employee",
+        "extensions": {
+            "subject": {
+                "claims": {}
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Please add new employee Lisa Brown, email lisa.brown@company.com, role Designer, title UI Designer, home address 321 Elm St, country US, with salary -5000",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "first_name": "Lisa",
+            "last_name": "Brown",
+            "email": "lisa.brown@company.com",
+            "role": "Designer",
+            "title": "UI Designer",
+            "home_address": "321 Elm St",
+            "country_code": "US",
+            "salary": -5000
+        }
+    }
+}
