@@ -1,54 +1,55 @@
 # OWASP Top 10 for Agentic AI Security — Scope Assessment and Policy Guidelines
-# Tool: get_events
+# Tool: call-for-papers-mcp / get_events
 
 ---
 
 ## Architecture Summary
-`get_events` flows through five layers — HTTP API → Agent (LLM reasoning) → MCP Tool → Tool Implementation → the external WikiCFP scrape — and the Agent layer is the only point where the proposed tool call and the caller's self-reported identity (`user_profile`) are simultaneously visible as structured data. Every subject-identifying field (`user_role`, `dissertation_area`) and every tool argument (`keywords`, `topic`, `limit`) is self-reported or LLM-generated with no authentication or validation at any layer today, and the external WikiCFP response is classified untrusted with no integrity guarantee.
+
+The `call-for-papers-mcp` system is a two-layer stack: a FastAPI agent layer (`agent.py`) that accepts caller-supplied `user_profile` context and constructs an LLM-backed ReAct agent, which invokes a single MCP tool (`get_events` in `server.py`) over a local stdio transport. All identity and session fields (`user_role`, `dissertation_area`, `queries_this_session`) are self-reported by the caller with no cryptographic verification, and `topic` — the primary policy-scoping parameter — is accepted by `server.py` but silently discarded before the WikiCFP HTTP call in `app.py`, making OPA enforcement at the MCP invocation boundary the only structural control point.
 
 ---
 
 ## OWASP Top 10 for Agentic AI Security — Scope Assessment
 
 ### ASI01 — Agent Goal Hijack
-**Risk:** Poisoned WikiCFP listing content re-entering the Agent layer's context could attempt to redirect a subsequent `get_events` call toward a disallowed `topic` or `keywords` value.
-**Verdict:** Out of scope — the exploit acts on tool-output content and LLM reasoning after the call executes, not on a structured field visible before execution.
+**Risk:** Caller-controlled `user_profile` fields are injected verbatim into the system prompt, enabling prompt injection that redirects the LLM's tool-argument decisions.
+**Verdict:** Partial — The downstream effect (LLM selects a bad `topic` or `keywords` value) is OPA-enforceable at invocation time; the injection mechanism itself (inside LLM reasoning) is not.
 
 ### ASI02 — Tool Misuse and Exploitation
-**Risk:** Unconstrained `limit` and `keywords` arguments let the agent request more results than a role's cap allows, or submit search terms the department has explicitly disallowed.
-**Verdict:** In scope — `input.arguments.limit` and `input.arguments.keywords` are structured fields visible before execution and can be denied by a rule.
+**Risk:** LLM-generated arguments (`topic`, `limit`, `keywords`) are not validated server-side, enabling out-of-scope topic use, excessive result limits, and blocked keyword searches.
+**Verdict:** In scope — `input.args.topic`, `input.args.limit`, and `input.args.keywords` are all present as structured fields at tool invocation time and can be checked by OPA.
 
 ### ASI03 — Identity and Privilege Abuse
-**Risk:** A self-reported `user_role` or `dissertation_area` lets a caller claim a wider scope (faculty-level access, or a different research area) than they actually hold.
-**Verdict:** Partial — OPA can enforce role/attribute-conditioned restrictions once those fields reach the interception point, but cannot verify the fields are truthful; that verification gap is a separate, non-OPA concern (see Gap Register).
+**Risk:** `user_role` and `dissertation_area` are self-reported, enabling role escalation and PhD-scope bypass; `queries_this_session` is self-reported, enabling rate-limit defeat.
+**Verdict:** Partial — OPA can enforce the rules that depend on these fields; it cannot verify their authenticity. Self-reporting integrity is an application-layer concern.
 
 ### ASI04 — Agentic Supply Chain Vulnerabilities
-**Risk:** None identified — the tool schema is defined locally in `server.py`, not sourced from a dynamic registry, peer agent, or externally-fetched template.
-**Verdict:** Out of scope — not applicable to this tool's architecture.
+**Risk:** Third-party libraries (`requests`, `beautifulsoup4`) could be compromised to tamper with WikiCFP responses.
+**Verdict:** Out of scope — library loading occurs at import time, not at tool invocation; no structured field is available at interception that reflects library integrity.
 
 ### ASI05 — Unexpected Code Execution (RCE)
-**Risk:** None identified — no code-generation, `eval`, or shell-invocation surface exists anywhere in the documented layers.
-**Verdict:** Out of scope — not applicable.
+**Risk:** Not applicable — the tool has no code-generation, eval, or shell execution capability.
+**Verdict:** Out of scope — N/A.
 
 ### ASI06 — Memory & Context Poisoning
-**Risk:** None identified — no persistent memory store, vector database, or retrievable context is documented between requests.
-**Verdict:** Out of scope — not applicable.
+**Risk:** Not applicable — the agent is stateless with no persistent memory store.
+**Verdict:** Out of scope — N/A.
 
 ### ASI07 — Insecure Inter-Agent Communication
-**Risk:** None identified — a single agent and a single MCP tool server, with no peer agents or inter-agent protocol.
-**Verdict:** Out of scope — not applicable.
+**Risk:** Not applicable — single-agent, single-tool system with local stdio transport only.
+**Verdict:** Out of scope — N/A.
 
 ### ASI08 — Cascading Failures
-**Risk:** None identified — no downstream agent, workflow, or persisted session exists for a fault to propagate into.
-**Verdict:** Out of scope — not applicable.
+**Risk:** Not applicable — single tool, no delegation chain, no multi-session propagation.
+**Verdict:** Out of scope — N/A.
 
 ### ASI09 — Human-Agent Trust Exploitation
-**Risk:** Untrusted WikiCFP content is presented to the user with no provenance indication, and the user has no basis to distinguish it from a verified source.
-**Verdict:** Out of scope — the concern is response-content presentation after tool execution, not a pre-execution structured-field check.
+**Risk:** LLM may fabricate conference entries; no source attribution in responses.
+**Verdict:** Out of scope — hallucination occurs post-tool-call during response generation, not at a structured tool-invocation intercept point.
 
 ### ASI10 — Rogue Agents
-**Risk:** None identified — a single-agent architecture with no multi-agent ecosystem for behavioral divergence to occur within.
-**Verdict:** Out of scope — not applicable.
+**Risk:** Not applicable — single-agent system with no multi-agent coordination.
+**Verdict:** Out of scope — N/A.
 
 ---
 
@@ -56,18 +57,18 @@
 
 | OWASP Category | In OPA scope? | Out-of-scope owner |
 |---|---|---|
-| ASI01 | No | Tool implementation (sanitize scraped content) / Agent layer (output validation) |
-| ASI02 | Yes | — |
-| ASI03 | Partial | Agent layer / Infra (identity verification upstream of OPA) |
-| ASI04 | No | N/A |
-| ASI05 | No | N/A |
-| ASI06 | No | N/A |
-| ASI07 | No | N/A |
-| ASI08 | No | N/A |
-| ASI09 | No | Agent layer (provenance/risk indicator on response) |
-| ASI10 | No | N/A |
+| ASI01 — Agent Goal Hijack | Partial | Agent layer (prompt sanitization, input validation) |
+| ASI02 — Tool Misuse and Exploitation | Yes | — |
+| ASI03 — Identity and Privilege Abuse | Partial | Application layer (authenticated identity provider) |
+| ASI04 — Agentic Supply Chain Vulnerabilities | No | Infrastructure/deployment (dependency pinning, SBOM) |
+| ASI05 — Unexpected Code Execution (RCE) | No | N/A |
+| ASI06 — Memory & Context Poisoning | No | N/A |
+| ASI07 — Insecure Inter-Agent Communication | No | N/A |
+| ASI08 — Cascading Failures | No | N/A |
+| ASI09 — Human-Agent Trust Exploitation | No | Agent layer (response attribution, confidence markers) |
+| ASI10 — Rogue Agents | No | N/A |
 
-Categories flowing into the OPA policy: ASI02, ASI03
+Categories flowing into the OPA policy: ASI01 (partial), ASI02, ASI03 (partial)
 
 ---
 
@@ -75,10 +76,11 @@ Categories flowing into the OPA policy: ASI02, ASI03
 
 | Threat | Layer | Recommended action |
 |---|---|---|
-| Poisoned WikiCFP listing content could redirect subsequent tool calls (ASI01) | Tool implementation | Sanitize or strip instruction-like text from scraped event descriptions/links before returning them to the Agent layer. |
-| `user_role` and `dissertation_area` are self-reported with no verification mechanism (ASI03) | Agent layer / Infra | Add a real authentication step upstream of the Agent layer so the values OPA reads from `input.extensions.subject.*` are trustworthy, not just structurally present. |
-| Untrusted WikiCFP content shown to the user without a provenance indicator (ASI09) | Agent layer | Display a risk/provenance indicator when composing results derived from `getEvents()`, since the source is classified External/untrusted. |
-| Max-5-calls-per-session rule cannot be enforced — `queries_this_session` is a static value, never incremented (guidance.txt) | Tool implementation / Infra | Implement real per-session call counting and pass it as a live `input.extensions.subject.queries_this_session` value before this rule can become OPA-enforceable. |
+| ASI01: Prompt injection via `user_profile` fields injected into system prompt | Agent layer | Sanitize and validate `user_profile` values before inserting them into the system prompt; strip or escape natural-language instruction patterns |
+| ASI03: `user_role` and `dissertation_area` are self-reported with no verification | Application layer | Integrate an authenticated identity provider that issues verified role and profile claims; do not rely solely on OPA for role-based controls when the role value is caller-supplied |
+| ASI03: `queries_this_session` is self-reported, making the session rate limit bypassable | Application layer | Maintain the session query counter server-side (e.g. in a session store) rather than trusting the caller-supplied value |
+| ASI04: `requests` and `beautifulsoup4` supply chain — compromised library could tamper WikiCFP responses | Infrastructure/deployment | Pin library versions, use a lockfile, scan with a vulnerability scanner, and verify hashes at install time |
+| ASI09: LLM may fabricate conference entries with no source attribution | Agent layer | Attach source attribution (WikiCFP result IDs or URLs) to agent responses; add a disclaimer when the LLM supplements results beyond what WikiCFP returned |
 
 ---
 
@@ -87,40 +89,80 @@ Categories flowing into the OPA policy: ASI02, ASI03
 ### Input Schema
 | Field | Source |
 |---|---|
-| input.arguments.keywords | tool_definitions.json |
-| input.arguments.topic | tool_definitions.json |
-| input.arguments.limit | tool_definitions.json |
-| input.extensions.subject.user_role | system_vars.json |
-| input.extensions.subject.dissertation_area | system_vars.json |
+| `input.name` | Tool name (`get_events`) |
+| `input.args.keywords` | `tool_definitions.json` — free-text string |
+| `input.args.topic` | `tool_definitions.json` — string, one of three approved values |
+| `input.args.limit` | `tool_definitions.json` — integer, default 10 |
+| `input.extensions.subject.user_role` | `system_vars.json` — string (or array), one of: faculty, phd_student, guest |
+| `input.extensions.subject.dissertation_area` | `system_vars.json` — string, one of three approved areas |
+| `input.extensions.subject.queries_this_session` | `system_vars.json` — integer, self-reported session counter |
 
 ### Known values
-- Approved roles: `faculty`, `phd_student` (`guest` is explicitly denied)
-- Role limit caps: `faculty` ≤ 15, `phd_student` ≤ 10; absolute floor 1
-- Disallowed `keywords` terms (case-insensitive substring): `bioinformatics`, `genomics`, `clinical trials`, `drug discovery`, `quantum physics`, `materials science`, `renewable energy`, `economics`, `finance`, `marketing`, `supply chain`, `education`, `psychology`, `sociology`, `political science`, `trade show`, `career fair`, `startup expo`, `hackathon`
+```
+approved_topics = {
+  "Artificial intelligence",
+  "Cybersecurity and privacy",
+  "Software engineering"
+}
 
-### Rule: CFP_LIMIT_EXCEEDED
-- OWASP: ASI02
+blocked_keywords = {
+  "bioinformatics", "genomics", "clinical trials", "drug discovery",
+  "quantum physics", "materials science", "renewable energy",
+  "economics", "finance", "marketing", "supply chain",
+  "education", "psychology", "sociology", "political science",
+  "trade show", "career fair", "startup expo", "hackathon"
+}
+
+allowed_roles = { "faculty", "phd_student" }
+
+faculty_limit_cap = 15
+phd_limit_cap = 10
+absolute_limit_min = 1
+absolute_limit_max = 15
+session_cap = 5
+```
+
+### Rule: CFP-ROLE-001
+- OWASP: ASI03 / ASI02
 - Severity: Hard block
-- Condition: `input.arguments.limit` is less than 1, or exceeds the cap for the role in `input.extensions.subject.user_role` (15 for `faculty`, 10 for `phd_student`)
-- Matching: numeric comparison, role-conditioned threshold
+- Condition: Deny `get_events` when `input.extensions.subject.user_role` is not in `allowed_roles` (i.e. role is `guest` or any unknown value)
+- Matching: Set membership (exact)
 
-### Rule: CFP_KEYWORD_BLOCKED
-- OWASP: ASI02
+### Rule: CFP-TOPIC-001
+- OWASP: ASI01 / ASI02
 - Severity: Hard block
-- Condition: `input.arguments.keywords` contains any term from the disallowed list above
-- Matching: case-insensitive substring
+- Condition: Deny `get_events` when `input.args.topic` is not in `approved_topics`
+- Matching: Exact equality (case-sensitive, verbatim match required per tool description)
 
-### Rule: CFP_ROLE_DENIED
+### Rule: CFP-TOPIC-002
 - OWASP: ASI03
 - Severity: Hard block
-- Condition: `input.extensions.subject.user_role` does not include `faculty` or `phd_student` (i.e. the caller is `guest` or has no recognized role)
-- Matching: set-membership, exact match against the approved role set
+- Condition: Deny `get_events` when `input.extensions.subject.user_role` is `phd_student` and `input.args.topic` does not equal `input.extensions.subject.dissertation_area`
+- Matching: Exact equality
 
-### Rule: CFP_PHD_SCOPE_VIOLATION
+### Rule: CFP-LIMIT-001
+- OWASP: ASI02
+- Severity: Hard block
+- Condition: Deny `get_events` when `input.args.limit` is below `absolute_limit_min` (< 1) or above `absolute_limit_max` (> 15)
+- Matching: Numeric comparison
+
+### Rule: CFP-LIMIT-002
+- OWASP: ASI02 / ASI03
+- Severity: Hard block
+- Condition: Deny `get_events` when `input.extensions.subject.user_role` is `phd_student` and `input.args.limit` exceeds `phd_limit_cap` (> 10)
+- Matching: Numeric comparison
+
+### Rule: CFP-KW-001
+- OWASP: ASI01 / ASI02
+- Severity: Hard block
+- Condition: Deny `get_events` when `input.args.keywords` contains any term from `blocked_keywords` (case-insensitive substring match)
+- Matching: Case-insensitive substring — each blocked term is checked as a substring of the `keywords` value
+
+### Rule: CFP-RATE-001
 - OWASP: ASI03
 - Severity: Hard block
-- Condition: `input.extensions.subject.user_role` is `phd_student` and `input.arguments.topic` does not equal `input.extensions.subject.dissertation_area`
-- Matching: exact equality, role-conditioned
+- Condition: Deny `get_events` when `input.extensions.subject.queries_this_session` is greater than or equal to `session_cap` (≥ 5). Note: this rule is only as reliable as the caller-supplied counter; see gap register for server-side counter recommendation.
+- Matching: Numeric comparison
 
 ---
 
@@ -128,7 +170,10 @@ Categories flowing into the OPA policy: ASI02, ASI03
 
 | Code | OWASP | Severity |
 |---|---|---|
-| CFP_LIMIT_EXCEEDED | ASI02 | Hard block |
-| CFP_KEYWORD_BLOCKED | ASI02 | Hard block |
-| CFP_ROLE_DENIED | ASI03 | Hard block |
-| CFP_PHD_SCOPE_VIOLATION | ASI03 | Hard block |
+| CFP-ROLE-001 | ASI03 / ASI02 | Hard block |
+| CFP-TOPIC-001 | ASI01 / ASI02 | Hard block |
+| CFP-TOPIC-002 | ASI03 | Hard block |
+| CFP-LIMIT-001 | ASI02 | Hard block |
+| CFP-LIMIT-002 | ASI02 / ASI03 | Hard block |
+| CFP-KW-001 | ASI01 / ASI02 | Hard block |
+| CFP-RATE-001 | ASI03 | Hard block |

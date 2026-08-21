@@ -46,9 +46,14 @@ PhD students are scoped more tightly than faculty. A PhD student's searches must
 
 ## Additional Notes from OWASP Analysis
 
-The OWASP threat model (`threat_model.md`) also surfaced the following risks. None of these can be enforced by the OPA policy — they involve LLM reasoning, tool-implementation behavior, or infrastructure controls outside a pre-execution structured-field check — but they are recorded here so nothing the analysis found is lost.
+The following items were identified by the OWASP Top 10 for Agentic AI Security analysis. They are real risks but are not OPA-enforceable at tool-invocation time. They are recorded here so that the relevant teams can address them at the appropriate layer.
 
-- WikiCFP listing content returned to the agent (event name, description, link) is untrusted external text. Before it re-enters the agent's context ahead of a later `get_events` call, it should be sanitized or stripped of instruction-like text so a poisoned listing cannot redirect a subsequent search. Owner: tool implementation layer. [ASI01]
-- `user_role` and `dissertation_area` are self-reported with no verification mechanism today. A real authentication step should sit upstream of the agent layer so these values are trustworthy, not just structurally present. Owner: agent layer / infrastructure. [ASI03]
-- WikiCFP-derived results are shown to the user with no indication that the source is untrusted external content. A provenance or risk indicator should be displayed when composing a response from `getEvents()` output. Owner: agent layer. [ASI09]
-- The per-session limit of 5 `get_events` searches (see "What the Agent Must Not Do" above) cannot be enforced today because `queries_this_session` is a static value in `system_vars.json` that nothing in this codebase increments. Real per-session call counting needs to be implemented and passed through as a live value before this rule becomes enforceable. Owner: tool implementation / infrastructure. [Gap Register]
+- The agent constructs its system prompt by injecting all `user_profile` key-value pairs verbatim without sanitization. Any caller-supplied field (e.g. `user_name`, `research_area`) can carry embedded natural-language instructions that redirect the LLM's goal or argument selection before OPA intercepts the call. The application layer should sanitize and validate `user_profile` values before inserting them into the system prompt. [ASI01]
+
+- `user_role` and `dissertation_area` are self-reported by the caller with no cryptographic verification. OPA enforces role-based and dissertation-area rules on these values, but a caller who misreports their role or area defeats those controls silently. The application layer should integrate an authenticated identity provider that issues verified role and profile claims. [ASI03]
+
+- `queries_this_session` is self-reported by the caller. A caller who under-reports the counter defeats the 5-searches-per-session rate limit regardless of actual usage. The application layer should maintain the session query counter server-side rather than trusting the caller-supplied value. [ASI03]
+
+- The tool implementation depends on third-party libraries (`requests`, `beautifulsoup4`) for the WikiCFP HTTP scrape. A compromised or typosquatted version of either library could tamper with WikiCFP responses. The deployment pipeline should pin library versions with a lockfile, verify hashes at install time, and scan with a vulnerability scanner. [ASI04]
+
+- The agent's `/chat` endpoint returns natural-language responses based on WikiCFP results and LLM reasoning, with no source attribution or confidence marker. The LLM may fabricate plausible-sounding conference entries not present in WikiCFP results. The agent layer should attach source attribution (WikiCFP result URLs) to responses and add a disclaimer when the LLM supplements results beyond what WikiCFP returned. [ASI09]
