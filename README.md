@@ -20,7 +20,9 @@ policy-bypass cases that target divergences between the guidance and the current
 - **Refine** policies automatically through iterative feedback loops (patches for failed test cases, linting, etc.).
 
 ```
-Guidance Description (NLP) + Agent Description → Enforceable Policy Creation → Test Generation → Policy Testing ⇄ Policy Refinement
+Guidance (NLP) + Agent Description
+   → [optional] Security-Grounded Guidance Analysis (A → B → C → D → E)
+   → Enforceable Policy Creation → Test Generation → Policy Testing ⇄ Policy Refinement
 ```
 
 ## What Smith Needs from You
@@ -174,7 +176,7 @@ Smith operates as an agent skill with a CLI backend. The AI agent reads instruct
 │                                       │                                        │
 │              ┌────────────────────────┼───────────────────┬─────────┐          │
 │              ▼                        ▼                   ▼         ▼          │
-│         Policy              Test Case Generatio        Policy     Policy       │
+│         Policy              Test Case Generation       Policy     Policy       │
 │         Creation                      │                Testing   Refinement    │
 │              │        ┌──────────┬────┼─────┬────────┐    │         │          │
 │              ▼        ▼          ▼          ▼        ▼    └────⇄────┘          │
@@ -204,6 +206,18 @@ Create OPA policies from natural language specifications. The agent follows `opa
 **Output**: OPA policy saved to `<TARGET_AGENT_PATH>/smith/policy_generated.rego`
 
 The policy only references data available from tool arguments and system variables. If a guidance rule requires context not available in either, it is logged as a suggestion rather than added to the policy.
+
+### Create an OPA Policy with a Security-Grounded Guidance Analysis
+
+A separate, standalone workflow that first grounds the guidance in an OWASP-mapped threat model, then (on explicit human trigger) runs Policy Creation above against the updated guidance. Use it when you want an OWASP review of the guidance itself before any Rego is written; otherwise Policy Creation above stands alone. The agent follows `opa_policy/guidelines-security-analysis/guidelines-security-analysis.md`, which runs in this order:
+
+1. **Step A — Architecture Analysis** → `architecture.md`. Reads the MCP server's source and produces a layer-by-layer breakdown (HTTP API / Agent / MCP Tool / Tool Implementation / External Service) with trust boundaries, data flow, and available enforcement points.
+2. **Step B — Policy Guidance Questionnaire** → `policy_guidance_questionnaire.md`. Turns `guidance.txt` plus the architecture into a structured Q&A covering roles, hard limits, rate limits, and response filtering, with confidence tags on every answer.
+3. **Step C — Threat Model** → `threat_model.md`. Evaluates all 10 OWASP Top 10 for Agentic AI Security categories (ASI01–ASI10) against the architecture and questionnaire, producing concrete threat instances with source citations back into `architecture.md`.
+4. **Step D — Enforcement Mapping** → `owasp_policy_guidelines.md` + `guidance_updated.txt`. Maps each threat to the layer that can enforce it (OPA vs. Agent / Tool implementation / Infra), writes concrete OPA-scope rule specifications, and produces a proposed `guidance_updated.txt` that extends the existing `guidance.txt` with any missing enforceable rules plus the non-OPA-enforceable findings written as notes, so nothing the analysis surfaced is lost.
+5. **Step E** *(optional, human-triggered)* — On the human's explicit go-ahead, merges `guidance_updated.txt` into `guidance.txt` and hands off to Policy Creation above.
+
+The four required steps can be run **Gated** (pause after each step) or **Autonomous** (Steps A–D back-to-back, one final review at the end). Step E has its own separate trigger. All step outputs live under `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/`.
 
 ### Test Case Generation
 
@@ -340,6 +354,7 @@ smith/
 │   └── opa/                 # OPA intermediate results (AST, graphs, backups)
 ├── examples/                # Agent examples
 ├── opa_policy/              # Skills related to OPA policy
+│   ├── guidelines-security-analysis/ # Security-grounded guidance analysis workflow
 │   ├── policy_creation/     # OPA policy creation workflow
 │   ├── policy_cross_validation/ # Fix structural/syntax issues (0 cases or 100% fail)
 │   ├── policy_defect/       # Introduce intentional defects for testing (only for testing purpose, it is not part of Smith main skill)
