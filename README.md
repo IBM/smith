@@ -191,6 +191,18 @@ Bypass cases are generated from the current policy (a `Policy Creation` output) 
 
 ## Core Concepts
 
+### Create an OPA Policy with a Security-Grounded Guidance Analysis
+
+Before creating a policy, the agent can run a foundation workflow that grounds policy design in an OWASP-mapped threat model rather than in the human-written guidance alone. The agent follows `opa_policy/guidelines-security-analysis/guidelines-security-analysis.md`, which runs in this order:
+
+1. **Step A — Architecture Analysis** → `architecture.md`. Reads the MCP server's source and produces a layer-by-layer breakdown (HTTP API / Agent / MCP Tool / Tool Implementation / External Service) with trust boundaries, data flow, and available enforcement points.
+2. **Step B — Policy Guidance Questionnaire** → `policy_guidance_questionnaire.md`. Turns `guidance.txt` plus the architecture into a structured Q&A covering roles, hard limits, rate limits, and response filtering, with confidence tags on every answer.
+3. **Step C — Threat Model** → `threat_model.md`. Evaluates all 10 OWASP Top 10 for Agentic AI Security categories (ASI01–ASI10) against the architecture and questionnaire, producing concrete threat instances with source citations back into `architecture.md`.
+4. **Step D — Enforcement Mapping** → `owasp_policy_guidelines.md` + `guidance_updated.txt`. Maps each threat to the layer that can enforce it (OPA vs. Agent / Tool implementation / Infra), writes concrete OPA-scope rule specifications, and produces a proposed `guidance_updated.txt` that extends the existing `guidance.txt` with any missing enforceable rules plus the non-OPA-enforceable findings written as notes, so nothing the analysis surfaced is lost.
+5. **Step E** *(optional, human-triggered)* — On the human's explicit go-ahead, merges `guidance_updated.txt` into `guidance.txt` and hands off to Policy Creation below.
+
+The four required steps can be run **Gated** (pause after each step) or **Autonomous** (Steps A–D back-to-back, one final review at the end). Step E has its own separate trigger. All step outputs live under `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/`.
+
 ### Policy Creation
 
 Create OPA policies from natural language specifications. The agent follows `opa_policy/policy_creation/opa_policy_creation.md` to generate a `.rego` policy file.
