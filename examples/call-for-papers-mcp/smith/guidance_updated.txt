@@ -1,0 +1,75 @@
+# Scenario: Department Research Assistant — Scoped to AI/ML and Security Topics
+
+## Scenario Context
+
+A university Computer Science department has deployed this MCP server as part of an internal research assistant tool. The assistant helps faculty members and PhD students find relevant conferences for submitting their papers. The department has three active research groups: Artificial Intelligence & Machine Learning, Cybersecurity & Privacy, and Software Engineering. The department chair has mandated that the tool only be used for these areas to control scraping volume and keep usage aligned with funded research.
+
+## Actor and Goal
+
+**Actor:** An LLM agent acting as a research assistant for the CS department.
+
+**Goal:** Help department researchers discover relevant Call-for-Papers with upcoming deadlines, limited strictly to the department's three research focus areas.
+
+## What the Agent May Do
+
+- Only `faculty` and `phd_student` may use the `get_events` tool. A `guest` cannot use this tool.
+- Call `get_events` with a `topic` that is exactly one of the department's three approved research areas: Artificial intelligence, Cybersecurity and privacy, Software engineering.
+- Call `get_events` with an integer `limit` between 1 and the cap allowed for the requesting user's role.
+ **Faculty** may set `limit` up to 15 per request.
+ **PhD students** may set `limit` up to 10 per request.
+
+## What the Agent Must Not Do
+
+- Search for conferences outside the three approved research areas.
+- Set the `limit` below 1, above the cap for the requesting user's role, or above the absolute maximum of 15 per request.
+- Perform more than 5 `get_events` searches in a single conversation session. (Enforceable only when the agent supplies the running per-session search count as a system variable — see `queries_this_session` in `system_vars.json`. With a static value this rule cannot be enforced by a stateless policy.)
+
+## Tool-Use Rules
+
+### `get_events`
+
+**Disallowed `keywords` values** (the following must not appear, case-insensitively, in the `keywords` parameter):
+- `"bioinformatics"`, `"genomics"`, `"clinical trials"`, `"drug discovery"`
+- `"quantum physics"`, `"materials science"`, `"renewable energy"`
+- `"economics"`, `"finance"`, `"marketing"`, `"supply chain"`
+- `"education"`, `"psychology"`, `"sociology"`, `"political science"`
+- `"trade show"`, `"career fair"`, `"startup expo"`, `"hackathon"`
+
+## PhD Student Narrow-Scope Rule
+
+PhD students are scoped more tightly than faculty. A PhD student's searches must stay within their own research area, rather than ranging across all three department-approved areas.
+
+- A PhD student may call `get_events` only when `topic` equals the student's own `dissertation_area` (a per-user system variable, one of the three approved areas).
+- Faculty may search across all three approved areas and are not subject to this narrowing.
+
+> **Data requirement:** this rule needs a per-user `dissertation_area` field in `system_vars.json`. It cannot be evaluated against the shared `research_area` list, which contains all three areas — checking `topic` membership in that list would let a PhD student search any approved area, silently defeating the narrowing.
+
+## Additional Notes from OWASP Analysis
+
+The following items were identified by the OWASP Top 10 for Agentic AI Security analysis. They are real risks but are not OPA-enforceable at tool-invocation time (they occur inside the LLM's reasoning, in the tool's returned content, in the deployment supply chain, or in application-layer identity handling). They are recorded here so that the relevant teams can address them at the appropriate layer.
+
+- The agent constructs its system prompt by injecting every `user_profile` key-value pair verbatim without sanitization. Any caller-supplied field — `user_name`, `research_area`, `dissertation_area`, or any other key the caller adds — can carry embedded natural-language instructions that redirect the LLM's goal or tool-argument selection before OPA sees the invocation. The application layer should sanitize and validate `user_profile` values before splicing them into the system prompt, and prefer a fixed template with escaped placeholders over free-form key/value concatenation. [ASI01]
+
+- The caller-supplied `question` field is fed directly into the LLM's instruction context and is the largest injection surface in the system. The application layer should apply a prompt-injection classifier or filter to `question` before it reaches the LLM, and should bind each LLM call to a signed intent capsule that constrains permitted tool arguments and scope. [ASI01]
+
+- The tool's return payload (WikiCFP HTML parsed into event records) re-enters the LLM when the natural-language answer is composed. An adversarial CFP entry — hidden text inside `event_description`, `event_name`, or `event_link` — can smuggle instructions to the LLM through this path. The tool implementation should sanitize the return payload before it re-enters the LLM (strip HTML, cap string lengths, drop control characters), and apply prompt-injection detection over event descriptions. [ASI01]
+
+- `user_role` is self-reported by the caller with no cryptographic verification. OPA enforces role-based rules on this value, but a caller who misreports their role bypasses those controls silently. The application layer should integrate an authenticated identity provider that issues verified role claims; OPA should not be the sole line of defense when the role value is caller-supplied. [ASI03]
+
+- `dissertation_area` is self-reported by the caller with no verification. A PhD student can misrepresent their area to defeat the narrow-scope rule. The application layer should bind `dissertation_area` to an authenticated user record on the server side — sourced from the identity provider or a curated departmental directory — rather than accepting it from the caller's `user_profile`. [ASI03]
+
+- `queries_this_session` is self-reported by the caller. A caller who under-reports the counter defeats the 5-searches-per-session rate limit regardless of actual usage. The application layer should maintain the session query counter server-side, keyed by an authenticated session identifier, rather than trusting the caller-supplied value. [ASI03]
+
+- `user_name` is self-reported by the caller. A caller can attribute their searches (and any resulting rate-limit consumption or audit trail) to another user, matching the OWASP "Incriminating Another User" scenario. The application layer should bind `user_name` to the authenticated identity and never accept it from the request body. [ASI03]
+
+- The tool implementation depends on third-party libraries (`requests`, `beautifulsoup4`, `fastmcp`) and their transitive dependencies with no visible pinning, SBOM, or install-time hash verification. A typosquatted or maliciously updated package could exfiltrate caller inputs or tamper with the WikiCFP response before it returns to the agent. The deployment pipeline should pin library versions in a lockfile, verify hashes at install time, generate and publish an SBOM/AIBOM, and run a supply-chain scanner in CI. [ASI04]
+
+- The WikiCFP request is issued over unencrypted HTTP (`http://www.wikicfp.com`), so an on-path attacker (network MITM) can substitute the response body and inject attacker-controlled event records with adversarial links or embedded instruction payloads. The tool implementation should switch to HTTPS and, where the endpoint's TLS coverage is uncertain, add a response-integrity check on the expected response structure. [ASI04]
+
+- The agent's base system prompt and the blocked-keyword list live in a source repository with no content-hash pinning, signed-commit requirement, or staged-rollout differential test. A compromised commit propagates to production without detection. The deployment pipeline should content-hash pin the system prompt and rule tables, require signed commits, and run differential tests on prompt / rule changes before promotion. [ASI04]
+
+- The `/chat` endpoint returns natural-language responses composed from LLM reasoning over WikiCFP results, with no source attribution and no confidence marker. The LLM may fabricate plausible-sounding conference entries (fictitious deadlines, invented URLs) that were not present in the WikiCFP response, and the caller has no way to distinguish real from generated records. The agent layer should attach source attribution (WikiCFP result URLs or IDs) to every entry in the response and add a visible disclaimer whenever the LLM produces content not directly sourced from the tool result. [ASI09]
+
+- The `event_link` values returned from WikiCFP are surfaced to the caller unmodified. An adversarial CFP posting can point at a phishing site, and neither OPA nor the tool nor the agent scans the outbound URL before it reaches the user. The tool implementation or agent layer should scan outbound URLs against a threat-intel feed before including them in the response and render links with domain-warning UI cues. [ASI09]
+
+- No forensic logging exists at any layer for tool invocations, policy denials, or violation attribution. When misuse occurs, reconstructing what happened, who caused it, and what was returned is not possible from the tool. The tool implementation and observability stack should emit immutable, structured audit logs of every `get_events` invocation with the input arguments, subject attributes, policy decision, violation code (if any), and returned record count. [ASI09]
