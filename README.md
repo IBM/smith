@@ -352,6 +352,7 @@ smith/
 │   └── opa/                 # OPA intermediate results (AST, graphs, backups)
 ├── examples/                # Agent examples
 ├── opa_policy/              # Skills related to OPA policy
+│   ├── guidelines-security-analysis/ # Security-grounded guidance analysis workflow
 │   ├── policy_creation/     # OPA policy creation workflow
 │   ├── policy_cross_validation/ # Fix structural/syntax issues (0 cases or 100% fail)
 │   ├── policy_defect/       # Introduce intentional defects for testing (only for testing purpose, it is not part of Smith main skill)
