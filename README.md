@@ -20,7 +20,9 @@ policy-bypass cases that target divergences between the guidance and the current
 - **Refine** policies automatically through iterative feedback loops (patches for failed test cases, linting, etc.).
 
 ```
-Guidance Description (NLP) + Agent Description → Enforceable Policy Creation → Test Generation → Policy Testing ⇄ Policy Refinement
+Guidance (NLP) + Agent Description
+   → [optional] Security-Grounded Guidance Analysis (A → B → C → D → E)
+   → Enforceable Policy Creation → Test Generation → Policy Testing ⇄ Policy Refinement
 ```
 
 ## What Smith Needs from You
@@ -174,7 +176,7 @@ Smith operates as an agent skill with a CLI backend. The AI agent reads instruct
 │                                       │                                        │
 │              ┌────────────────────────┼───────────────────┬─────────┐          │
 │              ▼                        ▼                   ▼         ▼          │
-│         Policy              Test Case Generatio        Policy     Policy       │
+│         Policy              Test Case Generation       Policy     Policy       │
 │         Creation                      │                Testing   Refinement    │
 │              │        ┌──────────┬────┼─────┬────────┐    │         │          │
 │              ▼        ▼          ▼          ▼        ▼    └────⇄────┘          │

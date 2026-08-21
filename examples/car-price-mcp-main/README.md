@@ -90,7 +90,26 @@ MCP_CWD=examples/car-price-mcp-main
 
 Ask your coding agent to use skill Smith to generate an OPA policy from the guidance file.
 
-#### Step 1.2: Generate Test Cases 
+#### Step 1.2: (Optional) Security-Grounded Guidance Analysis
+
+Instead of running Step 1.1 directly against the existing `smith/guidance.txt`, you can first run the security-grounded guidance analysis workflow to produce an OWASP-mapped threat model of this MCP server's tools and extend `smith/guidance.txt` with any missing enforceable rules plus non-OPA-enforceable notes. Same workflow as `SKILL.md`'s "Create an OPA Policy with a Security-Grounded Guidance Analysis" entry.
+
+Ask your coding agent:
+
+> Create an OPA policy for this MCP server with a security-grounded guidance analysis.
+
+The agent asks whether to run **Gated** (pause after each step) or **Autonomous** (Steps A–D back-to-back with one final review), then produces four artifacts under `smith/guidelines-security-analysis/`:
+
+| Step | Output |
+|------|--------|
+| A — Architecture Analysis | `smith/guidelines-security-analysis/architecture.md` |
+| B — Policy Guidance Questionnaire | `smith/guidelines-security-analysis/policy_guidance_questionnaire.md` |
+| C — Threat Model against OWASP Top 10 for Agentic AI Security | `smith/guidelines-security-analysis/threat_model.md` |
+| D — Enforcement Mapping | `smith/guidelines-security-analysis/owasp_policy_guidelines.md` + `smith/guidance_updated.txt` |
+
+Review `smith/guidance_updated.txt` when the workflow completes. When you're satisfied, tell the agent to merge — Step E overwrites `smith/guidance.txt` with the updated content and continues into Policy Creation automatically.
+
+#### Step 1.3: Generate Test Cases 
 To generate test cases, there are three options:
 
 1. You can ask smith to generate test cases after it finishes policy generation.
