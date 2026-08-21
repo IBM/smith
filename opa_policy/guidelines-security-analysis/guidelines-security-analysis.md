@@ -55,7 +55,7 @@ content of `guidance_updated.txt` — see Step E below.
 If the user asks to analyse the architecture of an MCP server, or when
 starting this workflow for a new tool:
 
-Strictly follow `./owasp/architecture_analysis.md`.
+Strictly follow `./steps/architecture_analysis.md`.
 
 - Input: MCP server directory (e.g. `examples/call-for-papers-mcp/`)
 - Output: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/architecture.md`
@@ -69,7 +69,7 @@ Strictly follow `./owasp/architecture_analysis.md`.
 
 After Step A is confirmed, or if `smith/guidelines-security-analysis/architecture.md` already exists:
 
-Strictly follow `./owasp/policy_guidance_questionnaire.md`.
+Strictly follow `./steps/policy_guidance_questionnaire.md`.
 
 - Input: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/architecture.md`
 - Input (optional): `<TARGET_AGENT_PATH>/smith/guidance.txt` — primary source of policy intent; read before all other smith/ files
@@ -89,7 +89,7 @@ Strictly follow `./owasp/policy_guidance_questionnaire.md`.
 
 After Step B is confirmed, or if `smith/guidelines-security-analysis/policy_guidance_questionnaire.md` already exists:
 
-Strictly follow `./owasp/threat_model.md`.
+Strictly follow `./steps/threat_model.md`.
 
 - Input: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/architecture.md`
 - Input: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/policy_guidance_questionnaire.md`
@@ -110,7 +110,7 @@ Strictly follow `./owasp/threat_model.md`.
 
 After Step C is confirmed, or if `smith/guidelines-security-analysis/threat_model.md` already exists:
 
-Strictly follow `./owasp/enforcement_mapping.md`.
+Strictly follow `./steps/enforcement_mapping.md`.
 
 - Input: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/architecture.md`
 - Input: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/threat_model.md`
