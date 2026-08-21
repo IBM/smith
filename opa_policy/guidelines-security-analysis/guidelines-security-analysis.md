@@ -11,10 +11,13 @@ Each step produces an artifact under `<TARGET_AGENT_PATH>/smith/guidelines-secur
 That subfolder is created automatically on first write. Do not skip steps
 or reorder them.
 
-This workflow terminates at Step D. Its outputs
+Step D is the last of the four required steps. Its outputs
 (`owasp_policy_guidelines.md` and `guidance_updated.txt`) are the final
-artifacts; this workflow does not write any Rego and does not hand off
-to any specific downstream skill.
+artifacts of the required pipeline; this workflow does not write any
+Rego itself. An optional Step E performs the merge of
+`guidance_updated.txt` into `guidance.txt` itself and hands off to
+policy creation — but only once the human explicitly asks for the merge
+to happen; it never starts on its own, in either confirmation mode.
 
 The target MCP server directory is provided by the user at invocation time.
 If not provided, ask before starting Step A.
@@ -35,12 +38,15 @@ All generated artifacts live under:
 <TARGET_AGENT_PATH>/smith/guidelines-security-analysis/
 ```
 
-Source inputs (never modified by this pipeline) remain at:
+Source inputs remain at:
 ```
 <TARGET_AGENT_PATH>/smith/guidance.txt
 <TARGET_AGENT_PATH>/smith/system_vars.json
 <TARGET_AGENT_PATH>/smith/tool_definitions.json
 ```
+Steps A–D never modify any of these. Step E is the one exception: on an
+explicit human trigger, it overwrites `guidance.txt` with the merged
+content of `guidance_updated.txt` — see Step E below.
 
 ---
 
@@ -127,8 +133,11 @@ Strictly follow `./owasp/enforcement_mapping.md`.
 - Output: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/owasp_policy_guidelines.md`
 - Output: `<TARGET_AGENT_PATH>/smith/guidance_updated.txt` — written next
   to `guidance.txt` itself (not under `guidelines-security-analysis/`):
-  the existing guidance plus any OPA-scope rules this step found that
-  `guidance.txt` is missing.
+  the existing guidance, plus any OPA-scope rules this step found that
+  `guidance.txt` is missing, plus every gap-register item from STEP 4
+  (OWASP findings that are real but not OPA-enforceable) written in
+  `guidance.txt`'s own style — nothing the OWASP analysis found is
+  dropped just because it can't become an OPA rule.
 - Gate: if the confirmation mode is Gated, do not proceed to Completion
   until the human confirms the output. If Autonomous, proceed to
   Completion immediately and present all four step outputs together for
@@ -146,21 +155,67 @@ When Step D is complete, inform the user:
 >    the enforcement specification (architecture + questionnaire +
 >    threat model + enforcement mapping), all confirmed.
 > 2. `smith/guidance_updated.txt` — the existing `guidance.txt` plus
->    any OPA-scope rules Step D found missing. This is a proposal;
->    review it and merge into `guidance.txt` by hand before running any
->    downstream policy-authoring workflow, or the resulting policy will
->    be written against stale intent.
+>    any OPA-scope rules Step D found missing, plus the OWASP findings
+>    that aren't OPA-enforceable (written as notes in `guidance.txt`'s
+>    own style, so nothing the analysis found is lost). This is a
+>    proposal for you to review.
+>
+> Once you're satisfied with it, tell me to merge — I'll write it into
+> `guidance.txt` for you and then run policy creation against the
+> result. I won't touch `guidance.txt` until you say so.
+
+---
+
+# Step E — Merge and Hand Off to Policy Creation (optional, human-triggered)
+
+This step does not start automatically, in either confirmation mode, and
+it is not covered by the Step A–D Gate logic above. It stays dormant
+until the human explicitly asks for the merge to be applied (e.g.
+"merge"/ "yes"). Do not infer this from
+silence, and do not merge on your own initiative just because Step D
+finished — wait for the explicit instruction.
+
+Once triggered:
+
+1. **Merge.** Overwrite `<TARGET_AGENT_PATH>/smith/guidance.txt` with the
+   full contents of `<TARGET_AGENT_PATH>/smith/guidance_updated.txt`.
+   `guidance_updated.txt` is built (Step D, STEP 8) to already contain
+   every existing `guidance.txt` rule unchanged plus the newly proposed
+   material appended after it, so this merge is a straight replace, not
+   a line-by-line diff. This is the one exception to "Steps A–D never
+   modify guidance.txt" in the Overview above — it happens only here,
+   and only after the explicit human trigger.
+2. **Policy creation.** Strictly follow
+   `../policy_creation/opa_policy_creation.md` to generate
+   `<TARGET_AGENT_PATH>/smith/policy_generated.rego` from the
+   just-merged `guidance.txt`. This is the same procedure `SKILL.md`'s
+   "Create OPA Policy" section already describes — this step exists only
+   to trigger it against the guidance this workflow just updated, not to
+   redefine policy creation.
+3. **Hand off.** After it completes, hand off exactly as `SKILL.md`
+   prescribes: tell the user, "The policy has been created. Next steps
+   you can take: (1) generate test cases, (2) if you already have test
+   cases, you can ask me to test the policy." Do not continue on your
+   own into test generation, policy testing, or refinement
+   (patch/regal/dedup) — those remain separate, human-requested steps
+   per `SKILL.md`.
 
 ## General Rules
 
-- Never skip a step.
+- Never skip a Step A–D step. Step E is optional and only ever runs on
+  an explicit human trigger; it is not subject to "never skip."
 - Follow the confirmation mode (Gated or Autonomous) chosen before Step A
-  for every step's Gate — do not stop for confirmation in Autonomous mode,
-  and do not skip a confirmation pause in Gated mode.
+  for every Step A–D Gate — do not stop for confirmation in Autonomous
+  mode, and do not skip a confirmation pause in Gated mode. Step E has
+  its own, separate trigger and ignores this setting.
 - If any input file is missing, stop and tell the user exactly which
   file is needed and which step produces it — this applies regardless of
   confirmation mode.
 - Do not modify any existing file other than writing the designated
-  output for each step.
-- All writes go to `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/`. Never write
-  generated artifacts directly to the MCP server root.
+  output for each step, except Step E's sanctioned overwrite of
+  `guidance.txt` on explicit human trigger.
+- All writes go to `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/`, except Step E's
+  merge into `guidance.txt` and its `policy_generated.rego` output, which
+  per `opa_policy_creation.md` are both written to
+  `<TARGET_AGENT_PATH>/smith/` directly. Never write generated artifacts
+  directly to the MCP server root.

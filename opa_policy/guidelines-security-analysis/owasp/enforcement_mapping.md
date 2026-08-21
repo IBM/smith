@@ -360,10 +360,29 @@ For every missing candidate, write a new `guidance.txt`-style line:
   VIOLATION_CODE]` for Source 1, `[from questionnaire Q12]` for Source 2,
   or both tags together for a deduplicated candidate
 
+**Carry the Gap Register forward too.** STEP 7 only admits candidates
+that pass the OPA Enforcement Boundary test, so a real finding from the
+OWASP threat model that fails that test (Agent-layer, tool-implementation,
+or infra-owned) never becomes a STEP 7 candidate and would otherwise
+never reach `guidance_updated.txt` — even on a run where every STEP 7
+candidate is already covered and the numbered-rule list has nothing to
+add. Do not let that happen: every row in STEP 4's gap register must
+show up in `guidance_updated.txt` too, written in the same
+natural-language style `guidance.txt` itself uses (a plain descriptive
+sentence, not OPA/Rego syntax) and tagged with its source ASI category
+for traceability, e.g. `[ASI01]`. Match `guidance.txt`'s own section
+conventions — either fold each item under the header it most naturally
+belongs to if one exists, or add one new header in the same style as
+`guidance.txt`'s existing ones (e.g. `## Additional Notes from OWASP
+Analysis`) if none fits.
+
 Write `<TARGET_AGENT_PATH>/smith/guidance_updated.txt` containing:
 1. Every existing rule from `guidance.txt`, unchanged, in its original order
 2. Every missing candidate identified above, appended after them,
    continuing the numbering
+3. Every gap register item from STEP 4, appended after them, written in
+   guidance.txt's own style as described above — nothing found by the
+   OWASP analysis is dropped just because it isn't OPA-enforceable
 
 Overwrite `guidance_updated.txt` in full on every run rather than
 appending to a prior run's file — this keeps it consistent with the
@@ -379,10 +398,12 @@ and merge in manually.
 #### STEP 9 — Human review
 
 Present the summary table, the list of violation codes, the STEP 7
-candidate list (with source tags), and the list of newly proposed
-guidance rules from STEP 8 (or "none — guidance.txt already covers every
+candidate list (with source tags), the list of newly proposed guidance
+rules from STEP 8 (or "none — guidance.txt already covers every
 OWASP-derived and questionnaire-derived candidate" / "none — no
-guidance.txt found, all candidates written fresh").
+guidance.txt found, all candidates written fresh"), and the gap register
+items carried into `guidance_updated.txt` (or "none — gap register is
+empty").
 
 Log these, then hand control back to the top-level workflow, which
 decides (per confirmation mode) whether to proceed to Completion. This
