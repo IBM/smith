@@ -410,15 +410,70 @@ and merge in manually.
 
 ---
 
+#### STEP 8b — Redundancy self-check on `guidance_updated.txt`
+
+STEP 8 checks whether every new candidate is already covered by an
+existing `guidance.txt` rule — one direction only. It does NOT catch
+overlap between two *existing* rules, or between two newly appended
+rules, or an existing rule and a newly appended one that STEP 8 marked
+as "not covered" for a reason that later turns out to be phrasing-only.
+This step closes that gap using the same three-criteria test STEP 8
+already applies.
+
+Take every numbered rule in the just-written `guidance_updated.txt`
+(existing rules 1..N plus every rule the previous step appended) and
+compare each pair (i, j) with i < j against the three criteria from
+STEP 8:
+
+1. **Same structured field.** The `input.*` path the two rules
+   ultimately constrain must be the same (e.g., both talk about
+   `input.arguments.select_fields` on the same tool set, or both talk
+   about `input.extensions.subject.roles`).
+2. **Same operator / matching semantics.** Exact-equality, substring,
+   numeric threshold, set-membership, and regex are distinct;
+   allow-polarity vs deny-polarity are distinct.
+3. **Overlapping value set.** For value-based conditions the two
+   rules' allowed/blocked sets must overlap on the value that would
+   trigger the rule.
+
+If all three match, the pair is an overlap candidate. Record it as:
+
+| Rule i | Rule j | Field | Operator | Value set overlap |
+|---|---|---|---|---|
+| <rule-i text> | <rule-j text> | <input.*> | <exact / substring / …> | <values> |
+
+Do NOT auto-merge and do NOT rewrite either rule. Which wording to
+keep and whether to broaden one to absorb the other is a semantic
+call the human makes during STEP 9 — the skill's job here is only to
+surface the pair before the merge into `guidance.txt` happens, so the
+duplication doesn't have to be caught downstream at the Rego layer by
+`policy_duplication.md` / `duplication_suggestion` (which operate on
+the compiled policy, not on guidance).
+
+Log the resulting overlap table for STEP 9. If no pair matches all
+three criteria, log a one-line result (`Redundancy self-check: no
+overlapping pairs found`) so the human can see the check ran.
+
+Cost note: this is an O(N²) pairwise scan across `guidance_updated.txt`;
+for a typical file of 20-40 rules that is trivial. Only compare rules
+whose OPA-enforcement fields can be identified — a natural-language
+note from the gap register (under `## Additional Notes from OWASP
+Analysis`) that does not reduce to a structured-field check has no
+"field/operator/value set" to compare and is exempt from the scan.
+
+---
+
 #### STEP 9 — Human review
 
 Present the summary table, the list of violation codes, the STEP 7
 candidate list (with source tags), the list of newly proposed guidance
 rules from STEP 8 (or "none — guidance.txt already covers every
 OWASP-derived and questionnaire-derived candidate" / "none — no
-guidance.txt found, all candidates written fresh"), and the gap register
+guidance.txt found, all candidates written fresh"), the gap register
 items carried into `guidance_updated.txt` (or "none — gap register is
-empty").
+empty"), and the STEP 8b redundancy self-check result (either the
+overlap table for the human to reconcile, or "Redundancy self-check:
+no overlapping pairs found").
 
 Log these, then hand control back to the top-level workflow, which
 decides (per confirmation mode) whether to proceed to Completion. This
