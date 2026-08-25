@@ -19,10 +19,25 @@ Rego itself. An optional Step E performs the merge of
 policy creation — but only once the human explicitly asks for the merge
 to happen; it never starts on its own, in either confirmation mode.
 
-The target MCP server directory is provided by the user at invocation time.
-If not provided, ask before starting Step A.
+## Prerequisites
 
-Before starting Step A, also ask the user how they want the four steps to
+Run `smith --flag get_current_agent` to confirm the active target agent
+path and guidance file path (do not read `.env` for these). It prints
+the active `target_agent:` (the `<TARGET_AGENT_PATH>`) and
+`guidance_file:` (the resolved `<GUIDANCE_FILE>` path). Use those two
+values everywhere `<TARGET_AGENT_PATH>` and `<GUIDANCE_FILE>` appear
+below.
+
+Then run `smith --flag get_mcp_parameter` to generate
+`<TARGET_AGENT_PATH>/smith/tool_definitions.json`. This connects to the
+MCP server and extracts every tool's name, parameters, types, and
+descriptions — Step A treats it as the authoritative source for
+`input.arguments.*` field names, Step B fills questionnaire Q4 from it,
+and Steps C/D cite it during their citation-verification passes. Run
+this command even if `tool_definitions.json` already exists, so the
+extracted shapes match the server actually running.
+
+Before starting Step A, ask the user how they want the four steps to
 run:
 - **Gated** — pause after each step and wait for the human to confirm the
   output before starting the next step.
