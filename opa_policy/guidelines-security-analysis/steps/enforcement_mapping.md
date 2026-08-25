@@ -356,9 +356,15 @@ For every missing candidate, write a new `guidance.txt`-style line:
 - Continue the existing numbering in `guidance.txt`; do not renumber
   existing rules
 - Phrase it as a plain-English guidance rule, not as OPA/Rego syntax
-- Tag it with its source in brackets so it stays traceable: `[ASI04 /
-  VIOLATION_CODE]` for Source 1, `[from questionnaire Q12]` for Source 2,
-  or both tags together for a deduplicated candidate
+- Do NOT append source tags, violation codes, or questionnaire
+  references inside `guidance_updated.txt` itself (no `[ASI04 /
+  VIOLATION_CODE]`, no `[from questionnaire Q12]`, no similar
+  suffixes). The file must mirror `guidance.txt`'s own flat
+  natural-language style so it can be merged in unchanged. Per-rule
+  traceability from each new line back to its ASI category and
+  violation code already lives in `owasp_policy_guidelines.md`'s
+  "Policy Rules (OPA scope only)" section and STEP 7's candidate
+  list; do not duplicate it into this file.
 
 **Carry the Gap Register forward too.** STEP 7 only admits candidates
 that pass the OPA Enforcement Boundary test, so a real finding from the
@@ -369,12 +375,21 @@ candidate is already covered and the numbered-rule list has nothing to
 add. Do not let that happen: every row in STEP 4's gap register must
 show up in `guidance_updated.txt` too, written in the same
 natural-language style `guidance.txt` itself uses (a plain descriptive
-sentence, not OPA/Rego syntax) and tagged with its source ASI category
-for traceability, e.g. `[ASI01]`. Match `guidance.txt`'s own section
-conventions — either fold each item under the header it most naturally
-belongs to if one exists, or add one new header in the same style as
-`guidance.txt`'s existing ones (e.g. `## Additional Notes from OWASP
-Analysis`) if none fits.
+sentence, not OPA/Rego syntax) with no source tags, ASI category
+markers, or layer annotations of any kind (no `[ASI01]`, no
+`(Agent Layer)`, no `(Infrastructure/Deployment)`, no `(Tool
+implementation)`, no `(Calling application)`). Where the layer that
+owns the fix is load-bearing to the reader, fold it into the
+sentence itself ("the calling application must populate …", "the
+FastAPI /chat endpoint should …") rather than appending it as a
+suffix. Match `guidance.txt`'s own section conventions — either
+fold each item under the header it most naturally belongs to if one
+exists, or add one new header in the same style as `guidance.txt`'s
+existing ones (e.g. `## Additional Notes from OWASP Analysis`) if
+none fits. Full per-item traceability (which ASI category surfaced
+the gap and which layer owns the fix) lives in the Gap Register
+table in `owasp_policy_guidelines.md`; do not duplicate it into this
+file.
 
 Write `<TARGET_AGENT_PATH>/smith/guidance_updated.txt` containing:
 1. Every existing rule from `guidance.txt`, unchanged, in its original order
