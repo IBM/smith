@@ -1,45 +1,7 @@
-# Scenario: Department Research Assistant — Scoped to AI/ML and Security Topics
-
-## Scenario Context
-
-A university Computer Science department has deployed this MCP server as part of an internal research assistant tool. The assistant helps faculty members and PhD students find relevant conferences for submitting their papers. The department has three active research groups: Artificial Intelligence & Machine Learning, Cybersecurity & Privacy, and Software Engineering. The department chair has mandated that the tool only be used for these areas to control scraping volume and keep usage aligned with funded research.
-
-## Actor and Goal
-
-**Actor:** An LLM agent acting as a research assistant for the CS department.
-
-**Goal:** Help department researchers discover relevant Call-for-Papers with upcoming deadlines, limited strictly to the department's three research focus areas.
-
-## What the Agent May Do
-
-- Only `faculty` and `phd_student` may use the `get_events` tool. A `guest` cannot use this tool.
-- Call `get_events` with a `topic` that is exactly one of the department's three approved research areas: Artificial intelligence, Cybersecurity and privacy, Software engineering.
-- Call `get_events` with an integer `limit` between 1 and the cap allowed for the requesting user's role.
- **Faculty** may set `limit` up to 15 per request.
- **PhD students** may set `limit` up to 10 per request.
-
-## What the Agent Must Not Do
-
-- Search for conferences outside the three approved research areas.
-- Set the `limit` below 1, above the cap for the requesting user's role, or above the absolute maximum of 15 per request.
-- Perform more than 5 `get_events` searches in a single conversation session. (Enforceable only when the agent supplies the running per-session search count as a system variable — see `queries_this_session` in `system_vars.json`. With a static value this rule cannot be enforced by a stateless policy.)
-
-## Tool-Use Rules
-
-### `get_events`
-
-**Disallowed `keywords` values** (the following must not appear, case-insensitively, in the `keywords` parameter):
-- `"bioinformatics"`, `"genomics"`, `"clinical trials"`, `"drug discovery"`
-- `"quantum physics"`, `"materials science"`, `"renewable energy"`
-- `"economics"`, `"finance"`, `"marketing"`, `"supply chain"`
-- `"education"`, `"psychology"`, `"sociology"`, `"political science"`
-- `"trade show"`, `"career fair"`, `"startup expo"`, `"hackathon"`
-
-## PhD Student Narrow-Scope Rule
-
-PhD students are scoped more tightly than faculty. A PhD student's searches must stay within their own research area, rather than ranging across all three department-approved areas.
-
-- A PhD student may call `get_events` only when `topic` equals the student's own `dissertation_area` (a per-user system variable, one of the three approved areas).
-- Faculty may search across all three approved areas and are not subject to this narrowing.
-
-> **Data requirement:** this rule needs a per-user `dissertation_area` field in `system_vars.json`. It cannot be evaluated against the shared `research_area` list, which contains all three areas — checking `topic` membership in that list would let a PhD student search any approved area, silently defeating the narrowing.
+1. Only `faculty` and `phd_student` may call `get_events`. A caller with `user_role` equal to `guest` or any unrecognized value must be denied.
+2. The `topic` argument must be exactly one of the three department-approved research areas: `Artificial intelligence`, `Cybersecurity and privacy`, or `Software engineering`. Any other value must be denied.
+3. A `phd_student` may only call `get_events` when `topic` equals the student's own `dissertation_area`. A PhD student who requests a topic outside their dissertation area must be denied.
+4. The `limit` argument must be at least 1 and no greater than 15. Any value below 1 or above 15 must be denied for all roles.
+5. A `phd_student` may not set `limit` above 10. A PhD student whose `limit` exceeds 10 must be denied.
+6. The `keywords` argument must not contain any of the following substrings (case-insensitive): `bioinformatics`, `genomics`, `clinical trials`, `drug discovery`, `quantum physics`, `materials science`, `renewable energy`, `economics`, `finance`, `marketing`, `supply chain`, `education`, `psychology`, `sociology`, `political science`, `trade show`, `career fair`, `startup expo`, `hackathon`.
+7. A caller may not perform more than 5 `get_events` calls in a single session. When `queries_this_session` is greater than or equal to 5, the call must be denied.
