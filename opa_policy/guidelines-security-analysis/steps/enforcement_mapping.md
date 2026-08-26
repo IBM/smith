@@ -317,9 +317,17 @@ containing only STEP 7's candidate list, numbered starting from 1, with
 their source tags preserved.
 
 If `guidance.txt` exists, for each candidate from STEP 7, check whether
-an existing numbered rule in `guidance.txt` already covers the same
-condition on the same field. A candidate counts as covered only when an
-existing rule matches the candidate on ALL THREE of the following:
+an existing rule in `guidance.txt` already covers the same condition on
+the same field. `guidance.txt` may express its rules in different
+shapes across bundled examples — flat numbered lines (e.g.
+RagChatbot's `1. ...`, `2. ...` style, or bare one-per-line rules in
+hr-agent style), bulleted lists nested under `#`/`##` section headers
+(call-for-papers, car-price, employee style), or paragraphs of prose
+that state a rule. Treat every such statement as an existing rule for
+the coverage check regardless of formatting; the format never protects
+a candidate from being marked "covered" if the substance matches. A
+candidate counts as covered only when an existing rule matches the
+candidate on ALL THREE of the following:
 
 1. **Same structured field.** The `input.*` path the candidate would
    check must correspond to the field the guidance.txt rule constrains
@@ -385,19 +393,40 @@ analysis is dropped; it just doesn't ride along in a file whose only
 consumer is Rego generation.
 
 Write `<TARGET_AGENT_PATH>/smith/guidance_updated.txt` containing ONLY
-the newly proposed numbered rules — the missing candidates STEP 8
-identified above, with numbering that continues from where
-`guidance.txt` left off (if `guidance.txt`'s last rule is 14, the
-first new rule is 15). Do NOT copy the existing `guidance.txt` rules
-into this file; do NOT include any non-rule content — no section
-headers, no `## Additional Notes from OWASP Analysis`, no natural-
-language notes appended after the numbered list. The file is the
-addendum that Step E appends to `guidance.txt`; it is not a
-replacement.
+the newly proposed rules — the missing candidates STEP 8 identified
+above. Do NOT copy the existing `guidance.txt` rules into this file;
+do NOT append natural-language notes about OWASP findings (those live
+in `owasp_policy_guidelines.md`'s Gap Register table, not here). The
+file is the addendum that Step E appends to `guidance.txt`; it is not
+a replacement.
+
+Match `guidance.txt`'s own format so the append reads naturally:
+
+- **Flat-numbered guidance.txt** (RagChatbot's `1. ...`, `2. ...`
+  style, or hr-agent's bare-one-rule-per-line style): number the new
+  rules continuing from where `guidance.txt` left off. If the last
+  existing rule is 14, the first new rule is 15. No header, no blank
+  section — a clean run of numbered lines the append tacks on the end.
+- **Prose-with-headers guidance.txt** (call-for-papers, car-price,
+  employee style, where the file uses `#`/`##` section headers and
+  rule-bearing bullets or paragraphs): open the addendum with a new
+  header at the same depth as the file's existing top-level rule
+  sections (e.g. `## Additional Rules from Security Analysis` if the
+  file uses `##` headers), then list the new rules as a numbered list
+  starting at 1 under that header. This keeps the append visually
+  consistent with the file's conventions while still yielding a plain
+  numbered rule list that test generation and policy creation can
+  consume.
+
+Decide the shape by looking at `guidance.txt` itself — count the lines
+that start with `<N>.` and count the lines that start with `#`/`##`;
+whichever is larger picks the shape. If both are absent (bare-line
+style like hr-agent), treat it as flat-numbered starting from `<N+1>`
+where `N` is the count of rule-bearing lines.
 
 If `guidance.txt` did not exist at STEP 7 time (per the branch above),
-write `guidance_updated.txt` containing the candidate list numbered
-starting from 1 — same shape, no existing rules to renumber against.
+write `guidance_updated.txt` as a flat numbered list starting at 1 —
+no existing rules to renumber against, no format to match.
 
 **Why the file is an addendum, not a replacement.** `guidance.txt` may
 contain more than numbered rules — headings, blank lines, comments,

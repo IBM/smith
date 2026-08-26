@@ -94,7 +94,7 @@ Ask your coding agent to use skill Smith to generate an OPA policy from the guid
 
 #### Step 1.2: (Optional) Security-Grounded Guidance Analysis
 
-Instead of running Step 1.1 directly against the existing `smith/guidance.txt`, you can first run the security-grounded guidance analysis workflow to produce an OWASP-mapped threat model of this MCP server's tools and extend `smith/guidance.txt` with any missing enforceable rules plus non-OPA-enforceable notes. Same workflow as `SKILL.md`'s "Create an OPA Policy with a Security-Grounded Guidance Analysis" entry.
+Instead of running Step 1.1 directly against the existing `smith/guidance.txt`, you can first run the security-grounded guidance analysis workflow to produce an OWASP-mapped threat model of this MCP server's tools and propose a `smith/guidance_updated.txt` addendum with any missing OPA-enforceable rules (non-OPA-enforceable OWASP findings stay in the Gap Register table of `smith/guidelines-security-analysis/owasp_policy_guidelines.md`, not in `guidance_updated.txt`). Same workflow as `SKILL.md`'s "Create an OPA Policy with a Security-Grounded Guidance Analysis" entry.
 
 Ask your coding agent:
 
@@ -109,7 +109,7 @@ The agent asks whether to run **Gated** (pause after each step) or **Autonomous*
 | C — Threat Model against OWASP Top 10 for Agentic AI Security | `smith/guidelines-security-analysis/threat_model.md` |
 | D — Enforcement Mapping | `smith/guidelines-security-analysis/owasp_policy_guidelines.md` + `smith/guidance_updated.txt` |
 
-Review `smith/guidance_updated.txt` when the workflow completes. When you're satisfied, tell the agent to merge — Step E overwrites `smith/guidance.txt` with the updated content and continues into Policy Creation automatically.
+Review `smith/guidance_updated.txt` when the workflow completes. When you're satisfied, tell the agent to merge — Step E appends `smith/guidance_updated.txt` to `smith/guidance.txt` (preserving your existing content byte-for-byte) and continues into Policy Creation automatically.
 
 #### Step 1.3: Generate Test Cases 
 

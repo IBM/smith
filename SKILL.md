@@ -27,9 +27,9 @@ If the user asks to **create an OPA policy with a security-grounded guidance ana
 - **Step D** — Enforcement Mapping (`owasp_policy_guidelines.md` + `guidance_updated.txt`)
 - **Step E** *(optional, human-triggered)* — Merge `guidance_updated.txt` into `guidance.txt` and hand off to "Create OPA Policy" above
 
-Before starting Step A, ask the user whether to run **Gated** (pause after each step) or **Autonomous** (Steps A–D back-to-back, one final review at the end). Step E stays dormant until the human explicitly asks for the merge; then it overwrites `guidance.txt` and continues into `./opa_policy/policy_creation/opa_policy_creation.md` (the same procedure as "Create OPA Policy" above).
+Before starting Step A, ask the user whether to run **Gated** (pause after each step) or **Autonomous** (Steps A–D back-to-back, one final review at the end). Step E stays dormant until the human explicitly asks for the merge; then it appends `guidance_updated.txt` to `guidance.txt` (preserving the existing file byte-for-byte) and continues into `./opa_policy/policy_creation/opa_policy_creation.md` (the same procedure as "Create OPA Policy" above).
 
-After Step D completes, remind the user: "Review `guidance_updated.txt`. When you're satisfied, tell me to merge — I'll write it into `guidance.txt` and run policy creation against the result."
+After Step D completes, remind the user: "Review `guidance_updated.txt`. When you're satisfied, tell me to merge — I'll append it to `guidance.txt` (preserving your existing content) and run policy creation against the result."
 
 ## Test Case Generation
 If the user asks to generate test cases, you should strictly follow instructions in `./test_generation/test_generation.md` in the skill directory.
