@@ -2,7 +2,7 @@
   "tools": [
     {
       "name": "add_employee",
-      "description": "Add an employee. Required: first_name, last_name, email (unique), role,\n    title, home_address, country_code (e.g. 'US'). Optional: organization (one\n    of IBM, IBM partner, Red Hat), department_id, manager_id, salary,\n    salary_currency, start_date (YYYY-MM-DD).\n    Returns the employee dict or {\"error\": ...}.",
+      "description": "Add an employee. Required: first_name, last_name, email (unique), role,\ntitle, home_address, country_code (e.g. 'US'). Optional: organization (one\nof IBM, IBM partner, Red Hat), department_id, manager_id, salary,\nsalary_currency, start_date (YYYY-MM-DD).\nReturns the employee dict or {\"error\": ...}.",
       "parameters": [
         {
           "name": "first_name",
@@ -194,7 +194,7 @@
     },
     {
       "name": "update_employee",
-      "description": "Update any provided employee fields (others left unchanged).\n    Returns the updated employee dict or {\"error\": ...}.",
+      "description": "Update any provided employee fields (others left unchanged).\nReturns the updated employee dict or {\"error\": ...}.",
       "parameters": [
         {
           "name": "user_id",
@@ -476,7 +476,7 @@
     },
     {
       "name": "list_employees",
-      "description": "List employees filtered by any of department_id, manager_id,\n    country_code. Returns a list of employee dicts limited to user_id,\n    first_name, last_name, role, organization, title, department_id,\n    manager_id, and country_code (email, home_address, salary,\n    salary_currency, and start_date are omitted).",
+      "description": "List employees filtered by any of department_id, manager_id,\ncountry_code. Returns a list of employee dicts limited to user_id,\nfirst_name, last_name, role, organization, title, department_id,\nmanager_id, and country_code (email, home_address, salary,\nsalary_currency, and start_date are omitted).",
       "parameters": [
         {
           "name": "department_id",
@@ -1186,7 +1186,7 @@
     },
     {
       "name": "set_emergency_contact",
-      "description": "Set (upsert) the employee's emergency contact. relationship must be one\n    of: Spouse, Parent, Sibling, Child, Relative, Friend, Guardian, Partner.",
+      "description": "Set (upsert) the employee's emergency contact. relationship must be one\nof: Spouse, Parent, Sibling, Child, Relative, Friend, Guardian, Partner.",
       "parameters": [
         {
           "name": "user_id",
@@ -1758,7 +1758,7 @@
     },
     {
       "name": "set_leave_allotment",
-      "description": "Set annual allotment for a leave_type (Vacation, Sick Leave, Maternity,\n    Paternity, Jury Duty, Unpaid). annual_days null = untracked.",
+      "description": "Set annual allotment for a leave_type (Vacation, Sick Leave, Maternity,\nPaternity, Jury Duty, Unpaid). annual_days null = untracked.",
       "parameters": [
         {
           "name": "user_id",
@@ -1834,7 +1834,7 @@
     },
     {
       "name": "create_time_off_request",
-      "description": "Create a Pending time-off request. leave_type from the fixed set; dates\n    YYYY-MM-DD with end_date >= start_date. Returns the request dict.",
+      "description": "Create a Pending time-off request. leave_type from the fixed set; dates\nYYYY-MM-DD with end_date >= start_date. Returns the request dict.",
       "parameters": [
         {
           "name": "user_id",
@@ -2012,7 +2012,7 @@
     },
     {
       "name": "get_leave_balance",
-      "description": "Per-leave-type balance for a year: {leave_type: {allotment, used,\n    remaining}}. 'used' excludes weekends and the employee's country holidays;\n    remaining is null for untracked (Unpaid) types.",
+      "description": "Per-leave-type balance for a year: {leave_type: {allotment, used,\nremaining}}. 'used' excludes weekends and the employee's country holidays;\nremaining is null for untracked (Unpaid) types.",
       "parameters": [
         {
           "name": "user_id",
