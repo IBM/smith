@@ -39,7 +39,7 @@ Read the following files from the target MCP server directory if they exist:
   over what is inferred from source code. If absent, note this gap — the
   enforcement_mapping skill will need to rely on source code inference instead.
 - `smith/tool_definitions.json` — if present, the authoritative source
-  for `input.arguments.*` field names and types.
+  for `input.args.*` field names and types.
 - `smith/guidance.txt` — if present, the existing policy intent for this
   tool. Used only in STEP 4 to cross-check available enforcement points;
   do not merge its contents into any other section.
@@ -103,7 +103,7 @@ OPA can only enforce at a point where:
 If `smith/guidance.txt` was read in STEP 1, do a coverage sweep before
 finalising the "Available (OPA-interceptable)" list: for each numbered
 rule in guidance.txt, name the specific field(s) it would need at
-invocation time (e.g. `input.arguments.amount`,
+invocation time (e.g. `input.args.amount`,
 `input.extensions.subject.role`) and confirm those fields appear in
 this section's list. Any guidance.txt rule whose fields are NOT visible
 at any interception point goes into "Blind Spots" with a one-line

@@ -285,9 +285,9 @@ before they propagate into Step D.
 
 For every threat instance and every "Evidence:" line:
 
-1. If it names an `input.arguments.<x>`, an `input.extensions.subject.<x>`,
+1. If it names an `input.args.<x>`, an `input.extensions.subject.<x>`,
    or any other structured field, confirm that exact field appears in
-   `tool_definitions.json` (for `input.arguments.*`) or in
+   `tool_definitions.json` (for `input.args.*`) or in
    `system_vars.json` / architecture.md's Trust Boundaries table (for
    `input.extensions.*` and other subject fields).
 2. If it cites `architecture.md` (a layer, file, or behaviour), confirm

@@ -39,7 +39,7 @@ OPA can enforce a control if and only if ALL of the following are true:
 
 1. The tool call is intercepted BEFORE the tool executes
 2. The relevant data is present as a structured field at interception time
-3. The field comes from `input.name`, `input.arguments.*`, or
+3. The field comes from `input.name`, `input.args.*`, or
    `input.extensions.*`
 
 OPA CANNOT enforce controls over:
@@ -76,7 +76,7 @@ Q1: Is the threat visible at tool invocation time as a structured field?
     NO  → assign layer = Out of OPA scope, go to STEP 3
 
 Q2: Which structured field carries the evidence for this threat?
-    Name it explicitly (e.g. input.arguments.keywords,
+    Name it explicitly (e.g. input.args.keywords,
     input.extensions.subject.role).
 
 Q3: Can a Rego rule deny the request based solely on that field?
@@ -219,7 +219,7 @@ Categories flowing into the OPA policy: <comma-separated list>
 
 The output is a specification for policy generation, not an
 implementation. It is expected to name OPA-native field paths
-(`input.name`, `input.arguments.*`, `input.extensions.*`) because those
+(`input.name`, `input.args.*`, `input.extensions.*`) because those
 are the interception surface. What it must NOT contain:
 
 - Rego syntax — no `package`, no rule blocks, no `default allow := ...`,
@@ -242,7 +242,7 @@ rule specifications this step produces.
 
 For every rule under "Policy Rules (OPA scope only)":
 
-1. **Fields.** Every `input.arguments.<x>` must appear in
+1. **Fields.** Every `input.args.<x>` must appear in
    `tool_definitions.json`. Every `input.extensions.subject.<x>` (or any
    other `input.extensions.*`) must appear in `system_vars.json` or in
    `architecture.md`'s Trust Boundaries table. A rule that checks a
@@ -287,7 +287,7 @@ hard parameter/numeric limits, approval paths, keyword blocks, rate
 limits, response filtering). These answers do not need to map to any
 OWASP category to be worth enforcing. For each answer, apply the same OPA
 Enforcement Boundary test from the top of this file (is the condition
-visible at invocation time as `input.name`/`input.arguments.*`/
+visible at invocation time as `input.name`/`input.args.*`/
 `input.extensions.*`?). Keep only the answers that pass. Skip any answer
 tagged `[inferred — low confidence]` — those are not eligible to become
 candidate rules on their own (STEP 6b already applied this to Source 1).
@@ -384,17 +384,29 @@ below surfaces the same table for the reviewer. Nothing from the OWASP
 analysis is dropped; it just doesn't ride along in a file whose only
 consumer is Rego generation.
 
-Write `<TARGET_AGENT_PATH>/smith/guidance_updated.txt` containing:
-1. Every existing rule from `guidance.txt`, unchanged, in its original order
-2. Every missing candidate identified above, appended after them,
-   continuing the numbering
+Write `<TARGET_AGENT_PATH>/smith/guidance_updated.txt` containing ONLY
+the newly proposed numbered rules — the missing candidates STEP 8
+identified above, with numbering that continues from where
+`guidance.txt` left off (if `guidance.txt`'s last rule is 14, the
+first new rule is 15). Do NOT copy the existing `guidance.txt` rules
+into this file; do NOT include any non-rule content — no section
+headers, no `## Additional Notes from OWASP Analysis`, no natural-
+language notes appended after the numbered list. The file is the
+addendum that Step E appends to `guidance.txt`; it is not a
+replacement.
 
-The file must contain numbered rules only. No section headers, no
-`## Additional Notes from OWASP Analysis`, no natural-language notes
-appended after the numbered list — Step E's merge is a straight replace
-of `guidance.txt` with this file's contents, and `guidance.txt` must
-stay in its flat numbered-rule format so test generation and policy
-creation can consume it directly.
+If `guidance.txt` did not exist at STEP 7 time (per the branch above),
+write `guidance_updated.txt` containing the candidate list numbered
+starting from 1 — same shape, no existing rules to renumber against.
+
+**Why the file is an addendum, not a replacement.** `guidance.txt` may
+contain more than numbered rules — headings, blank lines, comments,
+paragraphs of context authored by the human. Overwriting it would
+discard that content. Step E instead appends `guidance_updated.txt` to
+`guidance.txt`, preserving every byte of the original file and adding
+only the new numbered rules after it. Test generation and policy
+creation still see a flat numbered-rule list because the append is
+line-oriented and the new rules follow the same numbered format.
 
 Overwrite `guidance_updated.txt` in full on every run rather than
 appending to a prior run's file — this keeps it consistent with the
@@ -417,14 +429,17 @@ as "not covered" for a reason that later turns out to be phrasing-only.
 This step closes that gap using the same three-criteria test STEP 8
 already applies.
 
-Take every numbered rule in the just-written `guidance_updated.txt`
-(existing rules 1..N plus every rule the previous step appended) and
-compare each pair (i, j) with i < j against the three criteria from
-STEP 8:
+Under STEP 8's revised semantics, `guidance_updated.txt` holds only
+the newly proposed rules — so the redundancy check must scan the
+*post-merge* state, i.e., `guidance.txt`'s existing rules 1..N
+followed by `guidance_updated.txt`'s new rules N+1..M as they would
+appear after Step E's append. Read both files, concatenate the
+numbered-rule content in that order, and compare each pair (i, j)
+with i < j against the three criteria from STEP 8:
 
 1. **Same structured field.** The `input.*` path the two rules
    ultimately constrain must be the same (e.g., both talk about
-   `input.arguments.select_fields` on the same tool set, or both talk
+   `input.args.select_fields` on the same tool set, or both talk
    about `input.extensions.subject.roles`).
 2. **Same operator / matching semantics.** Exact-equality, substring,
    numeric threshold, set-membership, and regex are distinct;

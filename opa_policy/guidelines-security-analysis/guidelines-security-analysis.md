@@ -32,7 +32,7 @@ Then run `smith --flag get_mcp_parameter` to generate
 `<TARGET_AGENT_PATH>/smith/tool_definitions.json`. This connects to the
 MCP server and extracts every tool's name, parameters, types, and
 descriptions — Step A treats it as the authoritative source for
-`input.arguments.*` field names, Step B fills questionnaire Q4 from it,
+`input.args.*` field names, Step B fills questionnaire Q4 from it,
 and Steps C/D cite it during their citation-verification passes. Run
 this command even if `tool_definitions.json` already exists, so the
 extracted shapes match the server actually running.
@@ -59,9 +59,10 @@ Source inputs remain at:
 <TARGET_AGENT_PATH>/smith/system_vars.json
 <TARGET_AGENT_PATH>/smith/tool_definitions.json
 ```
-Steps A–D never modify any of these. Step E is the one exception: on an
-explicit human trigger, it overwrites `guidance.txt` with the merged
-content of `guidance_updated.txt` — see Step E below.
+Steps A–D never modify any of these. Step E is the one exception: on
+an explicit human trigger, it appends `guidance_updated.txt` to
+`guidance.txt`, preserving the existing file byte-for-byte and adding
+the newly proposed rules after it — see Step E below.
 
 ---
 
@@ -148,11 +149,14 @@ Strictly follow `./steps/enforcement_mapping.md`.
 - Output: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/owasp_policy_guidelines.md`
 - Output: `<TARGET_AGENT_PATH>/smith/guidance_updated.txt` — written next
   to `guidance.txt` itself (not under `guidelines-security-analysis/`):
-  the existing guidance, plus any OPA-scope rules this step found that
-  `guidance.txt` is missing, plus every gap-register item from STEP 4
-  (OWASP findings that are real but not OPA-enforceable) written in
-  `guidance.txt`'s own style — nothing the OWASP analysis found is
-  dropped just because it can't become an OPA rule.
+  contains ONLY the newly proposed OPA-scope rules that `guidance.txt`
+  is missing, numbered as an addendum that continues from
+  `guidance.txt`'s last rule number. It is not a replacement for
+  `guidance.txt` — Step E appends it, preserving the original file.
+  Gap-register items (OWASP findings that are not OPA-enforceable) do
+  NOT go into this file; their durable home is
+  `owasp_policy_guidelines.md`'s Gap Register table so downstream
+  policy/test generation never sees non-rule content.
 - Gate: if the confirmation mode is Gated, do not proceed to Completion
   until the human confirms the output. If Autonomous, proceed to
   Completion immediately and present all four step outputs together for
@@ -169,15 +173,17 @@ When Step D is complete, inform the user:
 > 1. `smith/guidelines-security-analysis/owasp_policy_guidelines.md` —
 >    the enforcement specification (architecture + questionnaire +
 >    threat model + enforcement mapping), all confirmed.
-> 2. `smith/guidance_updated.txt` — the existing `guidance.txt` plus
->    any OPA-scope rules Step D found missing, plus the OWASP findings
->    that aren't OPA-enforceable (written as notes in `guidance.txt`'s
->    own style, so nothing the analysis found is lost). This is a
->    proposal for you to review.
+> 2. `smith/guidance_updated.txt` — the newly proposed OPA-scope
+>    rules Step D found missing from `guidance.txt`, numbered as an
+>    addendum. This is a proposal for you to review. OWASP findings
+>    that aren't OPA-enforceable are recorded in the Gap Register
+>    table inside `owasp_policy_guidelines.md` above, not appended
+>    here, so downstream policy/test generation only ever sees rules.
 >
-> Once you're satisfied with it, tell me to merge — I'll write it into
-> `guidance.txt` for you and then run policy creation against the
-> result. I won't touch `guidance.txt` until you say so.
+> Once you're satisfied with it, tell me to merge — I'll append it to
+> `guidance.txt` (preserving your existing content) and then run
+> policy creation against the result. I won't touch `guidance.txt`
+> until you say so.
 
 ---
 
@@ -192,14 +198,21 @@ finished — wait for the explicit instruction.
 
 Once triggered:
 
-1. **Merge.** Overwrite `<TARGET_AGENT_PATH>/smith/guidance.txt` with the
-   full contents of `<TARGET_AGENT_PATH>/smith/guidance_updated.txt`.
-   `guidance_updated.txt` is built (Step D, STEP 8) to already contain
-   every existing `guidance.txt` rule unchanged plus the newly proposed
-   material appended after it, so this merge is a straight replace, not
-   a line-by-line diff. This is the one exception to "Steps A–D never
-   modify guidance.txt" in the Overview above — it happens only here,
-   and only after the explicit human trigger.
+1. **Merge (append, not overwrite).** Append the contents of
+   `<TARGET_AGENT_PATH>/smith/guidance_updated.txt` to
+   `<TARGET_AGENT_PATH>/smith/guidance.txt`. `guidance_updated.txt` is
+   built (Step D, STEP 8) to contain ONLY the newly proposed numbered
+   rules, so this merge is a straight append — the existing
+   `guidance.txt` (including any headings, blank lines, comments, or
+   paragraphs of context beyond the numbered rules) is preserved
+   byte-for-byte, and the new rules land after it with their numbering
+   already continuing from where `guidance.txt` left off. Ensure
+   there is a trailing newline on `guidance.txt` before the append so
+   the first new rule starts on its own line. This is the one
+   exception to "Steps A–D never modify guidance.txt" in the Overview
+   above — it happens only here, and only after the explicit human
+   trigger. Do NOT overwrite `guidance.txt` — that would discard any
+   non-rule content the human authored.
 2. **Policy creation.** Strictly follow
    `../policy_creation/opa_policy_creation.md` to generate
    `<TARGET_AGENT_PATH>/smith/policy_generated.rego` from the
