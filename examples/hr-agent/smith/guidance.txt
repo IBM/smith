@@ -1,2 +1,8 @@
 All employees can only access internal repositories.
 All employees cannot access other teams' repositories.
+Only HR employees can access compensation records, including salary figures and compensation adjustments.
+Only employees with the view_ssn permission can request SSN data in compensation lookups; callers without this permission must not set include_ssn to true.
+Only engineers and security team members can search repositories; all other roles are blocked from this tool.
+The security team may search external repositories; all other roles are restricted to internal and public repositories only.
+HR employees may adjust compensation without approval for amounts up to $10,000; any adjustment greater than $10,000 requires prior manager approval, indicated by the has_approval flag.
+Emails must not contain Social Security Numbers in their subject or body; any send_email call with an SSN-pattern in the subject or body must be blocked.

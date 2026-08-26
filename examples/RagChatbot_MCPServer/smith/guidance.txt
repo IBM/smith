@@ -15,22 +15,3 @@
 15. Employees cannot use the email_compensation_report tool to send compensation or salary reports to any recipient.
 16. When view_team_compensation or export_compensation_data is called with a select_fields list, the fields ssn, home_address, bank_account, tax_id, and emergency_contact must always be excluded from the selection regardless of the requesting role.
 
-## Additional Notes from OWASP Analysis
-
-The following items were identified by the OWASP security analysis as real risks that cannot be enforced by the OPA policy at tool invocation time.
-
-The tool implementations for view_team_compensation and export_compensation_data currently return SSN, home_address, bank_account, and emergency_contact fields unconditionally in the response payload. These fields must be removed from the tool response construction before any policy filtering can be effective; the policy alone cannot suppress data that is already in the tool's return value.
-
-The RAG pipeline for ask_for_workpolicy returns content from preloaded PDF files without sanitization. Content retrieved from the RAG index should be scanned for embedded prompt-injection patterns before being passed to the LLM.
-
-The user_role field accepted by the HTTP API and the set_user_role MCP tool is entirely self-reported and carries no cryptographic proof of identity. The calling application should supply role claims from an authenticated identity provider rather than accepting them from the caller's request body.
-
-The approval field in the session context is self-reported by the caller with no external authority validating that an actual manager approval was granted. The calling application should populate this field from an authoritative approval workflow system.
-
-The set_user_role MCP tool allows any caller to switch the server-side session role, which cascades to all subsequent tool calls in the same session. This tool should require authenticated context or be removed in production deployments.
-
-Third-party dependencies in requirements.txt are not pinned by content hash. All dependencies should be pinned using hash-verified lock files to prevent supply chain compromise.
-
-The preloaded PDF files (salary_summary.pdf, work_rules_and_regulations_2016.pdf) are not integrity-verified on server startup. SHA-256 hashes of these files should be checked at startup to detect tampering.
-
-Within a session, the LLM may recall and honor claims made in earlier turns when constructing arguments for later tool calls. Authorization for sensitive actions should be enforced via structured fields only, not inferred from free-text session history.
