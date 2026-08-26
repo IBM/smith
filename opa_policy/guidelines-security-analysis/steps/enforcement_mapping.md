@@ -366,38 +366,35 @@ For every missing candidate, write a new `guidance.txt`-style line:
   "Policy Rules (OPA scope only)" section and STEP 7's candidate
   list; do not duplicate it into this file.
 
-**Carry the Gap Register forward too.** STEP 7 only admits candidates
-that pass the OPA Enforcement Boundary test, so a real finding from the
-OWASP threat model that fails that test (Agent-layer, tool-implementation,
-or infra-owned) never becomes a STEP 7 candidate and would otherwise
-never reach `guidance_updated.txt` — even on a run where every STEP 7
-candidate is already covered and the numbered-rule list has nothing to
-add. Do not let that happen: every row in STEP 4's gap register must
-show up in `guidance_updated.txt` too, written in the same
-natural-language style `guidance.txt` itself uses (a plain descriptive
-sentence, not OPA/Rego syntax) with no source tags, ASI category
-markers, or layer annotations of any kind (no `[ASI01]`, no
-`(Agent Layer)`, no `(Infrastructure/Deployment)`, no `(Tool
-implementation)`, no `(Calling application)`). Where the layer that
-owns the fix is load-bearing to the reader, fold it into the
-sentence itself ("the calling application must populate …", "the
-FastAPI /chat endpoint should …") rather than appending it as a
-suffix. Match `guidance.txt`'s own section conventions — either
-fold each item under the header it most naturally belongs to if one
-exists, or add one new header in the same style as `guidance.txt`'s
-existing ones (e.g. `## Additional Notes from OWASP Analysis`) if
-none fits. Full per-item traceability (which ASI category surfaced
-the gap and which layer owns the fix) lives in the Gap Register
-table in `owasp_policy_guidelines.md`; do not duplicate it into this
-file.
+**Do NOT carry the Gap Register into `guidance_updated.txt`.** Every
+row in STEP 4's gap register is by definition not OPA-enforceable
+(Agent-layer, tool-implementation, or infra-owned). If those items
+were appended to `guidance_updated.txt` and then merged into
+`guidance.txt` under Step E, downstream stages would ingest them as
+if they were enforceable policy rules — `smith --flag test_generation`
+decomposes each numbered rule into legitimate + adversarial test cases,
+and the policy creation skill maps each rule to a `deny` block. Both
+would misfire on a natural-language note that doesn't reduce to a
+structured-field check.
+
+The gap register's durable home is the Gap Register table in
+`owasp_policy_guidelines.md` — this document already writes every row
+there with its ASI category, layer, and recommended action, and STEP 9
+below surfaces the same table for the reviewer. Nothing from the OWASP
+analysis is dropped; it just doesn't ride along in a file whose only
+consumer is Rego generation.
 
 Write `<TARGET_AGENT_PATH>/smith/guidance_updated.txt` containing:
 1. Every existing rule from `guidance.txt`, unchanged, in its original order
 2. Every missing candidate identified above, appended after them,
    continuing the numbering
-3. Every gap register item from STEP 4, appended after them, written in
-   guidance.txt's own style as described above — nothing found by the
-   OWASP analysis is dropped just because it isn't OPA-enforceable
+
+The file must contain numbered rules only. No section headers, no
+`## Additional Notes from OWASP Analysis`, no natural-language notes
+appended after the numbered list — Step E's merge is a straight replace
+of `guidance.txt` with this file's contents, and `guidance.txt` must
+stay in its flat numbered-rule format so test generation and policy
+creation can consume it directly.
 
 Overwrite `guidance_updated.txt` in full on every run rather than
 appending to a prior run's file — this keeps it consistent with the
@@ -455,11 +452,10 @@ three criteria, log a one-line result (`Redundancy self-check: no
 overlapping pairs found`) so the human can see the check ran.
 
 Cost note: this is an O(N²) pairwise scan across `guidance_updated.txt`;
-for a typical file of 20-40 rules that is trivial. Only compare rules
-whose OPA-enforcement fields can be identified — a natural-language
-note from the gap register (under `## Additional Notes from OWASP
-Analysis`) that does not reduce to a structured-field check has no
-"field/operator/value set" to compare and is exempt from the scan.
+for a typical file of 20-40 rules that is trivial. Per STEP 8,
+`guidance_updated.txt` contains numbered rules only, so every row in
+the scan has a structured-field check to compare — no exempt-notes
+carve-out is needed here.
 
 ---
 
@@ -470,10 +466,13 @@ candidate list (with source tags), the list of newly proposed guidance
 rules from STEP 8 (or "none — guidance.txt already covers every
 OWASP-derived and questionnaire-derived candidate" / "none — no
 guidance.txt found, all candidates written fresh"), the gap register
-items carried into `guidance_updated.txt` (or "none — gap register is
-empty"), and the STEP 8b redundancy self-check result (either the
-overlap table for the human to reconcile, or "Redundancy self-check:
-no overlapping pairs found").
+items recorded in `owasp_policy_guidelines.md`'s Gap Register table
+(or "none — gap register is empty") — note that these are NOT
+appended to `guidance_updated.txt`, so if the reviewer wants any of
+them enforced they will need to be reformulated as OPA-enforceable
+rules and added to `guidance.txt` manually, and the STEP 8b redundancy
+self-check result (either the overlap table for the human to
+reconcile, or "Redundancy self-check: no overlapping pairs found").
 
 Log these, then hand control back to the top-level workflow, which
 decides (per confirmation mode) whether to proceed to Completion. This
