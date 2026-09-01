@@ -267,7 +267,7 @@ def _build_tool_params_instructions(tool_definitions):
         _TOOL_PARAMS_MARKER,
         "Each generated prompt MUST include concrete, realistic values for ALL required parameters of the target tool. "
         "Do not generate vague requests like 'add an employee' — instead include specific names, emails, roles, etc. "
-        "The available tools and their required parameters are:"
+        "The available tools and their required parameters are:",
     ]
     for t in tools:
         required = [p["name"] for p in t.get("parameters", []) if p.get("required")]
