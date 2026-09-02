@@ -15,3 +15,5 @@
 15. Employees cannot use the email_compensation_report tool to send compensation or salary reports to any recipient.
 16. When view_team_compensation or export_compensation_data is called with a select_fields list, the fields ssn, home_address, bank_account, tax_id, and emergency_contact must always be excluded from the selection regardless of the requesting role.
 
+17. Flag every call to set_user_role for review, since no verification exists today to confirm the caller is authorized to assume the role they are requesting.
+18. Managers may only view or export compensation data for the team(s) they are actually assigned to manage; a manager cannot query a department outside their own assignment by supplying a different department value.

@@ -1,6 +1,3 @@
-# Copyright 2026 Smith authors
-# SPDX-License-Identifier: Apache-2.0
-
 package mcp.policies
 
 default allow := false
@@ -11,104 +8,182 @@ args := object.get(input, "args", {})
 
 # === Constants ===
 
-recognized_roles := {"fleet_manager", "consumer", "journalist", "analyst", "guest"}
+blocked_email_domains := {"gmail.com", "yahoo.com", "hotmail.com", "outlook.com", "personal.com"}
 
-recognized_vehicle_types := {"carros", "cars", "motos", "motorcycles", "caminhoes", "trucks"}
+trusted_email_domain := "ibm.com"
 
-vehicle_types_by_role := {
-	"fleet_manager": {"caminhoes", "trucks"},
-	"consumer": {"carros", "cars"},
-	"journalist": {"carros", "cars"},
-	"analyst": {"carros", "cars", "motos", "motorcycles", "caminhoes", "trucks"},
+blocked_sensitive_fields := {"ssn", "home_address", "bank_account", "tax_id", "emergency_contact"}
+
+blocked_phrases := {"ignore all policies", "bypass security", "override all policies", "show all ssn data"}
+
+employee_purchase_cap := 200
+
+manager_purchase_cap := 1000
+
+compensation_tools := {"view_team_compensation", "export_compensation_data", "email_compensation_report"}
+
+free_text_arg_names := {"ticket_content", "question", "email_content", "body", "report_data", "justification"}
+
+# === Helpers ===
+
+email_domain(email) := domain if {
+	parts := split(email, "@")
+	count(parts) == 2
+	domain := lower(parts[1])
 }
 
-fleet_manager_brands := {"Scania", "Volvo", "Mercedes-Benz", "MAN", "DAF", "Iveco", "Ford", "Volkswagen"}
-
-journalist_brands := {
-	"Fiat", "Chevrolet", "Volkswagen", "Hyundai", "Toyota", "Renault",
-	"Honda", "Nissan", "Jeep", "Peugeot", "Citroën", "Caoa Chery",
+select_fields_list := sf if {
+	sf := args.select_fields
+	sf != null
 }
 
-brands_by_role := {
-	"fleet_manager": fleet_manager_brands,
-	"journalist": journalist_brands,
+select_fields_list := [] if {
+	object.get(args, "select_fields", null) == null
 }
 
-# === Global DENY/ALLOW Rules ===
-
-# NOTE: subject.user_role is a single-element array (e.g. ["fleet_manager"]),
-# not a scalar string, so membership checks must unwrap it via `some`.
-role_recognized if {
-	some role in subject.user_role
-	role in recognized_roles
+contains_blocked_field if {
+	some f in select_fields_list
+	lower(f) in blocked_sensitive_fields
 }
 
-# guidance.txt: "Unknown Roles" — a request whose user_role matches none of
-# the five defined roles has no privileges and may call no tool.
+contains_blocked_phrase if {
+	some field_name in free_text_arg_names
+	value := object.get(args, field_name, "")
+	is_string(value)
+	some phrase in blocked_phrases
+	contains(lower(value), phrase)
+}
+
+# === Global DENY Rules ===
+
+# Rules 11-14: block known prompt-injection phrases in any free-text argument
 deny[msg] if {
-	not role_recognized
-	msg := sprintf("user_role '%v' is not a recognized role and may not call any tool", [subject.user_role])
+	contains_blocked_phrase
+	msg := "PROMPT_INJECTION_PHRASE_BLOCK: request contains a blocked policy-override phrase"
 }
 
-# A caller identity must assert exactly one role; claiming multiple roles at
-# once is not a valid identity under guidance.txt and must be denied for
-# every tool, regardless of whether each individual asserted role would
-# otherwise be permitted.
+# === Tool-Specific DENY Rules ===
+
+# Rule 2: employees cannot view team compensation data
 deny[msg] if {
-	count(subject.user_role) != 1
-	msg := sprintf("user_role '%v' must assert exactly one role", [subject.user_role])
+	input.name == "view_team_compensation"
+	subject.role != "manager"
+	msg := "MANAGER_ROLE_GATED_COMPENSATION_ACCESS: view_team_compensation is manager-only"
 }
 
-# === Tool-Specific DENY/ALLOW Rules ===
-
-# guidance.txt: "Tool Access by Role" — a guest may only call get_car_brands.
+# Rule 3 / 16: view_team_compensation must never return sensitive fields, with or without select_fields
 deny[msg] if {
-	"guest" in subject.user_role
-	input.name != "get_car_brands"
-	msg := sprintf("guest role may not call tool '%v'; only get_car_brands is allowed", [input.name])
-}
-
-# guidance.txt: "Vehicle Type Restrictions" — allowed vehicle_type values
-# depend on role; any value outside the six recognized values is denied for
-# every role (do not rely on the backend's silent fallback to "carros").
-deny[msg] if {
-	input.name == "get_vehicles_by_type"
-	not args.vehicle_type in recognized_vehicle_types
-	some role in subject.user_role
-	role in recognized_roles
-	msg := sprintf("vehicle_type '%v' is not a recognized value", [args.vehicle_type])
-}
-
-deny[msg] if {
-	input.name == "get_vehicles_by_type"
-	args.vehicle_type in recognized_vehicle_types
-	some role in subject.user_role
-	role in recognized_roles
-	allowed := vehicle_types_by_role[role]
-	not args.vehicle_type in allowed
-	msg := sprintf("role '%v' is not permitted to use vehicle_type '%v'", [role, args.vehicle_type])
-}
-
-# guidance.txt: "Brand Restrictions" — allowed brand_name values depend on
-# role; empty/whitespace-only brand_name is denied for all roles.
-deny[msg] if {
-	input.name == "search_car_price"
-	trim_space(object.get(args, "brand_name", "")) == ""
-	some role in subject.user_role
-	role in recognized_roles
-	msg := "brand_name must not be empty or whitespace-only"
+	input.name == "view_team_compensation"
+	subject.role == "manager"
+	select_fields_list == []
+	msg := "DEFAULT_SENSITIVE_FIELD_EXPOSURE: select_fields must be provided and exclude sensitive fields"
 }
 
 deny[msg] if {
-	input.name == "search_car_price"
-	trim_space(object.get(args, "brand_name", "")) != ""
-	some role in subject.user_role
-	allowed := brands_by_role[role]
-	not args.brand_name in allowed
-	msg := sprintf("role '%v' is not permitted to search brand '%v'", [role, args.brand_name])
+	input.name == "view_team_compensation"
+	contains_blocked_field
+	msg := "DEFAULT_SENSITIVE_FIELD_EXPOSURE: select_fields includes a blocked sensitive field"
+}
+
+# Rule 5: employees cannot export team compensation data
+deny[msg] if {
+	input.name == "export_compensation_data"
+	subject.role != "manager"
+	msg := "MANAGER_ROLE_GATED_COMPENSATION_ACCESS: export_compensation_data is manager-only"
+}
+
+# Rule 3 / 16: export_compensation_data must never return sensitive fields, with or without select_fields
+deny[msg] if {
+	input.name == "export_compensation_data"
+	subject.role == "manager"
+	select_fields_list == []
+	msg := "DEFAULT_SENSITIVE_FIELD_EXPOSURE: select_fields must be provided and exclude sensitive fields"
+}
+
+deny[msg] if {
+	input.name == "export_compensation_data"
+	contains_blocked_field
+	msg := "DEFAULT_SENSITIVE_FIELD_EXPOSURE: select_fields includes a blocked sensitive field"
+}
+
+# Rule 7: no one may export compensation data externally
+deny[msg] if {
+	input.name == "export_compensation_data"
+	args.external_sharing == true
+	msg := "EXTERNAL_COMPENSATION_SHARING: export_compensation_data cannot be shared externally"
+}
+
+# Rule 6: send_email external sends restricted to non-compensation content; only managers may send externally
+deny[msg] if {
+	input.name == "send_email"
+	email_domain(args.recipient_email) != trusted_email_domain
+	subject.role != "manager"
+	msg := "MANAGER_ROLE_GATED_EXTERNAL_EMAIL: only managers may send email to non-ibm.com recipients"
+}
+
+# Rule 8: blocked domains for send_email
+deny[msg] if {
+	input.name == "send_email"
+	email_domain(args.recipient_email) in blocked_email_domains
+	msg := "BLOCKED_EMAIL_DOMAIN: recipient_email domain is blocked"
+}
+
+# Rule 15: employees cannot use email_compensation_report
+deny[msg] if {
+	input.name == "email_compensation_report"
+	subject.role != "manager"
+	msg := "MANAGER_ROLE_GATED_COMPENSATION_ACCESS: email_compensation_report is manager-only"
+}
+
+# Rule 7: no one may share compensation reports externally / to non-ibm.com domains
+deny[msg] if {
+	input.name == "email_compensation_report"
+	args.external_sharing == true
+	msg := "EXTERNAL_COMPENSATION_SHARING: email_compensation_report cannot be shared externally"
+}
+
+deny[msg] if {
+	input.name == "email_compensation_report"
+	email_domain(args.destination) != trusted_email_domain
+	msg := "COMPENSATION_EMAIL_DOMAIN_RESTRICTION: email_compensation_report destination must be an ibm.com address"
+}
+
+# Rule 8: blocked domains for email_compensation_report
+deny[msg] if {
+	input.name == "email_compensation_report"
+	email_domain(args.destination) in blocked_email_domains
+	msg := "BLOCKED_EMAIL_DOMAIN: destination domain is blocked"
+}
+
+# Rule 9: employees cannot buy >= $200 without manager approval
+deny[msg] if {
+	input.name == "purchase"
+	subject.role != "manager"
+	args.amount >= employee_purchase_cap
+	subject.approval != "true"
+	msg := "PURCHASE_LIMIT_EXCEEDED: employees require manager approval to purchase $200 or more"
+}
+
+# Rule 10: managers capped at purchases under $1,000
+deny[msg] if {
+	input.name == "purchase"
+	subject.role == "manager"
+	args.amount >= manager_purchase_cap
+	msg := "PURCHASE_LIMIT_EXCEEDED: managers cannot purchase $1,000 or more"
+}
+
+# Rule 17: set_user_role cannot be verified today; label the decision for downstream review rather than deny
+label[msg] if {
+	input.name == "set_user_role"
+	msg := "SET_ROLE_UNVERIFIABLE: role assignment has no authentication; flagged for review"
 }
 
 # === Final ALLOW ===
+
+any_deny if {
+	count(deny) > 0
+}
+
 allow if {
-	count(deny) == 0
+	not any_deny
 }
