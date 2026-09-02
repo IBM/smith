@@ -2,7 +2,7 @@
   "tools": [
     {
       "name": "get_car_brands",
-      "description": "\nGet all available car brands from FIPE API.\n\nReturns:\n    List of car brands with their codes and names\n",
+      "description": "\n    Get all available car brands from FIPE API.\n    \n    Returns:\n        List of car brands with their codes and names\n    ",
       "parameters": [],
       "input_schema": {
         "properties": {},
@@ -12,7 +12,7 @@
     },
     {
       "name": "search_car_price",
-      "description": "\nSearch for car models and prices by brand name.\n\nArgs:\n    brand_name: The car brand name to search for (e.g., \"Toyota\", \"Honda\", \"Ford\")\n\nReturns:\n    Car models with current market prices from FIPE database\n",
+      "description": "\n    Search for car models and prices by brand name.\n    \n    Args:\n        brand_name: The car brand name to search for (e.g., \"Toyota\", \"Honda\", \"Ford\")\n    \n    Returns:\n        Car models with current market prices from FIPE database\n    ",
       "parameters": [
         {
           "name": "brand_name",
@@ -36,7 +36,7 @@
     },
     {
       "name": "get_vehicles_by_type",
-      "description": "\nGet vehicles by type (cars, motorcycles, trucks).\n\nArgs:\n    vehicle_type: Type of vehicles to fetch (\"carros\"/\"cars\", \"motos\"/\"motorcycles\", \"caminhoes\"/\"trucks\")\n\nReturns:\n    List of vehicle brands for the specified type\n",
+      "description": "\n    Get vehicles by type (cars, motorcycles, trucks).\n    \n    Args:\n        vehicle_type: Type of vehicles to fetch (\"carros\"/\"cars\", \"motos\"/\"motorcycles\", \"caminhoes\"/\"trucks\")\n    \n    Returns:\n        List of vehicle brands for the specified type\n    ",
       "parameters": [
         {
           "name": "vehicle_type",
