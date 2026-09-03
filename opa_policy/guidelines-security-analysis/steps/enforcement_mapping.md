@@ -275,9 +275,21 @@ For every rule under "Policy Rules (OPA scope only)":
       key spells it — if the key is `roles`, the field is
       `subject.roles`, never `subject.role`. Do not singularize,
       pluralize, or otherwise rename a declared key.
+   d. Where the declared input enumerates a field's permitted values,
+      the values the rule depends on must appear in THAT tool's own
+      enumeration. Value domains are declared in two places: a
+      parameter's `input_schema` enum, and the tool's `description`
+      text, which for list-valued parameters often names the permitted
+      members ("Available fields: …") and for string parameters often
+      names the permitted options. Read both. A rule whose trigger
+      values are absent from the governed tool's domain is vacuous on
+      that tool even though the field name exists — it can never fire,
+      and it generates test cases that can never be satisfied. Narrow
+      it to the tools whose domain actually contains those values, per
+      the remedy below.
 
-   A rule that checks a field that does not exist at invocation time
-   cannot be enforced.
+   A rule that checks a field that does not exist at invocation time,
+   or a value that tool can never carry, cannot be enforced.
 
    Worked example — one rule, two governed tools, one verdict each:
 
@@ -290,6 +302,17 @@ For every rule under "Policy Rules (OPA scope only)":
    below it is narrowed to that tool rather than kept whole — keeping it
    whole would produce a policy rule whose body can never evaluate.
 
+   Worked example for 1d — the field exists on both tools, but only one
+   tool's value domain contains the values the rule cares about:
+
+   | Rule | Governed tool | Field | Field on tool? | Trigger value in that tool's domain? | Verified? |
+   |---|---|---|---|---|---|
+   | Exclude `ssn` from any `select_fields` selection | `view_team_compensation` | `input.args.select_fields` | yes | yes — its description lists `ssn` among available fields | Yes |
+   | (same rule) | `export_compensation_data` | `input.args.select_fields` | yes | no — its description lists only `employee_id, name, title, level, current_salary, total_comp_2024, performance_rating` | No |
+
+   Field existence alone would have passed both. The rule is narrowed to
+   `view_team_compensation`.
+
 2. **Mitigation grounding.** The mitigation cited from the catalog for
    the rule's ASI category must be present verbatim (or as a clear
    paraphrase) in that catalog entry's `mitigations` array. Do not
@@ -300,6 +323,20 @@ For every rule under "Policy Rules (OPA scope only)":
    sign that STEP 2's decision logic was skipped; remove it or add the
    missing threat instance to `threat_model.md` (and re-run STEP 2 for
    that category).
+
+   The linkage must also be the rule's actual justification, not merely
+   a citation attached to it. Read the reason the rule gives for
+   existing: if that reason argues from another rule rather than from a
+   threat — "matching the limits already applied to the same roles",
+   "by analogy with", "for consistency with rule N", "the same
+   treatment as" — then the rule's basis is symmetry with existing
+   policy, not risk, and the linkage fails no matter which threat
+   instance is cited alongside it. Symmetry is not a threat: two
+   operations that look alike can carry opposite risk (a spend and a
+   refund both move money, and capping the second protects nothing).
+   Either restate the rule's justification as the threat it actually
+   mitigates, or drop it. Do not add a threat instance to
+   `threat_model.md` for the purpose of satisfying this check.
 4. **Questionnaire-sourced values.** If a rule's value set was pulled
    from a questionnaire answer, that answer must not be tagged
    `[inferred — low confidence]`. If it is, either drop the rule or
@@ -386,9 +423,28 @@ hr-agent style), bulleted lists nested under `#`/`##` section headers
 (call-for-papers, car-price, employee style), or paragraphs of prose
 that state a rule. Treat every such statement as an existing rule for
 the coverage check regardless of formatting; the format never protects
-a candidate from being marked "covered" if the substance matches. A
-candidate counts as covered only when an existing rule matches the
-candidate on ALL THREE of the following:
+a candidate from being marked "covered" if the substance matches.
+
+**Subsumption test — apply this BEFORE the three criteria below.** A
+candidate is also covered when an existing rule already denies the whole
+tool, or a strictly broader condition on that tool, for the same
+subject population the candidate targets. The three criteria below test
+for an *equivalent* rule; they cannot see a *broader* one, because a
+broader rule usually constrains a different field. A narrower condition
+on a tool that is already fully denied can never fire.
+
+Worked example: an existing rule says employees cannot export
+compensation data at all (a deny on `export_compensation_data` keyed on
+role). A candidate says employees may not request `export_type`
+`"detailed"` on that tool. The fields differ — role versus
+`export_type` — so all three criteria below report "not covered," yet
+the candidate is unreachable for every caller it applies to. It is
+covered by subsumption; do not write it. Record it in the scratch table
+as covered, naming the subsuming rule.
+
+Where subsumption does not apply, a candidate counts as covered only
+when an existing rule matches the candidate on ALL THREE of the
+following:
 
 1. **Same structured field.** The `input.*` path the candidate would
    check must correspond to the field the guidance.txt rule constrains
@@ -427,6 +483,33 @@ verification**, and where a candidate was narrowed, write only the
 narrowed form. A line with no verified `(tool, field)` is a claim about
 a capability the MCP server does not declare, and merging it would push
 that claim into test generation and policy creation.
+
+**Reducibility gate.** Every line about to be written must be
+expressible as a single decision: *field · operator · value · deny on
+match*. State that quadruple for the line before writing it. If the
+line cannot be reduced to one, it is not a rule, and it does not go in
+`guidance_updated.txt` no matter how sound it is:
+
+- A requirement to **record, log, audit, or report** something is not a
+  decision — OPA returns allow/deny and writes nothing. It is an
+  Agent-layer or infrastructure concern and belongs in the gap register
+  (STEP 4).
+- A statement that **defines a term, equates two values, or says how
+  other rules should be interpreted** ("treat X and Y as the same
+  role", "evaluate a caller with several roles against all of them") is
+  not a decision either. It constrains no single call. Its home is the
+  Input Schema / Known values section of `owasp_policy_guidelines.md`,
+  where the policy author will read it while encoding the rules it
+  qualifies.
+- A **recommendation to review, monitor, or flag** something for human
+  attention is not a deny. Either state the deny it implies, or put it
+  in the gap register.
+
+This restates the gap-register prohibition further down as a test
+applied per line, because the prohibition on its own has proven easy to
+satisfy in the abstract and skip in practice. Log each rejected line
+with which of the three shapes above it matched and where it was sent
+instead.
 
 Do NOT include this scratch table in `guidance_updated.txt`; log it
 alongside the STEP 9 summary.
@@ -548,23 +631,60 @@ with i < j against the three criteria from STEP 8:
    rules' allowed/blocked sets must overlap on the value that would
    trigger the rule.
 
-If all three match, the pair is an overlap candidate. Record it as:
+If all three match, the pair is an **Overlap** candidate.
 
-| Rule i | Rule j | Field | Operator | Value set overlap |
-|---|---|---|---|---|
-| <rule-i text> | <rule-j text> | <input.*> | <exact / substring / …> | <values> |
+The same pairwise scan produces two further verdicts. Both are cheap
+because the pairs are already enumerated, and neither is an overlap, so
+the three-criteria test above would report nothing for them:
 
-Do NOT auto-merge and do NOT rewrite either rule. Which wording to
-keep and whether to broaden one to absorb the other is a semantic
-call the human makes during STEP 9 — the skill's job here is only to
-surface the pair before the merge into `guidance.txt` happens, so the
+- **Conflict.** The two rules constrain the same field on the same
+  tool but prescribe incompatible outcomes — block versus flag-for-
+  review, deny versus allow, or two different numeric thresholds on the
+  same value with no scoping to tell them apart. Criterion 2 treats
+  opposite polarities as *distinct*, which is right for coverage and
+  wrong here: distinctness is exactly what makes them a conflict. A
+  conflicting pair must be resolved before Step E merges, because the
+  policy author will otherwise pick one arbitrarily and the other rule
+  becomes silently dead. Two rules that both appeared in this run's
+  candidate list can conflict with each other, so scan new-vs-new pairs
+  as well as new-vs-existing.
+- **Correction.** The candidate constrains the same field as an existing
+  rule with a value set that *diverges* from it — values added, and in
+  particular values dropped. Then the candidate must be written as a
+  correction that names the existing rule number and states the whole
+  replacement set, not as an additive "in addition to X and Y, also
+  block Z" line. An additive phrasing that silently omits a value the
+  existing rule listed reads as an addition while actually being a
+  removal, and the reviewer has no way to see that a value was dropped
+  or why. If the dropped value was found not to exist — `architecture.md`
+  records fields that no tool declares — say so in the correction.
+
+Record all three verdicts in one table:
+
+| Rule i | Rule j | Verdict | Field | Operator | Value set relationship |
+|---|---|---|---|---|---|
+| <rule-i text> | <rule-j text> | Overlap / Conflict / Correction | <input.*> | <exact / substring / …> | <overlap, or what diverges> |
+
+For an **Overlap** or a **Conflict**, do NOT auto-merge and do NOT
+rewrite either rule. Which wording to keep, whether to broaden one to
+absorb the other, and which side of a conflict wins are semantic calls
+the human makes during STEP 9 — the skill's job here is only to surface
+the pair before the merge into `guidance.txt` happens, so the
 duplication doesn't have to be caught downstream at the Rego layer by
 `policy_duplication.md` / `duplication_suggestion` (which operate on
 the compiled policy, not on guidance).
 
-Log the resulting overlap table for STEP 9. If no pair matches all
-three criteria, log a one-line result (`Redundancy self-check: no
-overlapping pairs found`) so the human can see the check ran.
+A **Correction** is the one verdict that does change what gets written:
+rephrase the *candidate* line (never the existing `guidance.txt` rule)
+so it names the rule it corrects and states the full replacement value
+set. The existing rule stays untouched — Step D never edits
+`guidance.txt` — so the human still decides whether to accept the
+correction during STEP 9.
+
+Log the resulting table for STEP 9. If no pair yields any of the three
+verdicts, log a one-line result (`Redundancy self-check: no overlapping,
+conflicting, or correcting pairs found`) so the human can see the check
+ran.
 
 Cost note: this is an O(N²) pairwise scan across `guidance_updated.txt`;
 for a typical file of 20-40 rules that is trivial. Per STEP 8,
@@ -586,8 +706,23 @@ items recorded in `owasp_policy_guidelines.md`'s Gap Register table
 appended to `guidance_updated.txt`, so if the reviewer wants any of
 them enforced they will need to be reformulated as OPA-enforceable
 rules and added to `guidance.txt` manually, and the STEP 8b redundancy
-self-check result (either the overlap table for the human to
-reconcile, or "Redundancy self-check: no overlapping pairs found").
+self-check result (either the table for the human to reconcile, or
+"Redundancy self-check: no overlapping, conflicting, or correcting pairs
+found").
+
+Call out explicitly, rather than leaving the reviewer to find them in
+the tables:
+- Any **Conflict** pair from STEP 8b. These must be resolved before
+  Step E merges, so name them and say which rules disagree.
+- Any candidate rejected by STEP 8's **reducibility gate**, and where it
+  was sent instead (gap register, or the Input Schema / Known values
+  section). A reviewer expecting a control to be enforced should learn
+  here that it became a monitoring item.
+- Any rule **narrowed** by STEP 6b criterion 1 — which governed tools it
+  was narrowed to and which were dropped, and whether the drop was for a
+  missing field (1b) or a value outside that tool's domain (1d). This is
+  the reviewer's only chance to notice that a control they expected to
+  cover two tools now covers one.
 
 Log these, then hand control back to the top-level workflow, which
 decides (per confirmation mode) whether to proceed to Completion. This
