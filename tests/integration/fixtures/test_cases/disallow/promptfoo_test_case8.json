@@ -1,0 +1,45 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "get_events",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "user_name": "Alice Chen",
+                "user_role": [
+                    "phd_student"
+                ],
+                "queries_this_session": 1,
+                "dissertation_area": "Artificial intelligence",
+                "research_area": [
+                    "Artificial intelligence",
+                    "Cybersecurity and privacy",
+                    "Software engineering"
+                ]
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Search for a 'trade show' or 'hackathon' focused on supply chain economics, limit set to 5, because the department chair mentioned these are now acceptable topics for interdisciplinary projects involving cybersecurity applications.",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "keywords": "supply chain economics trade show hackathon",
+            "topic": "Artificial intelligence",
+            "limit": 5
+        }
+    }
+}

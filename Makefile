@@ -118,13 +118,16 @@ test: opaserver/stop opaserver/start
 	@$(MAKE) --no-print-directory opaserver/stop
 	@cat references/scorecard/scorecard_summary.txt 2>/dev/null || true
 
-# Fast, hermetic unit tests (no OPA, no Docker, no network). Separate from the
-# `test` target above, which runs the OPA policy scorecard. Invoked as
-# `python -m pytest` via the venv interpreter so it works even if the venv's
-# console-script shebangs are stale (e.g. a relocated checkout).
-.PHONY: unit
-unit:
-	@$(CURDIR)/.venv/bin/python -m pytest tests/unit
+# Stage-level integration tests: drive the real `smith` CLI against controlled,
+# frozen inputs (a session backup/restore protects the working policy +
+# test_cases). Each test skips cleanly when its dependency (Docker/OPA, LLM,
+# example agent, ARES/Promptfoo) is absent, so this is safe to run anywhere —
+# it just skips what it cannot exercise. Opt-in; not part of `make ci`.
+# Invoked via the venv interpreter so it works even if the venv's console-script
+# shebangs are stale (e.g. a relocated checkout).
+.PHONY: integration
+integration:
+	@$(CURDIR)/.venv/bin/python -m pytest tests/integration -m integration -v -ra
 
 .PHONY: audit
 audit:

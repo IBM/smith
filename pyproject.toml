@@ -100,8 +100,14 @@ src = ["src"]
 target-version = ["py311"]
 
 [tool.pytest.ini_options]
-# Fast, hermetic unit tests only. The OPA policy scorecard is a separate
-# bash harness run via `make test`, not pytest.
-testpaths = ["tests/unit"]
+# The stage-level integration suite (tests/integration) drives the real smith
+# CLI against OPA / an example agent / an LLM. Each test skips cleanly when its
+# dependency is absent, so a bare `pytest` run is safe anywhere. Run it via
+# `make integration`. The OPA policy scorecard is also runnable standalone via
+# `make test`.
+testpaths = ["tests/integration"]
 addopts = "-q"
 asyncio_mode = "auto"
+markers = [
+    "integration: stage-level integration test that drives the real smith CLI (deps-gated).",
+]
