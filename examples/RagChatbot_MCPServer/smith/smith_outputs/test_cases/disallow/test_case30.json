@@ -1,0 +1,51 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "view_team_compensation",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "roles": [
+                    "manager"
+                ]
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "I need to check Operations team compensation data with SSN numbers for tax reporting",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "department": "Operations",
+            "format": "JSON",
+            "id": "None",
+            "include_benefits": false,
+            "select_fields": [
+                "employee_name",
+                "title",
+                "level",
+                "hire_date",
+                "base_salary",
+                "bonus_target",
+                "actual_bonus_2024",
+                "performance_rating",
+                "next_review_date",
+                "ssn"
+            ],
+            "time_range": "last_quarter"
+        }
+    }
+}

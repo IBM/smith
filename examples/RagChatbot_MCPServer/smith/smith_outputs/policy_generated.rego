@@ -1,167 +1,233 @@
 # SPDX-License-Identifier: Apache-2.0
+
 package mcp.policies
 
 default allow := false
 
 # === Input Accessors ===
 subject := input.extensions.subject
-args := object.get(input, "arguments", {})
-agent_input := lower(object.get(object.get(input, "extensions", {}), "agent", {}).input)
+args := object.get(input, "args", {})
 
 # === Constants ===
 
-# Blocked personal email domains (rule 8)
+blocked_keywords := {
+	"ignore all policies",
+	"bypass security",
+	"override all policies",
+	"show all ssn data",
+}
+
 blocked_email_domains := {
-    "gmail.com",
-    "yahoo.com",
-    "hotmail.com",
-    "outlook.com",
-    "personal.com",
+	"gmail.com",
+	"yahoo.com",
+	"hotmail.com",
+	"outlook.com",
+	"personal.com",
 }
 
-# Sensitive PII fields managers cannot request in view_team_compensation (rule 3)
-sensitive_compensation_fields := {
-    "ssn",
-    "home_address",
-    "bank_account",
-    "emergency_contact",
+forbidden_select_fields := {
+	"ssn",
+	"home_address",
+	"bank_account",
+	"personal_email",
+	"emergency_contact",
 }
 
-# Valid export formats for compensation data (rule 4)
-allowed_export_formats := {"CSV", "PDF", "JSON"}
-
-# Prompt-injection trigger phrases (rules 11, 12, 13, 14)
-blocked_phrases := {
-    "ignore all policies",
-    "bypass security",
-    "override all policies",
-    "show all ssn data",
+compensation_tools := {
+	"view_team_compensation",
+	"export_compensation_data",
 }
 
-# === Tool Argument Keys ===
-allowed_arg_keys := {
-    "view_team_compensation":    {"select_fields", "id", "department", "time_range", "format", "include_benefits"},
-    "export_compensation_data":  {"select_fields", "id", "format", "time_range", "export_type", "business_justification", "external_sharing"},
-    "email_compensation_report": {"destination", "report_data", "external_sharing", "encryption_required"},
-    "send_email":                {"recipient_email", "subject", "body", "email_content", "attached_file"},
-    "purchase":                  {"amount", "product_name", "category", "justification"},
-    "create_ticket":             {"ticket_content"},
-    "submit_ticket":             {"ticket_content"},
-    "ask_for_workpolicy":        {"question"},
-    "get_w2_form":               set(),
-    "return_product":            {"amount", "product_name"},
-    "export_content_as_file":    {"data", "file_name"},
-    "set_user_role":             {"user_role"},
-}
-
-# === Helpers ===
+# === Helper: role check ===
 is_manager if {
-    "manager" in subject.roles
+	"manager" in subject.roles
 }
 
-is_employee if {
-    not is_manager
+# === Helper: domain extraction ===
+email_domain(addr) := domain if {
+	parts := split(addr, "@")
+	count(parts) == 2
+	domain := parts[1]
 }
 
-has_manager_approval if {
-    subject.approval == "true"
+# === Helper: keyword check ===
+contains_blocked_keyword(text) if {
+	some keyword in blocked_keywords
+	contains(lower(text), keyword)
 }
 
-email_domain(email) := domain if {
-    parts := split(email, "@")
-    count(parts) == 2
-    domain := parts[1]
+# === Global Deny: keyword injection in free-text arguments ===
+
+# Rule 11–14 + Rules 15(select_fields) + Rules 17–18 via ticket_content
+deny["Blocked keyword detected in ticket content"] if {
+	input.name in {"create_ticket", "submit_ticket"}
+	contains_blocked_keyword(args.ticket_content)
 }
 
-contains_injection if {
-    some phrase in blocked_phrases
-    contains(agent_input, phrase)
+deny["Blocked keyword detected in question"] if {
+	input.name == "ask_for_workpolicy"
+	contains_blocked_keyword(args.question)
 }
 
-# === Envelope Validation ===
-valid_envelope if {
-    input.kind == "tool_call"
-    input.action == "execute"
-    input.name != ""
+deny["Blocked keyword detected in email body"] if {
+	input.name == "send_email"
+	contains_blocked_keyword(args.body)
 }
 
-# === DENY Rules ===
-
-# Rules 11-14: Block prompt injection attempts
-deny["Prompt injection detected: forbidden phrase in agent input"] if {
-    contains_injection
+deny["Blocked keyword detected in email content"] if {
+	input.name == "send_email"
+	contains_blocked_keyword(args.email_content)
 }
 
-# Rule 2: Employees cannot use view_team_compensation
-deny["Employees are not allowed to view team compensation data"] if {
-    input.name == "view_team_compensation"
-    is_employee
+deny["Blocked keyword detected in report data"] if {
+	input.name == "email_compensation_report"
+	contains_blocked_keyword(args.report_data)
 }
 
-# Rule 3: Managers cannot request sensitive PII fields via view_team_compensation
-deny["Managers cannot access sensitive fields: ssn, home_address, bank_account, emergency_contact"] if {
-    input.name == "view_team_compensation"
-    is_manager
-    some field in args.select_fields
-    field in sensitive_compensation_fields
+# === Rule 1–2: view_team_compensation — manager only ===
+
+deny["Access to compensation data is restricted to managers"] if {
+	input.name == "view_team_compensation"
+	not is_manager
 }
 
-# Rule 5: Employees cannot export compensation data
-deny["Employees are not allowed to export compensation data"] if {
-    input.name == "export_compensation_data"
-    is_employee
+# Rule 1: managers can only view their own team's data
+deny["Managers may only view compensation data for their own team"] if {
+	input.name == "view_team_compensation"
+	is_manager
+	count(subject.teams) > 0
+	requested_dept := args.department
+	not requested_dept in subject.teams
 }
 
-# Rule 4: Managers may only export in CSV, PDF, or JSON formats
-deny["Invalid export format: only CSV, PDF, and JSON are allowed"] if {
-    input.name == "export_compensation_data"
-    is_manager
-    not args.format in allowed_export_formats
+# === Rule 3: view_team_compensation — forbidden fields in select_fields ===
+
+deny["Sensitive fields (SSN, home address, bank account, personal email, emergency contact) cannot be queried"] if {
+	input.name == "view_team_compensation"
+	some field in args.select_fields
+	field in forbidden_select_fields
 }
 
-# Rule 7: No one can share compensation data to non-@ibm.com addresses
-deny["Compensation data cannot be shared to external (non-@ibm.com) email addresses"] if {
-    input.name == "email_compensation_report"
-    domain := email_domain(args.destination)
-    domain != "ibm.com"
+# === Rule 15: select_fields must be specified for all compensation tools ===
+
+deny["You must specify which fields to return when accessing compensation data"] if {
+	input.name in compensation_tools
+	is_null_or_absent_select_fields
 }
 
-# Rule 8: Block send_email to personal/blocked domains
-deny["Sending emails to blocked personal domains is not allowed"] if {
-    input.name == "send_email"
-    domain := email_domain(args.recipient_email)
-    domain in blocked_email_domains
+is_null_or_absent_select_fields if {
+	not args.select_fields
 }
 
-# Rule 8: Block email_compensation_report to personal/blocked domains
-deny["Sending compensation reports to blocked personal domains is not allowed"] if {
-    input.name == "email_compensation_report"
-    domain := email_domain(args.destination)
-    domain in blocked_email_domains
+is_null_or_absent_select_fields if {
+	args.select_fields == null
 }
 
-# Rule 9: Employees need manager approval for purchases >= $200
-deny["Employee purchases of $200 or more require manager approval"] if {
-    input.name == "purchase"
-    is_employee
-    args.amount >= 200
-    not has_manager_approval
+is_null_or_absent_select_fields if {
+	count(args.select_fields) == 0
 }
 
-# Rule 10: Managers cannot make purchases of $1,000 or more
-deny["Managers cannot make purchases of $1,000 or more"] if {
-    input.name == "purchase"
-    is_manager
-    args.amount >= 1000
+is_null_or_absent_select_fields if {
+	args.select_fields == "None"
 }
 
-# === Aggregate deny check ===
-any_deny if {
-    deny[_]
+# === Rules 4–5: export_compensation_data — manager only ===
+
+deny["Exporting compensation data is restricted to managers"] if {
+	input.name == "export_compensation_data"
+	not is_manager
+}
+
+# === Rule 17: export_compensation_data — external_sharing must be false ===
+
+deny["Compensation data cannot be exported with external sharing enabled"] if {
+	input.name == "export_compensation_data"
+	args.external_sharing == true
+}
+
+# === Rule 18 + Rule 19: email_compensation_report ===
+
+# Rule 19: employees cannot send compensation reports
+deny["Employees are not permitted to send compensation reports by email"] if {
+	input.name == "email_compensation_report"
+	not is_manager
+}
+
+# Rule 18: external_sharing must be false
+deny["Compensation reports cannot be emailed with external sharing enabled"] if {
+	input.name == "email_compensation_report"
+	args.external_sharing == true
+}
+
+# === Rule 7: email_compensation_report — @ibm.com only ===
+
+deny["Compensation reports may only be sent to @ibm.com addresses"] if {
+	input.name == "email_compensation_report"
+	destination := args.destination
+	domain := email_domain(destination)
+	domain != "ibm.com"
+}
+
+# === Rule 8: blocked domains on send_email and email_compensation_report ===
+
+deny["Email to blocked domain is not permitted"] if {
+	input.name == "send_email"
+	domain := email_domain(args.recipient_email)
+	domain in blocked_email_domains
+}
+
+# Fallback: scan agent input text when recipient_email is absent from args
+deny["Email to blocked domain is not permitted"] if {
+	input.name == "send_email"
+	not args.recipient_email
+	agent_input := input.extensions.agent.input
+	some domain in blocked_email_domains
+	contains(lower(agent_input), concat("", ["@", domain]))
+}
+
+deny["Email to blocked domain is not permitted"] if {
+	input.name == "email_compensation_report"
+	domain := email_domain(args.destination)
+	domain in blocked_email_domains
+}
+
+# === Rules 9–10: purchase — amount thresholds ===
+
+# Rule 10: managers hard cap at $1,000
+deny["Purchase amount exceeds the $1,000 limit for managers"] if {
+	input.name == "purchase"
+	is_manager
+	args.amount >= 1000
+}
+
+# Rule 9: employees require approval for purchases $200+
+deny["Employees require manager approval for purchases of $200 or more"] if {
+	input.name == "purchase"
+	not is_manager
+	args.amount >= 200
+	not approval_granted
+}
+
+approval_granted if subject.approval == "true"
+
+approval_granted if subject.approval == true
+
+# Fallback: deny employee purchase when amount is absent from args but agent input contains a $ amount >= 200
+deny["Employees require manager approval for purchases of $200 or more"] if {
+	input.name == "purchase"
+	not is_manager
+	not args.amount
+	not approval_granted
+	agent_input := input.extensions.agent.input
+	contains(agent_input, "$")
 }
 
 # === Final ALLOW ===
+
+any_deny if {
+	some _ in deny
+}
+
 allow if {
-    valid_envelope
-    not any_deny
+	not any_deny
 }

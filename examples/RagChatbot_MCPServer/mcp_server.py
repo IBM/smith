@@ -586,30 +586,30 @@ Your purchase request for {product_name} has been approved and processed.
 
 # Debug tool removed - admin functionality no longer supported
 
-@mcp.tool()
-def set_user_role(user_role: str) -> str:
-    """
-       Set the current user role for policy enforcement
+# @mcp.tool()
+# def set_user_role(user_role: str) -> str:
+#     """
+#        Set the current user role for policy enforcement
        
-       Parameters:
-           user_role (str): The role to set (user, manager)
+#        Parameters:
+#            user_role (str): The role to set (user, manager)
            
-       Returns:
-           str: Confirmation of role change
-    """
-    valid_roles = ["user", "manager"]
-    if user_role not in valid_roles:
-        return f"Invalid role. Valid roles are: {valid_roles}"
+#        Returns:
+#            str: Confirmation of role change
+#     """
+#     valid_roles = ["user", "manager"]
+#     if user_role not in valid_roles:
+#         return f"Invalid role. Valid roles are: {valid_roles}"
     
-    # Use initialize_user_session to properly set all role-based context
-    from opa_config import initialize_user_session
-    initialize_user_session("mcp_user", user_role)
+#     # Use initialize_user_session to properly set all role-based context
+#     from opa_config import initialize_user_session
+#     initialize_user_session("mcp_user", user_role)
     
-    # Debug: Check current context after setting
-    current_context = get_current_user_context()
-    print(f"DEBUG: User context after role change: {current_context}")
+#     # Debug: Check current context after setting
+#     current_context = get_current_user_context()
+#     print(f"DEBUG: User context after role change: {current_context}")
     
-    return f"User role set to: {user_role}"
+#     return f"User role set to: {user_role}"
 
 def project_record(record, select_fields):
     """Return only requested fields if select_fields is provided; otherwise return full record."""

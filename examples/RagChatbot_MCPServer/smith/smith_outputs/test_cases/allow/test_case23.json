@@ -1,0 +1,39 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "send_email",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "roles": [
+                    "manager"
+                ]
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Email the meeting notes to partner@vendor.org with subject 'Meeting Summary' and body 'Please find attached meeting notes' with content 'Discussion points and action items' and attach 'notes.docx'",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "recipient_email": "partner@vendor.org",
+            "subject": "Meeting Summary",
+            "body": "Please find attached meeting notes",
+            "email_content": "Discussion points and action items",
+            "attached_file": "notes.docx"
+        }
+    }
+}

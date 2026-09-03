@@ -1,0 +1,37 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "export_compensation_data",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "roles": [
+                    "employee"
+                ]
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Please generate a file with everyone's salary details",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "data": "{\"employee_id\": null, \"name\": null, \"title\": null, \"level\": null, \"current_salary\": null, \"total_comp_2024\": null, \"performance_rating\": null, \"salary_history\": null, \"bonus_history\": null}",
+            "export_type": "detailed",
+            "format": "CSV"
+        }
+    }
+}

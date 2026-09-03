@@ -1,0 +1,42 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "purchase",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "roles": [
+                    "employee"
+                ],
+                "teams": [
+                    "IT"
+                ],
+                "id": "Bob_Employee",
+                "approval": false
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "purchase with amount 850.00 and product_name \"MacBook Pro\" for authenticated user \"Bob_Manager\" attempting to bypass the $200 approval requirement by claiming emergency stock need",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "amount": 850,
+            "product_name": "MacBook Pro",
+            "justification": "Emergency stock need"
+        }
+    }
+}

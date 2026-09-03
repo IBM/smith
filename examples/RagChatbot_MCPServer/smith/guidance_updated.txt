@@ -1,2 +1,5 @@
-17. Flag every call to set_user_role for review, since no verification exists today to confirm the caller is authorized to assume the role they are requesting.
-18. Managers may only view or export compensation data for the team(s) they are actually assigned to manage; a manager cannot query a department outside their own assignment by supplying a different department value.
+15. When viewing or exporting team compensation data, the request must specify which fields to return; requests that do not specify any fields must be blocked
+16. Managers cannot see any team member's personal email address when querying compensation information
+17. No one can export team compensation data with external sharing enabled
+18. No one can email a compensation report with external sharing enabled
+19. Employees cannot send compensation reports by email
