@@ -75,6 +75,13 @@ Strictly follow `./steps/architecture_analysis.md`.
 
 - Input: MCP server directory (e.g. `examples/call-for-papers-mcp/`)
 - Output: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/architecture.md`
+  — besides the layer/trust-boundary/enforcement sections, this step is
+  the **only** one that reads the server implementation, so two of its
+  findings are load-bearing for Step D and cannot be reconstructed
+  later: the **Disposition** column on the Trust Boundaries table (does
+  the tool act on an argument, merely echo it, or ignore it) and the
+  **Undeclared Fields** table (fields existing guidance depends on that
+  no tool declares, or that the governing tool does not declare).
 - Gate: if the confirmation mode is Gated, do not proceed to Step B until
   the human confirms the output. If Autonomous, continue to Step B
   immediately.
@@ -115,6 +122,12 @@ Strictly follow `./steps/threat_model.md`.
   the tool's architecture and questionnaire answers to produce the
   concrete threat vectors written into `threat_model.md` — it is not
   optional context, it is the taxonomy the whole step is structured around.
+- Input: `<TARGET_AGENT_PATH>/smith/tool_definitions.json` and
+  `<TARGET_AGENT_PATH>/smith/system_vars.json` — this step's STEP 6
+  verifies every field cited in a threat instance or evidence line
+  against the **governing tool's own** parameter list, not against the
+  file as a whole. It runs before Step D, so an unverified evidence line
+  is inherited downstream as established fact.
 - Output: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/threat_model.md`
 - Gate: if the confirmation mode is Gated, do not proceed to Step D until
   the human confirms the output. If Autonomous, continue to Step D

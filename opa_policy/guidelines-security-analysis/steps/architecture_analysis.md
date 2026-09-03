@@ -83,6 +83,35 @@ Pay particular attention to:
 - Session counters or quotas (who maintains them?)
 - Parameter values that are passed directly to external calls
 
+Then, for every tool argument, record its **disposition** — what the
+implementation actually does with the value:
+
+- **Acts on** — the value changes what the tool does: it filters or
+  selects data, routes the call, gates a branch, or is passed to an
+  external service.
+- **Echoed** — the value is accepted and then only reflected back in the
+  response, a log line, or result metadata. It does not change what the
+  tool does or returns.
+- **Ignored** — the value is accepted and never referenced at all.
+
+This is not a stylistic note; it is the only place in the whole workflow
+where it can be established. Step A is the sole step that reads the
+server implementation — the later steps see `tool_definitions.json`,
+which reports a parameter's name, type and default but cannot say
+whether the code honours it. A protective-sounding flag that is merely
+echoed will otherwise pass every downstream check and yield a rule that
+guarantees nothing (e.g. an `encryption_required: bool = True` argument
+that the tool interpolates into its response text without encrypting
+anything). The enforcement_mapping step relies on this column to refuse
+such rules.
+
+Determine the disposition by reading the tool's body, not its docstring
+or type signature. A default value in the signature says what will be
+substituted, never what the code does with it. When the body is unclear,
+record `Unclear` with a one-line note rather than guessing — a wrong
+"acts on" is worse than an admitted unknown, because it licenses a rule
+downstream.
+
 ---
 
 #### STEP 4 — Identify enforcement points
@@ -111,6 +140,32 @@ explanation. This surfaces underenumeration early — do NOT rewrite the
 rule or restate guidance.txt's intent; just record the field-visibility
 result.
 
+As part of the same sweep, produce a required **Undeclared fields**
+finding: for every field or value an existing guidance.txt rule depends
+on, confirm that some tool declares it as an argument (or some system
+variable declares it), and list the ones nothing declares. Include the
+rule number that references each.
+
+Distinguish two cases, because they lead to different downstream
+handling:
+
+- The field is declared by **some** tool but not by the tool that rule
+  governs. The rule is enforceable for a narrower set of tools than it
+  claims.
+- The field is declared by **no** tool at all — it does not exist
+  anywhere in the server's surface, and any rule depending on it can
+  never fire.
+
+Both are common and neither is visible later without this list: a rule
+naming a field that exists somewhere reads as verified to any check that
+looks up field names globally. Write the finding even when the list is
+empty (`Undeclared fields: none`), so the later steps can tell the check
+ran from the check finding nothing.
+
+Report the list; do not edit guidance.txt and do not propose
+replacement wording here. Deciding what to do about a phantom field
+belongs to the enforcement_mapping step and ultimately to the human.
+
 ---
 
 #### STEP 5 — Write architecture.md
@@ -134,10 +189,11 @@ this structure:
 
 ## Trust Boundaries
 
-| Field | Source | Classification |
-|---|---|---|
-| <field> | <who sets it> | Verified / Self-reported / External |
-[one row per field]
+| Field | Source | Classification | Disposition |
+|---|---|---|---|
+| <field> | <who sets it> | Verified / Self-reported / External | Acts on / Echoed / Ignored / Unclear |
+[one row per field; Disposition applies to tool arguments — write "n/a"
+ for subject and session fields the tool never receives]
 
 ## Data Flow
 
@@ -154,6 +210,13 @@ this structure:
 
 ### Blind Spots
 - <layer>: <what cannot be enforced and why>
+
+## Undeclared Fields
+
+| Field | Referenced by guidance rule # | Declared by | Consequence |
+|---|---|---|---|
+| <field> | <rule #> | <tool name(s), or "no tool"> | Rule enforceable for fewer tools than claimed / can never fire |
+[or "none" if every referenced field is declared by the tool its rule governs]
 ```
 
 ---
@@ -165,6 +228,12 @@ Present a one-paragraph summary of the key findings:
 - Which fields are self-reported (most important for policy)
 - Where OPA can be placed
 - What the main blind spots are
+- Any argument whose disposition is **Echoed**, **Ignored** or
+  **Unclear** — name them. A protective-sounding flag the tool does not
+  act on is the finding most likely to become a rule that guarantees
+  nothing, and this is the reviewer's first and best chance to see it.
+- Any row in the **Undeclared Fields** table, with the guidance rule
+  that depends on it (or "none")
 
 Log the summary and hand control back to the top-level workflow, which
 decides (per confirmation mode) whether to proceed to the next step.

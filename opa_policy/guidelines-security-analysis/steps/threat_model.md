@@ -17,6 +17,14 @@ not substitute one from elsewhere.
   names, definitions, and reference threat data — do not hardcode or
   duplicate its content into this skill file or into `threat_model.md`
   beyond the short citations STEP 4 asks for.
+- Input 4: `<TARGET_AGENT_PATH>/smith/tool_definitions.json` — the
+  authoritative source for `input.args.*`, **per tool**: each entry's
+  `parameters` array lists only the arguments that tool accepts. STEP 6
+  verifies every cited field against it. Required — if it is absent,
+  stop and tell the user to run `smith --flag get_mcp_parameter`.
+- Input 5: `<TARGET_AGENT_PATH>/smith/system_vars.json` — the
+  authoritative source for `input.extensions.subject.*` field names,
+  used in the same verification.
 - Output: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/threat_model.md`
 
 ### Workflow (follow strictly)
@@ -25,8 +33,9 @@ not substitute one from elsewhere.
 
 #### STEP 1 — Read inputs
 
-Read `architecture.md`, `policy_guidance_questionnaire.md`, and the full
-`owasp_10_ai_catalog.json` catalog before proceeding.
+Read `architecture.md`, `policy_guidance_questionnaire.md`, the full
+`owasp_10_ai_catalog.json` catalog, `tool_definitions.json`, and
+`system_vars.json` before proceeding.
 If any file is missing, stop and tell the user which file is needed.
 
 The catalog's `threats` array has exactly 10 entries, `id` ASI01 through
@@ -286,10 +295,26 @@ before they propagate into Step D.
 For every threat instance and every "Evidence:" line:
 
 1. If it names an `input.args.<x>`, an `input.extensions.subject.<x>`,
-   or any other structured field, confirm that exact field appears in
-   `tool_definitions.json` (for `input.args.*`) or in
-   `system_vars.json` / architecture.md's Trust Boundaries table (for
-   `input.extensions.*` and other subject fields).
+   or any other structured field, confirm that exact field is declared
+   where the threat instance needs it:
+   - For `input.args.<x>`: name the tool the threat instance concerns,
+     then confirm the field appears in **that tool's own** `parameters`
+     array in `tool_definitions.json`. Do not accept the field merely
+     appearing somewhere in the file — many tools share a parameter
+     name, and a field declared on one tool says nothing about another.
+     A threat instance citing `args.department` as evidence against a
+     tool that has no `department` argument is a fabricated evidence
+     line, even though the name exists elsewhere.
+   - For `input.extensions.subject.<x>` and other subject fields:
+     confirm the key appears in `system_vars.json` or
+     architecture.md's Trust Boundaries table, spelled exactly as that
+     source spells it (`roles`, not `role`).
+
+   This check runs here as well as in the enforcement_mapping step
+   because it runs *first*. A threat instance that verifies clean here
+   is inherited downstream as established, and enforcement_mapping's
+   own threat-linkage check will then find genuine upstream support for
+   a rule built on a field that tool never receives.
 2. If it cites `architecture.md` (a layer, file, or behaviour), confirm
    the citation matches text actually present in `architecture.md`.
 3. If it cites a questionnaire answer (e.g. "per Q9"), confirm that

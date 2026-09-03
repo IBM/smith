@@ -288,6 +288,38 @@ For every rule under "Policy Rules (OPA scope only)":
       it to the tools whose domain actually contains those values, per
       the remedy below.
 
+   e. If the rule's ALLOW path depends on the tool acting on an
+      argument — that is, the rule permits the call *because* a
+      protective flag is set — confirm from `architecture.md` that the
+      tool actually acts on it. `architecture.md` is Step A's reading of
+      the server implementation and is this step's only sanctioned view
+      of it; do not open the server source here. If `architecture.md`
+      does not say either way, treat the argument as unverified: note
+      the gap for the reviewer rather than assuming the tool honours
+      it. A parameter the tool accepts and then
+      only echoes back, logs, or ignores is **inert**: permitting a call
+      because the flag is set grants a false assurance, because the call
+      behaves identically whether it is set or not. Deny-path rules are
+      unaffected: when OPA denies on a flag, the block itself is the
+      enforcement and what the tool would have done is irrelevant. The
+      asymmetry is the whole point — the same boolean can be sound to
+      deny on and worthless to permit on.
+
+      Worked example: `email_compensation_report` declares
+      `encryption_required: bool = True`, and the implementation only
+      interpolates it into its response string — nothing is encrypted.
+      A rule blocking the call when the flag is explicitly `false` looks
+      enforceable and passes every check above, yet the permitted call
+      sends exactly the same unencrypted data. Contrast
+      `external_sharing` on the same tool, equally un-acted-upon: a rule
+      denying when it is `true` is sound, because the denial stops the
+      call outright.
+
+      Where a permit depends on an inert argument, write no rule.
+      Record it in the gap register (STEP 4) as a tool-implementation
+      item — the control is real and wanted, it just cannot come from
+      OPA until the tool honours the flag.
+
    A rule that checks a field that does not exist at invocation time,
    or a value that tool can never carry, cannot be enforced.
 
@@ -649,15 +681,37 @@ the three-criteria test above would report nothing for them:
   candidate list can conflict with each other, so scan new-vs-new pairs
   as well as new-vs-existing.
 - **Correction.** The candidate constrains the same field as an existing
-  rule with a value set that *diverges* from it — values added, and in
-  particular values dropped. Then the candidate must be written as a
-  correction that names the existing rule number and states the whole
-  replacement set, not as an additive "in addition to X and Y, also
-  block Z" line. An additive phrasing that silently omits a value the
-  existing rule listed reads as an addition while actually being a
-  removal, and the reviewer has no way to see that a value was dropped
-  or why. If the dropped value was found not to exist — `architecture.md`
-  records fields that no tool declares — say so in the correction.
+  rule with a value set that *diverges* from it. Split by the kind of
+  divergence, because only one kind can be expressed by appending:
+
+  - *Additive* — the candidate adds values and removes none, and
+    narrows no scope. Write it as a plain rule stating only the
+    additional values. The existing rule stays, the union is correct,
+    and nothing needs to reference anything. Do NOT write "in addition
+    to X and Y" or name the rule being extended: rule numbers are not
+    stable across runs (`guidance.txt` is appended to and renumbered),
+    and the cross-reference buys nothing the union does not already
+    give.
+  - *Contradictory* — the candidate requires a value to be **removed**
+    from the existing rule's set, or its scope **narrowed** to fewer
+    tools. This cannot be written as an appended line at all.
+    Appending never removes: both lines end up in `guidance.txt` as
+    independent numbered rules, and per this document's own note on
+    downstream consumers, `test_generation` will decompose both and
+    policy creation will emit a `deny` block for both — so the value
+    the candidate meant to retire stays enforced and the two rules
+    contradict each other permanently. A line that opens "Correcting
+    rule N" is the clearest instance of this failure: it reads as a
+    fix and functions as a conflict.
+
+  For a contradictory divergence, write **no** guidance line. Record it
+  as a proposed edit to the existing numbered rule and surface it in
+  STEP 9 for the human to apply by hand: name the rule, state the full
+  replacement value set and scope, and say what is being removed and
+  why. Where a removed value was found not to exist at all —
+  `architecture.md` records fields no tool declares — cite that.
+  Step D never edits `guidance.txt`, so a correction is always a
+  recommendation, never an output line.
 
 Record all three verdicts in one table:
 
@@ -674,12 +728,12 @@ duplication doesn't have to be caught downstream at the Rego layer by
 `policy_duplication.md` / `duplication_suggestion` (which operate on
 the compiled policy, not on guidance).
 
-A **Correction** is the one verdict that does change what gets written:
-rephrase the *candidate* line (never the existing `guidance.txt` rule)
-so it names the rule it corrects and states the full replacement value
-set. The existing rule stays untouched — Step D never edits
-`guidance.txt` — so the human still decides whether to accept the
-correction during STEP 9.
+A **Correction** is the one verdict that changes what gets written, and
+in only one direction: an *additive* divergence is written as a plain
+rule carrying just the new values, and a *contradictory* one is written
+nowhere — it leaves `guidance_updated.txt` entirely and becomes a
+proposed edit in STEP 9. Never rewrite the existing `guidance.txt` rule
+here; Step D does not edit that file.
 
 Log the resulting table for STEP 9. If no pair yields any of the three
 verdicts, log a one-line result (`Redundancy self-check: no overlapping,
@@ -691,6 +745,52 @@ for a typical file of 20-40 rules that is trivial. Per STEP 8,
 `guidance_updated.txt` contains numbered rules only, so every row in
 the scan has a structured-field check to compare — no exempt-notes
 carve-out is needed here.
+
+---
+
+#### STEP 8c — Regression check against the previous run
+
+STEP 8 overwrites `guidance_updated.txt` in full on every run, by
+design, so the file stays consistent with the current threat model
+instead of accumulating stale entries. The cost of that is real: a
+control this workflow proposed on an earlier run can silently fail to
+reappear, because nothing compares the two runs. Every other check in
+this document asks "is this candidate sound?" — none asks "is anything
+the last run found now missing?" A control can be correct, verified,
+and quietly gone.
+
+Before writing the file, read the prior `guidance_updated.txt` if one
+exists on disk (the version about to be overwritten). For each rule in
+it, decide which of these applies:
+
+1. **Still proposed** — a candidate in this run covers the same field
+   and condition. Nothing to report.
+2. **Merged** — the rule is now present in `guidance.txt`, because the
+   human ran Step E since the last run. Nothing to report; it is no
+   longer a candidate precisely because it succeeded.
+3. **Deliberately dropped** — this run's checks rejected it. Report it
+   with the check that rejected it (criterion 1b/1d/1e, subsumption,
+   reducibility, justification). This is the healthy case and the
+   reviewer should still see it.
+4. **Unexplained** — none of the above. It simply is not in this run's
+   candidate list and no check rejected it. Report it as a regression.
+
+Case 4 is the one this step exists for. Do not re-add the rule
+automatically: the threat model may have legitimately changed, and
+silently resurrecting a candidate would defeat the point of rebuilding
+the file from the current analysis. Present it to the human in STEP 9
+with its text and the run it came from, and let them decide whether it
+belongs.
+
+Record the result as:
+
+| Prior rule | Status | Explanation |
+|---|---|---|
+| <rule text from the previous run> | Still proposed / Merged / Dropped / **Regression** | <covering candidate, or rejecting check, or "unexplained"> |
+
+If no prior `guidance_updated.txt` exists, log
+`Regression check: no prior run to compare against` so the human can
+see the check ran rather than silently passing.
 
 ---
 
@@ -718,6 +818,18 @@ the tables:
   was sent instead (gap register, or the Input Schema / Known values
   section). A reviewer expecting a control to be enforced should learn
   here that it became a monitoring item.
+- Any **regression** from STEP 8c — a rule the previous run proposed that
+  this run neither proposes nor explains. Name each one and say it was
+  not re-added automatically, so the human can decide. A control that
+  disappears without a stated reason is the failure mode this whole
+  workflow is least able to notice on its own.
+- Any **proposed edit to an existing `guidance.txt` rule** from STEP 8b's
+  contradictory-Correction path, as a numbered list the human can work
+  through: the rule number, its full replacement text, and what is being
+  removed and why. These are the only findings in the whole workflow that
+  cannot be delivered by appending, so they are the easiest to lose —
+  present them as work the human still has to do, not as something the
+  run already handled.
 - Any rule **narrowed** by STEP 6b criterion 1 — which governed tools it
   was narrowed to and which were dropped, and whether the drop was for a
   missing field (1b) or a value outside that tool's domain (1d). This is
