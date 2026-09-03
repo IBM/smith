@@ -141,6 +141,13 @@ Strictly follow `./steps/enforcement_mapping.md`.
   Low-confidence questionnaire answers are excluded from the candidate
   list. Step D's STEP 8 (Reconcile candidates against guidance.txt) is
   the only step that touches guidance.txt.
+- Input: `<TARGET_AGENT_PATH>/smith/tool_definitions.json` — the
+  authoritative, per-tool source for `input.args.*`. Step D's STEP 6b and
+  STEP 7 verify every candidate rule against it: a rule may only
+  reference arguments the governing tool actually declares. Required — if
+  it is missing, stop and run `smith --flag get_mcp_parameter`.
+- Input: `<TARGET_AGENT_PATH>/smith/system_vars.json` — the authoritative
+  source for `input.extensions.subject.*`, used in the same verification.
 - Input (optional): `<TARGET_AGENT_PATH>/smith/guidance.txt` — the same
   existing per-target-agent guidance file already read in Step B, not a
   new file. Used here only to check which of this step's candidate rules

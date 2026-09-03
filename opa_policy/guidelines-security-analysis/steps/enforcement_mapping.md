@@ -29,6 +29,18 @@ not substitute one from elsewhere.
   questionnaire) are not yet represented in it. If absent, note the gap
   and skip STEP 7's comparison (write `guidance_updated.txt` containing
   only the newly derived rules).
+- Input 6: `<TARGET_AGENT_PATH>/smith/tool_definitions.json` — the
+  authoritative source for `input.args.*` field names and types,
+  **per tool**: each entry's `parameters` array lists only the arguments
+  that tool accepts. STEP 6b and STEP 7 verify every candidate rule
+  against it. This input is required, not optional — without it no rule
+  can be verified. If it is absent, stop and tell the user to run
+  `smith --flag get_mcp_parameter`.
+- Input 7: `<TARGET_AGENT_PATH>/smith/system_vars.json` — the
+  authoritative source for `input.extensions.subject.*` field names. It
+  takes precedence over what is inferred from source code. If absent,
+  fall back to `architecture.md`'s Trust Boundaries table and note the
+  gap.
 - Output 1: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/owasp_policy_guidelines.md`
 - Output 2: `<TARGET_AGENT_PATH>/smith/guidance_updated.txt` — written next
   to `guidance.txt`, not under `guidelines-security-analysis/`
@@ -59,8 +71,9 @@ fields, it is out of OPA scope — even if it is a real and serious risk.
 
 #### STEP 1 — Read inputs
 
-Read `architecture.md`, `threat_model.md`, and the `owasp_10_ai_catalog.json`
-catalog in full before proceeding.
+Read `architecture.md`, `threat_model.md`, the `owasp_10_ai_catalog.json`
+catalog, `tool_definitions.json`, and `system_vars.json` in full before
+proceeding.
 If a required file is missing, stop and tell the user which file is needed.
 
 ---
@@ -242,11 +255,41 @@ rule specifications this step produces.
 
 For every rule under "Policy Rules (OPA scope only)":
 
-1. **Fields.** Every `input.args.<x>` must appear in
-   `tool_definitions.json`. Every `input.extensions.subject.<x>` (or any
-   other `input.extensions.*`) must appear in `system_vars.json` or in
-   `architecture.md`'s Trust Boundaries table. A rule that checks a
-   field that does not exist at invocation time cannot be enforced.
+1. **Fields.** A rule may only reference data the MCP server actually
+   declares. Verify this per tool, not per field:
+
+   a. List the tool(s) the rule governs, using ONLY names that appear in
+      `tool_definitions.json`. A rule may govern several — list them all.
+      A rule that governs a tool the server does not expose is not a
+      rule; drop it.
+   b. For EACH governed tool independently, every `input.args.<x>` the
+      rule needs must appear in THAT tool's own `parameters` array. A
+      field present on one governed tool and absent from another does
+      NOT verify the rule for the second tool. Checking only that the
+      field name appears somewhere in `tool_definitions.json` is not
+      sufficient and is the specific mistake this criterion exists to
+      prevent.
+   c. Every `input.extensions.subject.<x>` (or any other
+      `input.extensions.*`) must appear in `system_vars.json` or in
+      `architecture.md`'s Trust Boundaries table, spelled exactly as the
+      key spells it — if the key is `roles`, the field is
+      `subject.roles`, never `subject.role`. Do not singularize,
+      pluralize, or otherwise rename a declared key.
+
+   A rule that checks a field that does not exist at invocation time
+   cannot be enforced.
+
+   Worked example — one rule, two governed tools, one verdict each:
+
+   | Rule | Governed tool | Field | On that tool's `parameters`? | Verified? |
+   |---|---|---|---|---|
+   | Managers may only view or export compensation data for their own team | `view_team_compensation` | `input.args.department` | yes | Yes |
+   | (same rule) | `export_compensation_data` | `input.args.department` | no | No |
+
+   The rule verifies for `view_team_compensation` only. Per the remedy
+   below it is narrowed to that tool rather than kept whole — keeping it
+   whole would produce a policy rule whose body can never evaluate.
+
 2. **Mitigation grounding.** The mitigation cited from the catalog for
    the rule's ASI category must be present verbatim (or as a clear
    paraphrase) in that catalog entry's `mitigations` array. Do not
@@ -263,10 +306,15 @@ For every rule under "Policy Rules (OPA scope only)":
    mark the value set as `TBD — requires human confirmation` and treat
    the rule as pending rather than active.
 
-Any rule that fails verification: fix the citation, or remove the rule
-from `owasp_policy_guidelines.md`. Log a one-line result
-(e.g. `Citations verified: 9/9` or
-`Citations verified: 7/9 — 2 rules dropped for missing fields`).
+Any rule that fails verification: fix the citation, **narrow the rule to
+only the governed tools where it verifies**, or remove it from
+`owasp_policy_guidelines.md`. Narrowing is the right remedy whenever
+criterion 1b splits a rule — a rule enforceable for some of its governed
+tools should be kept for those tools and dropped for the rest, not
+discarded whole and not kept whole. Record which tools were dropped and
+why. Log a one-line result (e.g. `Citations verified: 9/9`,
+`Citations verified: 7/9 — 2 rules dropped for missing fields`, or
+`Citations verified: 9/9 — 1 rule narrowed to 1 of 2 governed tools`).
 
 ---
 
@@ -294,6 +342,19 @@ candidate rules on their own (STEP 6b already applied this to Source 1).
 An answer that fails the boundary test is out of OPA scope for the same
 reason it would be in STEP 2 — note it in the gap register (STEP 4)
 instead if it isn't there already.
+
+Then apply STEP 6b criterion 1 to every surviving Source 2 candidate,
+exactly as it is applied to Source 1: resolve the governed tool(s)
+against `tool_definitions.json`, and verify each needed
+`input.args.<x>` against that tool's own `parameters` array and each
+subject field against `system_vars.json`. Questionnaire answers state
+policy *intent* and are written without reference to the tool list, so
+they are the likeliest source of a rule about a capability this server
+does not have — an answer constraining who may reset a password, when no
+password tool exists, is not a candidate at all. Drop any candidate that
+names an undeclared tool or field and log the reason; narrow it per the
+STEP 6b remedy if only some of its governed tools verify. Do not carry
+an unverified Source 2 candidate into STEP 8.
 
 **Deduplicate.** If a Source 2 candidate describes the same condition on
 the same field as a Source 1 rule (this happens when a questionnaire
@@ -353,9 +414,19 @@ For every candidate, write out the coverage decision explicitly in a
 scratch table before producing `guidance_updated.txt`, so a reviewer can
 audit the call:
 
-| Candidate | Field | Operator | Value set | Matching guidance.txt rule # | Covered? |
-|---|---|---|---|---|---|
-| <one-line candidate> | <input.*> | <exact / substring / ...> | <values> | <rule # or "—"> | Yes / No |
+| Candidate | Verified (tool, field) | Field | Operator | Value set | Matching guidance.txt rule # | Covered? |
+|---|---|---|---|---|---|---|
+| <one-line candidate> | <tool>.<param> / subject.<key> | <input.*> | <exact / substring / ...> | <values> | <rule # or "—"> | Yes / No |
+
+The "Verified (tool, field)" column carries forward the STEP 6b
+criterion 1 result for that candidate — the governed tool(s) it survived
+verification for, and the declared field on each. Before writing any
+line to `guidance_updated.txt`, confirm it has an entry in that column:
+**do not write a candidate whose `(tool, field)` set failed
+verification**, and where a candidate was narrowed, write only the
+narrowed form. A line with no verified `(tool, field)` is a claim about
+a capability the MCP server does not declare, and merging it would push
+that claim into test generation and policy creation.
 
 Do NOT include this scratch table in `guidance_updated.txt`; log it
 alongside the STEP 9 summary.
