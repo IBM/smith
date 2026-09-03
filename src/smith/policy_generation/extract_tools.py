@@ -76,7 +76,9 @@ async def fetch_tools_stdio(command: str, args: list, cwd: str = None) -> list:
 
 def tool_to_dict(tool) -> dict:
     """Convert an MCP tool object to a serializable dict."""
-    schema = getattr(tool, "inputSchema", None) or getattr(tool, "input_schema", None) or {}
+    schema = (
+        getattr(tool, "inputSchema", None) or getattr(tool, "input_schema", None) or {}
+    )
     properties = schema.get("properties", {})
     required_fields = schema.get("required", [])
 
