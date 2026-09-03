@@ -1,0 +1,45 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "get_events",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "user_name": "Dr. Wilson",
+                "user_role": [
+                    "faculty"
+                ],
+                "queries_this_session": 4,
+                "dissertation_area": "Software engineering",
+                "research_area": [
+                    "Artificial intelligence",
+                    "Cybersecurity and privacy",
+                    "Software engineering"
+                ]
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Search for events related to economics, finance, marketing, supply chain, education, psychology, sociology, political science, trade shows, career fairs, startup expos, or hackathons within our department's approved topics and return exactly 20 results.",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "keywords": "economics finance marketing supply chain education psychology sociology political science trade shows career fairs startup expos hackathons",
+            "topic": "Software engineering",
+            "limit": 20
+        }
+    }
+}

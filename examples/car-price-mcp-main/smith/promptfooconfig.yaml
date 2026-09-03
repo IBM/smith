@@ -3,7 +3,7 @@ targets:
 - id: http
   label: agent_name
   config:
-    url: http://127.0.0.1:8000/chat
+    url: http://127.0.0.1:9000/chat
     method: POST
     headers:
       Content-Type: application/json

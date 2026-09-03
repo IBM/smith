@@ -103,6 +103,20 @@ uv pip install -e .   # or: pip install -e .
 
 This installs the `smith` CLI command.
 
+### Running the tests
+
+```bash
+make integration    # stage-level tests driving the real smith CLI
+```
+
+`tests/integration/` covers one pipeline stage per module (generation, translation, policy
+testing/validation, cross-validate, cpex translate, promptfoo config, bypass generation,
+refinement suggestions, explorer/classifier, snapshot, smoke), running against frozen
+fixtures. 
+
+The separate `make test` target is the OPA policy scorecard, which scores the current
+policy against your generated test cases rather than testing Smith itself.
+
 ### Configuration
 
 ```bash
@@ -359,7 +373,9 @@ smith/
 │   ├── test_case_evaluation/ # Label validation and report generation
 │   ├── policy_testing/      # OPA scorecard harness (score_card.sh, coverage)
 │   └── tools/               # Developer utilities (explorer UI, license headers)
-├── tests/                   # Placeholder for the test suite (TODO)
+├── tests/                   # Test suite
+│   └── integration/         # Stage-level tests driving the smith CLI (`make integration`)
+│       └── fixtures/        # Frozen policy + test-case inputs
 ├── test_generation/         # Test generation skill markdown file
 ├── .env_template            # Environment template
 ├── SKILL.md                 # Main agent skill instructions

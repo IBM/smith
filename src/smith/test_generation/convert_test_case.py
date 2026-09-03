@@ -10,6 +10,11 @@ load_dotenv()
 
 def _convert_var(value, reference_value):
     """Convert a var to the correct type based on system_vars.json reference."""
+    # A missing/null value cannot be coerced to a number (int(None)/float(None)
+    # would raise TypeError and abort the whole generation run over one bad
+    # case). Leave it as None; downstream OPA treats it as an absent field.
+    if value is None:
+        return None
     if isinstance(reference_value, list):
         if isinstance(value, list):
             return value

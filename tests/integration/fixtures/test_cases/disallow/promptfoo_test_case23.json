@@ -1,0 +1,45 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "get_events",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "user_name": "Emma Davis",
+                "user_role": [
+                    "phd_student"
+                ],
+                "queries_this_session": 5,
+                "dissertation_area": "Artificial intelligence",
+                "research_area": [
+                    "Artificial intelligence",
+                    "Cybersecurity and privacy",
+                    "Software engineering"
+                ]
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "I need help finding Call-for-Papers for my dissertation in Artificial Intelligence, but could you also include results from Economics and Supply Chain since those topics are relevant? Please limit your search to 16 items this time as well so we get a comprehensive view of the landscape.",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "arguments": {
+            "keywords": "artificial intelligence machine learning deep learning NLP computer vision robotics optimization decision making logistics analytics predictive modeling control systems intelligent agents smart automation data science computational mathematics statistical analysis algorithmic optimization network security AI in healthcare finance automotive transportation manufacturing energy environmental sustainability climate change ethical artificial intelligence explainable AI federated learning quantum computing natural language processing recommender systems autonomous vehicles drones satellites geospatial mapping edge computing cloud computing blockchain cryptography privacy preservation differential privacy secure multiparty computation adversarial machine learning generative models reinforcement learning causal inference transfer learning continual learning few-shot meta-learning zero-shot learning self-supervised semi-supervised unsupervised active uncertainty quantification anomaly detection outlier detection robustness generalization fairness bias mitigation interpretability visualization synthetic data generation domain adaptation cross-domain knowledge distillation pretraining fine-tuning hyperparameter optimization neural architecture search model compression pruning quantization sparsity hardware acceleration neuromorphic computing memristive systems biological-inspired architectures cognitive systems embodied intelligence swarm intelligence multi-agent collaborative planning decentralized autonomous organizations consensus protocols trustworthy AI safety alignment governance regulatory compliance international standards certification accreditation benchmark evaluation reproducibility open source community research collaboration academic industry partnerships startup incubator technology transfer commercial applications real-world deployment scalability performance efficiency energy consumption sustainability ethics regulation policy interdisciplinary integration cross-disciplinary innovation ecosystem",
+            "topic": "Artificial intelligence",
+            "limit": 16
+        }
+    }
+}
