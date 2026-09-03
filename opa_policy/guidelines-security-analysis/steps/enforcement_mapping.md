@@ -628,6 +628,14 @@ appending to a prior run's file — this keeps it consistent with the
 current threat model and questionnaire instead of accumulating stale
 entries from earlier iterations.
 
+**Before overwriting, read the existing `guidance_updated.txt` if one is
+present and log its numbered rules verbatim.** They are the previous
+run's proposal and the overwrite is the only thing that destroys them —
+STEP 8c compares against this captured copy, and once the write has
+happened there is nothing left on disk to compare against. If no file
+was present, log that instead so STEP 8c can tell a first run from a
+lost capture.
+
 Do NOT modify `guidance.txt` or `policy_guidance_questionnaire.md`
 themselves. `guidance_updated.txt` is a proposal for the human to review
 and merge in manually.
@@ -759,9 +767,11 @@ this document asks "is this candidate sound?" — none asks "is anything
 the last run found now missing?" A control can be correct, verified,
 and quietly gone.
 
-Before writing the file, read the prior `guidance_updated.txt` if one
-exists on disk (the version about to be overwritten). For each rule in
-it, decide which of these applies:
+Use the previous run's rules **as captured in STEP 8 immediately before
+the overwrite** — not the file on disk, which by this point holds this
+run's output and would compare the run against itself, reporting every
+rule as still-proposed and detecting nothing. For each captured rule,
+decide which of these applies:
 
 1. **Still proposed** — a candidate in this run covers the same field
    and condition. Nothing to report.
@@ -788,9 +798,11 @@ Record the result as:
 |---|---|---|
 | <rule text from the previous run> | Still proposed / Merged / Dropped / **Regression** | <covering candidate, or rejecting check, or "unexplained"> |
 
-If no prior `guidance_updated.txt` exists, log
+If STEP 8 recorded that no prior `guidance_updated.txt` was present, log
 `Regression check: no prior run to compare against` so the human can
-see the check ran rather than silently passing.
+see the check ran rather than silently passing. If STEP 8 recorded
+nothing either way, say so — that is a skipped capture, not a first run,
+and the two must not be reported the same way.
 
 ---
 
