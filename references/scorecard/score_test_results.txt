@@ -1,5 +1,35 @@
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case127.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case127.json
+	{"result":true}
+
+-----------------------------
+
 Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case31.json
 /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case31.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case89.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case89.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case66.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case66.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/cv_test_case119.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/cv_test_case119.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case70.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case70.json
 	{"result":true}
 
 -----------------------------
@@ -16,14 +46,80 @@ Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/a
 
 -----------------------------
 
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/cv_test_case50.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/cv_test_case50.json
+	{"result":true}
+
+-----------------------------
+
 Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case11.json
 /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case11.json
 	{"result":true}
 
 -----------------------------
 
-Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/cv2_test_case9.json
-/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/cv2_test_case9.json
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case46.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case46.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case107.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case107.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case85.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case85.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case93.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case93.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case9.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case9.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case111.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case111.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case110.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case110.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case92.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case92.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case84.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case84.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case106.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case106.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case47.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case47.json
 	{"result":true}
 
 -----------------------------
@@ -34,26 +130,146 @@ Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/a
 
 -----------------------------
 
-Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/cv2_test_case8.json
-/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/cv2_test_case8.json
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/cv_test_case71.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/cv_test_case71.json
 	{"result":true}
 
 -----------------------------
 
-Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case4.json
-/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case4.json
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case51.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case51.json
 	{"result":true}
 
 -----------------------------
 
-Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case26.json
-/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case26.json
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case71.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case71.json
 	{"result":true}
 
 -----------------------------
 
-Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case3.json
-/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case3.json
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case88.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case88.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case67.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case67.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/cv_test_case47.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/cv_test_case47.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case30.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case30.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case126.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case126.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case130.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case130.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case56.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case56.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/cv_test_case60.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/cv_test_case60.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case40.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case40.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case101.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case101.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case83.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case83.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case95.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case95.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case117.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case117.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case121.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case121.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case37.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case37.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case60.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case60.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case99.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case99.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case76.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case76.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case21.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case21.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/cv_test_case57.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/cv_test_case57.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case2.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case2.json
 	{"result":true}
 
 -----------------------------
@@ -64,14 +280,128 @@ Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/a
 
 -----------------------------
 
-Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case16.json
-/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case16.json
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case98.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case98.json
 	{"result":true}
 
 -----------------------------
 
-Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case23.json
-/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case23.json
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case77.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case77.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case61.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case61.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case36.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case36.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case120.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case120.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case116.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case116.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case94.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case94.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case82.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case82.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case100.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case100.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case41.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case41.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case57.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case57.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case115.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case115.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/cv_test_case58.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/cv_test_case58.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case78.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case78.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case97.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case97.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case81.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case81.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case39.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case39.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case103.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case103.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case42.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case42.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case54.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case54.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case119.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case119.json
 	{"result":true}
 
 -----------------------------
@@ -82,8 +412,74 @@ Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/a
 
 -----------------------------
 
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case74.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case74.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case62.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case62.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case35.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case35.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case123.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case123.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case19.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case19.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case58.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case58.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case59.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case59.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case122.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case122.json
+	{"result":true}
+
+-----------------------------
+
 Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case18.json
 /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case18.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case34.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case34.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case63.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case63.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case75.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case75.json
 	{"result":true}
 
 -----------------------------
@@ -94,8 +490,26 @@ Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/a
 
 -----------------------------
 
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case118.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case118.json
+	{"result":true}
+
+-----------------------------
+
 Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case0.json
 /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case0.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/cv_test_case55.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/cv_test_case55.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case55.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case55.json
 	{"result":true}
 
 -----------------------------
@@ -106,8 +520,56 @@ Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/a
 
 -----------------------------
 
-Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case25.json
-/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case25.json
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case43.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case43.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case38.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case38.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case102.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case102.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case80.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case80.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case79.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case79.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case96.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case96.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case114.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case114.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case72.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case72.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case64.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case64.json
 	{"result":true}
 
 -----------------------------
@@ -118,8 +580,104 @@ Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/a
 
 -----------------------------
 
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case109.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case109.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case48.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case48.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case125.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case125.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/cv_test_case121.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/cv_test_case121.json
+	{"result":true}
+
+-----------------------------
+
 Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case29.json
 /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case29.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case113.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case113.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case91.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case91.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case68.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case68.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case87.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case87.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case105.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case105.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case44.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case44.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case13.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case13.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/cv_test_case72.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/cv_test_case72.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case52.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case52.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case53.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case53.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/cv_test_case65.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/cv_test_case65.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case128.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case128.json
 	{"result":true}
 
 -----------------------------
@@ -130,8 +688,74 @@ Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/a
 
 -----------------------------
 
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case45.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case45.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/cv_test_case49.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/cv_test_case49.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case104.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case104.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case69.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case69.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case86.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case86.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case90.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case90.json
+	{"result":true}
+
+-----------------------------
+
 Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case28.json
 /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case28.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case112.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case112.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/cv_test_case120.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/cv_test_case120.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case124.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case124.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/cv_test_case69.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/cv_test_case69.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case49.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case49.json
 	{"result":true}
 
 -----------------------------
@@ -142,14 +766,62 @@ Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/a
 
 -----------------------------
 
-Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/promptfoo_test_case21.json
-/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/promptfoo_test_case21.json
-	{"result":false}
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case108.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case108.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/cv_test_case45.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/cv_test_case45.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case65.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case65.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case73.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case73.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case24.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case24.json
+	{"result":true}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case6.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case6.json
+	{"result":true}
 
 -----------------------------
 
 Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case31.json
 /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case31.json
+	{"result":false}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case89.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case89.json
+	{"result":false}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case66.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case66.json
+	{"result":false}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case70.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case70.json
 	{"result":false}
 
 -----------------------------
@@ -166,14 +838,14 @@ Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/d
 
 -----------------------------
 
-Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case50.json
-/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case50.json
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case11.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case11.json
 	{"result":false}
 
 -----------------------------
 
-Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case11.json
-/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case11.json
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/cv_test_case3.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/cv_test_case3.json
 	{"result":false}
 
 -----------------------------
@@ -184,44 +856,68 @@ Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/d
 
 -----------------------------
 
-Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/promptfoo_test_case17.json
-/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/promptfoo_test_case17.json
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case107.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case107.json
 	{"result":false}
 
 -----------------------------
 
-Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/promptfoo_test_case1.json
-/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/promptfoo_test_case1.json
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case85.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case85.json
 	{"result":false}
 
 -----------------------------
 
-Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/promptfoo_test_case16.json
-/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/promptfoo_test_case16.json
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case93.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case93.json
 	{"result":false}
 
 -----------------------------
 
-Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/bypass_test_case4.json
-/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/bypass_test_case4.json
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case9.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case9.json
 	{"result":false}
 
 -----------------------------
 
-Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case47.json
-/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case47.json
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case111.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case111.json
 	{"result":false}
 
 -----------------------------
 
-Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/cv_test_case2.json
-/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/cv_test_case2.json
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/promptfoo_test_case0.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/promptfoo_test_case0.json
 	{"result":false}
 
 -----------------------------
 
-Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/cv_test_case30.json
-/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/cv_test_case30.json
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case8.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case8.json
+	{"result":false}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case110.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case110.json
+	{"result":false}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case92.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case92.json
+	{"result":false}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case84.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case84.json
+	{"result":false}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case106.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case106.json
 	{"result":false}
 
 -----------------------------
@@ -238,6 +934,12 @@ Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/d
 
 -----------------------------
 
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/cv_test_case26.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/cv_test_case26.json
+	{"result":false}
+
+-----------------------------
+
 Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case4.json
 /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case4.json
 	{"result":false}
@@ -250,14 +952,32 @@ Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/d
 
 -----------------------------
 
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case88.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case88.json
+	{"result":false}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case67.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case67.json
+	{"result":false}
+
+-----------------------------
+
 Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case30.json
 /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case30.json
 	{"result":false}
 
 -----------------------------
 
-Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/cv_test_case21.json
-/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/cv_test_case21.json
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case126.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case126.json
+	{"result":false}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/cv_test_case129.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/cv_test_case129.json
 	{"result":false}
 
 -----------------------------
@@ -280,14 +1000,32 @@ Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/d
 
 -----------------------------
 
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case101.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case101.json
+	{"result":false}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case83.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case83.json
+	{"result":false}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case95.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case95.json
+	{"result":false}
+
+-----------------------------
+
 Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/promptfoo_test_case6.json
 /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/promptfoo_test_case6.json
 	{"result":false}
 
 -----------------------------
 
-Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/cv_test_case9.json
-/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/cv_test_case9.json
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case117.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case117.json
 	{"result":false}
 
 -----------------------------
@@ -300,6 +1038,18 @@ Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/d
 
 Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/cv_test_case17.json
 /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/cv_test_case17.json
+	{"result":false}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case99.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case99.json
+	{"result":false}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case76.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case76.json
 	{"result":false}
 
 -----------------------------
@@ -328,6 +1078,30 @@ Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/d
 
 -----------------------------
 
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case98.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case98.json
+	{"result":false}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case77.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case77.json
+	{"result":false}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/cv_test_case16.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/cv_test_case16.json
+	{"result":false}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case61.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case61.json
+	{"result":false}
+
+-----------------------------
+
 Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case36.json
 /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case36.json
 	{"result":false}
@@ -346,14 +1120,26 @@ Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/d
 
 -----------------------------
 
-Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/promptfoo_test_case10.json
-/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/promptfoo_test_case10.json
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case116.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case116.json
 	{"result":false}
 
 -----------------------------
 
-Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/bypass_test_case2.json
-/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/bypass_test_case2.json
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case94.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case94.json
+	{"result":false}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case82.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case82.json
+	{"result":false}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case100.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case100.json
 	{"result":false}
 
 -----------------------------
@@ -364,26 +1150,56 @@ Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/d
 
 -----------------------------
 
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/cv_test_case4.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/cv_test_case4.json
+	{"result":false}
+
+-----------------------------
+
 Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case16.json
 /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case16.json
 	{"result":false}
 
 -----------------------------
 
-Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case57.json
-/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case57.json
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case115.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case115.json
 	{"result":false}
 
 -----------------------------
 
-Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/cv_test_case19.json
-/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/cv_test_case19.json
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case78.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case78.json
+	{"result":false}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case97.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case97.json
+	{"result":false}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/promptfoo_test_case13.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/promptfoo_test_case13.json
+	{"result":false}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case81.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case81.json
 	{"result":false}
 
 -----------------------------
 
 Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case39.json
 /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case39.json
+	{"result":false}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case103.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case103.json
 	{"result":false}
 
 -----------------------------
@@ -412,8 +1228,20 @@ Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/d
 
 -----------------------------
 
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/cv_test_case23.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/cv_test_case23.json
+	{"result":false}
+
+-----------------------------
+
 Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case23.json
 /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case23.json
+	{"result":false}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/promptfoo_test_case8.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/promptfoo_test_case8.json
 	{"result":false}
 
 -----------------------------
@@ -424,8 +1252,14 @@ Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/d
 
 -----------------------------
 
-Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/cv_test_case15.json
-/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/cv_test_case15.json
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case74.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case74.json
+	{"result":false}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case62.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case62.json
 	{"result":false}
 
 -----------------------------
@@ -442,6 +1276,24 @@ Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/d
 
 -----------------------------
 
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case59.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case59.json
+	{"result":false}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case134.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case134.json
+	{"result":false}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case122.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case122.json
+	{"result":false}
+
+-----------------------------
+
 Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case18.json
 /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case18.json
 	{"result":false}
@@ -454,14 +1306,26 @@ Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/d
 
 -----------------------------
 
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case63.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case63.json
+	{"result":false}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case75.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case75.json
+	{"result":false}
+
+-----------------------------
+
 Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case22.json
 /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case22.json
 	{"result":false}
 
 -----------------------------
 
-Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/promptfoo_test_case9.json
-/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/promptfoo_test_case9.json
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case118.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case118.json
 	{"result":false}
 
 -----------------------------
@@ -472,26 +1336,8 @@ Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/d
 
 -----------------------------
 
-Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case55.json
-/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case55.json
-	{"result":false}
-
------------------------------
-
 Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case14.json
 /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case14.json
-	{"result":false}
-
------------------------------
-
-Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/cv_test_case34.json
-/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/cv_test_case34.json
-	{"result":false}
-
------------------------------
-
-Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/cv_test_case6.json
-/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/cv_test_case6.json
 	{"result":false}
 
 -----------------------------
@@ -508,14 +1354,38 @@ Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/d
 
 -----------------------------
 
-Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/bypass_test_case0.json
-/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/bypass_test_case0.json
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case102.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case102.json
 	{"result":false}
 
 -----------------------------
 
 Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/promptfoo_test_case12.json
 /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/promptfoo_test_case12.json
+	{"result":false}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case80.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case80.json
+	{"result":false}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case79.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case79.json
+	{"result":false}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case96.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case96.json
+	{"result":false}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case114.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case114.json
 	{"result":false}
 
 -----------------------------
@@ -532,8 +1402,8 @@ Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/d
 
 -----------------------------
 
-Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/cv_test_case13.json
-/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/cv_test_case13.json
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case64.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case64.json
 	{"result":false}
 
 -----------------------------
@@ -544,14 +1414,20 @@ Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/d
 
 -----------------------------
 
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case109.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case109.json
+	{"result":false}
+
+-----------------------------
+
 Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case48.json
 /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case48.json
 	{"result":false}
 
 -----------------------------
 
-Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/promptfoo_test_case23.json
-/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/promptfoo_test_case23.json
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case133.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case133.json
 	{"result":false}
 
 -----------------------------
@@ -562,14 +1438,38 @@ Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/d
 
 -----------------------------
 
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case113.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case113.json
+	{"result":false}
+
+-----------------------------
+
 Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/promptfoo_test_case2.json
 /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/promptfoo_test_case2.json
 	{"result":false}
 
 -----------------------------
 
-Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/promptfoo_test_case15.json
-/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/promptfoo_test_case15.json
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case91.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case91.json
+	{"result":false}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case68.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case68.json
+	{"result":false}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case87.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case87.json
+	{"result":false}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case105.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case105.json
 	{"result":false}
 
 -----------------------------
@@ -592,8 +1492,8 @@ Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/d
 
 -----------------------------
 
-Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/cv_test_case24.json
-/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/cv_test_case24.json
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/cv_test_case25.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/cv_test_case25.json
 	{"result":false}
 
 -----------------------------
@@ -610,14 +1510,20 @@ Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/d
 
 -----------------------------
 
-Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case45.json
-/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case45.json
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case104.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case104.json
 	{"result":false}
 
 -----------------------------
 
-Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/promptfoo_test_case14.json
-/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/promptfoo_test_case14.json
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case86.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case86.json
+	{"result":false}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case90.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case90.json
 	{"result":false}
 
 -----------------------------
@@ -628,20 +1534,38 @@ Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/d
 
 -----------------------------
 
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case112.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case112.json
+	{"result":false}
+
+-----------------------------
+
 Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/promptfoo_test_case3.json
 /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/promptfoo_test_case3.json
 	{"result":false}
 
 -----------------------------
 
-Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case49.json
-/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case49.json
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case132.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case132.json
 	{"result":false}
 
 -----------------------------
 
 Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case32.json
 /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case32.json
+	{"result":false}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case108.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case108.json
+	{"result":false}
+
+-----------------------------
+
+Testing: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case73.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case73.json
 	{"result":false}
 
 -----------------------------

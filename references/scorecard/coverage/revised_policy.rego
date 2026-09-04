@@ -2,8 +2,6 @@
 
 package policy
 
-default allow := false
-
 # === Input Accessors ===
 subject := input.extensions.subject
 
@@ -11,110 +9,152 @@ args := object.get(input, "args", {})
 
 # === Constants ===
 
-approved_topics := {
-	"Artificial intelligence",
-	"Cybersecurity and privacy",
-	"Software engineering",
+permitted_roles := {"fleet_manager", "consumer", "journalist", "analyst", "guest"}
+
+# Tools accessible to non-guest roles only (guest is blocked from these)
+restricted_tools := {"search_car_price", "get_vehicles_by_type"}
+
+# fleet_manager brand allow-list (truck-relevant brands only, exact case-sensitive)
+fleet_manager_brands := {
+	"Scania",
+	"Volvo",
+	"Mercedes-Benz",
+	"MAN",
+	"DAF",
+	"Iveco",
+	"Ford",
+	"Volkswagen",
 }
 
-permitted_roles := {"faculty", "phd_student"}
-
-blocked_keywords := {
-	"bioinformatics",
-	"genomics",
-	"clinical trials",
-	"drug discovery",
-	"quantum physics",
-	"materials science",
-	"renewable energy",
-	"economics",
-	"finance",
-	"marketing",
-	"supply chain",
-	"education",
-	"psychology",
-	"sociology",
-	"political science",
-	"trade show",
-	"career fair",
-	"startup expo",
-	"hackathon",
+# journalist brand allow-list (domestic-market brands only, exact case-sensitive)
+journalist_brands := {
+	"Fiat",
+	"Chevrolet",
+	"Volkswagen",
+	"Hyundai",
+	"Toyota",
+	"Renault",
+	"Honda",
+	"Nissan",
+	"Jeep",
+	"Peugeot",
+	"Citroën",
+	"Caoa Chery",
 }
 
-# === Tool-Specific DENY Rules ===
+# Recognized vehicle_type values — exact case-sensitive
+recognized_vehicle_types := {"carros", "cars", "motos", "motorcycles", "caminhoes", "trucks"}
 
-# Rule 1: Only faculty and phd_student may call get_events
+# fleet_manager allowed vehicle types
+fleet_manager_vehicle_types := {"caminhoes", "trucks"}
+
+# consumer and journalist allowed vehicle types
+cars_only_vehicle_types := {"carros", "cars"}
+
+# === Role Helpers ===
+
+roles := object.get(subject, "user_role", [])
+
+# === Global DENY Rules ===
+
+# Rule: Unknown role — no privileges for any tool
 deny contains msg if {
-	input.name == "get_events"
-	roles := object.get(subject, "user_role", [])
-	count({r | r := roles[_]; permitted_roles[r]}) == 0
-	msg := "ROLE_BLOCKED: only faculty or phd_student may call get_events"
+	count({r | some r in roles; permitted_roles[r]}) == 0
+	msg := "ROLE_BLOCKED: caller has no recognised role and may not call any tool"
 }
 
-# Rule 2: topic must be exactly one of the three approved research areas
+# Rule: Multiple simultaneous roles are not permitted (each identity has exactly one role)
 deny contains msg if {
-	input.name == "get_events"
-	topic := object.get(args, "topic", "")
-	not approved_topics[topic]
-	msg := sprintf("TOPIC_BLOCKED: topic '%v' is not an approved research area", [topic])
+	count({r | some r in roles; permitted_roles[r]}) > 1
+	msg := "ROLE_AMBIGUOUS: caller may not hold more than one role simultaneously"
 }
 
-# Rule 3: phd_student may only search within their own dissertation_area
+# Rule: Guest may only call get_car_brands
 deny contains msg if {
-	input.name == "get_events"
-	roles := object.get(subject, "user_role", [])
-	"phd_student" in roles
-	topic := object.get(args, "topic", "")
-	dissertation_area := object.get(subject, "dissertation_area", "")
-	topic != dissertation_area
+	restricted_tools[input.name]
+	"guest" in roles
+	count({r | some r in roles; r != "guest"; permitted_roles[r]}) == 0
+	msg := sprintf("GUEST_TOOL_BLOCKED: guests may not call %v", [input.name])
+}
+
+# === Tool-Specific DENY Rules: search_car_price ===
+
+# Rule: brand_name must not be empty or whitespace-only
+deny contains msg if {
+	input.name == "search_car_price"
+	brand := object.get(args, "brand_name", "")
+	count(trim(brand, " \t\n\r")) == 0
+	msg := "BRAND_EMPTY: brand_name must not be empty or whitespace-only"
+}
+
+# Rule: fleet_manager may only search truck-relevant brands
+# analyst takes precedence — deny only when fleet_manager is present without analyst
+deny contains msg if {
+	input.name == "search_car_price"
+	"fleet_manager" in roles
+	not "analyst" in roles
+	brand := object.get(args, "brand_name", "")
+	not fleet_manager_brands[brand]
 	msg := sprintf(
-		"TOPIC_ROLE_BLOCKED: phd_student topic '%v' does not match dissertation_area '%v'",
-		[topic, dissertation_area],
+		"BRAND_BLOCKED: fleet_manager may not search brand '%v' (not in truck-brand allow-list)",
+		[brand],
 	)
 }
 
-# Rule 4a: limit must be at least 1
+# Rule: journalist may only search domestic-market brands
+# analyst takes precedence — deny only when journalist is present without analyst
 deny contains msg if {
-	input.name == "get_events"
-	limit := object.get(args, "limit", 10)
-	limit < 1
-	msg := sprintf("LIMIT_EXCEEDED: limit %v is below the minimum of 1", [limit])
+	input.name == "search_car_price"
+	"journalist" in roles
+	not "analyst" in roles
+	brand := object.get(args, "brand_name", "")
+	not journalist_brands[brand]
+	msg := sprintf(
+		"BRAND_BLOCKED: journalist may not search brand '%v' (not in domestic-brand allow-list)",
+		[brand],
+	)
 }
 
-# Rule 4b: limit must not exceed 15 (absolute cap for all roles)
+# === Tool-Specific DENY Rules: get_vehicles_by_type ===
+
+# Rule: vehicle_type must be one of the six recognised values (exact, case-sensitive)
 deny contains msg if {
-	input.name == "get_events"
-	limit := object.get(args, "limit", 10)
-	limit > 15
-	msg := sprintf("LIMIT_EXCEEDED: limit %v exceeds the absolute maximum of 15", [limit])
+	input.name == "get_vehicles_by_type"
+	vtype := object.get(args, "vehicle_type", "carros")
+	not recognized_vehicle_types[vtype]
+	msg := sprintf(
+		"VEHICLE_TYPE_BLOCKED: vehicle_type '%v' is not recognised (use carros/cars/motos/motorcycles/caminhoes/trucks)",
+		[vtype],
+	)
 }
 
-# Rule 5: phd_student limit cap is 10 (faculty role takes precedence)
+# Rule: fleet_manager may only use caminhoes/trucks
+# analyst takes precedence — deny only when fleet_manager is present without analyst
 deny contains msg if {
-	input.name == "get_events"
-	roles := object.get(subject, "user_role", [])
-	"phd_student" in roles
-	not "faculty" in roles
-	limit := object.get(args, "limit", 10)
-	limit > 10
-	msg := sprintf("LIMIT_ROLE_EXCEEDED: phd_student limit %v exceeds the maximum of 10", [limit])
+	input.name == "get_vehicles_by_type"
+	"fleet_manager" in roles
+	not "analyst" in roles
+	vtype := object.get(args, "vehicle_type", "carros")
+	not fleet_manager_vehicle_types[vtype]
+	msg := sprintf(
+		"VEHICLE_TYPE_FLEET_BLOCKED: fleet_manager may not use vehicle_type '%v' (only caminhoes/trucks allowed)",
+		[vtype],
+	)
 }
 
-# Rule 6: keywords must not contain any blocked substring (case-insensitive)
+# Rule: consumer and journalist may only use carros/cars
+# analyst takes precedence — deny only when neither analyst nor an unrestricted role is present
 deny contains msg if {
-	input.name == "get_events"
-	keywords := lower(object.get(args, "keywords", ""))
-	some blocked in blocked_keywords
-	contains(keywords, blocked)
-	msg := sprintf("KEYWORD_BLOCKED: keywords contain disallowed term '%v'", [blocked])
-}
-
-# Rule 7: session cap — deny when caller reports 5 or more get_events calls this session
-deny contains msg if {
-	input.name == "get_events"
-	queries := object.get(subject, "queries_this_session", 0)
-	queries >= 5
-	msg := sprintf("SESSION_LIMIT_EXCEEDED: %v get_events calls already made this session (max 5)", [queries])
+	input.name == "get_vehicles_by_type"
+	some role in {"consumer", "journalist"}
+	role in roles
+	not "analyst" in roles
+	vtype := object.get(args, "vehicle_type", "carros")
+	not cars_only_vehicle_types[vtype]
+	msg := sprintf(
+		"VEHICLE_TYPE_BLOCKED: %v may not use vehicle_type '%v' (only carros/cars allowed)",
+		[role, vtype],
+	)
 }
 
 # === Aggregation ===
@@ -122,6 +162,8 @@ deny contains msg if {
 any_deny if {
 	some _ in deny
 }
+
+default allow := false
 
 allow if {
 	not any_deny
