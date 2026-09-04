@@ -218,7 +218,21 @@ finished — wait for the explicit instruction.
 
 Once triggered:
 
-1. **Merge (append, not overwrite).** Append the contents of
+1. **Gate before merging.** Re-read
+   `<TARGET_AGENT_PATH>/smith/guidance_updated.txt` and apply Step D's
+   STEP 8d checks to it: markdown tables, non-rule headings such as
+   "Blind Spot Register" or "Known Limitations", lines asserting that
+   something cannot be enforced, variables absent from
+   `system_vars.json` and from the tool definitions, and
+   cross-references like "below" or "see the gap register". The file may
+   have been produced by an earlier run that predates that gate, and
+   this append is what makes any such content permanent in
+   `guidance.txt`. If anything trips the checks, stop and report it to
+   the human instead of merging; the fix is to correct
+   `guidance_updated.txt` first — relocating the content to
+   `owasp_policy_guidelines.md`'s Gap Register — and then merge.
+
+   **Merge (append, not overwrite).** Append the contents of
    `<TARGET_AGENT_PATH>/smith/guidance_updated.txt` to
    `<TARGET_AGENT_PATH>/smith/guidance.txt`. `guidance_updated.txt` is
    built (Step D, STEP 8) to contain ONLY the newly proposed numbered
@@ -228,7 +242,14 @@ Once triggered:
    byte-for-byte, and the new rules land after it with their numbering
    already continuing from where `guidance.txt` left off. Ensure
    there is a trailing newline on `guidance.txt` before the append so
-   the first new rule starts on its own line. This is the one
+   the first new rule starts on its own line, then **verify the join by
+   reading the merged file back**: the last line of the original and the
+   first line of the addendum must be two separate lines. When the
+   original lacks its trailing newline the append silently fuses them
+   (`...200 frequent flyer points.# guidance_updated.txt — Security-Grounded
+   Addendum`), which corrupts that final rule for both `decompose` and
+   policy creation and produces no error. Checking the newline before
+   writing is not sufficient on its own — confirm the result. This is the one
    exception to "Steps A–D never modify guidance.txt" in the Overview
    above — it happens only here, and only after the explicit human
    trigger. Do NOT overwrite `guidance.txt` — that would discard any

@@ -806,6 +806,56 @@ and the two must not be reported the same way.
 
 ---
 
+#### STEP 8d — Non-rule content gate on `guidance_updated.txt`
+
+STEP 8 states the prohibition ("Do NOT carry the Gap Register into
+`guidance_updated.txt`"; "do NOT append natural-language notes about
+OWASP findings"). STEP 8b checks redundancy and STEP 8c checks
+regressions, but nothing re-reads the written file to confirm the
+prohibition actually held. A run that drafts a "Blind Spot Register",
+"Known Limitations", or similar section into the addendum therefore
+passes every existing check, and Step E then merges it into
+`guidance.txt` verbatim. This step closes that hole.
+
+**Re-read the `guidance_updated.txt` you just wrote** — do not check
+your draft from memory, check the bytes on disk — and reject it if any
+of the following is true:
+
+1. **A markdown table is present.** Rules are numbered lines or
+   bullets. A pipe table (`|---|`) in this file is a gap register, a
+   limitations matrix, or a mitigation index — none of which are rules.
+2. **A heading matches non-rule content**, case-insensitively: `blind
+   spot`, `gap register`, `known limitation`, `not enforceable`,
+   `non-enforceable`, `out of scope`, `future work`, `blast radius`,
+   `mitigation`.
+3. **Any line asserts that something cannot be enforced** — "cannot be
+   enforced", "is a blind spot", "not OPA-enforceable", "requires a
+   database lookup", "absent by design", "requires wall clock". The
+   addendum states what the policy MUST do; a statement about what it
+   cannot do belongs in the Gap Register.
+4. **A variable is named that is absent from `system_vars.json` and
+   from every tool's declared arguments** — e.g. a recommended
+   `current_date`, `blacklist`, or `request_owner_id`. Proposing new
+   input fields is the Gap Register's job; a rule here that references
+   one would push policy creation toward a phantom variable, which
+   `../policy_creation/opa_policy_creation.md` forbids.
+5. **A cross-reference points outside the file** — "below", "above",
+   "see the gap register", "as documented in the table". After Step E's
+   append these resolve to nothing, or worse, to unrelated text.
+
+On any hit: delete the offending section or line from
+`guidance_updated.txt`, confirm the content it carried is present in
+`owasp_policy_guidelines.md`'s Gap Register table (add the row if it is
+not — nothing may be dropped, only relocated), then re-run this check
+against the rewritten file. Do not proceed to STEP 9 until it passes.
+
+Report the outcome in STEP 9 as `Non-rule content gate: passed` or
+`Non-rule content gate: N section(s) removed and relocated to the Gap
+Register`, naming each one. A silent pass and a pass after cleanup must
+not look the same to the reviewer.
+
+---
+
 #### STEP 9 — Human review
 
 Present the summary table, the list of violation codes, the STEP 7

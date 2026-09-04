@@ -1,170 +1,169 @@
 # SPDX-License-Identifier: Apache-2.0
-
 package mcp.policies
+
+import rego.v1
+
+default allow := false
 
 # === Input Accessors ===
 subject := input.extensions.subject
-
 args := object.get(input, "args", {})
 
 # === Constants ===
 
-permitted_roles := {"fleet_manager", "consumer", "journalist", "analyst", "guest"}
-
-# Tools accessible to non-guest roles only (guest is blocked from these)
-restricted_tools := {"search_car_price", "get_vehicles_by_type"}
-
-# fleet_manager brand allow-list (truck-relevant brands only, exact case-sensitive)
-fleet_manager_brands := {
-	"Scania",
-	"Volvo",
-	"Mercedes-Benz",
-	"MAN",
-	"DAF",
-	"Iveco",
-	"Ford",
-	"Volkswagen",
+hr_only_tools := {
+	"add_employee",
+	"add_department",
+	"update_department",
+	"add_holiday",
+	"delete_holiday",
+	"set_leave_allotment",
 }
 
-# journalist brand allow-list (domestic-market brands only, exact case-sensitive)
-journalist_brands := {
-	"Fiat",
-	"Chevrolet",
-	"Volkswagen",
-	"Hyundai",
-	"Toyota",
-	"Renault",
-	"Honda",
-	"Nissan",
-	"Jeep",
-	"Peugeot",
-	"Citroën",
-	"Caoa Chery",
+personal_record_tools := {
+	"get_passport",
+	"set_passport",
+	"update_passport",
+	"get_visa",
+	"set_visa",
+	"update_visa",
+	"get_emergency_contact",
+	"set_emergency_contact",
+	"update_emergency_contact",
+	"get_bank_account",
+	"set_bank_account",
+	"update_bank_account",
 }
 
-# Recognized vehicle_type values — exact case-sensitive
-recognized_vehicle_types := {"carros", "cars", "motos", "motorcycles", "caminhoes", "trucks"}
+passport_visa_tools := {
+	"set_passport",
+	"update_passport",
+	"set_visa",
+	"update_visa",
+}
 
-# fleet_manager allowed vehicle types
-fleet_manager_vehicle_types := {"caminhoes", "trucks"}
+employee_record_tools := {"get_employee", "update_employee"}
 
-# consumer and journalist allowed vehicle types
-cars_only_vehicle_types := {"carros", "cars"}
+leave_view_tools := {
+	"get_leave_allotments",
+	"list_time_off_requests",
+	"get_leave_balance",
+	"get_time_off_request",
+}
 
-# === Role Helpers ===
+org_email_domains := {
+	"IBM Corporation": "ibm.com",
+	"Red Hat": "redhat.com",
+	"Kyndryl": "kyndryl.com",
+}
 
-roles := object.get(subject, "user_role", [])
+# === Helper: email domain ===
+email_domain(email) := domain if {
+	parts := split(email, "@")
+	count(parts) == 2
+	domain := parts[1]
+}
 
-# === Global DENY Rules ===
+# === Helper: days between two YYYY-MM-DD strings ===
+# Computes naive day difference via time.parse_rfc3339_ns — dates are treated as midnight UTC
+day_diff_days(start_str, end_str) := diff if {
+	start_ns := time.parse_rfc3339_ns(concat("", [start_str, "T00:00:00Z"]))
+	end_ns := time.parse_rfc3339_ns(concat("", [end_str, "T00:00:00Z"]))
+	diff := (end_ns - start_ns) / (((24 * 60) * 60) * 1000000000)
+}
 
-# Rule: Unknown role — no privileges for any tool
+# === DENY Rules ===
+
+# R1 — HR-only tools: only HR may invoke these
 deny contains msg if {
-	count({r | some r in roles; permitted_roles[r]}) == 0
-	msg := "ROLE_BLOCKED: caller has no recognised role and may not call any tool"
+	input.name in hr_only_tools
+	subject.department != "HR"
+	msg := sprintf("HR_ONLY: tool '%v' requires HR department", [input.name])
 }
 
-# Rule: Multiple simultaneous roles are not permitted (each identity has exactly one role)
+# R2 — Personal-record ownership: non-HR must access own records only
 deny contains msg if {
-	count({r | some r in roles; permitted_roles[r]}) > 1
-	msg := "ROLE_AMBIGUOUS: caller may not hold more than one role simultaneously"
+	input.name in personal_record_tools
+	subject.department != "HR"
+	args.user_id != subject.user_id
+	msg := "OWNERSHIP: personal-record access requires own user_id or HR department"
 }
 
-# Rule: Guest may only call get_car_brands
+# R3 — Employee-record ownership: non-HR must access own record only
 deny contains msg if {
-	restricted_tools[input.name]
-	"guest" in roles
-	count({r | some r in roles; r != "guest"; permitted_roles[r]}) == 0
-	msg := sprintf("GUEST_TOOL_BLOCKED: guests may not call %v", [input.name])
+	input.name in employee_record_tools
+	subject.department != "HR"
+	args.user_id != subject.user_id
+	msg := "OWNERSHIP: employee-record access requires own user_id or HR department"
 }
 
-# === Tool-Specific DENY Rules: search_car_price ===
-
-# Rule: brand_name must not be empty or whitespace-only
+# R4 — Salary must be positive
 deny contains msg if {
-	input.name == "search_car_price"
-	brand := object.get(args, "brand_name", "")
-	count(trim(brand, " \t\n\r")) == 0
-	msg := "BRAND_EMPTY: brand_name must not be empty or whitespace-only"
+	input.name in {"add_employee", "update_employee"}
+	salary := args.salary
+	salary != null
+	salary <= 0
+	msg := "SALARY_INVALID: salary must be greater than zero"
 }
 
-# Rule: fleet_manager may only search truck-relevant brands
-# analyst takes precedence — deny only when fleet_manager is present without analyst
+# R5 — Email domain must match organization (when both are present in same call)
 deny contains msg if {
-	input.name == "search_car_price"
-	"fleet_manager" in roles
-	not "analyst" in roles
-	brand := object.get(args, "brand_name", "")
-	not fleet_manager_brands[brand]
-	msg := sprintf(
-		"BRAND_BLOCKED: fleet_manager may not search brand '%v' (not in truck-brand allow-list)",
-		[brand],
-	)
+	input.name in {"add_employee", "update_employee"}
+	email := args.email
+	email != null
+	org := args.organization
+	org != null
+	expected_domain := org_email_domains[org]
+	email_domain(email) != expected_domain
+	msg := sprintf("EMAIL_DOMAIN: email domain does not match organization (expected @%v)", [expected_domain])
 }
 
-# Rule: journalist may only search domestic-market brands
-# analyst takes precedence — deny only when journalist is present without analyst
+# R6 — Time-off request only for self
 deny contains msg if {
-	input.name == "search_car_price"
-	"journalist" in roles
-	not "analyst" in roles
-	brand := object.get(args, "brand_name", "")
-	not journalist_brands[brand]
-	msg := sprintf(
-		"BRAND_BLOCKED: journalist may not search brand '%v' (not in domestic-brand allow-list)",
-		[brand],
-	)
+	input.name == "create_time_off_request"
+	args.user_id != subject.user_id
+	msg := "TIMEOFF_OWNERSHIP: time-off requests may only be created for the requesting user"
 }
 
-# === Tool-Specific DENY Rules: get_vehicles_by_type ===
-
-# Rule: vehicle_type must be one of the six recognised values (exact, case-sensitive)
+# R7 — Time-off span must not exceed 90 consecutive calendar days
 deny contains msg if {
-	input.name == "get_vehicles_by_type"
-	vtype := object.get(args, "vehicle_type", "carros")
-	not recognized_vehicle_types[vtype]
-	msg := sprintf(
-		"VEHICLE_TYPE_BLOCKED: vehicle_type '%v' is not recognised (use carros/cars/motos/motorcycles/caminhoes/trucks)",
-		[vtype],
-	)
+	input.name == "create_time_off_request"
+	start_str := args.start_date
+	end_str := args.end_date
+	start_str != null
+	end_str != null
+	day_diff_days(start_str, end_str) > 90
+	msg := "TIMEOFF_SPAN: time-off request may not span more than 90 consecutive calendar days"
 }
 
-# Rule: fleet_manager may only use caminhoes/trucks
-# analyst takes precedence — deny only when fleet_manager is present without analyst
+# R8 — Passport / visa: issue date must be strictly before expiry date
 deny contains msg if {
-	input.name == "get_vehicles_by_type"
-	"fleet_manager" in roles
-	not "analyst" in roles
-	vtype := object.get(args, "vehicle_type", "carros")
-	not fleet_manager_vehicle_types[vtype]
-	msg := sprintf(
-		"VEHICLE_TYPE_FLEET_BLOCKED: fleet_manager may not use vehicle_type '%v' (only caminhoes/trucks allowed)",
-		[vtype],
-	)
+	input.name in passport_visa_tools
+	issue := args.issue_date
+	expiry := args.expiry_date
+	issue != null
+	expiry != null
+	issue >= expiry
+	msg := "DATE_ORDER: issue date must be strictly before expiry date"
 }
 
-# Rule: consumer and journalist may only use carros/cars
-# analyst takes precedence — deny only when neither analyst nor an unrestricted role is present
+# R9 — Leave-view tools: non-HR must view own records only
 deny contains msg if {
-	input.name == "get_vehicles_by_type"
-	some role in {"consumer", "journalist"}
-	role in roles
-	not "analyst" in roles
-	vtype := object.get(args, "vehicle_type", "carros")
-	not cars_only_vehicle_types[vtype]
-	msg := sprintf(
-		"VEHICLE_TYPE_BLOCKED: %v may not use vehicle_type '%v' (only carros/cars allowed)",
-		[role, vtype],
-	)
+	input.name in leave_view_tools
+	subject.department != "HR"
+	args.user_id != subject.user_id
+	msg := "LEAVE_OWNERSHIP: leave records may only be viewed by the employee or HR"
 }
 
-# === Aggregation ===
-
-any_deny if {
-	some _ in deny
+# R10 — Time-off status update: only HR may set Approved or Denied
+deny contains msg if {
+	input.name == "update_time_off_status"
+	subject.department != "HR"
+	args.status in {"Approved", "Denied"}
+	msg := "TIMEOFF_STATUS: only HR may approve or deny time-off requests"
 }
 
-default allow := false
-
+# === Final ALLOW ===
 allow if {
-	not any_deny
+	count(deny) == 0
 }

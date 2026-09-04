@@ -1,223 +1,199 @@
-# OPA Policy Guidance Questionnaire
-# Tool: employee (Enterprise Employee Hub — 29 tools)
+# Policy Guidance Questionnaire — Enterprise Employee Hub
+
+**Target agent path:** `examples/employee/`
+**Generated:** 2026-09-04
+**Workflow step:** B — Policy Guidance Questionnaire
 
 ---
 
-## Section 1: Tool Identity
+## Section 1 — System Identity and Scope
 
-**Q1. What is the tool name and what does it do in one sentence?**
+**Q1. What is the name and purpose of this MCP server?**
+Enterprise Employee Hub. It exposes an SQLite-backed employee directory through 33 MCP tools covering employee records, org chart, departments, personal records (passport, visa, emergency contact, bank account), country holidays, and time-off (allotments, requests, balances).
 
-> Tool name: `enterprise-employee-hub` — 29 tools across 6 domains managing employee records, org chart, departments, sensitive personal records (passport, visa, emergency contact, bank account), country holidays, and time-off (allotments, requests, and balances) against a shared SQLite database. [derived from architecture]
+**Q2. What deployment model is used?**
+Single agent (LangGraph ReAct) served over FastAPI at `:9000`. No multi-agent orchestration. The MCP server runs as a subprocess (stdio transport).
 
----
-
-**Q2. What external systems does it call?**
-
-> - **SQLite database** (`employee_hub.db`) — read/write; all employee, personal, leave, and holiday data. [derived from architecture]
-> - **LLM inference** (OpenAI-compatible endpoint, default local Ollama): read-only, no external auth relevant to policy. [derived from architecture]
-> - No external APIs or network services beyond the LLM. [derived from architecture]
+**Q3. What is the primary trust boundary at which the OPA policy is enforced?**
+Agent → MCP server boundary (pre-execution). The policy intercepts every tool call before the MCP server executes it. This is the **only** access-control enforcement layer; the MCP server performs no authorization.
 
 ---
 
-**Q3. Does it read data, write data, or both?**
+## Section 2 — Actor Identity and Trust Model
 
-> Both. Read tools: `get_employee`, `list_employees`, `get_manager`, `get_direct_reports`, `get_reporting_chain`, `get_department`, `list_departments`, `get_passport`, `get_visa`, `get_emergency_contact`, `get_bank_account`, `get_leave_allotments`, `get_time_off_request`, `list_time_off_requests`, `get_leave_balance`, `list_holidays`. Write/mutate tools: `add_employee`, `update_employee`, `add_department`, `update_department`, `set_passport`, `update_passport`, `set_visa`, `update_visa`, `set_emergency_contact`, `update_emergency_contact`, `set_bank_account`, `update_bank_account`, `set_leave_allotment`, `create_time_off_request`, `update_time_off_status`, `add_holiday`, `delete_holiday`. [derived from architecture]
+**Q4. How is the acting user's identity established?**
+Via `user_profile` JSON in the `/chat` and `/extract_tool_call` request bodies. `build_system_prompt()` in `agent.py` embeds these key/values verbatim into the system prompt. There is no cryptographic authentication; all identity claims are self-reported by the caller.
 
----
+Available subject fields (`input.extensions.subject.*`):
+- `user_id` (integer) — maps to `employees.user_id` in DB
+- `user_name` (string) — display name
+- `department` (one of: Corporate Leadership, Engineering, Product, HR, Finance)
+- `organization` (one of: IBM Corporation, Red Hat, Kyndryl)
 
-**Q4. What are its parameters? (key parameters only — see `tool_definitions.json` for full list)**
+**Q5. What roles or groups are defined, and how are they determined?**
+- **HR** — `input.extensions.subject.department == "HR"`. The only role that gates privileged write operations.
+- **Manager** — *not* a declared field in `system_vars.json`. Manager status is inferred from the DB (`employees.manager_id`); it is not available as an OPA-enforceable subject field at invocation time. [inferred — low confidence: manager exception for direct-reports view cannot be enforced at OPA layer]
+- **IBM employee** — determined by `input.extensions.subject.organization == "IBM Corporation"`. Cross-user org check (blocking non-IBM from viewing IBM records) requires the target employee's org from the DB — not available in OPA input.
 
-| Parameter | Tools | Type | Required | Valid values |
-|-----------|-------|------|----------|--------------|
-| `user_id` | most tools | int | varies | target employee numeric ID |
-| `salary` | `add_employee`, `update_employee` | float | No | must be > 0 |
-| `email` | `add_employee`, `update_employee` | string | varies | must match org domain |
-| `organization` | `add_employee`, `update_employee` | string | No | `IBM Corporation`, `Red Hat`, `Kyndryl` |
-| `department_id` | `add_employee`, `update_employee`, `list_employees` | int | No | valid dept id |
-| `manager_id` | `add_employee`, `update_employee`, `list_employees` | int | No | valid employee id |
-| `home_address`, `country_code` | `add_employee`, `update_employee` | string | varies | — |
-| `expiry_date`, `issue_date` | passport/visa tools | string | No | YYYY-MM-DD |
-| `start_date`, `end_date` | `create_time_off_request` | string | Yes | YYYY-MM-DD |
-| `leave_type` | `create_time_off_request`, `set_leave_allotment` | string | Yes | `Vacation`, `Sick Leave`, `Maternity`, `Paternity`, `Jury Duty`, `Unpaid` |
-| `status` | `update_time_off_status` | string | Yes | `Pending`, `Approved`, `Denied` |
-| `annual_days` | `set_leave_allotment` | int | No | null = untracked |
-| `country_code` | holiday tools | string | Yes | ISO country code |
-| `holiday_id` | `delete_holiday` | int | Yes | — |
-| `request_id` | `update_time_off_status`, `get_time_off_request` | int | Yes | — |
-
-> [derived from architecture] — confirmed against `tool_definitions.json` and `server.py`
+**Q6. What is the threat model for identity claims?**
+Since all `input.extensions.subject.*` values are self-reported, any caller can claim any department or organization. A policy relying on these must account for the possibility that a malicious caller claims `department = HR` or `organization = IBM Corporation` falsely. No additional authentication layer exists in the current architecture.
 
 ---
 
-## Section 2: Who Uses It
+## Section 3 — Tool Access Rules
 
-**Q5. What are the types of users? List every role.**
+**Q7. Which tools require HR department?**
+The following tools may only be invoked by users with `department = HR`:
+- `add_employee` — add new employee record
+- `add_department` — add department
+- `update_department` — update department name/description
+- `add_holiday` — add country holiday
+- `delete_holiday` — delete holiday
+- `set_leave_allotment` — set annual leave allotment
 
-> Users are identified by `department` (their organizational unit):
-> - `Corporate Leadership` — executives; general access implied.
-> - `Engineering` — engineers; general access.
-> - `Product` — product staff; general access.
-> - `HR` — HR staff; privileged — may view/edit all employee data, add employees, manage departments, holidays, and leave allotments.
-> - `Finance` — finance staff; general access.
->
-> Functional roles derived from `guidance.txt`:
-> - **Employee** (any department) — may view/edit only their own data; may create time-off for themselves.
-> - **Manager** — an employee whose `user_id` appears as another employee's `manager_id` in the DB; may view direct reports' data.
-> - **HR** — `department == "HR"`.
->
-> [derived from guidance.txt + architecture]
+Source: guidance.txt §Administrative Actions.
 
----
+**Q8. Which tools are read-only and open to any user?**
+- `list_employees`, `get_manager`, `get_direct_reports`, `get_reporting_chain`
+- `get_department`, `list_departments`
+- `list_holidays`
 
-**Q6. Are those roles verified by your system, or supplied by the user themselves?**
+Source: guidance.txt §Administrative Actions ("org chart, department listings, and country holidays may be viewed by any user").
 
-> **Self-reported** — `department`, `organization`, `user_id`, and `user_name` all come from the caller's `user_profile` JSON body field, which is injected into the system prompt verbatim. There is no authentication or cryptographic verification anywhere in this system. OPA enforces what the caller claims. [derived from architecture]
+**Q9. Which tools require ownership (target user_id == acting user_id)?**
+Ownership check required for:
+- Personal-record tools: `get_passport`, `set_passport`, `update_passport`, `get_visa`, `set_visa`, `update_visa`, `get_emergency_contact`, `set_emergency_contact`, `update_emergency_contact`, `get_bank_account`, `set_bank_account`, `update_bank_account`
+- Employee-record tools: `get_employee`, `update_employee`
+- Leave-view tools: `get_leave_allotments`, `list_time_off_requests`, `get_leave_balance`, `get_time_off_request`
+- Time-off creation: `create_time_off_request`
 
----
+Exception: HR bypasses ownership checks for all of the above.
+Exception (blind spot): Direct manager may view direct reports' data — requires DB lookup, not enforceable at OPA.
 
-**Q7. Is there a user ID? Where does it come from?**
-
-> Yes — `input.extensions.subject.user_id` (integer). Comes from the caller's `user_profile.user_id`. Self-reported; not verified. Used by OPA to check self-service ownership (`args.user_id == subject.user_id`). [derived from architecture]
-
----
-
-**Q8. Can a user belong to multiple roles at once?**
-
-> `department` is a single string (not an array) per `system_vars.json`. A user has exactly one department. The Manager role is structural (DB-derived), not a `department` value. OPA cannot enforce the Manager role directly; it would need a DB lookup. [derived from architecture]
+**Q10. What ownership field is used in tool arguments?**
+`input.args.user_id` for all employee/personal/leave tools. The exception is `update_time_off_status` and `get_time_off_request` / `list_time_off_requests` — these use `request_id`, not `user_id` directly.
 
 ---
 
-## Section 3: What Each Role Is Allowed To Do
+## Section 4 — Data Integrity Rules
 
-**Q9. For each role, which tools are they allowed to use and with what conditions?**
+**Q11. What constraints apply to salary?**
+Salary must be a positive number (greater than zero) when set via `add_employee` or `update_employee`. The constraint applies only when the `salary` argument is present in the call; it is optional.
 
-| Tool group | Employee (own data) | HR | Manager (direct reports) | guidance.txt rule |
+**Q12. What constraints apply to employee email?**
+When `add_employee` or `update_employee` is called with both `email` and `organization` in the same call, the email domain must match the organization's corporate domain:
+- `IBM Corporation` → `@ibm.com`
+- `Red Hat` → `@redhat.com`
+- `Kyndryl` → `@kyndryl.com`
+
+**Q13. What constraints apply to passport and visa dates?**
+When both `issue_date` and `expiry_date` are provided in the same call to any of `set_passport`, `update_passport`, `set_visa`, `update_visa`, the issue date must be strictly earlier than the expiry date.
+
+Note: The 6-month expiry rule (expiry must be >6 months from current date) is a blind spot — the current date is not in OPA input. [inferred — low confidence: not enforceable at OPA layer without adding `current_date` to system_vars.json]
+
+---
+
+## Section 5 — Time-Off and Leave Rules
+
+**Q14. Who may create a time-off request?**
+Only the acting user for themselves: `input.args.user_id` must equal `input.extensions.subject.user_id`.
+
+**Q15. What is the maximum time-off span?**
+A single request may not span more than 90 consecutive calendar days (`end_date` minus `start_date` ≤ 90 days).
+
+**Q16. Who may view leave data?**
+Leave allotments, time-off requests, and leave balance may be viewed only by:
+- HR (any leave data for any user)
+- The employee themselves (`input.args.user_id == input.extensions.subject.user_id`)
+- [blind spot] The employee's direct manager — requires DB lookup, not enforceable at OPA
+
+**Q17. Who may change time-off request status?**
+- HR may set any status (Pending, Approved, Denied)
+- Direct manager may set Approved or Denied [blind spot — DB lookup required; safe default: block all non-HR from Approved/Denied]
+- Requesting employee may set only Pending [blind spot — requires mapping request_id to requester user_id; not enforceable at OPA]
+
+OPA-enforceable rule: if `department != HR` and `status` is `Approved` or `Denied`, deny.
+
+**Q18. What leave balance check applies?**
+An employee may not create a time-off request unless they have sufficient available balance. [blind spot — balance requires computing annual_days minus used_days from DB; not enforceable at OPA layer without pre-computation]
+
+---
+
+## Section 6 — Administrative and Org-Chart Rules
+
+**Q19. Who may modify departments and holidays?**
+Only HR (see Q7). Read access is open to all users.
+
+**Q20. Who may delete employees?**
+Not covered by any tool in the current tool_definitions.json — there is no `delete_employee` tool. The guidance.txt mentions explicit confirmation phrasing for user deletion, but this is an agent-layer control, not OPA-enforceable.
+
+**Q21. What cross-organization data restrictions apply?**
+Users outside IBM Corporation are prohibited from viewing IBM employee data. [blind spot — the target employee's organization is in the DB, not in input.args.*; requires pre-fetch or DB-layer enforcement]
+
+---
+
+## Section 7 — Agent Behavior Rules
+
+**Q22. Are there agent behavior rules beyond tool access?**
+Yes, from guidance.txt:
+- DB write confirmation: before any write, agent must list the action and get explicit "yes". [agent-layer gate; not OPA-enforceable]
+- Agent makes one tool call at a time. [agent-layer / structured output; not OPA-enforceable]
+- Paternity leave approved only if baby details in conversation. [agent-layer gate; not OPA-enforceable]
+
+---
+
+## Section 8 — Full Tool Role-Permission Matrix
+
+| Tool | HR | Own (self) | Direct Manager | Any user |
 |---|---|---|---|---|
-| `get_employee`, `list_employees` | Allowed (own `user_id` only) | Allowed (all) | Allowed (direct reports) | Data Access |
-| `update_employee` (non-salary fields) | Allowed (own record) | Allowed (all) | Allowed (direct reports) | Data Access |
-| `update_employee` (salary) | Blocked | Allowed | Allowed (direct reports only) | Data Access |
-| `add_employee` | Blocked | Allowed | Blocked | Data Access |
-| `get_passport`, `get_visa`, `get_emergency_contact`, `get_bank_account` | Allowed (own) | Allowed (all) | Allowed (direct reports) | Data Access |
-| `set_passport`, `update_passport`, `set_visa`, `update_visa`, `set_emergency_contact`, `update_emergency_contact`, `set_bank_account`, `update_bank_account` | Allowed (own) | Allowed (all) | [inferred — low confidence; guidance says manager views but is silent on edits] | Data Access |
-| `get_manager`, `get_direct_reports`, `get_reporting_chain` | Allowed | Allowed | Allowed | Administrative Actions |
-| `get_department`, `list_departments` | Allowed | Allowed | Allowed | Administrative Actions |
-| `add_department`, `update_department` | Blocked | Allowed | Blocked | Administrative Actions |
-| `add_holiday`, `delete_holiday` | Blocked | Allowed | Blocked | Administrative Actions |
-| `list_holidays` | Allowed | Allowed | Allowed | Administrative Actions |
-| `set_leave_allotment` | Blocked | Allowed | Blocked | Administrative Actions |
-| `get_leave_allotments`, `get_leave_balance`, `get_time_off_request`, `list_time_off_requests` | Allowed (own) | Allowed (all) | Allowed (direct reports) | Time Off and Leave |
-| `create_time_off_request` | Allowed (own `user_id` only) | [inferred — low confidence] | [inferred — low confidence] | Time Off and Leave |
-| `update_time_off_status` | Allowed (set to `Pending` only) | Allowed (any status) | Allowed (`Approved` or `Denied` for direct reports) | Time Off and Leave |
+| `add_employee` | ✓ write | — | — | ✗ |
+| `update_employee` | ✓ write | ✓ self only | ✗ (blind spot) | ✗ |
+| `get_employee` | ✓ read | ✓ self only | ✗ (blind spot) | ✗ |
+| `list_employees` | ✓ | ✓ | ✓ | ✓ (filtered) |
+| `get_manager` | ✓ | ✓ | ✓ | ✓ |
+| `get_direct_reports` | ✓ | ✓ | ✓ | ✓ |
+| `get_reporting_chain` | ✓ | ✓ | ✓ | ✓ |
+| `add_department` | ✓ write | — | — | ✗ |
+| `update_department` | ✓ write | — | — | ✗ |
+| `get_department` | ✓ | ✓ | ✓ | ✓ |
+| `list_departments` | ✓ | ✓ | ✓ | ✓ |
+| `set_passport` | ✓ write | ✓ self only | ✗ | ✗ |
+| `update_passport` | ✓ write | ✓ self only | ✗ | ✗ |
+| `get_passport` | ✓ read | ✓ self only | ✗ | ✗ |
+| `set_visa` | ✓ write | ✓ self only | ✗ | ✗ |
+| `update_visa` | ✓ write | ✓ self only | ✗ | ✗ |
+| `get_visa` | ✓ read | ✓ self only | ✗ | ✗ |
+| `set_emergency_contact` | ✓ write | ✓ self only | ✗ | ✗ |
+| `update_emergency_contact` | ✓ write | ✓ self only | ✗ | ✗ |
+| `get_emergency_contact` | ✓ read | ✓ self only | ✗ | ✗ |
+| `set_bank_account` | ✓ write | ✓ self only | ✗ | ✗ |
+| `update_bank_account` | ✓ write | ✓ self only | ✗ | ✗ |
+| `get_bank_account` | ✓ read | ✓ self only | ✗ | ✗ |
+| `set_leave_allotment` | ✓ write | — | — | ✗ |
+| `get_leave_allotments` | ✓ read | ✓ self only | ✗ (blind spot) | ✗ |
+| `create_time_off_request` | ✓ | ✓ self only | ✗ | ✗ |
+| `update_time_off_status` | ✓ any status | ✗ (blind spot) | ✗ (blind spot) | ✗ |
+| `get_time_off_request` | ✓ read | ✓ self only (blind spot) | ✗ (blind spot) | ✗ |
+| `list_time_off_requests` | ✓ read | ✓ self only | ✗ (blind spot) | ✗ |
+| `get_leave_balance` | ✓ read | ✓ self only | ✗ (blind spot) | ✗ |
+| `add_holiday` | ✓ write | — | — | ✗ |
+| `list_holidays` | ✓ | ✓ | ✓ | ✓ |
+| `delete_holiday` | ✓ write | — | — | ✗ |
 
 ---
 
-**Q10. Are there topics, values, or parameter combinations some roles can use that others cannot?**
+## Section 9 — Violation Code Convention
 
-> - `salary` update: HR or direct manager only. [derived from guidance.txt]
-> - `include_ssn` equivalent: passport, visa, bank account — sensitive PII; same ownership rules as above.
-> - `email` field: must match organization's corporate domain when `organization` is also provided. [derived from guidance.txt]
-> - `salary` value: must be > 0 for all roles. [derived from guidance.txt]
-> - `expiry_date` must be > `issue_date` when both provided in the same call. [derived from guidance.txt]
-> - `start_date`/`end_date` span: ≤ 90 calendar days. [derived from guidance.txt]
-> - `leave_type` for `create_time_off_request`: must be from fixed enum. [derived from architecture]
-> - `status` for `update_time_off_status`: employee → `Pending` only; manager → `Approved`/`Denied`; HR → any. [derived from guidance.txt]
+All denial messages use the format: `UPPER_SNAKE_CASE: description`.
 
----
-
-**Q11. Are there roles that have no restrictions?**
-
-> HR has the fewest restrictions — may view/edit all employee data, add employees, manage departments/holidays/leave allotments, and set any time-off status. However, HR is still subject to data integrity rules (positive salary, email domain, date ordering). [derived from guidance.txt]
-
----
-
-## Section 4: Hard Limits
-
-**Q12. Are there parameter values that should always be blocked for everyone, regardless of role?**
-
-> - `salary ≤ 0` — blocked for all (must be positive). [derived from guidance.txt]
-> - Email domain mismatch: `args.email` not matching `args.organization`'s domain when both provided in the same call. [derived from guidance.txt]
-> - `issue_date >= expiry_date` when both provided in the same call (passport/visa). [derived from guidance.txt]
-> - `end_date - start_date > 90 days` for `create_time_off_request`. [derived from guidance.txt]
-
----
-
-**Q13. Is there a maximum value for any numeric parameter that no role can exceed?**
-
-> `create_time_off_request`: `end_date` − `start_date` ≤ 90 calendar days (computed, not a single integer field). [derived from guidance.txt]
-
----
-
-**Q13b. Are there approval paths?**
-
-> `update_time_off_status`: the allowed values for `status` depend on who is calling (HR / manager / employee). This is a role-conditional rule, not a simple approval flag. [derived from guidance.txt]
-
----
-
-**Q14. Are there keywords or inputs that must always be rejected?**
-
-> No free-text keyword blocks identified. The booking / frequent-flyer rule in `guidance.txt` does not apply to any of the 29 Employee Hub tools — it is out of scope. [derived from guidance.txt]
-
----
-
-## Section 5: Volume and Rate Limits
-
-**Q15. Is there a maximum number of times this tool can be called in a single session?**
-
-> No rate limits defined. [inferred — low confidence]
-
----
-
-**Q16. Who keeps track of call counts?**
-
-> No call-count field in `system_vars.json`. [inferred — low confidence]
-
----
-
-## Section 6: Response Filtering
-
-**Q17. After the tool returns results, does anything need to be hidden?**
-
-> All personal record data (passport, visa, bank account, emergency contact, home address, salary) should only be returned for the acting user's own records or, for HR/managers, for records they are authorized to view. However, response-side filtering is out of OPA scope — OPA blocks the tool call pre-execution. [derived from architecture]
-
----
-
-**Q18. Are there fields in the response that should be suppressed for certain roles?**
-
-> Not OPA-enforceable (response filtering is post-execution). [derived from architecture]
-
----
-
-**Q19. Are there conditions on a result that determine whether it is "actionable"?**
-
-> No post-execution actionability checks needed — OPA blocks pre-execution. [derived from architecture]
-
----
-
-## Section 7: Violations
-
-**Q20. Should a blocked request be silently rejected or explained?**
-
-> The agent is instructed: "if a tool returns an 'error' key, explain it to the user." OPA denials return an error envelope. [derived from architecture]
-
----
-
-**Q21. Are there different severity levels — hard block vs. warning?**
-
-> | Level | Examples |
-> |-------|----------|
-> | Hard block | All identified policy violations — no soft-block paths. |
-> | Soft block | None identified. |
-
----
-
-**Q22. Does an existing violation-code scheme need to be reused?**
-
-> No pre-existing OPA violation-code scheme for this agent. New codes minted in Step D.
->
-> | Code | Meaning |
-> |------|---------|
-> | (none pre-existing) | — |
-
----
-
-**Confidence breakdown:** `[derived from guidance.txt]`: 18 | `[derived from architecture]`: 14 | `[inferred — low confidence]`: 4 | blank: 0
+| Code | Applies to |
+|---|---|
+| `HR_ONLY` | Tool restricted to HR department |
+| `OWNERSHIP` | Personal or employee record access requires own user_id or HR |
+| `SALARY_INVALID` | Salary must be positive |
+| `EMAIL_DOMAIN` | Email domain does not match organization |
+| `TIMEOFF_OWNERSHIP` | Time-off request must be for the requesting user |
+| `TIMEOFF_SPAN` | Time-off span exceeds 90 days |
+| `DATE_ORDER` | Issue date must be before expiry date |
+| `LEAVE_OWNERSHIP` | Leave records restricted to employee or HR |
+| `TIMEOFF_STATUS` | Non-HR user cannot set Approved or Denied status |
