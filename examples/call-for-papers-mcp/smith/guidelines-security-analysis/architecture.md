@@ -3,84 +3,65 @@
 ## Layers
 
 ### HTTP API Layer
-- File: `agent.py` (`/chat`, `/extract_tool_call`, `/health`, FastAPI on :9000)
-- Role: Accepts inbound HTTP requests with an optional `user_profile` dict and the user's natural-language question; builds the system prompt by embedding `user_profile` key/values verbatim, then forwards to the LangGraph ReAct agent.
-- Inputs: `question` (string), `user_profile` (optional dict — any key/value; caller-supplied).
-- Outputs: System prompt string + user message passed to the agent layer.
-- Current enforcement: None — no authentication, no schema validation on `user_profile`, no role check.
+- File: agent.py
+- Role: Exposes `/chat` and `/extract_tool_call` POST endpoints; accepts `question` and `user_profile` from callers, builds the system prompt by embedding `user_profile` keys verbatim, and forwards the combined message to the agent.
+- Inputs: `question` (str), `user_profile` (Optional[Dict[str, Any]]) — both caller-supplied
+- Outputs: System prompt string (with embedded user_profile), user message — forwarded to the Agent Layer
+- Current enforcement: none
 
-### Agent Layer (LangGraph ReAct)
-- File: `agent.py` (`build_agent`, `build_system_prompt`, `chat`, `extract_tool_call`)
-- Role: Runs a LangGraph ReAct loop — the LLM reads the system prompt (which embeds `user_profile` key/values verbatim), decides to call `get_events`, and constructs `keywords`, `topic`, and `limit` arguments. Launches `server.py` over stdio via `MultiServerMCPClient`.
-- Inputs: System prompt (containing verbatim `user_profile` entries), user message.
-- Outputs: MCP `tools/call` requests over stdio with `name=get_events`, `arguments={keywords, topic, limit}`.
-- Current enforcement: None — `user_profile` is advisory; LLM may or may not respect role constraints stated in the system prompt.
+### Agent Layer
+- File: agent.py (LangGraph ReAct agent, `create_react_agent`)
+- Role: LLM-driven reasoning layer that decides which tool to call and with what arguments, based on the system prompt and user question.
+- Inputs: System prompt (containing embedded `user_profile`), user `question`
+- Outputs: Tool call decisions — `input.name`, `input.args.keywords`, `input.args.topic`, `input.args.limit`
+- Current enforcement: none (no pre-call argument validation)
 
-### MCP Tool Server
-- File: `server.py` (stdio transport, FastMCP)
-- Role: Single tool `get_events` — thin wrapper that forwards `keywords` and `limit` to `app.getEvents()`; `topic` is carried for policy scoping only and does not affect the WikiCFP query.
-- Inputs: JSON-RPC `tools/call` with `keywords` (string, required), `topic` (string, required), `limit` (int, default 10).
-- Outputs: `{"status", "count", "events": [...]}` dict from WikiCFP scrape.
-- Current enforcement: FastMCP schema validation (parameter types). No authorization, no topic enforcement, no limit cap.
+### MCP Tool Layer
+- File: server.py (`get_events` FastMCP tool)
+- Role: Declares the `get_events` tool schema (`keywords`, `topic`, `limit`) and forwards calls to the tool implementation; `topic` is declared as a required parameter here but is not forwarded to `app.py`.
+- Inputs: `keywords` (str, required), `topic` (str, required), `limit` (int, optional, default 10)
+- Outputs: Calls `getEvents(keywords, limit)` — `topic` is dropped here
+- Current enforcement: none
 
 ### Tool Implementation Layer
-- File: `app.py` (`WikiCFPScraper`, `getEvents`)
-- Role: Scrapes WikiCFP (`http://www.wikicfp.com/cfp/servlet/tool.search`) using the `keywords` query string; `topic` is ignored entirely by `getEvents` — it only passes `keywords` and `limit` to the scraper.
-- Inputs: `keywords` (string), `limit` (int or None).
-- Outputs: List of conference dicts (`event_name`, `event_description`, `event_time`, `event_location`, `deadline`, `event_link`).
-- Current enforcement: None — `limit` is applied as a Python slice after retrieval; no domain or keyword filtering.
+- File: app.py (`WikiCFPScraper`, `getEvents`)
+- Role: Constructs and sends an HTTP GET to WikiCFP (`q=<keywords>&year=t`), parses the HTML response, and returns structured conference data up to `limit` entries.
+- Inputs: `keywords` (str), `limit` (Optional[int])
+- Outputs: Dict with `status`, `count`, and `events` array (name, description, dates, location, deadline, link)
+- Current enforcement: none (no sanitisation of `keywords` before URL construction)
 
 ### External Service
-- Service: WikiCFP (`http://www.wikicfp.com`)
-- Role: Third-party conference listing site; scraped via HTTP GET with no authentication.
-- Inputs: `q` (query string), `year` (hardcoded `'t'` = this year).
-- Outputs: HTML page parsed into conference records.
-- Current enforcement: None — WikiCFP returns whatever matches the query; no topic or content filtering on the external side.
+- File: n/a (WikiCFP HTTP API, `http://www.wikicfp.com/cfp/servlet/tool.search`)
+- Role: Third-party academic conference index; receives keyword query, returns HTML listing of matching conferences.
+- Inputs: `q` query param, `year` filter
+- Outputs: HTML page scraped for conference data — untrusted external content
+- Current enforcement: n/a
 
 ---
 
 ## Trust Boundaries
 
-| Field | Source | Classification |
-|---|---|---|
-| `user_profile` (all keys) | HTTP caller (JSON body) | Self-reported — no cryptographic verification; caller can supply any key/value |
-| `user_profile.user_role` | HTTP caller | Self-reported — caller asserts their own role (`faculty`, `phd_student`, `guest`) |
-| `user_profile.dissertation_area` | HTTP caller | Self-reported — caller asserts their PhD dissertation area |
-| `user_profile.queries_this_session` | HTTP caller | Self-reported — caller asserts their session query count; trivially forgeable |
-| `input.extensions.subject.user_role` | Caller-supplied `user_profile` | Self-reported |
-| `input.extensions.subject.dissertation_area` | Caller-supplied `user_profile` | Self-reported |
-| `input.extensions.subject.queries_this_session` | Caller-supplied `user_profile` | Self-reported |
-| `input.extensions.subject.research_area` | Caller-supplied `user_profile` | Self-reported |
-| `input.name` (tool name, LLM-chosen) | Agent (LLM) | Self-reported — LLM-generated |
-| `input.args.keywords` | Agent (LLM) | Self-reported — LLM-chosen from user message |
-| `input.args.topic` | Agent (LLM) | Self-reported — LLM-chosen; must be one of three approved values per tool docstring |
-| `input.args.limit` | Agent (LLM) | Self-reported — LLM-chosen; no cap enforced at tool layer |
-| WikiCFP response data (event names, descriptions, links) | WikiCFP external website | External/untrusted — third-party content; no integrity guarantee |
+| Field | Source | Classification | Disposition |
+|---|---|---|---|
+| `question` | Caller POST body | Self-reported | n/a (processed by LLM, never a tool argument) |
+| `user_profile.*` (all keys including `user_role`, `dissertation_area`, `queries_this_session`, `research_area`, `user_name`) | Caller POST body | Self-reported | n/a (injected verbatim into system prompt; no tool argument; never reaches OPA interception surface as `input.args.*`) |
+| `keywords` (LLM-generated tool arg) | Agent LLM reasoning | Self-reported (LLM) | **Acts on** — passed as `q=` URL param to WikiCFP HTTP GET in app.py |
+| `topic` (LLM-generated tool arg) | Agent LLM reasoning | Self-reported (LLM) | **Echoed** — server.py accepts it and documents it as a policy-scoping parameter, but `getEvents()` is called as `getEvents(keywords, limit)` — `topic` is never forwarded to app.py and has no effect on the WikiCFP query or result filtering |
+| `limit` (LLM-generated tool arg) | Agent LLM reasoning | Self-reported (LLM) | **Acts on** — used in `conferences[:limit]` to slice the result list in app.py |
+| `input.extensions.subject.user_role` | system_vars.json schema | Self-reported | n/a (available at OPA interception time; not a tool arg) |
+| `input.extensions.subject.dissertation_area` | system_vars.json schema | Self-reported | n/a (available at OPA interception time; not a tool arg) |
+| `input.extensions.subject.queries_this_session` | system_vars.json schema | Self-reported | n/a (available at OPA interception time; not a tool arg) |
+| `input.extensions.subject.research_area` | system_vars.json schema | Self-reported | n/a (available at OPA interception time; not a tool arg) |
+| WikiCFP response (HTML) | External HTTP service | External/untrusted | Acts on — scraped and parsed; returned as event data to the agent |
 
 ---
 
 ## Data Flow
 
 ```
-HTTP caller
-  │  POST /chat  {question, user_profile: {user_role, dissertation_area, queries_this_session, ...}}
-  ▼
-agent.py HTTP API layer (:9000)
-  │  build_system_prompt() — embeds user_profile key/values verbatim into SYSTEM_PROMPT_BASE
-  ▼
-LangGraph ReAct agent
-  │  LLM: reads system prompt + user question → selects get_events → constructs {keywords, topic, limit}
-  ▼  stdio (MultiServerMCPClient)
-server.py MCP tool server
-  │  get_events(keywords, topic, limit) → calls app.getEvents(keywords, limit)
-  │  NOTE: topic is NOT passed to getEvents; it only exists as an OPA policy field
-  ▼
-app.py WikiCFPScraper
-  │  HTTP GET to http://www.wikicfp.com/cfp/servlet/tool.search?q=<keywords>&year=t
-  ▼
-WikiCFP (external)
-  ▼
-Response ← app ← server ← LLM (formatted answer) ← HTTP caller
+Caller → [HTTP API Layer: POST /chat] → [Agent Layer: system-prompt + question] → [MCP Tool Layer: get_events(keywords, topic, limit)] → [Tool Impl: getEvents(keywords, limit) — topic dropped] → [WikiCFP HTTP GET ?q=keywords&year=t]
+                                                                                                                                                                                                               ↓
+Caller ← [HTTP API Layer: ChatResponse] ← [Agent Layer: final message] ← [MCP Tool Layer: result dict] ← [Tool Impl: parsed conference list] ← [WikiCFP HTML response]
 ```
 
 ---
@@ -88,36 +69,40 @@ Response ← app ← server ← LLM (formatted answer) ← HTTP caller
 ## Enforcement Points
 
 ### Current
-- **MCP Tool Server**: FastMCP schema validation only (parameter types, `keywords` and `topic` required). No topic filtering, no limit cap, no role check.
-- **No authorization or content-filtering layer exists anywhere in this system today.**
+- None in any layer. No access control, no argument validation, no authentication.
 
 ### Available (OPA-interceptable)
-OPA intercepts at the agent → MCP server boundary. Fields present as structured data at that point:
-
-**From `input.extensions.subject.*` (populated from `user_profile`):**
-- `input.extensions.subject.user_role` — string: `faculty`, `phd_student`, or `guest`
-- `input.extensions.subject.dissertation_area` — string: one of the three approved areas (PhD students only)
-- `input.extensions.subject.queries_this_session` — integer: running per-session call count (self-reported)
-- `input.extensions.subject.research_area` — array of approved topics
-
-**From `input.args.*`:**
-- `input.args.keywords` — string (free text)
-- `input.args.topic` — string (must be one of three approved values)
-- `input.args.limit` — integer (default 10)
-
-**guidance.txt coverage sweep:**
-| Rule | Fields needed | Available? | Verdict |
-|---|---|---|---|
-| Only `faculty`/`phd_student` may use `get_events` | `subject.user_role` | Available | OPA-enforceable |
-| `topic` must be one of three approved areas | `args.topic` | Available | OPA-enforceable |
-| `limit` between 1 and role cap (faculty ≤15, phd_student ≤10) | `args.limit`, `subject.user_role` | Available | OPA-enforceable |
-| No more than 5 searches per session | `subject.queries_this_session` | Available (self-reported) | OPA-enforceable only if caller honestly reports count |
-| Disallowed `keywords` substrings | `args.keywords` | Available | OPA-enforceable (case-insensitive substring match) |
-| PhD student must use own `dissertation_area` as `topic` | `args.topic`, `subject.dissertation_area`, `subject.user_role` | Available | OPA-enforceable |
+- **MCP Tool Layer (pre-execution interception):** OPA can intercept the `get_events` call before it reaches `getEvents()`. At this point the following structured fields are visible:
+  - `input.name` = `"get_events"`
+  - `input.args.keywords` (str)
+  - `input.args.topic` (str) — **deny-path rules are sound; permit-path rules are not** (topic is echoed — it has no effect on what the tool does)
+  - `input.args.limit` (int)
+  - `input.extensions.subject.user_role` (string or list — system_vars.json declares it as a list)
+  - `input.extensions.subject.dissertation_area` (str)
+  - `input.extensions.subject.queries_this_session` (int)
+  - `input.extensions.subject.research_area` (list of str)
+  - `input.extensions.subject.user_name` (str)
 
 ### Blind Spots
-- **WikiCFP response content**: OPA intercepts before tool execution; it cannot inspect the returned conference list. A disallowed topic could be indirectly reached via innocuous keywords that happen to return off-topic results.
-- **`queries_this_session` is self-reported**: a caller can set this to 0 to reset the session counter; the per-session cap is only enforced against an honest client.
-- **`dissertation_area` is self-reported**: a PhD student can claim any `dissertation_area` to unlock a broader topic; identity is not verified.
-- **`topic` is not forwarded to WikiCFP**: `app.getEvents` ignores the `topic` argument entirely — the actual search is driven only by `keywords`. OPA can block a disallowed `topic` value, but a caller can supply an approved `topic` while using `keywords` that target an off-topic domain (the `keywords` blocklist partially mitigates this).
-- **LLM reasoning**: the LLM constructs `topic` and `keywords` from natural language; prompt injection in the user message could cause the LLM to select a disallowed `topic` or blocked `keywords` value, bypassing the advisory system-prompt constraints.
+- **HTTP API Layer:** `user_profile` key/value injection — any key can be embedded in the system prompt verbatim, enabling prompt injection into the agent's reasoning. No OPA-enforceable structured field exists for prompt-injection detection at this layer.
+- **Agent Layer:** LLM argument selection — OPA cannot intercept before the LLM decides which `keywords`, `topic`, or `limit` values to produce. It can only check the resulting arguments.
+- **Tool Implementation Layer:** `keywords` is used unsanitised in the WikiCFP URL `q=` parameter. This is a tool-implementation concern; OPA can block known bad keyword substrings but cannot prevent novel injection payloads it was not written to match.
+- **External Service Layer:** WikiCFP response content is untrusted and could contain adversarial data. OPA sees only the pre-call arguments; it cannot inspect or filter the response.
+- **Session rate limit:** `queries_this_session` is self-reported by the caller; a dishonest caller sets it to 0 to defeat the session cap. OPA can enforce the rule as written but cannot verify the count.
+- **`topic` permit-path:** Any rule that permits a call *because* `topic` is an approved value provides false assurance — the WikiCFP search executes identically regardless of what `topic` carries. Deny-path rules (blocking unapproved `topic` values) remain enforceable and useful.
+
+---
+
+## Undeclared Fields
+
+Undeclared fields: none. Every field referenced by a guidance.txt rule is declared either in `tool_definitions.json` (for `input.args.*`: `keywords`, `topic`, `limit`) or in `system_vars.json` (for `input.extensions.subject.*`: `user_role`, `dissertation_area`, `queries_this_session`, `research_area`).
+
+---
+
+## Step A Summary
+
+The system has 5 layers (HTTP API, Agent/LLM, MCP Tool, Tool Implementation, External Service). The key self-reported fields driving access-control rules are `user_profile.*` keys — specifically `user_role`, `dissertation_area`, and `queries_this_session` — which are injected into the system prompt at the HTTP layer and made available as `input.extensions.subject.*` fields at OPA interception time. The sole OPA interception point is the MCP Tool Layer pre-call intercept, where `input.args.*` and `input.extensions.subject.*` are both visible as structured data.
+
+The most significant finding is the **`topic` disposition: Echoed**. `topic` is declared as a required tool argument with the appearance of an access-control parameter, but `server.py` calls `getEvents(keywords, limit)` — `topic` is never forwarded to `app.py` and does not affect the WikiCFP query or result filtering. OPA deny-path rules keyed on `topic` (blocking calls whose `topic` is not an approved value) are sound and useful because they stop the call outright. Any permit-path rule (allowing a call *because* `topic` is an approved value) is not sound — it would pass calls that behave identically whether `topic` is approved or not.
+
+Main blind spots: (1) `user_profile` key injection at the HTTP layer enabling prompt injection into the LLM system prompt; (2) WikiCFP response content — fully untrusted and invisible to OPA; (3) `queries_this_session` is self-reported and can be set to 0 to defeat the session rate limit. Undeclared fields: none.

@@ -2,43 +2,48 @@
 OPA POLICY COVERAGE ANALYSIS REPORT
 ============================================================
 
-Total Rules: 23
-Covered Rules: 20
-Uncovered Rules: 3
-Coverage Percentage: 86.96%
+Total Rules: 27
+Covered Rules: 27
+Uncovered Rules: 0
+Coverage Percentage: 100.00%
 
 COVERED RULES:
 ----------------------------------------
  allow (lines 5, default)
  subject (lines 8, assignment)
- args (lines 9, assignment)
- blocked_keywords (lines 13-18, assignment)
- blocked_email_domains (lines 20-26, assignment)
- forbidden_select_fields (lines 28-34, assignment)
- compensation_tools (lines 36-39, assignment)
- is_manager (lines 42-44, rule)
- parts (lines 48, assignment)
- domain (lines 50, assignment)
- requested_dept (lines 99, assignment)
- is_null_or_absent_select_fields (lines 118-120, rule)
- is_null_or_absent_select_fields (lines 130-132, rule)
- destination (lines 166, assignment)
- domain (lines 175, assignment)
- agent_input (lines 183, assignment)
- domain (lines 190, assignment)
- agent_input (lines 221, assignment)
- any_deny (lines 227-229, rule)
- allow (lines 231-233, rule)
+ args (lines 10, assignment)
+ approved_topics (lines 14-18, assignment)
+ permitted_roles (lines 20, assignment)
+ blocked_keywords (lines 22-42, assignment)
+ roles (lines 49, assignment)
+ msg (lines 51, assignment)
+ topic (lines 57, assignment)
+ msg (lines 59, assignment)
+ roles (lines 65, assignment)
+ topic (lines 67, assignment)
+ dissertation_area (lines 68, assignment)
+ msg (lines 70-73, assignment)
+ limit (lines 79, assignment)
+ msg (lines 81, assignment)
+ limit (lines 87, assignment)
+ msg (lines 89, assignment)
+ roles (lines 95, assignment)
+ limit (lines 98, assignment)
+ msg (lines 100, assignment)
+ keywords (lines 106, assignment)
+ msg (lines 109, assignment)
+ queries (lines 115, assignment)
+ msg (lines 117, assignment)
+ any_deny (lines 122-124, rule)
+ allow (lines 126-128, rule)
 
 UNCOVERED RULES:
 ----------------------------------------
- is_null_or_absent_select_fields (lines 122-124, rule)
- is_null_or_absent_select_fields (lines 126-128, rule)
- domain (lines 167, assignment)
+All rules are covered by tests!
 
 POLICY COMPARISON:
 ----------------------------------------
-Rules in both policies: 15
+Rules in both policies: 14
 Rules only in main policy: 0
 Rules only in revised policy: 0
 ============================================================

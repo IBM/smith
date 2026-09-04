@@ -881,57 +881,9 @@
           "end": {
             "row": 442
           }
-        },
-        {
-          "start": {
-            "row": 445
-          },
-          "end": {
-            "row": 446
-          }
-        },
-        {
-          "start": {
-            "row": 449
-          },
-          "end": {
-            "row": 450
-          }
-        },
-        {
-          "start": {
-            "row": 453
-          },
-          "end": {
-            "row": 454
-          }
-        },
-        {
-          "start": {
-            "row": 457
-          },
-          "end": {
-            "row": 458
-          }
-        },
-        {
-          "start": {
-            "row": 461
-          },
-          "end": {
-            "row": 462
-          }
-        },
-        {
-          "start": {
-            "row": 465
-          },
-          "end": {
-            "row": 466
-          }
         }
       ],
-      "covered_lines": 232,
+      "covered_lines": 220,
       "coverage": 100
     },
     "/Users/saisree/smith-trial/.claude/skills/smith/references/scorecard/coverage/revised_policy.rego": {
@@ -949,15 +901,23 @@
             "row": 8
           },
           "end": {
-            "row": 9
+            "row": 8
           }
         },
         {
           "start": {
-            "row": 13
+            "row": 10
           },
           "end": {
-            "row": 13
+            "row": 10
+          }
+        },
+        {
+          "start": {
+            "row": 14
+          },
+          "end": {
+            "row": 14
           }
         },
         {
@@ -970,26 +930,10 @@
         },
         {
           "start": {
-            "row": 28
+            "row": 22
           },
           "end": {
-            "row": 28
-          }
-        },
-        {
-          "start": {
-            "row": 36
-          },
-          "end": {
-            "row": 36
-          }
-        },
-        {
-          "start": {
-            "row": 42
-          },
-          "end": {
-            "row": 43
+            "row": 22
           }
         },
         {
@@ -997,7 +941,7 @@
             "row": 47
           },
           "end": {
-            "row": 50
+            "row": 51
           }
         },
         {
@@ -1005,7 +949,7 @@
             "row": 55
           },
           "end": {
-            "row": 56
+            "row": 59
           }
         },
         {
@@ -1013,44 +957,28 @@
             "row": 63
           },
           "end": {
-            "row": 63
+            "row": 70
           }
         },
         {
           "start": {
-            "row": 73
+            "row": 77
           },
           "end": {
-            "row": 74
+            "row": 81
           }
         },
         {
           "start": {
-            "row": 78
+            "row": 85
           },
           "end": {
-            "row": 79
-          }
-        },
-        {
-          "start": {
-            "row": 83
-          },
-          "end": {
-            "row": 84
-          }
-        },
-        {
-          "start": {
             "row": 89
-          },
-          "end": {
-            "row": 91
           }
         },
         {
           "start": {
-            "row": 95
+            "row": 93
           },
           "end": {
             "row": 100
@@ -1058,10 +986,10 @@
         },
         {
           "start": {
-            "row": 105
+            "row": 104
           },
           "end": {
-            "row": 108
+            "row": 109
           }
         },
         {
@@ -1069,217 +997,7 @@
             "row": 113
           },
           "end": {
-            "row": 115
-          }
-        },
-        {
-          "start": {
-            "row": 118
-          },
-          "end": {
-            "row": 119
-          }
-        },
-        {
-          "start": {
-            "row": 123
-          },
-          "end": {
-            "row": 123
-          }
-        },
-        {
-          "start": {
-            "row": 127
-          },
-          "end": {
-            "row": 127
-          }
-        },
-        {
-          "start": {
-            "row": 130
-          },
-          "end": {
-            "row": 131
-          }
-        },
-        {
-          "start": {
-            "row": 136
-          },
-          "end": {
-            "row": 138
-          }
-        },
-        {
-          "start": {
-            "row": 143
-          },
-          "end": {
-            "row": 145
-          }
-        },
-        {
-          "start": {
-            "row": 151
-          },
-          "end": {
-            "row": 153
-          }
-        },
-        {
-          "start": {
-            "row": 158
-          },
-          "end": {
-            "row": 159
-          }
-        },
-        {
-          "start": {
-            "row": 165
-          },
-          "end": {
-            "row": 166
-          }
-        },
-        {
-          "start": {
-            "row": 173
-          },
-          "end": {
-            "row": 176
-          }
-        },
-        {
-          "start": {
-            "row": 180
-          },
-          "end": {
-            "row": 185
-          }
-        },
-        {
-          "start": {
-            "row": 189
-          },
-          "end": {
-            "row": 190
-          }
-        },
-        {
-          "start": {
-            "row": 197
-          },
-          "end": {
-            "row": 200
-          }
-        },
-        {
-          "start": {
-            "row": 204
-          },
-          "end": {
-            "row": 208
-          }
-        },
-        {
-          "start": {
-            "row": 211
-          },
-          "end": {
-            "row": 211
-          }
-        },
-        {
-          "start": {
-            "row": 213
-          },
-          "end": {
-            "row": 213
-          }
-        },
-        {
-          "start": {
-            "row": 216
-          },
-          "end": {
-            "row": 222
-          }
-        },
-        {
-          "start": {
-            "row": 227
-          },
-          "end": {
-            "row": 228
-          }
-        },
-        {
-          "start": {
-            "row": 231
-          },
-          "end": {
-            "row": 232
-          }
-        }
-      ],
-      "not_covered": [
-        {
-          "start": {
-            "row": 54
-          },
-          "end": {
-            "row": 54
-          }
-        },
-        {
-          "start": {
-            "row": 62
-          },
-          "end": {
-            "row": 62
-          }
-        },
-        {
-          "start": {
-            "row": 64
-          },
-          "end": {
-            "row": 64
-          }
-        },
-        {
-          "start": {
-            "row": 67
-          },
-          "end": {
-            "row": 69
-          }
-        },
-        {
-          "start": {
-            "row": 72
-          },
-          "end": {
-            "row": 72
-          }
-        },
-        {
-          "start": {
-            "row": 77
-          },
-          "end": {
-            "row": 77
-          }
-        },
-        {
-          "start": {
-            "row": 82
-          },
-          "end": {
-            "row": 82
+            "row": 117
           }
         },
         {
@@ -1287,7 +1005,7 @@
             "row": 122
           },
           "end": {
-            "row": 122
+            "row": 123
           }
         },
         {
@@ -1295,56 +1013,15 @@
             "row": 126
           },
           "end": {
-            "row": 126
-          }
-        },
-        {
-          "start": {
-            "row": 157
-          },
-          "end": {
-            "row": 157
-          }
-        },
-        {
-          "start": {
-            "row": 164
-          },
-          "end": {
-            "row": 164
-          }
-        },
-        {
-          "start": {
-            "row": 167
-          },
-          "end": {
-            "row": 168
-          }
-        },
-        {
-          "start": {
-            "row": 188
-          },
-          "end": {
-            "row": 188
-          }
-        },
-        {
-          "start": {
-            "row": 191
-          },
-          "end": {
-            "row": 191
+            "row": 127
           }
         }
       ],
-      "covered_lines": 91,
-      "not_covered_lines": 17,
-      "coverage": 84.25925925925925
+      "covered_lines": 57,
+      "coverage": 100
     }
   },
-  "covered_lines": 323,
-  "not_covered_lines": 17,
-  "coverage": 95
+  "covered_lines": 277,
+  "not_covered_lines": 0,
+  "coverage": 100
 }
