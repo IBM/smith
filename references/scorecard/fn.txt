@@ -1,0 +1,5 @@
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/promptfoo_test_case1.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case30.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/promptfoo_test_case8.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case25.json
+/Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/promptfoo_test_case2.json

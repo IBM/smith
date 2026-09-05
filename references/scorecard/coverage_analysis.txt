@@ -2,48 +2,42 @@
 OPA POLICY COVERAGE ANALYSIS REPORT
 ============================================================
 
-Total Rules: 28
-Covered Rules: 26
+Total Rules: 22
+Covered Rules: 20
 Uncovered Rules: 2
-Coverage Percentage: 92.86%
+Coverage Percentage: 90.91%
 
 COVERED RULES:
 ----------------------------------------
- subject (lines 6, assignment)
- args (lines 8, assignment)
- permitted_roles (lines 12, assignment)
- restricted_tools (lines 15, assignment)
- fleet_manager_brands (lines 18-27, assignment)
- journalist_brands (lines 30-43, assignment)
- recognized_vehicle_types (lines 46, assignment)
- fleet_manager_vehicle_types (lines 49, assignment)
- cars_only_vehicle_types (lines 52, assignment)
- roles (lines 56, assignment)
- msg (lines 69, assignment)
- msg (lines 77, assignment)
- brand (lines 85, assignment)
- msg (lines 87, assignment)
- brand (lines 96, assignment)
- msg (lines 98-101, assignment)
- brand (lines 110, assignment)
- msg (lines 112-115, assignment)
- vtype (lines 123, assignment)
- vtype (lines 137, assignment)
- msg (lines 139-142, assignment)
- vtype (lines 152, assignment)
- msg (lines 154-157, assignment)
- any_deny (lines 162-164, rule)
- allow (lines 166, default)
- allow (lines 168-170, rule)
+ allow (lines 5, default)
+ subject (lines 8, assignment)
+ args (lines 10, assignment)
+ subject_roles (lines 12, assignment)
+ compensation_tools (lines 17, assignment)
+ repo_search_roles (lines 20, assignment)
+ ssn_pattern (lines 26, assignment)
+ ssn_pattern_bare (lines 28, assignment)
+ caller_has_hr_role (lines 33-35, rule)
+ caller_has_hr_role (lines 37-39, rule)
+ any_repo_role (lines 42-45, rule)
+ msg (lines 54-57, assignment)
+ msg (lines 64-67, assignment)
+ msg (lines 75-78, assignment)
+ msg (lines 85-88, assignment)
+ msg (lines 107, assignment)
+ msg (lines 113, assignment)
+ msg (lines 119, assignment)
+ msg (lines 125, assignment)
+ allow (lines 129-131, rule)
 
 UNCOVERED RULES:
 ----------------------------------------
- msg (lines 63, assignment)
- msg (lines 125-128, assignment)
+ large_adjustment_threshold (lines 23, assignment)
+ msg (lines 97-100, assignment)
 
 POLICY COMPARISON:
 ----------------------------------------
-Rules in both policies: 15
+Rules in both policies: 12
 Rules only in main policy: 0
 Rules only in revised policy: 0
 ============================================================

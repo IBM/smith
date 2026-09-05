@@ -2,21 +2,21 @@ Scorecard Summary
 ===================
 Experiment: Test cases that should result in an allow decision
 Directory: /references/test_cases/allow
-Allowed:   134
-Denied:    0
-Total:     134
+Allowed:   19
+Denied:    5
+Total:     24
 --------------------------
 Experiment: Test cases that should result in a deny decision
 Directory: /references/test_cases/disallow
-Allowed:   0
-Denied:    130
-Total:     130
+Allowed:   5
+Denied:    42
+Total:     47
 --------------------------
 ===================
 The coverage test results are: 
-      "covered_lines": 61,
-      "not_covered_lines": 4,
-      "coverage": 93.84615384615384
+      "covered_lines": 55,
+      "not_covered_lines": 6,
+      "coverage": 90.1639344262295
 ===================
 The line number of current policy is:
-     170
+     131

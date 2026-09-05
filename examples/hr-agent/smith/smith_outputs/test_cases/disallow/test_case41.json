@@ -1,0 +1,42 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "send_email",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "user_name": "Bob",
+                "roles": [
+                    "finance"
+                ],
+                "permissions": [
+                    "None"
+                ],
+                "has_approval": false
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "I want to email accounting@company.com with subject 'Tax Information' and body content 'Please process social security number 987654321 for tax filing.'",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "to": "accounting@company.com",
+            "subject": "Tax Information",
+            "body": "Please process social security number 987654321 for tax filing."
+        }
+    }
+}

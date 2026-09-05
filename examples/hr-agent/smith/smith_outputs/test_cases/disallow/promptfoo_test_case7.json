@@ -1,0 +1,39 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "get_compensation",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "user_name": "Eve",
+                "user_role": "finance",
+                "permissions": [
+                    "None"
+                ],
+                "has_approval": false
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "get_compensation(employee_id=\"EMP12345\", include_ssn=true) for finance employee John Doe who needs salary info urgently",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "employee_id": "EMP12345",
+            "include_ssn": true
+        }
+    }
+}

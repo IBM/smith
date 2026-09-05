@@ -614,6 +614,42 @@ If `guidance.txt` did not exist at STEP 7 time (per the branch above),
 write `guidance_updated.txt` as a flat numbered list starting at 1 —
 no existing rules to renumber against, no format to match.
 
+**When there are no new rules to propose.** This is a normal, common
+outcome: `guidance.txt` already covers every OPA-enforceable candidate
+STEP 7 produced. Handle it as follows.
+
+- **Write `guidance_updated.txt` empty — zero bytes.** Do not delete
+  it: Step E still reads it, and an empty file makes the append a
+  correct no-op that leaves `guidance.txt` byte-for-byte unchanged. A
+  missing file is an error condition; an empty one is the answer.
+- **Do not write "No new rules proposed", a header, a comment, or a
+  coverage summary into it** when `guidance.txt` is flat-numbered or
+  bare-line style. `decompose` reads the guidance with a single
+  `f.read()` and passes the entire file to the LLM as one blob — there
+  is no line parsing, no `#` comment convention, and no filtering
+  anywhere in the pipeline. In a bare-line file every non-empty line is
+  rule text by construction, so any note you leave becomes guidance the
+  decomposer expands into test conditions, and the policy creation skill
+  tries to map to a `deny` block.
+- **Prose-with-headers `guidance.txt` is the one exception.** There a
+  single `##` section stating that the analysis proposed no new rules is
+  acceptable, because that file already interleaves prose with
+  rule-bearing lines and the section is visually contained. Even then it
+  carries the statement only — no gap-register rows, no rule-coverage
+  mapping, no maintenance or tooling notes.
+- **Report the finding in STEP 9, not in the file.** "None —
+  `guidance.txt` already covers every OWASP-derived and
+  questionnaire-derived candidate", together with which existing rules
+  cover which candidates, is human-review output. The reviewer sees it
+  in your STEP 9 summary; `guidance_updated.txt` is consumed by Rego and
+  test generation, which have no use for it.
+
+The failure mode this prevents: a run that finds nothing to add, then
+writes its reasoning trail — coverage mapping, gap register, tooling
+notes — into the addendum instead of reporting it. Step E appends all of
+it to `guidance.txt`, and every later stage reads that prose as policy
+rules.
+
 **Why the file is an addendum, not a replacement.** `guidance.txt` may
 contain more than numbered rules — headings, blank lines, comments,
 paragraphs of context authored by the human. Overwriting it would
@@ -842,6 +878,14 @@ of the following is true:
 5. **A cross-reference points outside the file** — "below", "above",
    "see the gap register", "as documented in the table". After Step E's
    append these resolve to nothing, or worse, to unrelated text.
+6. **STEP 8 proposed no new rules, but the file is not empty** — per
+   STEP 8's "When there are no new rules to propose", it must be zero
+   bytes for flat-numbered and bare-line `guidance.txt`, and at most a
+   single `##` statement section for prose-with-headers style. Any
+   coverage mapping, gap register, or tooling note here is content that
+   Step E will append into `guidance.txt` and the decomposer will read as
+   rules. Conversely, if STEP 8 *did* propose rules, an empty file is a
+   lost write — re-run STEP 8 rather than passing the gate.
 
 On any hit: delete the offending section or line from
 `guidance_updated.txt`, confirm the content it carried is present in

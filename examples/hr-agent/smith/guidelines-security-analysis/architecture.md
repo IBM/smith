@@ -1,132 +1,156 @@
-# Architecture: hr-agent (HR Copilot)
+# Architecture Analysis — HR Agent
 
-## Layers
+## 1. System Overview
 
-### A2A Client Layer
-- File: `chat.py` (external client, not deployed with agent)
-- Role: Mints persona and client JWTs, sends `message/send` requests to the sidecar reverse proxy.
-- Inputs: User free text; user identity credentials for JWT minting.
-- Outputs: A2A `message/send` POST with headers `X-User-Token` (user JWT), `Authorization` (client JWT Bearer), `X-Session-Id`, and A2A JSON body with `contextId`.
-- Current enforcement: JWT minting — identity is cryptographically bound at this layer.
+The HR Agent is a multi-layer agentic system that allows users (via HTTP/A2A) to interact with HR data through a natural-language agent backed by an MCP tool server. The system exposes 6 tools that act on employee compensation records, directory data, repository access, and email communication.
 
-### Sidecar Reverse Proxy (inbound) — authbridge-cpex :8000
-- File: authbridge-cpex sidecar (not in this repo; deployed as a container sidecar)
-- Role: Transparent inbound passthrough for A2A `message/send` traffic into the agent.
-- Inputs: HTTP request with `X-User-Token`, `Authorization`, `X-Session-Id`.
-- Outputs: Forwarded request to agent :8001 with headers preserved.
-- Current enforcement: Inbound passthrough only — no enforcement at this boundary.
-
-### Agent Layer — HR Copilot :8001
-- File: `agent.py`
-- Role: A2A executor; runs a litellm LLM tool-calling loop to decide which tool to call and constructs tool-call arguments, then re-attaches caller identity headers and forwards calls to the forward proxy.
-- Inputs: `X-User-Token` (user JWT), `Authorization` (client JWT), `X-Session-Id`, user free-text message.
-- Outputs: JSON-RPC 2.0 `tools/call` POST to sidecar forward proxy :8081, carrying `name` (tool name), `arguments` (LLM-chosen parameters), and identity headers.
-- Current enforcement: Checks that both `X-User-Token` and `Authorization` headers are present; rejects with an error message if either is missing. No role-based or parameter-level enforcement at this layer. LLM is instructed (via SYSTEM_PROMPT) to set `include_ssn=true` only on explicit user request, but this is advisory only (not enforced).
-
-### Sidecar Forward Proxy (outbound) — authbridge-cpex :8081
-- File: authbridge-cpex sidecar (not in this repo)
-- Role: CPEX enforcement point on all outbound tool calls — resolves identity from `X-User-Token` / `Authorization`, runs Cedar PDP, redacts `args.ssn`, performs PII scan, enforces RFC 8693 delegation to Keycloak, and maintains per-session taint state. Populates `input.extensions.subject.*` for any policy engine wired into this path.
-- Inputs: JSON-RPC `tools/call` with `name`, `arguments`, and identity headers.
-- Outputs: Allowed calls forwarded to MCP server :9100; denied calls returned as JSON-RPC error envelopes to the agent.
-- Current enforcement: Cedar PDP (authorization), JWT identity resolution, SSN redaction, PII scan, session taint, RFC 8693 delegation — this is the primary enforcement layer in production.
-
-### MCP Tool Server — hr-mcp :9100
-- File: `server.py`
-- Role: Implements the 6 HR tools as JSON-RPC `tools/call` handlers over HTTP; executes business logic against in-memory fixture data.
-- Inputs: JSON-RPC 2.0 body with `params.name` (tool name) and `params.arguments` (tool arguments).
-- Outputs: JSON-RPC result containing tool response data (salary, directory, email confirmation, etc.).
-- Current enforcement: None — no auth, no role checks, no parameter validation at this layer. Trust is fully delegated to the forward proxy upstream.
-
-### External Services (simulated)
-- File: `server.py` (in-memory fixture data; GitHub Enterprise and email are simulated)
-- Role: Backing data store / service layer for tool responses.
-- Inputs: Tool arguments passed through from the MCP server.
-- Outputs: Mock data records.
-- Current enforcement: None.
+OPA policy enforcement is applied at the Agent→MCP boundary (Layer 2→Layer 4), intercepting all tool calls before execution.
 
 ---
 
-## Trust Boundaries
+## 2. Layer Map
 
-| Field | Source | Classification |
-|---|---|---|
-| `X-User-Token` | A2A client (JWT minted by chat.py) | Verified — cryptographically signed JWT; cpex resolves `subject.*` from claims |
-| `Authorization` (Bearer client JWT) | A2A client (JWT minted by chat.py) | Verified — cryptographically signed JWT |
-| `X-Session-Id` | A2A client (or agent-generated UUID fallback) | Self-reported — no cryptographic binding; used to scope taint bucket |
-| `input.extensions.subject.roles` | Resolved by cpex sidecar from user JWT claims | Verified — extracted from verified JWT by cpex |
-| `input.extensions.subject.permissions` | Resolved by cpex sidecar from user JWT claims | Verified — extracted from verified JWT by cpex |
-| `input.extensions.subject.has_approval` | Resolved by cpex sidecar from user JWT claims | Verified — extracted from verified JWT by cpex |
-| `input.name` (tool name) | LLM in agent layer | Self-reported — LLM-generated, not user-supplied directly |
-| `input.arguments.employee_id` | LLM-chosen from user message | Self-reported — LLM-generated |
-| `input.arguments.include_ssn` | LLM-chosen (instructed to set only on explicit user request) | Self-reported — LLM-generated; advisory prompt only |
-| `input.arguments.amount` | LLM-chosen from user message | Self-reported — LLM-generated; no bounds check before policy |
-| `input.arguments.visibility` | LLM-chosen (enum: internal / public / external) | Self-reported — LLM-generated |
-| `input.arguments.repo_name` | LLM-chosen substring filter | Self-reported — LLM-generated |
-| `input.arguments.to` (email recipient) | LLM-chosen from user message | Self-reported — LLM-generated |
-| `input.arguments.subject` (email subject) | LLM-chosen / user-provided free text | Self-reported — could contain injected content |
-| `input.arguments.body` (email body) | LLM-chosen / user-provided free text | Self-reported — could contain injected content or sensitive data |
-| `input.arguments.department` | LLM-chosen optional filter | Self-reported — LLM-generated |
-| Tool response data (salary, SSN, internal_notes) | MCP server in-memory fixtures | External/untrusted — not verified by agent layer; cpex redacts SSN on egress |
+| # | Layer | Component | File | Description |
+|---|-------|-----------|------|-------------|
+| 1 | A2A / HTTP API | FastAPI entrypoints | `agent.py` | Receives inbound requests via `/chat` (Smith shim) and A2A path. Validates that at least one of `X-User-Token` or `Authorization` is present on the A2A path; Smith shim sets headers to empty strings. |
+| 2 | Agent Loop | `HRAgent` | `agent.py` | LiteLLM completion loop. Holds per-session conversation history (`_histories[session_id]`). Dispatches tool calls via `call_tool()`. Forwards `X-User-Token`, `Authorization`, `X-Session-Id` to MCP server. |
+| 3 | Sidecar (authbridge-cpex) | Forward proxy | *(absent locally)* | In K8s: Cedar PDP, SSN redaction, PII scan, session taint. **Not present in local/Smith runs.** All sidecar mitigations are unavailable at this intercept layer. |
+| 4 | MCP Tool Server | FastAPI JSON-RPC | `server.py` | Receives tool calls on `:9100/mcp`. Routes to tool implementations. No authorization at this layer — executes any tool call received. |
+| 5 | Tool Implementation | Python functions | `server.py` | 6 tool functions operating on in-memory fixtures: `EMPLOYEES` dict, `SENT_EMAILS` list, `REPOS` list. |
+
+**OPA intercept point: Layer 2 → Layer 4** (agent dispatches tool call; OPA evaluates before MCP server receives it).
 
 ---
 
-## Data Flow
+## 3. Tool Inventory and Argument Disposition
+
+| Tool | Parameter | Type | Required | Disposition | Notes |
+|------|-----------|------|----------|-------------|-------|
+| `get_compensation` | `employee_id` | string | yes | Acts on | Selects which employee record to return |
+| `get_compensation` | `include_ssn` | boolean | no (default false) | Acts on | If true, SSN field is added to response |
+| `display_compensation` | `employee_id` | string | yes | Acts on | Selects which employee to show band summary for |
+| `get_directory` | `department` | string | no (default "") | Acts on | Filters returned employee list by department |
+| `send_email` | `to` | string | yes | Acts on | Email recipient — written to SENT_EMAILS |
+| `send_email` | `subject` | string | yes | Acts on | Email subject — written to SENT_EMAILS |
+| `send_email` | `body` | string | yes | Acts on | Email body — written to SENT_EMAILS |
+| `search_repos` | `repo_name` | string | no | Acts on | Substring filter on repo names |
+| `search_repos` | `visibility` | string | yes (enum) | Acts on | Filters repos by visibility: `internal`, `public`, `external` |
+| `adjust_compensation` | `employee_id` | string | yes | Acts on | Selects which employee's salary to modify |
+| `adjust_compensation` | `amount` | integer | yes | Acts on | Dollar amount added directly to `employee["salary"]` |
+
+No arguments are Echoed or Ignored. All parameters influence the tool's execution or output.
+
+---
+
+## 4. Trust Boundaries
+
+| Field Path | Source | Trusted? | Notes |
+|------------|--------|----------|-------|
+| `input.extensions.subject.roles` | Self-reported by caller via request headers | No | Populated from `X-User-Token` or `Authorization` headers; no cryptographic verification in local runs |
+| `input.extensions.subject.permissions` | Self-reported | No | Same as above |
+| `input.extensions.subject.has_approval` | Self-reported | No | String "true" or "false"; trivially spoofable in local runs |
+| `input.extensions.subject.user_name` | Self-reported | No | Advisory only |
+| `input.args.*` | LLM-generated / caller-supplied | No | All tool arguments are constructed by the LLM from conversation context; not independently verified |
+| `EMPLOYEES` / `REPOS` / `SENT_EMAILS` | Server-side in-memory fixtures | Yes | Authoritative data held server-side; not attacker-controlled |
+| `SYSTEM_PROMPT` | Hardcoded in `agent.py` | Yes (advisory) | Static, not user-controlled; provides behavioral guidance to LLM but cannot be cryptographically enforced |
+
+**Key risk**: All identity fields (`roles`, `permissions`, `has_approval`) are self-reported. A caller that can set HTTP headers can claim any role or permission. This is the primary enforcement gap when authbridge-cpex is absent.
+
+---
+
+## 5. Guidance Coverage Sweep
+
+Current `guidance.txt` (2 rules):
 
 ```
-A2A client (chat.py)
-  │  POST message/send
-  │  headers: X-User-Token, Authorization, X-Session-Id
-  ▼
-Sidecar reverse proxy :8000  [inbound passthrough]
-  ▼
-HR Copilot agent :8001
-  │  LLM tool-calling loop (litellm → Ollama, DIRECT — not proxied)
-  │  Constructs JSON-RPC tools/call with arguments from LLM output
-  │  Re-attaches X-User-Token, Authorization, X-Session-Id
-  ▼  via explicit httpx.Client(proxy=MCP_PROXY) → sidecar forward proxy :8081
-Sidecar forward proxy :8081  [CPEX enforcement]
-  │  JWT identity resolution → input.extensions.subject.*
-  │  Cedar PDP · redact(args.ssn) · PII scan · session taint
-  │  RFC 8693 delegation → Keycloak
-  ▼  (if allowed)
-HR MCP server :9100
-  │  Executes tool against in-memory fixture data
-  ▼
-Response ← MCP server ← forward proxy (optionally redacted) ← agent (LLM summary) ← A2A client
+All employees can only access internal repositories.
+All employees cannot access other teams' repositories.
 ```
+
+| Rule # | Rule Text | OPA Field Required | Field Available? | Status |
+|--------|-----------|--------------------|------------------|--------|
+| 1 | All employees can only access internal repositories. | `input.args.visibility` (via `search_repos`) | Yes — `visibility` is a required enum parameter in `tool_definitions.json` | Enforceable |
+| 2 | All employees cannot access other teams' repositories. | `input.extensions.subject.team` | **No** — not declared in `system_vars.json`, not present in any tool schema | Blind spot — cannot fire as stated |
+
+### Undeclared Fields
+
+| Field | Required By | Declared In | Status |
+|-------|-------------|-------------|--------|
+| `input.extensions.subject.team` | Rule 2 | Nothing | Not declared anywhere — rule cannot be enforced without this field |
+
+### Coverage Gaps (tools with no corresponding guidance rule)
+
+The following tools and risk vectors have no corresponding rule in the current `guidance.txt`:
+
+| Tool / Vector | Risk | Guidance Coverage |
+|---------------|------|-------------------|
+| `get_compensation` | Any role can retrieve salary + SSN data | None |
+| `display_compensation` | Any role can view compensation bands | None |
+| `adjust_compensation` | Any role can raise any salary by any amount | None |
+| `send_email` | Any role can send email with arbitrary content, including PII/SSN | None |
+| `search_repos` (role gate) | Any role can search repos — guidance says "internal only", not "engineers/security only" | Partial (visibility only, no role restriction) |
 
 ---
 
-## Enforcement Points
+## 6. Enforcement Points Summary
 
-### Current
-- **A2A Client Layer**: JWT minting — user and client identity is cryptographically bound before it enters the system.
-- **Agent Layer (:8001)**: Header presence check — rejects turns where `X-User-Token` or `Authorization` is absent. No role or parameter enforcement.
-- **Sidecar Forward Proxy (:8081)**: Primary enforcement — Cedar PDP (role/permission-based authorization), SSN redaction (`args.ssn`), PII scan, session taint, RFC 8693 delegation. This is the production enforcement boundary.
+| OPA `input` Path | Available | Populated By |
+|------------------|-----------|-------------|
+| `input.name` | Yes | Tool name from dispatch |
+| `input.args.employee_id` | Yes | Caller |
+| `input.args.include_ssn` | Yes | LLM / caller |
+| `input.args.amount` | Yes | LLM / caller |
+| `input.args.visibility` | Yes | LLM / caller |
+| `input.args.department` | Yes | LLM / caller |
+| `input.args.to` | Yes | LLM / caller |
+| `input.args.subject` | Yes | LLM / caller |
+| `input.args.body` | Yes | LLM / caller |
+| `input.args.repo_name` | Yes | LLM / caller |
+| `input.extensions.subject.roles` | Yes | Identity headers (self-reported) |
+| `input.extensions.subject.permissions` | Yes | Identity headers (self-reported) |
+| `input.extensions.subject.has_approval` | Yes | Identity headers (self-reported) |
+| `input.extensions.subject.team` | **No** | Not declared — see Rule 2 blind spot |
 
-### Available (OPA-interceptable)
-The OPA interception point sits at the agent → sidecar forward proxy boundary. At this point the following fields are present as structured data:
+---
 
-- `input.name` — tool name (string, LLM-chosen from the 6 registered tools)
-- `input.arguments.employee_id` — string
-- `input.arguments.include_ssn` — boolean
-- `input.arguments.amount` — integer (adjust_compensation only)
-- `input.arguments.visibility` — enum string: `internal` | `public` | `external`
-- `input.arguments.repo_name` — string (optional substring filter)
-- `input.arguments.to`, `input.arguments.subject`, `input.arguments.body` — strings (send_email)
-- `input.arguments.department` — string (optional)
-- `input.extensions.subject.roles` — array of role strings (from JWT, authoritative)
-- `input.extensions.subject.permissions` — array of permission strings (from JWT, authoritative)
-- `input.extensions.subject.has_approval` — string `"true"` or `"false"` (from JWT)
+## 7. Data Flow Diagram (Text)
 
-**guidance.txt coverage sweep (existing 2 rules):**
-- Rule 1: "All employees can only access internal repositories." → needs `input.arguments.visibility` (present) and `input.name == "search_repos"` (present). ✓ OPA-enforceable.
-- Rule 2: "All employees cannot access other teams' repositories." → would need a team-to-repo ownership mapping AND a `subject.team` field. Neither exists in `system_vars.json` or `tool_definitions.json`. ✗ **Blind spot** — see below.
-
-### Blind Spots
-- **LLM reasoning** (Agent Layer): The LLM decides which tool to call, what arguments to populate, and whether to honor the `include_ssn` advisory. No structured data is available at reasoning time; OPA cannot intercept here.
-- **System prompt content** (Agent Layer): The SYSTEM_PROMPT is constructed at boot time inside the agent; it is not a structured field at tool invocation time.
-- **Tool response / output** (MCP Server layer): OPA intercepts before the tool executes; it cannot see the response content. SSN in the response is handled by the cpex sidecar's redaction, not OPA.
-- **Team-to-repository ownership mapping**: guidance.txt Rule 2 requires knowing which team owns each repo and which team the caller belongs to. No `subject.team` field exists in `system_vars.json` and no repo ownership mapping is available. OPA cannot enforce this rule as stated.
-- **Email body / subject free-text SSN detection**: Raw regex on `input.arguments.body`/`subject` can catch simple SSN patterns but is best-effort.
-- **Session taint state**: Whether the caller accessed SSN data earlier in the conversation is maintained by the cpex sidecar's session store, not by OPA's input fields.
+```
+User / A2A Client
+      │
+      ▼ HTTP (X-User-Token, Authorization, X-Session-Id)
+┌─────────────────────────────┐
+│  Layer 1: FastAPI Entrypoint│  agent.py /chat  /a2a
+│  (Smith shim or A2A path)   │
+└─────────────┬───────────────┘
+              │ session_id, message
+              ▼
+┌─────────────────────────────┐
+│  Layer 2: HRAgent Loop      │  LiteLLM completion
+│  (LLM + tool dispatch)      │  per-session history
+└─────────────┬───────────────┘
+              │ tool_name + args
+              ▼
+         ┌──────────┐
+         │  OPA     │  ← INTERCEPT POINT
+         │  Policy  │  input = {name, args, extensions}
+         └────┬─────┘
+              │ allow / deny
+              ▼
+┌─────────────────────────────┐
+│  Layer 3: authbridge-cpex   │  ABSENT in local/Smith runs
+│  (Cedar PDP, SSN redact)    │  Cedar, PII scan unavailable
+└─────────────┬───────────────┘
+              │
+              ▼
+┌─────────────────────────────┐
+│  Layer 4: MCP Tool Server   │  server.py :9100/mcp
+│  (FastAPI JSON-RPC)         │  No authz — executes all calls
+└─────────────┬───────────────┘
+              │
+              ▼
+┌─────────────────────────────┐
+│  Layer 5: Tool Implementation│  EMPLOYEES, REPOS, SENT_EMAILS
+│  (Python functions)         │  in-memory fixtures
+└─────────────────────────────┘
+```

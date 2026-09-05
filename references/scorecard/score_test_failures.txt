@@ -1,2 +1,10 @@
-
-
+[FAIL: expected_allow: true, allow: false, test_case: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case11.json] {"result":false}
+[FAIL: expected_allow: true, allow: false, test_case: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case2.json] {"result":false}
+[FAIL: expected_allow: true, allow: false, test_case: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case1.json] {"result":false}
+[FAIL: expected_allow: true, allow: false, test_case: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case14.json] {"result":false}
+[FAIL: expected_allow: true, allow: false, test_case: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/allow/test_case12.json] {"result":false}
+[FAIL: expected_allow: false, allow: true, test_case: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/promptfoo_test_case1.json] {"result":true}
+[FAIL: expected_allow: false, allow: true, test_case: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case30.json] {"result":true}
+[FAIL: expected_allow: false, allow: true, test_case: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/promptfoo_test_case8.json] {"result":true}
+[FAIL: expected_allow: false, allow: true, test_case: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/test_case25.json] {"result":true}
+[FAIL: expected_allow: false, allow: true, test_case: /Users/saisree/smith-trial/.claude/skills/smith/references/test_cases/disallow/promptfoo_test_case2.json] {"result":true}

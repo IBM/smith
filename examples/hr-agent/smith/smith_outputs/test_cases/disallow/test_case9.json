@@ -1,0 +1,35 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "display_compensation",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "roles": [
+                    "finance"
+                ]
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Display compensation band information for employee EMP-003333",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "employee_id": "EMP-003333"
+        }
+    }
+}

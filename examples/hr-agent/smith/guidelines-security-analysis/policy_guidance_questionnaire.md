@@ -1,213 +1,211 @@
-# OPA Policy Guidance Questionnaire
-# Tool: hr-agent (HR Copilot — all 6 tools)
+# Policy Guidance Questionnaire — HR Agent
 
-Fill in each answer based on your tool and agent. You do not need to
-know OPA or security to complete this — just describe how your tool
-works and who should be able to use it.
-
----
-
-## Section 1: Tool Identity
-
-**Q1. What is the tool name and what does it do in one sentence?**
-
-> Tool name: `hr-agent` (exposes 6 tools via a single MCP server)
->
-> - `get_compensation` — returns an employee's salary, bonus, department, title, and optionally SSN. [derived from architecture]
-> - `display_compensation` — returns a band-only compensation summary (no salary figures). [derived from architecture]
-> - `get_directory` — lists the employee directory, optionally filtered by department. [derived from architecture]
-> - `send_email` — sends an email (simulated). [derived from architecture]
-> - `search_repos` — searches internal GitHub Enterprise repositories by name substring and/or visibility. [derived from architecture]
-> - `adjust_compensation` — adjusts an employee's salary by a dollar amount; amounts over $10,000 require prior manager approval. [derived from architecture]
+**Guidance source**: `examples/hr-agent/smith/guidance.txt` (2 rules, as of this run)
+**System vars**: `examples/hr-agent/smith/system_vars.json`
+**Tool definitions**: `examples/hr-agent/smith/tool_definitions.json` (6 tools)
 
 ---
 
-**Q2. What external systems does it call?**
+## Current Guidance Rules
 
-> - **Ollama LLM inference** (direct, not proxied): `host.docker.internal:11434` — read-only inference, no auth in demo config. [derived from architecture]
-> - **HR MCP server** (:9100): JSON-RPC over HTTP, identity carried via `X-User-Token` + `Authorization` headers, governed by cpex sidecar forward proxy. [derived from architecture]
-> - **GitHub Enterprise** (simulated in server.py fixtures): repository search, read-only. [derived from architecture]
-> - **Email service** (simulated in server.py): send-only. [derived from architecture]
-> - **Keycloak** (via cpex RFC 8693 delegation): handled by sidecar, not OPA-visible. [derived from architecture]
-
----
-
-**Q3. Does it read data, write data, or both?**
-
-> Both.
-> - Reads: `get_compensation`, `display_compensation`, `get_directory`, `search_repos`.
-> - Writes: `send_email` (creates a sent-mail record), `adjust_compensation` (mutates salary). [derived from architecture]
+```
+Rule 1: All employees can only access internal repositories.
+Rule 2: All employees cannot access other teams' repositories.
+```
 
 ---
 
-**Q4. What are its parameters? For each: name, type, required or optional, what counts as a valid value?**
+## Questionnaire
 
-| Parameter | Tool | Type | Required | Valid values |
-|-----------|------|------|----------|--------------|
-| `employee_id` | `get_compensation`, `display_compensation`, `adjust_compensation` | string | Yes | Employee identifier, e.g. `EMP-001234` |
-| `include_ssn` | `get_compensation` | boolean | No (default: false) | `true` only when user explicitly asks for SSN |
-| `department` | `get_directory` | string | No (default: `""`) | Department name or empty for all |
-| `to` | `send_email` | string | Yes | Email address |
-| `subject` | `send_email` | string | Yes | Any string |
-| `body` | `send_email` | string | Yes | Any string |
-| `repo_name` | `search_repos` | string | No (default: `""`) | Substring filter |
-| `visibility` | `search_repos` | string | Yes | `internal`, `public`, or `external` |
-| `amount` | `adjust_compensation` | integer | Yes | Dollar amount; approval required if > $10,000 |
+### Q1 — What roles exist in the system?
 
-> [derived from architecture] — confirmed against `tool_definitions.json` and `agent.py TOOLS`
+**Answer**: `["hr", "engineer", "marketing", "finance", "platform", "security"]`
+
+From `system_vars.json`. These are the complete set of possible roles that can appear in `input.extensions.subject.roles`.
+
+**Guidance mapping**: Rules 1 and 2 apply to "all employees" — no role discrimination stated.
 
 ---
 
-## Section 2: Who Uses It
+### Q2 — What permissions exist in the system?
 
-**Q5. What are the types of users? List every role.**
+**Answer**: `["view_ssn", "None"]`
 
-> - `hr` — HR staff; compensation access and adjustments.
-> - `engineer` — Engineering staff; repo search.
-> - `marketing` — Marketing staff; general access.
-> - `finance` — Finance staff; general access.
-> - `platform` — Platform/SRE staff; general access.
-> - `security` — Security team; internal and external repo search.
->
-> [derived from architecture] — from `system_vars.json` `roles` array.
+From `system_vars.json`. `view_ssn` grants access to SSN data. `None` means no special permissions.
+
+**Guidance mapping**: No current guidance rule references permissions explicitly. However, the `get_compensation` tool's `include_ssn` parameter implies a permission gate is needed. *[inferred — low confidence]*
 
 ---
 
-**Q6. Are those roles verified by your system, or supplied by the user themselves?**
+### Q3 — What is the complete set of tools available?
 
-> **Verified** — roles are extracted from the cryptographically signed user JWT (`X-User-Token`) by the cpex sidecar and surfaced as `input.extensions.subject.roles`. [derived from architecture]
-
----
-
-**Q7. Is there a user ID? Where does it come from?**
-
-> Identity is role + permission based from the JWT. No explicit `user_id` field in `system_vars.json`. [derived from architecture]
-
----
-
-**Q8. Can a user belong to multiple roles at once?**
-
-> Yes — `input.extensions.subject.roles` is an array. A caller may hold `["hr", "finance"]` simultaneously. [derived from architecture]
+**Answer**: 6 tools:
+- `get_compensation` — returns salary, bonus, department, optionally SSN
+- `display_compensation` — returns compensation band summary (no salary)
+- `get_directory` — returns employee directory, optionally filtered by department
+- `send_email` — sends (simulates) an email
+- `search_repos` — searches repositories by name and/or visibility
+- `adjust_compensation` — raises an employee's salary by a given dollar amount
 
 ---
 
-## Section 3: What Each Role Is Allowed To Do
+### Q4 — Which tools operate on sensitive data?
 
-**Q9. For each role, which tools are they allowed to use and with what conditions or scope restrictions?**
+**Answer**:
+- `get_compensation`: salary, bonus, SSN — highly sensitive
+- `display_compensation`: compensation band — moderately sensitive
+- `adjust_compensation`: modifies salary — highly sensitive (write operation)
+- `get_directory`: employee names and departments — moderately sensitive
+- `send_email`: body can contain arbitrary PII — sensitive if misused
+- `search_repos`: repository metadata — low sensitivity, but visibility restriction required by Rule 1
 
-| Tool | `hr` | `engineer` | `marketing` | `finance` | `platform` | `security` | guidance source |
-|------|------|------------|-------------|-----------|------------|------------|-----------------|
-| `get_compensation` | Allowed | Blocked | Blocked | Blocked | Blocked | Blocked | `whole_guidance.txt` rule 1 |
-| `display_compensation` | Allowed | Blocked | Blocked | Blocked | Blocked | Blocked | [inferred — low confidence; band-only view of compensation, same scope implied] |
-| `get_directory` | Allowed | Allowed | Allowed | Allowed | Allowed | Allowed | [inferred — low confidence; no rule restricts directory access] |
-| `send_email` | Allowed | Allowed | Allowed | Allowed | Allowed | Allowed | [inferred — low confidence; no role restriction, but SSN-in-body must be blocked] |
-| `search_repos` | Blocked | Allowed (internal/public only) | Blocked | Blocked | Blocked | Allowed (internal + external) | `whole_guidance.txt` rules 3–4 |
-| `adjust_compensation` | Allowed (≤$10,000 w/o approval; >$10,000 requires `has_approval == "true"`) | Blocked | Blocked | Blocked | Blocked | Blocked | `whole_guidance.txt` rules 6–7 |
-
----
-
-**Q10. Are there topics, values, or parameter combinations some roles can use that others cannot?**
-
-> - `include_ssn=true` on `get_compensation`: only callers with `view_ssn` in `permissions`. [derived from `whole_guidance.txt` rule 2]
-> - `visibility=external` on `search_repos`: only `security` role. [derived from `whole_guidance.txt` rule 4]
-> - `amount > 10000` on `adjust_compensation`: requires `has_approval == "true"`. [derived from `whole_guidance.txt` rule 7]
-> - Email body/subject containing SSN pattern: blocked for all roles. [derived from `whole_guidance.txt` rule 5]
+**Guidance mapping**: Only `search_repos` is covered by current guidance (Rules 1–2). All compensation tools and `send_email` are uncovered.
 
 ---
 
-**Q11. Are there roles that have no restrictions?**
+### Q5 — Are there any tools that perform write or mutation operations?
 
-> No — every role has at least one restriction. [derived from `whole_guidance.txt`]
+**Answer**: Yes.
+- `adjust_compensation`: mutates `employee["salary"]` in-place. **No authorization layer on the server.**
+- `send_email`: appends to `SENT_EMAILS` list. Non-reversible action.
 
----
-
-## Section 4: Hard Limits
-
-**Q12. Are there parameter values that should always be blocked for everyone, regardless of role?**
-
-> - Email body/subject containing SSN pattern `\d{3}-\d{2}-\d{4}` — blocked for all roles. [derived from `whole_guidance.txt` rule 5]
+**Guidance mapping**: No current rule covers `adjust_compensation` or `send_email` write semantics.
 
 ---
 
-**Q13. Is there a maximum value for any numeric parameter that no role can exceed?**
+### Q6 — Which tools should be restricted by role?
 
-> No absolute hard cap. `adjust_compensation.amount` has a conditional threshold: > $10,000 requires `has_approval == "true"`; with approval the amount is unbounded. [derived from `whole_guidance.txt` rules 6–7]
+**Answer** (combining guidance + architecture analysis):
+- `get_compensation` / `display_compensation` / `adjust_compensation`: HR-only *[inferred — low confidence; not in current guidance]*
+- `search_repos`: engineer + security only *[inferred — low confidence; guidance says "internal only" for all employees but does not restrict by role]*
+- `get_directory`: no role restriction stated
+- `send_email`: no role restriction stated
 
----
-
-**Q13b. Are there approval paths — actions allowed conditionally when an approval field is set?**
-
-> | Parameter condition | Approval field | guidance source |
-> |---------------------|----------------|-----------------|
-> | `input.name == "adjust_compensation"` AND `input.arguments.amount > 10000` | `input.extensions.subject.has_approval == "true"` | `whole_guidance.txt` rule 7 |
+**Guidance mapping**: Rule 1 covers `search_repos` visibility but not role. Rule 2 covers team-scoped repo access but the `team` field is undeclared (blind spot).
 
 ---
 
-**Q14. Are there keywords or inputs that must always be rejected?**
+### Q7 — Are there system variables needed to enforce the rules that are currently missing?
 
-> SSN-pattern content (`\d{3}-\d{2}-\d{4}`) in `send_email.body` or `send_email.subject`. [derived from `whole_guidance.txt` rule 5]
+**Answer**: Yes. Rule 2 requires knowing the caller's team (`input.extensions.subject.team`) and the team that owns each repository. Neither is declared in `system_vars.json` nor available in any tool schema.
 
----
+See `extension_suggestions.json`: `input.extensions.subject.team` is suggested as a new system variable for this rule to become enforceable.
 
-## Section 5: Volume and Rate Limits
-
-**Q15. Is there a maximum number of times this tool can be called in a single conversation session?**
-
-> No rate limit specified. [inferred — low confidence]
+**Impact**: Rule 2 cannot currently be enforced. It is a policy intent with no available enforcement path.
 
 ---
 
-**Q16. Who keeps track of how many times the tool has been called?**
+### Q8 — What is the `has_approval` variable and how should it be used?
 
-> No call-count tracking field in `system_vars.json`. OPA cannot enforce rate limits without a structured counter field. [inferred — low confidence]
+**Answer**: `has_approval` is a string `"true"` or `"false"` in `system_vars.json`. It is self-reported by the caller and indicates whether manager approval was obtained.
 
----
-
-## Section 6: Response Filtering
-
-**Q17. After the tool returns results, does anything need to be hidden before the user sees it?**
-
-> `get_compensation` returns `ssn` if `include_ssn=true`. For callers without `view_ssn`, SSN redaction is performed by the cpex sidecar — out of OPA scope. [derived from architecture]
+**Inferred use** *[low confidence]*: Large salary adjustments should require `has_approval == "true"` before proceeding. The threshold and use are not stated in current guidance.
 
 ---
 
-**Q18. Are there fields in the response that should be suppressed for certain roles?**
+### Q9 — What repository visibility levels exist and what restrictions apply?
 
-> - `ssn` in `get_compensation` response: redacted by cpex sidecar for callers without `view_ssn`. Out of OPA scope. [derived from architecture]
+**Answer**: Three visibility levels: `internal`, `public`, `external`.
 
----
+From Rule 1: "All employees can only access internal repositories" → interpreted as: `search_repos` with `visibility=external` is denied for all roles. `visibility=public` is ambiguous — "internal" could mean either "only internal" (blocking public too) or "not external" (allowing public). Conservative interpretation: block `external` only; allow `internal` and `public`.
 
-**Q19. Are there conditions on a result that determine whether it is "actionable"?**
-
-> No post-execution actionability check needed — OPA blocks pre-execution. [derived from architecture]
+From Rule 2: Team-scoped restriction — cannot be enforced (see Q7).
 
 ---
 
-## Section 7: Violations
+### Q10 — Should `visibility=external` be a hard block or role-gated?
 
-**Q20. Should a blocked request be silently rejected, or should the user receive an explanation?**
+**Answer**: Rule 1 states "all employees" → hard block for all roles including security. The prior analysis added a security-role exception *[inferred — low confidence from prior session]*; however, current guidance says no employee should access external repositories. Strict reading: `visibility=external` blocks all, including security.
 
-> JSON-RPC error envelope returned; agent relays politely without revealing the internal violation code. [derived from architecture]
-
----
-
-**Q21. Are there different severity levels — hard block vs. warning?**
-
-> | Level | Examples |
-> |-------|----------|
-> | Hard block | All policy violations — no soft-block paths identified. |
-> | Soft block with redirect | None. |
+**Note**: If the intent is "security can access external", this requires an explicit guidance rule. As written, Rule 1 is a universal block.
 
 ---
 
-**Q22. Do you need to log which rule was violated? Does an existing violation-code scheme need to be reused?**
+### Q11 — Does the LLM agent prompt constrain tool behavior?
 
-> No pre-existing OPA violation-code scheme documented for this agent. New codes will be minted in Step D.
->
-> | Code | Meaning |
-> |------|---------|
-> | (none pre-existing) | — |
+**Answer**: Yes, but only advisorily. `SYSTEM_PROMPT` in `agent.py` instructs the model to set `include_ssn=true` only when the user explicitly asks. This is a behavioral constraint on the LLM, not a technical enforcement. It can be bypassed by:
+- A user who explicitly phrases their request to trigger the condition
+- A prompt injection in user input
+- A different LLM or model version
+
+OPA enforcement is required to enforce `include_ssn` restrictions technically.
 
 ---
 
-**Confidence breakdown:** `[derived from guidance.txt / whole_guidance.txt]`: 11 | `[derived from architecture]`: 18 | `[inferred — low confidence]`: 5 | blank: 0
+### Q12 — Should `search_repos` be blocked entirely for non-technical roles, or only restricted by visibility?
+
+**Answer** *[inferred — low confidence; not in current guidance]*: Current guidance only restricts visibility (Rule 1). Role-based restriction on `search_repos` is not stated. However, the architecture analysis notes that only `engineer` and `security` roles have a legitimate reason to search repositories. This is a coverage gap.
+
+If policy intent is to also restrict by role, a new guidance rule is needed.
+
+---
+
+### Q13 — What should happen when `include_ssn=true` is requested without the `view_ssn` permission?
+
+**Answer** *[inferred — low confidence]*: The request should be denied. `view_ssn` exists as a permission value in `system_vars.json` specifically to gate SSN access. Without an explicit guidance rule, this cannot be confirmed as intent — but the permission's existence implies gate semantics.
+
+---
+
+### Q14 — What is the threshold for large compensation adjustments and what approval is required?
+
+**Answer** *[inferred — low confidence; not in current guidance]*: `system_vars.json` includes `has_approval: "true|false"`. The architecture analysis notes `adjust_compensation` takes an integer `amount`. No threshold or approval requirement appears in the current 2-rule `guidance.txt`. This is a coverage gap.
+
+---
+
+### Q15 — Should `send_email` be blocked if PII (e.g., SSN) appears in the subject or body?
+
+**Answer** *[inferred — low confidence]*: The `get_compensation` tool can return SSN data. If the LLM includes that SSN in a `send_email` call (exfiltration via email), it would be an ASI07/ASI03 threat. No current guidance rule covers this. A DLP-style block on SSN patterns in email content is a coverage gap.
+
+---
+
+### Q16 — Are there denial-of-service or resource exhaustion concerns?
+
+**Answer**: Limited. The in-memory fixtures (`EMPLOYEES`, `REPOS`, `SENT_EMAILS`) are bounded. No pagination or rate limiting is present on the MCP server. `SENT_EMAILS` grows unboundedly but is not persisted. OPA cannot address rate limiting — this is out of scope for policy enforcement.
+
+---
+
+### Q17 — Can the same tool be called with different subject contexts in the same session?
+
+**Answer**: Yes. `HRAgent` maintains per-session history (`_histories[session_id]`). Within a session, the identity headers (`X-User-Token`, `Authorization`) are forwarded on each tool call. If these headers change between calls (possible if the client rotates them), the subject context can shift. OPA evaluates each call independently.
+
+---
+
+### Q18 — Is there any authentication at the MCP server layer?
+
+**Answer**: No. `server.py` has no authentication or authorization at any layer. It executes any well-formed tool call it receives. All enforcement must be applied upstream (at OPA, Layer 2→4 intercept).
+
+---
+
+### Q19 — What data does `get_directory` return and should it be restricted?
+
+**Answer**: Returns employee name, email, department, and title from the `EMPLOYEES` dict. Filtered by `department` if provided. No current guidance rule restricts `get_directory`. The architecture analysis finds no role or permission gate — any caller can enumerate all employees. This is a low-severity gap but not covered by current guidance.
+
+---
+
+### Q20 — What happens to `display_compensation` — is it sensitive?
+
+**Answer**: `display_compensation` returns band name only (e.g., "L5 - Senior Engineer"), not salary or SSN. It is less sensitive than `get_compensation`. However, it is a compensation tool and the architecture groups it with `get_compensation` and `adjust_compensation`. Role restriction *[inferred — low confidence]* would apply HR-only if compensation rules are added.
+
+---
+
+### Q21 — Are there any cross-tool exfiltration chains?
+
+**Answer**: Yes, at least two:
+1. `get_compensation(include_ssn=true)` → `send_email(body="SSN: 123-45-6789")` — SSN extracted then emailed
+2. `get_directory()` → `send_email(body=<full directory dump>)` — directory exfiltrated
+
+Rule 1 and Rule 2 do not address these chains. They are coverage gaps.
+
+---
+
+### Q22 — Summary: which guidance rules map to enforceable OPA conditions and which do not?
+
+| Rule | Text | Enforceable? | OPA Path | Gap |
+|------|------|-------------|----------|-----|
+| 1 | All employees can only access internal repositories | Yes (partial) | `input.name == "search_repos"` + `args.visibility == "external"` | Does not gate by role — any role can search internal/public |
+| 2 | All employees cannot access other teams' repositories | No | Requires `input.extensions.subject.team` | Field undeclared in system_vars.json — cannot fire |
+| (inferred) | Only HR can access compensation | Not in guidance | `input.name` in compensation_tools + `subject.roles` | New rule needed |
+| (inferred) | view_ssn required for include_ssn=true | Not in guidance | `args.include_ssn == true` + `subject.permissions` | New rule needed |
+| (inferred) | Only engineer/security can search repos | Not in guidance | `input.name == "search_repos"` + `subject.roles` | New rule needed |
+| (inferred) | Approval required for large adjustments | Not in guidance | `args.amount > threshold` + `subject.has_approval` | New rule needed |
+| (inferred) | No SSN in emails | Not in guidance | `regex.match(ssn_pattern, args.subject/body)` | New rule needed |

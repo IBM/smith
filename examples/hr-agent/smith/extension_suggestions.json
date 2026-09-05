@@ -2,11 +2,11 @@
     "suggestions": [
         {
             "guidance_rule": "All employees cannot access other teams' repositories.",
-            "missing_context": "No team-to-repository ownership mapping is available in system_vars.json or search_repos tool arguments. Enforcing this rule requires knowing which team owns each repository and which team the caller belongs to.",
+            "missing_context": "No 'team' field is declared in system_vars.json or any tool schema. The rule requires knowing which team the caller belongs to and which teams own which repositories, neither of which is available at OPA intercept time.",
             "suggested_path": "input.extensions.subject.team",
             "type": "string",
-            "candidates": ["hr", "engineer", "marketing", "finance", "platform"],
-            "reason": "This rule cannot be enforced without a 'team' field in subject claims and a corresponding repo ownership mapping. Add 'team' to system_vars.json and pass it as a subject claim, then add a repo-to-team mapping to the policy data."
+            "candidates": ["engineering", "security", "hr", "marketing", "finance", "platform"],
+            "reason": "This rule cannot be enforced without a 'team' field populated from authenticated identity (e.g., JWT claims via authbridge-cpex sidecar). Additionally, repo-to-team ownership would need to be represented in either tool arguments or a policy data document."
         }
     ],
     "note": "These are suggestions for future system variable additions. They are NOT part of the current policy."
