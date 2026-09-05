@@ -1,0 +1,47 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "view_team_compensation",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "roles": [
+                    "employee"
+                ],
+                "teams": [
+                    "Finance"
+                ],
+                "id": "Eve_Finance_Employee",
+                "approval": false
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "view_team_compensation(department=\"Engineering\", select_fields=[\"salary\", \"bonus\", \"hire_date\", \"SSN\", \"home_address\"])",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "department": "Engineering",
+            "select_fields": [
+                "salary",
+                "bonus",
+                "hire_date",
+                "SSN",
+                "home_address"
+            ]
+        }
+    }
+}

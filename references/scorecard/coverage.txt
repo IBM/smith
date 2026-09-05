@@ -1,0 +1,718 @@
+{
+  "files": {
+    "/Users/saisree/smith-trial/.claude/skills/smith/references/scorecard/coverage/policy_test.rego": {
+      "covered": [
+        {
+          "start": {
+            "row": 5
+          },
+          "end": {
+            "row": 6
+          }
+        },
+        {
+          "start": {
+            "row": 9
+          },
+          "end": {
+            "row": 10
+          }
+        },
+        {
+          "start": {
+            "row": 13
+          },
+          "end": {
+            "row": 14
+          }
+        },
+        {
+          "start": {
+            "row": 17
+          },
+          "end": {
+            "row": 18
+          }
+        },
+        {
+          "start": {
+            "row": 21
+          },
+          "end": {
+            "row": 22
+          }
+        },
+        {
+          "start": {
+            "row": 25
+          },
+          "end": {
+            "row": 26
+          }
+        },
+        {
+          "start": {
+            "row": 29
+          },
+          "end": {
+            "row": 30
+          }
+        },
+        {
+          "start": {
+            "row": 33
+          },
+          "end": {
+            "row": 34
+          }
+        },
+        {
+          "start": {
+            "row": 37
+          },
+          "end": {
+            "row": 38
+          }
+        },
+        {
+          "start": {
+            "row": 41
+          },
+          "end": {
+            "row": 42
+          }
+        },
+        {
+          "start": {
+            "row": 45
+          },
+          "end": {
+            "row": 46
+          }
+        },
+        {
+          "start": {
+            "row": 49
+          },
+          "end": {
+            "row": 50
+          }
+        },
+        {
+          "start": {
+            "row": 53
+          },
+          "end": {
+            "row": 54
+          }
+        },
+        {
+          "start": {
+            "row": 57
+          },
+          "end": {
+            "row": 58
+          }
+        },
+        {
+          "start": {
+            "row": 61
+          },
+          "end": {
+            "row": 62
+          }
+        },
+        {
+          "start": {
+            "row": 65
+          },
+          "end": {
+            "row": 66
+          }
+        },
+        {
+          "start": {
+            "row": 69
+          },
+          "end": {
+            "row": 70
+          }
+        },
+        {
+          "start": {
+            "row": 73
+          },
+          "end": {
+            "row": 74
+          }
+        },
+        {
+          "start": {
+            "row": 77
+          },
+          "end": {
+            "row": 78
+          }
+        },
+        {
+          "start": {
+            "row": 81
+          },
+          "end": {
+            "row": 82
+          }
+        },
+        {
+          "start": {
+            "row": 85
+          },
+          "end": {
+            "row": 86
+          }
+        },
+        {
+          "start": {
+            "row": 89
+          },
+          "end": {
+            "row": 90
+          }
+        },
+        {
+          "start": {
+            "row": 93
+          },
+          "end": {
+            "row": 94
+          }
+        },
+        {
+          "start": {
+            "row": 97
+          },
+          "end": {
+            "row": 98
+          }
+        },
+        {
+          "start": {
+            "row": 101
+          },
+          "end": {
+            "row": 102
+          }
+        },
+        {
+          "start": {
+            "row": 105
+          },
+          "end": {
+            "row": 106
+          }
+        },
+        {
+          "start": {
+            "row": 109
+          },
+          "end": {
+            "row": 110
+          }
+        },
+        {
+          "start": {
+            "row": 113
+          },
+          "end": {
+            "row": 114
+          }
+        },
+        {
+          "start": {
+            "row": 117
+          },
+          "end": {
+            "row": 118
+          }
+        },
+        {
+          "start": {
+            "row": 121
+          },
+          "end": {
+            "row": 122
+          }
+        },
+        {
+          "start": {
+            "row": 125
+          },
+          "end": {
+            "row": 126
+          }
+        },
+        {
+          "start": {
+            "row": 129
+          },
+          "end": {
+            "row": 130
+          }
+        },
+        {
+          "start": {
+            "row": 133
+          },
+          "end": {
+            "row": 134
+          }
+        },
+        {
+          "start": {
+            "row": 137
+          },
+          "end": {
+            "row": 138
+          }
+        },
+        {
+          "start": {
+            "row": 141
+          },
+          "end": {
+            "row": 142
+          }
+        },
+        {
+          "start": {
+            "row": 145
+          },
+          "end": {
+            "row": 146
+          }
+        },
+        {
+          "start": {
+            "row": 149
+          },
+          "end": {
+            "row": 150
+          }
+        },
+        {
+          "start": {
+            "row": 153
+          },
+          "end": {
+            "row": 154
+          }
+        },
+        {
+          "start": {
+            "row": 157
+          },
+          "end": {
+            "row": 158
+          }
+        },
+        {
+          "start": {
+            "row": 161
+          },
+          "end": {
+            "row": 162
+          }
+        },
+        {
+          "start": {
+            "row": 165
+          },
+          "end": {
+            "row": 166
+          }
+        },
+        {
+          "start": {
+            "row": 169
+          },
+          "end": {
+            "row": 170
+          }
+        },
+        {
+          "start": {
+            "row": 173
+          },
+          "end": {
+            "row": 174
+          }
+        },
+        {
+          "start": {
+            "row": 177
+          },
+          "end": {
+            "row": 178
+          }
+        },
+        {
+          "start": {
+            "row": 181
+          },
+          "end": {
+            "row": 182
+          }
+        },
+        {
+          "start": {
+            "row": 185
+          },
+          "end": {
+            "row": 186
+          }
+        },
+        {
+          "start": {
+            "row": 189
+          },
+          "end": {
+            "row": 190
+          }
+        },
+        {
+          "start": {
+            "row": 193
+          },
+          "end": {
+            "row": 194
+          }
+        },
+        {
+          "start": {
+            "row": 197
+          },
+          "end": {
+            "row": 198
+          }
+        },
+        {
+          "start": {
+            "row": 201
+          },
+          "end": {
+            "row": 202
+          }
+        },
+        {
+          "start": {
+            "row": 205
+          },
+          "end": {
+            "row": 206
+          }
+        },
+        {
+          "start": {
+            "row": 209
+          },
+          "end": {
+            "row": 210
+          }
+        },
+        {
+          "start": {
+            "row": 213
+          },
+          "end": {
+            "row": 214
+          }
+        },
+        {
+          "start": {
+            "row": 217
+          },
+          "end": {
+            "row": 218
+          }
+        },
+        {
+          "start": {
+            "row": 221
+          },
+          "end": {
+            "row": 222
+          }
+        },
+        {
+          "start": {
+            "row": 225
+          },
+          "end": {
+            "row": 226
+          }
+        },
+        {
+          "start": {
+            "row": 229
+          },
+          "end": {
+            "row": 230
+          }
+        },
+        {
+          "start": {
+            "row": 233
+          },
+          "end": {
+            "row": 234
+          }
+        },
+        {
+          "start": {
+            "row": 237
+          },
+          "end": {
+            "row": 238
+          }
+        },
+        {
+          "start": {
+            "row": 241
+          },
+          "end": {
+            "row": 242
+          }
+        },
+        {
+          "start": {
+            "row": 245
+          },
+          "end": {
+            "row": 246
+          }
+        }
+      ],
+      "covered_lines": 122,
+      "coverage": 100
+    },
+    "/Users/saisree/smith-trial/.claude/skills/smith/references/scorecard/coverage/revised_policy.rego": {
+      "covered": [
+        {
+          "start": {
+            "row": 5
+          },
+          "end": {
+            "row": 5
+          }
+        },
+        {
+          "start": {
+            "row": 8
+          },
+          "end": {
+            "row": 8
+          }
+        },
+        {
+          "start": {
+            "row": 10
+          },
+          "end": {
+            "row": 10
+          }
+        },
+        {
+          "start": {
+            "row": 12
+          },
+          "end": {
+            "row": 12
+          }
+        },
+        {
+          "start": {
+            "row": 17
+          },
+          "end": {
+            "row": 17
+          }
+        },
+        {
+          "start": {
+            "row": 20
+          },
+          "end": {
+            "row": 20
+          }
+        },
+        {
+          "start": {
+            "row": 26
+          },
+          "end": {
+            "row": 26
+          }
+        },
+        {
+          "start": {
+            "row": 28
+          },
+          "end": {
+            "row": 28
+          }
+        },
+        {
+          "start": {
+            "row": 33
+          },
+          "end": {
+            "row": 34
+          }
+        },
+        {
+          "start": {
+            "row": 37
+          },
+          "end": {
+            "row": 38
+          }
+        },
+        {
+          "start": {
+            "row": 42
+          },
+          "end": {
+            "row": 44
+          }
+        },
+        {
+          "start": {
+            "row": 50
+          },
+          "end": {
+            "row": 54
+          }
+        },
+        {
+          "start": {
+            "row": 56
+          },
+          "end": {
+            "row": 56
+          }
+        },
+        {
+          "start": {
+            "row": 61
+          },
+          "end": {
+            "row": 64
+          }
+        },
+        {
+          "start": {
+            "row": 66
+          },
+          "end": {
+            "row": 66
+          }
+        },
+        {
+          "start": {
+            "row": 71
+          },
+          "end": {
+            "row": 75
+          }
+        },
+        {
+          "start": {
+            "row": 77
+          },
+          "end": {
+            "row": 77
+          }
+        },
+        {
+          "start": {
+            "row": 82
+          },
+          "end": {
+            "row": 85
+          }
+        },
+        {
+          "start": {
+            "row": 87
+          },
+          "end": {
+            "row": 87
+          }
+        },
+        {
+          "start": {
+            "row": 104
+          },
+          "end": {
+            "row": 107
+          }
+        },
+        {
+          "start": {
+            "row": 110
+          },
+          "end": {
+            "row": 113
+          }
+        },
+        {
+          "start": {
+            "row": 116
+          },
+          "end": {
+            "row": 119
+          }
+        },
+        {
+          "start": {
+            "row": 122
+          },
+          "end": {
+            "row": 125
+          }
+        },
+        {
+          "start": {
+            "row": 129
+          },
+          "end": {
+            "row": 130
+          }
+        }
+      ],
+      "not_covered": [
+        {
+          "start": {
+            "row": 23
+          },
+          "end": {
+            "row": 23
+          }
+        },
+        {
+          "start": {
+            "row": 93
+          },
+          "end": {
+            "row": 97
+          }
+        }
+      ],
+      "covered_lines": 55,
+      "not_covered_lines": 6,
+      "coverage": 90.1639344262295
+    }
+  },
+  "covered_lines": 177,
+  "not_covered_lines": 6,
+  "coverage": 96.72131147540983
+}

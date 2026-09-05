@@ -1,282 +1,169 @@
 # SPDX-License-Identifier: Apache-2.0
-
 package mcp.policies
+
+import rego.v1
 
 default allow := false
 
 # === Input Accessors ===
 subject := input.extensions.subject
-args := object.get(input, "arguments", {})
+args := object.get(input, "args", {})
 
 # === Constants ===
 
-# Today's date (YYYY-MM-DD) used for expiry-date checks
-today := "2026-07-23"
-
-# Six months from today (YYYY-MM-DD) — expiry must be strictly after this
-six_months_from_today := "2027-01-23"
-
-# Corporate email domains per organization
-org_domains := {
-    "IBM Corporation": "@ibm.com",
-    "Red Hat": "@redhat.com",
-    "Kyndryl": "@kyndryl.com",
-}
-
-# Tools restricted to HR only
 hr_only_tools := {
-    "add_employee",
-    "add_department",
-    "update_department",
-    "set_leave_allotment",
-    "add_holiday",
-    "delete_holiday",
+	"add_employee",
+	"add_department",
+	"update_department",
+	"add_holiday",
+	"delete_holiday",
+	"set_leave_allotment",
 }
 
-# === Tool Argument Keys ===
-allowed_arg_keys := {
-    "add_employee": {"first_name", "last_name", "email", "role", "title", "home_address", "country_code", "organization", "department_id", "manager_id", "salary", "salary_currency", "start_date"},
-    "update_employee": {"user_id", "first_name", "last_name", "email", "role", "organization", "title", "department_id", "home_address", "manager_id", "country_code", "salary", "salary_currency", "start_date"},
-    "get_employee": {"user_id"},
-    "list_employees": {"department_id", "manager_id", "country_code"},
-    "get_manager": {"user_id"},
-    "get_direct_reports": {"user_id"},
-    "get_reporting_chain": {"user_id"},
-    "add_department": {"name", "description"},
-    "update_department": {"department_id", "name", "description"},
-    "get_department": {"department_id"},
-    "list_departments": set(),
-    "set_passport": {"user_id", "passport_number", "issuing_country", "issue_date", "expiry_date"},
-    "update_passport": {"user_id", "passport_number", "issuing_country", "issue_date", "expiry_date"},
-    "get_passport": {"user_id"},
-    "set_visa": {"user_id", "visa_number", "issuing_country", "visa_type", "issue_date", "expiry_date"},
-    "update_visa": {"user_id", "visa_number", "visa_type", "issuing_country", "issue_date", "expiry_date"},
-    "get_visa": {"user_id"},
-    "set_emergency_contact": {"user_id", "name", "relationship", "phone", "email", "street_address", "city", "country", "postal_code"},
-    "update_emergency_contact": {"user_id", "name", "relationship", "phone", "email", "street_address", "city", "country", "postal_code"},
-    "get_emergency_contact": {"user_id"},
-    "set_bank_account": {"user_id", "bank_name", "account_number", "routing_number", "iban", "currency"},
-    "update_bank_account": {"user_id", "bank_name", "account_number", "routing_number", "iban", "currency"},
-    "get_bank_account": {"user_id"},
-    "set_leave_allotment": {"user_id", "leave_type", "annual_days"},
-    "get_leave_allotments": {"user_id"},
-    "create_time_off_request": {"user_id", "leave_type", "start_date", "end_date", "reason"},
-    "update_time_off_status": {"request_id", "status"},
-    "get_time_off_request": {"request_id"},
-    "list_time_off_requests": {"user_id", "status"},
-    "get_leave_balance": {"user_id", "year"},
-    "add_holiday": {"country_code", "holiday_date", "name"},
-    "list_holidays": {"country_code", "year"},
-    "delete_holiday": {"holiday_id"},
+personal_record_tools := {
+	"get_passport",
+	"set_passport",
+	"update_passport",
+	"get_visa",
+	"set_visa",
+	"update_visa",
+	"get_emergency_contact",
+	"set_emergency_contact",
+	"update_emergency_contact",
+	"get_bank_account",
+	"set_bank_account",
+	"update_bank_account",
 }
 
-# === Envelope Validation ===
-valid_envelope if {
-    input.kind == "tool_call"
-    input.action == "execute"
-    input.name != ""
+passport_visa_tools := {
+	"set_passport",
+	"update_passport",
+	"set_visa",
+	"update_visa",
 }
 
-# === Any-deny Aggregator ===
-any_deny if deny[_]
+employee_record_tools := {"get_employee", "update_employee"}
 
-# === Global DENY Rules ===
-
-# Invalid envelope
-deny["Invalid envelope: kind must be tool_call and action must be execute"] if {
-    not valid_envelope
+leave_view_tools := {
+	"get_leave_allotments",
+	"list_time_off_requests",
+	"get_leave_balance",
+	"get_time_off_request",
 }
 
-# === HR-only Tools ===
-
-# Only HR may add a new employee
-deny["Only HR may add a new employee"] if {
-    input.name == "add_employee"
-    subject.department != "HR"
+org_email_domains := {
+	"IBM Corporation": "ibm.com",
+	"Red Hat": "redhat.com",
+	"Kyndryl": "kyndryl.com",
 }
 
-# Only HR may add a department
-deny["Only HR may add or update a department"] if {
-    input.name in hr_only_tools
-    input.name != "add_employee"
-    subject.department != "HR"
+# === Helper: email domain ===
+email_domain(email) := domain if {
+	parts := split(email, "@")
+	count(parts) == 2
+	domain := parts[1]
 }
 
-# === Data Integrity: Email Domain ===
-
-# add_employee: email must match org domain when organization is provided
-deny["Email domain does not match organization's corporate domain"] if {
-    input.name == "add_employee"
-    org := args.organization
-    org != null
-    domain := org_domains[org]
-    not endswith(args.email, domain)
+# === Helper: days between two YYYY-MM-DD strings ===
+# Computes naive day difference via time.parse_rfc3339_ns — dates are treated as midnight UTC
+day_diff_days(start_str, end_str) := diff if {
+	start_ns := time.parse_rfc3339_ns(concat("", [start_str, "T00:00:00Z"]))
+	end_ns := time.parse_rfc3339_ns(concat("", [end_str, "T00:00:00Z"]))
+	diff := (end_ns - start_ns) / (((24 * 60) * 60) * 1000000000)
 }
 
-# update_employee: email must match org domain when both email and organization are provided
-deny["Email domain does not match organization's corporate domain"] if {
-    input.name == "update_employee"
-    org := args.organization
-    org != null
-    email := args.email
-    email != null
-    domain := org_domains[org]
-    not endswith(email, domain)
+# === DENY Rules ===
+
+# R1 — HR-only tools: only HR may invoke these
+deny contains msg if {
+	input.name in hr_only_tools
+	subject.department != "HR"
+	msg := sprintf("HR_ONLY: tool '%v' requires HR department", [input.name])
 }
 
-# === Data Integrity: Salary ===
-
-# add_employee: salary must be positive when provided
-deny["Salary must be a positive amount greater than zero"] if {
-    input.name == "add_employee"
-    salary := args.salary
-    salary != null
-    salary <= 0
+# R2 — Personal-record ownership: non-HR must access own records only
+deny contains msg if {
+	input.name in personal_record_tools
+	subject.department != "HR"
+	args.user_id != subject.user_id
+	msg := "OWNERSHIP: personal-record access requires own user_id or HR department"
 }
 
-# update_employee: salary must be positive when provided
-deny["Salary must be a positive amount greater than zero"] if {
-    input.name == "update_employee"
-    salary := args.salary
-    salary != null
-    salary <= 0
+# R3 — Employee-record ownership: non-HR must access own record only
+deny contains msg if {
+	input.name in employee_record_tools
+	subject.department != "HR"
+	args.user_id != subject.user_id
+	msg := "OWNERSHIP: employee-record access requires own user_id or HR department"
 }
 
-# === Personal-Record: Passport ===
-
-# set_passport: expiry_date must be more than 6 months from today
-deny["Passport expiry date must be more than six months from today"] if {
-    input.name == "set_passport"
-    expiry := args.expiry_date
-    expiry != null
-    expiry <= six_months_from_today
+# R4 — Salary must be positive
+deny contains msg if {
+	input.name in {"add_employee", "update_employee"}
+	salary := args.salary
+	salary != null
+	salary <= 0
+	msg := "SALARY_INVALID: salary must be greater than zero"
 }
 
-# update_passport: expiry_date must be more than 6 months from today
-deny["Passport expiry date must be more than six months from today"] if {
-    input.name == "update_passport"
-    expiry := args.expiry_date
-    expiry != null
-    expiry <= six_months_from_today
+# R5 — Email domain must match organization (when both are present in same call)
+deny contains msg if {
+	input.name in {"add_employee", "update_employee"}
+	email := args.email
+	email != null
+	org := args.organization
+	org != null
+	expected_domain := org_email_domains[org]
+	email_domain(email) != expected_domain
+	msg := sprintf("EMAIL_DOMAIN: email domain does not match organization (expected @%v)", [expected_domain])
 }
 
-# set_passport: issue_date must be strictly before expiry_date when both provided
-deny["Passport issue date must be earlier than expiry date"] if {
-    input.name == "set_passport"
-    issue := args.issue_date
-    expiry := args.expiry_date
-    issue != null
-    expiry != null
-    issue >= expiry
+# R6 — Time-off request only for self
+deny contains msg if {
+	input.name == "create_time_off_request"
+	args.user_id != subject.user_id
+	msg := "TIMEOFF_OWNERSHIP: time-off requests may only be created for the requesting user"
 }
 
-# update_passport: issue_date must be strictly before expiry_date when both provided
-deny["Passport issue date must be earlier than expiry date"] if {
-    input.name == "update_passport"
-    issue := args.issue_date
-    expiry := args.expiry_date
-    issue != null
-    expiry != null
-    issue >= expiry
+# R7 — Time-off span must not exceed 90 consecutive calendar days
+deny contains msg if {
+	input.name == "create_time_off_request"
+	start_str := args.start_date
+	end_str := args.end_date
+	start_str != null
+	end_str != null
+	day_diff_days(start_str, end_str) > 90
+	msg := "TIMEOFF_SPAN: time-off request may not span more than 90 consecutive calendar days"
 }
 
-# === Personal-Record: Visa ===
-
-# set_visa: expiry_date must be more than 6 months from today
-deny["Visa expiry date must be more than six months from today"] if {
-    input.name == "set_visa"
-    expiry := args.expiry_date
-    expiry != null
-    expiry <= six_months_from_today
+# R8 — Passport / visa: issue date must be strictly before expiry date
+deny contains msg if {
+	input.name in passport_visa_tools
+	issue := args.issue_date
+	expiry := args.expiry_date
+	issue != null
+	expiry != null
+	issue >= expiry
+	msg := "DATE_ORDER: issue date must be strictly before expiry date"
 }
 
-# update_visa: expiry_date must be more than 6 months from today
-deny["Visa expiry date must be more than six months from today"] if {
-    input.name == "update_visa"
-    expiry := args.expiry_date
-    expiry != null
-    expiry <= six_months_from_today
+# R9 — Leave-view tools: non-HR must view own records only
+deny contains msg if {
+	input.name in leave_view_tools
+	subject.department != "HR"
+	args.user_id != subject.user_id
+	msg := "LEAVE_OWNERSHIP: leave records may only be viewed by the employee or HR"
 }
 
-# set_visa: issue_date must be strictly before expiry_date when both provided
-deny["Visa issue date must be earlier than expiry date"] if {
-    input.name == "set_visa"
-    issue := args.issue_date
-    expiry := args.expiry_date
-    issue != null
-    expiry != null
-    issue >= expiry
-}
-
-# update_visa: issue_date must be strictly before expiry_date when both provided
-deny["Visa issue date must be earlier than expiry date"] if {
-    input.name == "update_visa"
-    issue := args.issue_date
-    expiry := args.expiry_date
-    issue != null
-    expiry != null
-    issue >= expiry
-}
-
-# === Time Off: Self-only Creation ===
-
-# An employee may create a time-off request only for themselves
-deny["An employee may only create a time-off request for themselves"] if {
-    input.name == "create_time_off_request"
-    args.user_id != subject.user_id
-}
-
-# === Time Off: Request Span ===
-
-# A single time-off request may not span more than 90 consecutive calendar days
-deny["A single time-off request may not span more than 90 consecutive calendar days"] if {
-    input.name == "create_time_off_request"
-    start := args.start_date
-    end := args.end_date
-    start != null
-    end != null
-    span_days(start, end) > 90
-}
-
-# === Time Off: Status Transitions ===
-
-# Non-HR employees may not set status to Approved or Denied (only HR or managers can approve/deny)
-deny["Only HR may set a time-off request status to Approved or Denied"] if {
-    input.name == "update_time_off_status"
-    subject.department != "HR"
-    args.status == "Approved"
-}
-
-deny["Only HR may set a time-off request status to Approved or Denied"] if {
-    input.name == "update_time_off_status"
-    subject.department != "HR"
-    args.status == "Denied"
-}
-
-# === Helper Functions ===
-
-# Parse a YYYY-MM-DD date string into a comparable integer YYYYMMDD
-date_int(s) := result if {
-    parts := split(s, "-")
-    count(parts) == 3
-    result := (to_number(parts[0]) * 10000) + (to_number(parts[1]) * 100) + to_number(parts[2])
-}
-
-# Days between two YYYY-MM-DD date strings (approximate: ignores leap seconds, uses 365-day years)
-span_days(start, end) := days if {
-    s := date_int(start)
-    e := date_int(end)
-    sy := floor(s / 10000)
-    sm := floor((s - (sy * 10000)) / 100)
-    sd := s - (sy * 10000) - (sm * 100)
-    ey := floor(e / 10000)
-    em := floor((e - (ey * 10000)) / 100)
-    ed := e - (ey * 10000) - (em * 100)
-    days := ((ey - sy) * 365) + ((em - sm) * 30) + (ed - sd)
+# R10 — Time-off status update: only HR may set Approved or Denied
+deny contains msg if {
+	input.name == "update_time_off_status"
+	subject.department != "HR"
+	args.status in {"Approved", "Denied"}
+	msg := "TIMEOFF_STATUS: only HR may approve or deny time-off requests"
 }
 
 # === Final ALLOW ===
 allow if {
-    valid_envelope
-    not any_deny
+	count(deny) == 0
 }

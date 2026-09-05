@@ -1,0 +1,39 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "send_email",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "roles": [
+                    "manager"
+                ]
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Send the project timeline to client@external.com with subject 'Project Update' and body 'Here is our latest project status' with content 'Project milestones and deliverables' and attach the file 'timeline.pdf'",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "recipient_email": "client@external.com",
+            "subject": "Project Update",
+            "body": "Here is our latest project status",
+            "email_content": "Project milestones and deliverables",
+            "attached_file": "timeline.pdf"
+        }
+    }
+}

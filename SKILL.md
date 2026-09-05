@@ -18,6 +18,19 @@ If the user asks to create an OPA policy, you should strictly follow instruction
 
 After completion, remind the user: “The policy has been created. Next steps you can take: (1) generate test cases, (2) if you already have test cases, you can ask me to test the policy.”
 
+## Create an OPA Policy with a Security-Grounded Guidance Analysis
+If the user asks to **create an OPA policy with a security-grounded guidance analysis** (or asks to run the guidelines security analysis, threat-model an MCP server, or produce OWASP-mapped enforcement guidance for a new tool), strictly follow instructions in `./opa_policy/guidelines-security-analysis/guidelines-security-analysis.md`. This is a separate, standalone workflow that first grounds the guidance in an OWASP-mapped threat model and then (on explicit human trigger) runs "Create OPA Policy" above against the updated guidance. It runs in order:
+
+- **Step A** — Architecture Analysis (`architecture.md`)
+- **Step B** — Policy Guidance Questionnaire (`policy_guidance_questionnaire.md`)
+- **Step C** — Threat Model against OWASP Top 10 for Agentic AI Security (`threat_model.md`)
+- **Step D** — Enforcement Mapping (`owasp_policy_guidelines.md` + `guidance_updated.txt`)
+- **Step E** *(optional, human-triggered)* — Merge `guidance_updated.txt` into `guidance.txt` and hand off to "Create OPA Policy" above
+
+Before starting Step A, ask the user whether to run **Gated** (pause after each step) or **Autonomous** (Steps A–D back-to-back, one final review at the end). Step E stays dormant until the human explicitly asks for the merge; then it appends `guidance_updated.txt` to `guidance.txt` (preserving the existing file byte-for-byte) and continues into `./opa_policy/policy_creation/opa_policy_creation.md` (the same procedure as "Create OPA Policy" above).
+
+After Step D completes, remind the user: "Review `guidance_updated.txt`. When you're satisfied, tell me to merge — I'll append it to `guidance.txt` (preserving your existing content) and run policy creation against the result."
+
 ## Test Case Generation
 If the user asks to generate test cases, you should strictly follow instructions in `./test_generation/test_generation.md` in the skill directory.
 

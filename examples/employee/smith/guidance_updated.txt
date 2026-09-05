@@ -1,0 +1,7 @@
+## Additional Rules from Security Analysis
+
+All 10 OPA-enforceable candidate rules identified by the security threat analysis are already
+covered by existing rules in guidance.txt. No new rules are proposed.
+
+For further security analysis details and gap-register items, see:
+  smith/guidelines-security-analysis/owasp_policy_guidelines.md

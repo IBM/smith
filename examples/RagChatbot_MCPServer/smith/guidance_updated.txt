@@ -1,0 +1,5 @@
+15. When viewing or exporting team compensation data, the request must specify which fields to return; requests that do not specify any fields must be blocked
+16. Managers cannot see any team member's personal email address when querying compensation information
+17. No one can export team compensation data with external sharing enabled
+18. No one can email a compensation report with external sharing enabled
+19. Employees cannot send compensation reports by email

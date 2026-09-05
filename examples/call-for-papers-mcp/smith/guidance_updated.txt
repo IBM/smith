@@ -1,0 +1,5 @@
+## Additional Rules from Security Analysis
+
+<!-- No new OPA-enforceable rules identified. All 7 candidate rules derived from the OWASP threat model
+     and questionnaire are already present in guidance.txt. See owasp_policy_guidelines.md for the
+     Gap Register (non-OPA-enforceable findings) and the full enforcement specification. -->

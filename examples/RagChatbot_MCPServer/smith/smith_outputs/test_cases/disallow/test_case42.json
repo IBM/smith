@@ -1,0 +1,36 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "send_email",
+        "extensions": {
+            "subject": {
+                "claims": {}
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "I want to email team.lead@gmail.com about the quarterly review with subject 'Q4 Planning' and attach the meeting_notes.pdf file",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "recipient_email": "team.lead@gmail.com",
+            "subject": "Q4 Planning",
+            "body": "Quarterly Review Email",
+            "email_content": "Dear Team Lead,\n\nI hope this email finds you well. This is to share some important updates regarding our Q4 Planning session. We have prepared detailed meeting notes that outline the key discussion points and action items for the upcoming quarter.\n\nPlease find attached the meeting_notes.pdf file which contains comprehensive details about:\n- Q4 objectives and strategic goals\n- Resource allocation planning\n- Timeline and milestone updates\n- Next steps and responsibilities\n\nWe look forward to your feedback and collaboration on these important planning initiatives. Please review the attached document and let us know if you have any questions or suggestions.\n\nBest regards,\nHR Team",
+            "attached_file": "meeting_notes.pdf"
+        }
+    }
+}

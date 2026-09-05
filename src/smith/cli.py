@@ -165,18 +165,34 @@ def _selected_tools(base_url):
 
 
 def get_tool_definitions(transport, mcp_url, mcp_command, mcp_args, mcp_cwd):
-    """Extract tool definitions from the MCP server."""
-    tool_definitions = asyncio.run(
-        extract_tools(
-            transport=transport,
-            url=mcp_url,
-            command=mcp_command,
-            cmd_args=mcp_args,
-            cwd=mcp_cwd,
+    """Extract tool definitions from the MCP server, falling back to a cached file."""
+    try:
+        tool_definitions = asyncio.run(
+            extract_tools(
+                transport=transport,
+                url=mcp_url,
+                command=mcp_command,
+                cmd_args=mcp_args,
+                cwd=mcp_cwd,
+            )
         )
-    )
-    print(f"Extracted {len(tool_definitions['tools'])} tools from MCP server")
-    return tool_definitions
+        print(f"Extracted {len(tool_definitions['tools'])} tools from MCP server")
+        return tool_definitions
+    except Exception as e:
+        # Fall back to cached tool_definitions.json when the MCP server is unavailable
+        # (e.g. mcp v1/v2 incompatibility, server not running).
+        base = os.environ.get("BASE_URL", "")
+        target_agent = os.environ.get("TARGET_AGENT_PATH", "")
+        fallback = os.path.join(base, target_agent, "smith", "tool_definitions.json")
+        if os.path.exists(fallback):
+            print(
+                f"Warning: MCP server unavailable ({type(e).__name__}). Loading cached tool definitions from {fallback}"
+            )
+            with open(fallback) as f:
+                tool_definitions = json.load(f)
+            print(f"Loaded {len(tool_definitions.get('tools', []))} tools from cache")
+            return tool_definitions
+        raise
 
 
 def resolve_attack_tools():

@@ -2155,6 +2155,6 @@
       }
     }
   ],
-  "source": "python server.py",
+  "source": "/Users/saisree/smith-trial/.claude/skills/smith/examples/employee/.venv/bin/python server.py",
   "transport": "stdio"
 }

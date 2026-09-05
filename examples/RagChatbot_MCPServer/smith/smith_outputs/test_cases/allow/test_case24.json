@@ -1,0 +1,39 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "send_email",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "roles": [
+                    "manager"
+                ]
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Forward the training schedule to consultant@external.net with subject 'Training Calendar' and body 'Training information as requested' with content 'Workshop dates and locations' and attach 'schedule.xlsx'",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "recipient_email": "consultant@external.net",
+            "subject": "Training Calendar",
+            "body": "Training information as requested",
+            "email_content": "Workshop dates and locations",
+            "attached_file": "schedule.xlsx"
+        }
+    }
+}
