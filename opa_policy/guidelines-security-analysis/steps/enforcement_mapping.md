@@ -586,57 +586,76 @@ in `owasp_policy_guidelines.md`'s Gap Register table, not here). The
 file is the addendum that Step E appends to `guidance.txt`; it is not
 a replacement.
 
-Match `guidance.txt`'s own format so the append reads naturally:
+**The file has exactly one permitted format. Do not choose a shape, do
+not match `guidance.txt`'s style, do not adapt to the target agent.**
+Every run of every target agent writes `guidance_updated.txt` in this
+one form:
 
-- **Flat-numbered guidance.txt** (RagChatbot's `1. ...`, `2. ...`
-  style, or hr-agent's bare-one-rule-per-line style): number the new
-  rules continuing from where `guidance.txt` left off. If the last
-  existing rule is 14, the first new rule is 15. No header, no blank
-  section — a clean run of numbered lines the append tacks on the end.
-- **Prose-with-headers guidance.txt** (call-for-papers, car-price,
-  employee style, where the file uses `#`/`##` section headers and
-  rule-bearing bullets or paragraphs): open the addendum with a new
-  header at the same depth as the file's existing top-level rule
-  sections (e.g. `## Additional Rules from Security Analysis` if the
-  file uses `##` headers), then list the new rules as a numbered list
-  starting at 1 under that header. This keeps the append visually
-  consistent with the file's conventions while still yielding a plain
-  numbered rule list that test generation and policy creation can
-  consume.
+```
+<N+1>. <rule text on a single line>
+<N+2>. <rule text on a single line>
+```
 
-Decide the shape by looking at `guidance.txt` itself — count the lines
-that start with `<N>.` and count the lines that start with `#`/`##`;
-whichever is larger picks the shape. If both are absent (bare-line
-style like hr-agent), treat it as flat-numbered starting from `<N+1>`
-where `N` is the count of rule-bearing lines.
+- One rule per line, each line beginning `<number>. ` and nothing else.
+- `N` is the highest rule number already in `guidance.txt`. If
+  `guidance.txt` has no numbered lines, `N` is the count of its
+  rule-bearing lines. If `guidance.txt` does not exist, `N` is 0.
+- **No headers.** Never write `#`, `##`, or any heading line — not
+  `## Additional Rules from Security Analysis`, not any variant.
+- **No comments.** Never write `<!-- ... -->`, `#`-prefixed notes, or
+  any other comment syntax. The file is consumed as plain text and has
+  no comment convention; a comment becomes guidance content.
+- **No prose, blank-line sections, titles, dates, provenance lines, or
+  "see also" pointers to other artifacts.**
+- Nothing before the first rule line and nothing after the last.
 
-If `guidance.txt` did not exist at STEP 7 time (per the branch above),
-write `guidance_updated.txt` as a flat numbered list starting at 1 —
-no existing rules to renumber against, no format to match.
+This format is fixed because the file is machine-consumed, not read:
+`decompose` opens the merged `guidance.txt` with a single `f.read()`
+and hands the whole blob to the Guidance Flattening Agent, whose job is
+explicitly to promote headings and sub-items into numbered guidance
+statements. A header you add to make the append "read naturally"
+therefore does not stay decoration — it is flattened into a rule, and
+policy creation then tries to map it to a `deny` block. Visual
+consistency with `guidance.txt` is not a goal; there is no human in
+this file's consumption path.
 
 **When there are no new rules to propose.** This is a normal, common
 outcome: `guidance.txt` already covers every OPA-enforceable candidate
 STEP 7 produced. Handle it as follows.
 
-- **Write `guidance_updated.txt` empty — zero bytes.** Do not delete
-  it: Step E still reads it, and an empty file makes the append a
-  correct no-op that leaves `guidance.txt` byte-for-byte unchanged. A
-  missing file is an error condition; an empty one is the answer.
-- **Do not write "No new rules proposed", a header, a comment, or a
-  coverage summary into it** when `guidance.txt` is flat-numbered or
-  bare-line style. `decompose` reads the guidance with a single
-  `f.read()` and passes the entire file to the LLM as one blob — there
-  is no line parsing, no `#` comment convention, and no filtering
-  anywhere in the pipeline. In a bare-line file every non-empty line is
-  rule text by construction, so any note you leave becomes guidance the
-  decomposer expands into test conditions, and the policy creation skill
-  tries to map to a `deny` block.
-- **Prose-with-headers `guidance.txt` is the one exception.** There a
-  single `##` section stating that the analysis proposed no new rules is
-  acceptable, because that file already interleaves prose with
-  rule-bearing lines and the section is visually contained. Even then it
-  carries the statement only — no gap-register rows, no rule-coverage
-  mapping, no maintenance or tooling notes.
+- **Write `guidance_updated.txt` empty — exactly zero bytes.** Not a
+  blank line, not a newline, not whitespace: a 0-byte file. Do not
+  delete it either — Step E still reads it, and an empty file makes the
+  append a correct no-op that leaves `guidance.txt` byte-for-byte
+  unchanged. A missing file is an error condition; an empty one is the
+  answer.
+- **There are no exceptions to this, for any target agent.** The empty
+  outcome does not vary with `guidance.txt`'s format. Whatever
+  `guidance.txt` looks like — flat-numbered, bare-line, or prose with
+  `#`/`##` headers and blockquotes — "no new rules" is written the same
+  way: 0 bytes. Specifically, do NOT write any of the following:
+  - a heading such as `## Additional Rules from Security Analysis`,
+    with or without content under it;
+  - an HTML comment such as `<!-- No new rules proposed -->`, or any
+    other comment syntax;
+  - a plain-prose status line such as "No new rules were proposed" or
+    "existing guidance already covers all candidates";
+  - a coverage summary, gap-register row, or rule-to-candidate mapping;
+  - a "see also" or "refer to `owasp_policy_guidelines.md`" pointer;
+  - a copy of rules that are already in `guidance.txt`.
+  If you have written any of these, the correct file is still 0 bytes —
+  truncate it.
+- **Why there is no comment or heading escape hatch.** `decompose` reads
+  the guidance with a single `f.read()` and passes the entire file to the
+  LLM as one blob. There is no line parsing, no `#` or `<!-- -->` comment
+  convention, and no filtering anywhere in the pipeline. The Guidance
+  Flattening Agent it feeds is specifically built to promote headings and
+  sub-items into numbered guidance statements, so a heading is not
+  ignored — it is converted into a rule. Every non-empty byte you leave
+  in this file becomes guidance that the decomposer expands into test
+  conditions and that policy creation tries to map to a `deny` block.
+  "Visually contained" is not a property the consumer has any way to
+  observe.
 - **Report the finding in STEP 9, not in the file.** "None —
   `guidance.txt` already covers every OWASP-derived and
   questionnaire-derived candidate", together with which existing rules
@@ -649,6 +668,37 @@ writes its reasoning trail — coverage mapping, gap register, tooling
 notes — into the addendum instead of reporting it. Step E appends all of
 it to `guidance.txt`, and every later stage reads that prose as policy
 rules.
+
+**Mandatory write check — run this before writing, every run, and do
+not treat it as optional judgement.** Assemble the candidate lines you
+intend to write, then apply these four tests in order and act on them
+mechanically:
+
+1. **Drop already-covered rules.** For each line, check whether
+   `guidance.txt` already expresses that rule. If it does, delete the
+   line. This is a semantic check, not a string comparison — a
+   reworded restatement of an existing rule is still already covered.
+   Never emit a line that restates, paraphrases, or verbatim copies
+   something already in `guidance.txt`; the file is a delta, and a
+   partial copy of the parent file is always a bug.
+2. **Drop every non-rule line.** Delete anything that is not a single
+   enforceable rule: headings, comments, blank-line separators, titles,
+   status messages, coverage notes, pointers to other artifacts.
+3. **If nothing survives 1-2, write 0 bytes and stop here.** Do not
+   substitute a status message for the empty result; do not fall back to
+   emitting the covered rules you dropped in test 1 "so the file isn't
+   empty". An empty file is the correct, expected, common answer.
+4. **If lines survive, verify the written file against the one permitted
+   format.** Read it back and confirm: every line matches
+   `^<digits>\. `, the first number is `N+1`, numbering is contiguous,
+   and the file contains no `#`, no `<!--`, and no blank lines. If any
+   check fails, rewrite the file — do not merge and do not proceed.
+
+This check is what makes the output deterministic across runs and across
+target agents. Two runs that reach the same conclusion must produce
+byte-identical files; the shape of the output must never depend on which
+example you are analysing or on how you decided to phrase things this
+time.
 
 **Why the file is an addendum, not a replacement.** `guidance.txt` may
 contain more than numbered rules — headings, blank lines, comments,
@@ -671,6 +721,16 @@ STEP 8c compares against this captured copy, and once the write has
 happened there is nothing left on disk to compare against. If no file
 was present, log that instead so STEP 8c can tell a first run from a
 lost capture.
+
+An **existing but empty** `guidance_updated.txt` is a third, distinct
+case: log it as `prior proposal: empty`. It means either that the last
+run proposed nothing, or that Step E merged the last run's proposal and
+truncated the file afterwards (Step E does this once the append is
+verified). Either way there are no prior rules to regress against, so
+STEP 8c has nothing to compare — but this is not the same as a missing
+file or a skipped capture, and STEP 8c must not report it as one. If you
+need to know whether a merge happened, the merged rules are in
+`guidance.txt`; they are not missing, they succeeded.
 
 Do NOT modify `guidance.txt` or `policy_guidance_questionnaire.md`
 themselves. `guidance_updated.txt` is a proposal for the human to review
@@ -837,8 +897,12 @@ Record the result as:
 If STEP 8 recorded that no prior `guidance_updated.txt` was present, log
 `Regression check: no prior run to compare against` so the human can
 see the check ran rather than silently passing. If STEP 8 recorded
-nothing either way, say so — that is a skipped capture, not a first run,
-and the two must not be reported the same way.
+`prior proposal: empty`, log `Regression check: prior proposal was empty
+(nothing proposed, or merged and truncated by Step E)` — there is
+nothing to regress against, and this must not be reported as a missing
+file. If STEP 8 recorded nothing either way, say so — that is a skipped
+capture, not a first run, and the three must not be reported the same
+way.
 
 ---
 
@@ -878,14 +942,29 @@ of the following is true:
 5. **A cross-reference points outside the file** — "below", "above",
    "see the gap register", "as documented in the table". After Step E's
    append these resolve to nothing, or worse, to unrelated text.
-6. **STEP 8 proposed no new rules, but the file is not empty** — per
-   STEP 8's "When there are no new rules to propose", it must be zero
-   bytes for flat-numbered and bare-line `guidance.txt`, and at most a
-   single `##` statement section for prose-with-headers style. Any
-   coverage mapping, gap register, or tooling note here is content that
-   Step E will append into `guidance.txt` and the decomposer will read as
-   rules. Conversely, if STEP 8 *did* propose rules, an empty file is a
-   lost write — re-run STEP 8 rather than passing the gate.
+6. **STEP 8 proposed no new rules, but the file is not zero bytes** —
+   per STEP 8's "When there are no new rules to propose", the file must
+   be exactly 0 bytes, with no exception for any `guidance.txt` format.
+   A heading, an HTML comment, a status line, a coverage mapping, or a
+   gap-register note is content that Step E will append into
+   `guidance.txt` and the decomposer will read as rules. Conversely, if
+   STEP 8 *did* propose rules, an empty file is a lost write — re-run
+   STEP 8 rather than passing the gate.
+7. **The file violates the one permitted format.** Every non-empty line
+   must match `^<digits>\. ` — one rule per line, numbering contiguous
+   and starting at `N+1` where `N` is `guidance.txt`'s last rule number.
+   Reject any `#`/`##` heading (including `## Additional Rules from
+   Security Analysis`), any `<!-- ... -->` comment, any blank line, any
+   bullet, and any prose line without a leading number. There is no
+   "matches the target agent's style" defence: the format is fixed
+   across every target agent precisely so the output does not vary
+   run-to-run.
+8. **A line duplicates a rule already in `guidance.txt`.** Compare each
+   line against the existing guidance semantically, not textually. This
+   file is a delta; a line that restates or copies an existing rule is a
+   defect even though it looks like valid rule text, and appending it
+   gives `guidance.txt` two numberings of the same rule. If every line
+   is a duplicate, the correct file is 0 bytes.
 
 On any hit: delete the offending section or line from
 `guidance_updated.txt`, confirm the content it carried is present in

@@ -14,10 +14,12 @@ or reorder them.
 Step D is the last of the four required steps. Its outputs
 (`owasp_policy_guidelines.md` and `guidance_updated.txt`) are the final
 artifacts of the required pipeline; this workflow does not write any
-Rego itself. An optional Step E performs the merge of
-`guidance_updated.txt` into `guidance.txt` itself and hands off to
-policy creation — but only once the human explicitly asks for the merge
-to happen; it never starts on its own, in either confirmation mode.
+Rego itself. An optional Step E appends `guidance_updated.txt` to
+`guidance.txt` itself and can then hand off to policy creation — but
+only once the human explicitly asks for the merge to happen; it never
+starts on its own, in either confirmation mode. Step E carries two
+separate human gates: the merge trigger, and then a second explicit
+question before policy creation runs. Merging never implies a policy.
 
 ## Prerequisites
 
@@ -177,6 +179,22 @@ Strictly follow `./steps/enforcement_mapping.md`.
   NOT go into this file; their durable home is
   `owasp_policy_guidelines.md`'s Gap Register table so downstream
   policy/test generation never sees non-rule content.
+
+  **This file has exactly one permitted format, identical for every
+  target agent — do not adapt it to `guidance.txt`'s style.** Either it
+  is a run of `<N>. <rule>` lines and nothing else, or, when the
+  analysis proposes no new rules, it is **exactly zero bytes**. No
+  headings (`## Additional Rules from Security Analysis` included), no
+  HTML or `#` comments, no status prose ("no new rules were proposed"),
+  no coverage summaries, no "see also" pointers, and never a copy of
+  rules already present in `guidance.txt`. An empty file is the normal
+  and common outcome — it makes Step E's append a correct no-op — and it
+  must not be padded with anything to look non-empty. The file is
+  machine-consumed: `decompose` reads the merged guidance with a single
+  `f.read()` and its flattening agent promotes headings into numbered
+  guidance statements, so any non-rule byte becomes a policy rule. See
+  `./steps/enforcement_mapping.md` STEP 8 for the format and its
+  mandatory pre-write check, and STEP 8d checks 6-8 for the gate.
 - Gate: if the confirmation mode is Gated, do not proceed to Completion
   until the human confirms the output. If Autonomous, proceed to
   Completion immediately and present all four step outputs together for
@@ -199,11 +217,16 @@ When Step D is complete, inform the user:
 >    that aren't OPA-enforceable are recorded in the Gap Register
 >    table inside `owasp_policy_guidelines.md` above, not appended
 >    here, so downstream policy/test generation only ever sees rules.
+>    If this file is empty, that is the result, not a failure: your
+>    existing `guidance.txt` already covers every enforceable
+>    candidate the analysis found. The per-candidate coverage detail is
+>    in the summary above.
 >
 > Once you're satisfied with it, tell me to merge — I'll append it to
-> `guidance.txt` (preserving your existing content) and then run
-> policy creation against the result. I won't touch `guidance.txt`
-> until you say so.
+> `guidance.txt` (preserving your existing content), then ask you
+> whether to run policy creation before doing anything further. I
+> won't touch `guidance.txt` until you say so, and merging on its own
+> won't generate a policy.
 
 ---
 
@@ -232,6 +255,26 @@ Once triggered:
    `guidance_updated.txt` first — relocating the content to
    `owasp_policy_guidelines.md`'s Gap Register — and then merge.
 
+   **Then apply the format gate — this is mechanical, not a judgement
+   call.** A file written before the single-format rule existed may
+   carry a heading, an HTML comment, a status line, or a copy of rules
+   already in `guidance.txt`, and the append is what makes it permanent.
+   - If the file is **zero bytes**, the merge is a no-op: report that
+     the analysis proposed no new rules, leave `guidance.txt` untouched,
+     and go straight to step 2. Do not treat an empty file as an error
+     or a missing write — it is the expected "nothing to add" answer.
+   - Otherwise, every non-empty line must match `^<digits>\. `. If the
+     file contains a `#`/`##` heading, a `<!-- ... -->` comment, a blank
+     line, a bullet, a "see also" pointer, or unnumbered prose, **do not
+     merge** — that content would be flattened into policy rules
+     downstream. Stop, show the human the offending lines, and merge
+     only after the file is reduced to bare numbered rules (or to zero
+     bytes, if nothing legitimate remains).
+   - Check each line against `guidance.txt` and **do not merge lines it
+     already covers** — a duplicate append gives the same rule two
+     numbers. If every line is a duplicate, the file should have been
+     empty; report that and merge nothing.
+
    **Merge (append, not overwrite).** Append the contents of
    `<TARGET_AGENT_PATH>/smith/guidance_updated.txt` to
    `<TARGET_AGENT_PATH>/smith/guidance.txt`. `guidance_updated.txt` is
@@ -254,14 +297,49 @@ Once triggered:
    above — it happens only here, and only after the explicit human
    trigger. Do NOT overwrite `guidance.txt` — that would discard any
    non-rule content the human authored.
-2. **Policy creation.** Strictly follow
-   `../policy_creation/opa_policy_creation.md` to generate
+
+   **After the join is verified, truncate `guidance_updated.txt` to zero
+   bytes.** Its rules now live in `guidance.txt`, so by the file's own
+   definition — the rules `guidance.txt` is *missing* — it is empty.
+   Leaving the merged copy on disk creates three problems: a second
+   merge trigger re-appends the same rules and gives each one two
+   numbers in `guidance.txt`; the stale file looks like a pending
+   proposal to the next human who reads it; and the next Step D run
+   captures it as "the previous run's proposal" in STEP 8c and reports
+   every already-merged rule as still outstanding. Truncate, do not
+   delete — Step E and STEP 8 both expect the file to exist, and a
+   missing file is an error condition while an empty one is the correct
+   post-merge state. Do this only after the read-back confirms the
+   append landed; truncating first would lose the rules outright.
+2. **Ask before policy creation — this is the handoff point.** The merge
+   trigger authorises the merge only, never policy creation. Once the
+   append is verified, stop and ask the human exactly this:
+
+   > `guidance.txt` now has the merged rules. Do you want me to run
+   > policy creation against it now, or stop here?
+
+   Then wait for the answer. Treat only an explicit yes as approval to
+   continue; on "stop", "not yet", silence, or anything ambiguous, stop
+   here and report that the merge is done and `guidance.txt` is ready
+   whenever they want the policy generated. Do not infer approval from
+   the earlier merge trigger, from the human having reviewed
+   `guidance_updated.txt`, or from the fact that the merge succeeded —
+   the merge and policy creation are two separate decisions with two
+   separate triggers. Ask this even in Autonomous mode: the Step A–D
+   confirmation mode governs Steps A–D only and never waives this gate.
+3. **Policy creation (only after an explicit yes in step 2).** Strictly
+   follow `../policy_creation/opa_policy_creation.md` to generate
    `<TARGET_AGENT_PATH>/smith/policy_generated.rego` from the
-   just-merged `guidance.txt`. This is the same procedure `SKILL.md`'s
-   "Create OPA Policy" section already describes — this step exists only
-   to trigger it against the guidance this workflow just updated, not to
-   redefine policy creation.
-3. **Hand off.** After it completes, hand off exactly as `SKILL.md`
+   just-merged `guidance.txt`. Start that skill directly — do not
+   re-summarise the guidance or ask the human to re-confirm the merge
+   first. This is the same procedure `SKILL.md`'s "Create OPA Policy"
+   section already describes — this step exists only to trigger it
+   against the guidance this workflow just updated, not to redefine
+   policy creation. Note that `opa_policy_creation.md` has its own
+   internal confirmation point after it maps rules to tool arguments and
+   system variables; that checkpoint belongs to policy creation and does
+   not replace the gate in step 2.
+4. **Hand off.** After it completes, hand off exactly as `SKILL.md`
    prescribes: tell the user, "The policy has been created. Next steps
    you can take: (1) generate test cases, (2) if you already have test
    cases, you can ask me to test the policy." Do not continue on your
@@ -275,14 +353,17 @@ Once triggered:
   an explicit human trigger; it is not subject to "never skip."
 - Follow the confirmation mode (Gated or Autonomous) chosen before Step A
   for every Step A–D Gate — do not stop for confirmation in Autonomous
-  mode, and do not skip a confirmation pause in Gated mode. Step E has
-  its own, separate trigger and ignores this setting.
+  mode, and do not skip a confirmation pause in Gated mode. Step E
+  ignores this setting: it has two human gates of its own — the merge
+  trigger, and the policy-creation question in its step 2 — and both
+  apply in Autonomous mode as well as Gated.
 - If any input file is missing, stop and tell the user exactly which
   file is needed and which step produces it — this applies regardless of
   confirmation mode.
 - Do not modify any existing file other than writing the designated
-  output for each step, except Step E's sanctioned overwrite of
-  `guidance.txt` on explicit human trigger.
+  output for each step, except Step E's sanctioned append to
+  `guidance.txt` on explicit human trigger. Appending is the only
+  sanctioned modification — never overwrite `guidance.txt`.
 - All writes go to `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/`, except Step E's
   merge into `guidance.txt` and its `policy_generated.rego` output, which
   per `opa_policy_creation.md` are both written to
