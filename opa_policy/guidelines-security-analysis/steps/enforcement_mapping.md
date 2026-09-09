@@ -5,21 +5,24 @@ control, determines OPA scope, produces `owasp_policy_guidelines.md`, and
 reconciles both the resulting OPA-scope rules AND the questionnaire's own
 enforceable answers against the target's existing `guidance.txt` to
 surface guidance gaps in `guidance_updated.txt`.
-Requires `architecture.md` and `threat_model.md` in the target directory.
+Requires `architecture.md` and `threat_model.md` in
+`<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/`.
 
 ### Authoritative Paths
 
 **Inputs:** Use ONLY these exact files. Do NOT read similarly-named files
-from other folders. If a required file is missing here, stop and ask; do
-not substitute one from elsewhere.
+from other folders. If a required file is missing here, stop and tell
+the user which file is needed and which step produces it; do not
+substitute one from elsewhere.
 - Input 1: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/architecture.md`
 - Input 2: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/threat_model.md`
 - Input 3: `src/smith/data/owasp_10_ai_catalog.json` — repo-relative, not
   per-target-agent. Source of the `mitigations` used to ground STEP 5's
   rule proposals for each ASI category.
 - Input 4: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/policy_guidance_questionnaire.md`
-  — used only in STEP 7. Sections 3-6 (Q9-Q19: role scoping, hard limits,
-  rate limits, response filtering) capture concrete policy intent that
+  — used only in STEP 7. Sections 3-6 (Q9-Q19, Q13b included: role
+  scoping, hard limits, rate limits, response filtering) capture
+  concrete policy intent that
   does not need to map to any OWASP category to be worth enforcing — STEP
   7 pulls these in as a second source of candidate rules, independent of
   the OWASP path in STEP 2-6.
@@ -73,8 +76,7 @@ fields, it is out of OPA scope — even if it is a real and serious risk.
 
 Read `architecture.md`, `threat_model.md`, the `owasp_10_ai_catalog.json`
 catalog, `tool_definitions.json`, and `system_vars.json` in full before
-proceeding.
-If a required file is missing, stop and tell the user which file is needed.
+proceeding. On a missing file, apply the Authoritative Paths guard above.
 
 ---
 
@@ -399,11 +401,14 @@ wrong" or "the coverage check was wrong."
 scope only)" in STEP 6 (post-verification per STEP 6b).
 
 **Source 2 — questionnaire-derived.** Read
-`policy_guidance_questionnaire.md` Sections 3-6 (Q9-Q19: role scoping,
-hard parameter/numeric limits, approval paths, keyword blocks, rate
-limits, response filtering). These answers do not need to map to any
-OWASP category to be worth enforcing. For each answer, apply the same OPA
-Enforcement Boundary test from the top of this file (is the condition
+`policy_guidance_questionnaire.md` Sections 3-6 (Q9-Q19, and Q13b
+between Q13 and Q14: role scoping, hard parameter limits, numeric caps
+(Q13), approval paths (Q13b), free-text keyword blocks (Q14), rate
+limits, response filtering). Q13b's approval-path table is a candidate
+source like any other answer — a conditional allow is still a rule.
+These answers do not need to map to any OWASP category to be worth
+enforcing. For each answer, apply the same OPA Enforcement Boundary
+test from the top of this file (is the condition
 visible at invocation time as `input.name`/`input.args.*`/
 `input.extensions.*`?). Keep only the answers that pass. Skip any answer
 tagged `[inferred — low confidence]` — those are not eligible to become
@@ -651,17 +656,11 @@ STEP 7 produced. Handle it as follows.
   If you have written any of these, delete the file — do not truncate it
   to 0 bytes and leave it behind, because a present-but-empty file still
   reads as a pending proposal.
-- **Why there is no comment or heading escape hatch.** `decompose` reads
-  the guidance with a single `f.read()` and passes the entire file to the
-  LLM as one blob. There is no line parsing, no `#` or `<!-- -->` comment
-  convention, and no filtering anywhere in the pipeline. The Guidance
-  Flattening Agent it feeds is specifically built to promote headings and
-  sub-items into numbered guidance statements, so a heading is not
-  ignored — it is converted into a rule. Every non-empty byte you leave
-  in this file becomes guidance that the decomposer expands into test
-  conditions and that policy creation tries to map to a `deny` block.
-  "Visually contained" is not a property the consumer has any way to
-  observe.
+- **Why there is no comment or heading escape hatch.** For the reason
+  given under the permitted format above: there is no line parsing and
+  no comment convention anywhere in the pipeline, so every non-empty
+  byte left in this file becomes guidance. "Visually contained" is not a
+  property the consumer has any way to observe.
 - **Report the finding in STEP 9, not in the file.** "None —
   `guidance.txt` already covers every OWASP-derived and
   questionnaire-derived candidate", together with which existing rules
@@ -779,24 +778,17 @@ as "not covered" for a reason that later turns out to be phrasing-only.
 This step closes that gap using the same three-criteria test STEP 8
 already applies.
 
-Under STEP 8's revised semantics, `guidance_updated.txt` holds only
-the newly proposed rules — so the redundancy check must scan the
-*post-merge* state, i.e., `guidance.txt`'s existing rules 1..N
+Because `guidance_updated.txt` holds only the newly proposed rules
+(STEP 8), the redundancy check must scan the *post-merge* state,
+i.e., `guidance.txt`'s existing rules 1..N
 followed by `guidance_updated.txt`'s new rules N+1..M as they would
 appear after Step E's append. Read both files, concatenate the
 numbered-rule content in that order, and compare each pair (i, j)
-with i < j against the three criteria from STEP 8:
-
-1. **Same structured field.** The `input.*` path the two rules
-   ultimately constrain must be the same (e.g., both talk about
-   `input.args.select_fields` on the same tool set, or both talk
-   about `input.extensions.subject.roles`).
-2. **Same operator / matching semantics.** Exact-equality, substring,
-   numeric threshold, set-membership, and regex are distinct;
-   allow-polarity vs deny-polarity are distinct.
-3. **Overlapping value set.** For value-based conditions the two
-   rules' allowed/blocked sets must overlap on the value that would
-   trigger the rule.
+with i < j against the three criteria from STEP 8 — same structured
+field, same operator / matching semantics, overlapping value set. Read
+them symmetrically: STEP 8 states them as candidate-versus-guidance,
+whereas here both sides are already-written rules, so "the field the
+candidate would check" becomes "the field both rules constrain."
 
 If all three match, the pair is an **Overlap** candidate.
 
@@ -875,11 +867,15 @@ verdicts, log a one-line result (`Redundancy self-check: no overlapping,
 conflicting, or correcting pairs found`) so the human can see the check
 ran.
 
-Cost note: this is an O(N²) pairwise scan across `guidance_updated.txt`;
-for a typical file of 20-40 rules that is trivial. Per STEP 8,
-`guidance_updated.txt` contains numbered rules only, so every row in
-the scan has a structured-field check to compare — no exempt-notes
-carve-out is needed here.
+Cost note: this is an O(N²) pairwise scan across the concatenated
+post-merge set defined above — `guidance.txt`'s rules 1..N followed by
+`guidance_updated.txt`'s N+1..M — **not** across `guidance_updated.txt`
+alone, which would skip every existing-versus-new pair this step exists
+to catch. For a typical merged set of 20-40 rules that is trivial. Per
+STEP 8, `guidance_updated.txt` contains numbered rules only, and
+`guidance.txt`'s rule lines are numbered too, so every row in the scan
+has a structured-field check to compare — no exempt-notes carve-out is
+needed here.
 
 ---
 

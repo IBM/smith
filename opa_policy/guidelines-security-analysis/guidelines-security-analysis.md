@@ -151,8 +151,9 @@ Strictly follow `./steps/enforcement_mapping.md`.
 - Input: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/policy_guidance_questionnaire.md`
   — the same file produced in Step B, not a new file. Step D's STEP 7
   (Build the combined candidate-rule list) pulls Sections 3-6's answers
-  in directly as a second, independent source of candidate rules (they
-  don't need to map to an OWASP category to be worth enforcing).
+  (Q9-Q19, including Q13b's approval paths) in directly as a second,
+  independent source of candidate rules (they don't need to map to an
+  OWASP category to be worth enforcing).
   Low-confidence questionnaire answers are excluded from the candidate
   list. Step D's STEP 8 (Reconcile candidates against guidance.txt) is
   the only step that touches guidance.txt.

@@ -2,13 +2,15 @@
 
 Applies the OWASP Top 10 for Agentic AI Security (ASI01–ASI10) to a target
 MCP server and produces `threat_model.md`. Requires `architecture.md` and
-`policy_guidance_questionnaire.md` to be present in the target directory.
+`policy_guidance_questionnaire.md` to be present in
+`<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/`.
 
 ### Authoritative Paths
 
 **Inputs:** Use ONLY these exact files. Do NOT read similarly-named files
-from other folders. If a required file is missing here, stop and ask; do
-not substitute one from elsewhere.
+from other folders. If a required file is missing here, stop and tell
+the user which file is needed and which step produces it; do not
+substitute one from elsewhere.
 - Input 1: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/architecture.md` (from architecture_analysis skill)
 - Input 2: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/policy_guidance_questionnaire.md`
 - Input 3: `src/smith/data/owasp_10_ai_catalog.json` — repo-relative, not
@@ -36,7 +38,7 @@ not substitute one from elsewhere.
 Read `architecture.md`, `policy_guidance_questionnaire.md`, the full
 `owasp_10_ai_catalog.json` catalog, `tool_definitions.json`, and
 `system_vars.json` before proceeding.
-If any file is missing, stop and tell the user which file is needed.
+On a missing file, apply the Authoritative Paths guard above.
 
 The catalog's `threats` array has exactly 10 entries, `id` ASI01 through
 ASI10, in order. Each entry carries `name`, `description`, `impact`,

@@ -50,9 +50,9 @@ available files are read:
 | Field-level restrictions (which fields are forbidden per role) | Section 3, Q10 + Section 6, Q17–Q18 |
 | Scope restrictions (e.g. manager's own team only) | Section 3, Q9 — add as a sub-condition |
 | Hard parameter blocks (external_sharing, blocked domains) | Section 4, Q12 |
-| Numeric caps (purchase amounts) | Section 4, Q13–Q14 |
-| Approval paths (action allowed with approval flag) | Section 4, Q14 — note approval field name |
-| Prompt injection / keyword blocks | Section 4, Q13–Q14 |
+| Numeric caps (purchase amounts) | Section 4, Q13 |
+| Approval paths (action allowed with approval flag) | Section 4, Q13b — note approval field name |
+| Prompt injection / keyword blocks | Section 4, Q14 |
 | Format or value enumerations (CSV/PDF/JSON) | Section 4, Q12 |
 
 Pre-fill every answer you can derive from these files. Tag each answer
@@ -169,8 +169,10 @@ can use that others cannot?**
 
 ## Section 4: Hard Limits
 
-**Q12. Are there parameter values that should always be blocked for
-everyone, regardless of role?**
+**Q12. Are there specific parameter values that should always be blocked
+for everyone, regardless of role?** Enumerable values only — named
+values, formats, domains, flags. Content patterns inside free-text
+fields belong in Q14, not here.
 
 > <list them, or "none">
 
@@ -192,7 +194,9 @@ approval field is set?**
 
 ---
 
-**Q14. Are there keywords or inputs that must always be rejected?**
+**Q14. Are there keywords or content patterns in free-text input that
+must always be rejected?** Free-text content only — a specific blocked
+parameter value belongs in Q12, and a numeric ceiling in Q13.
 
 > <list them with the free-text field they appear in, or "none">
 

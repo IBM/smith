@@ -7,8 +7,9 @@ required input for the threat_model and enforcement_mapping skills.
 
 **Inputs (from `<TARGET_AGENT_PATH>/`, provided by the user at invocation
 time):** Use ONLY these exact files. Do NOT read similarly-named files from
-other folders. If a required file is missing here, stop and ask; do not
-substitute one from elsewhere.
+other folders. If a required file is missing here, stop and tell the user
+which file is needed and which step produces it; do not substitute one
+from elsewhere.
 - `agent.py`, `server.py`, `app.py`, `README.md`, `SYSTEM_VARIABLES.md` — read if present
 - `smith/system_vars.json` — authoritative source for subject fields, if present
 - `smith/tool_definitions.json` — read if present. Used to confirm which
@@ -18,7 +19,7 @@ substitute one from elsewhere.
   sure the fields guidance.txt cares about are surfaced as available
   enforcement points; do not carry guidance.txt content into the
   descriptive layers/trust-boundaries/data-flow sections.
-- Any other `.py` files in the target directory
+- Any other `.py` files in `<TARGET_AGENT_PATH>/` (the MCP server root)
 - Output file: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/architecture.md`
 
 ### Workflow (follow strictly)
@@ -27,7 +28,8 @@ substitute one from elsewhere.
 
 #### STEP 1 — Identify source files
 
-Read the following files from the target MCP server directory if they exist:
+Read the following files from `<TARGET_AGENT_PATH>/` (the MCP server
+root) if they exist:
 - `agent.py` — the FastAPI/agent layer
 - `server.py` — the MCP tool server
 - `app.py` — the tool implementation
