@@ -510,6 +510,10 @@ def parse_dot_format(graph_path):
 
 
 def init_graph(opa_ast_path, policy_dir, graph_path, saver=True):
+    # Reset the module-level parsing state before building a new graph.
+    head_rule_index.clear()
+    index_to_count.clear()
+
     G = nx.MultiDiGraph(data=True, align="vertical")
     if saver:
         create_ast(policy_dir, opa_ast_path)

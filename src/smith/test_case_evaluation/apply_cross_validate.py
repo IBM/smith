@@ -68,12 +68,17 @@ def apply_cross_validate_results(report_file, test_case_base_path):
         prefixed_name = f"cv_{filename}"
 
         if action == "move_to_allow":
+            # Create the destination bucket on demand: shutil.move raises
+            # FileNotFoundError if it does not already exist, which happens on a
+            # fresh case tree or one whose allow/ cases have all been moved out.
+            os.makedirs(allow_dir, exist_ok=True)
             dest = os.path.join(allow_dir, prefixed_name)
             shutil.move(path, dest)
             print(f"  MOVED to allow/: {filename} -> {prefixed_name}")
             moved += 1
 
         elif action == "move_to_disallow":
+            os.makedirs(disallow_dir, exist_ok=True)
             dest = os.path.join(disallow_dir, prefixed_name)
             shutil.move(path, dest)
             print(f"  MOVED to disallow/: {filename} -> {prefixed_name}")

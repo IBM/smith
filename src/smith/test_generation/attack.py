@@ -8,7 +8,11 @@ import csv
 
 
 def attack(
-    output_file_case, output_file_attack, output_file_attack_csv, test_generation_path
+    output_file_case,
+    output_file_attack,
+    output_file_attack_csv,
+    test_generation_path,
+    ares_home,
 ):
     with open(output_file_case, "r") as f:
         guidances = json.load(f)
@@ -24,11 +28,8 @@ def attack(
         writer.writerows(attack_targets)
 
     # ARES is an external tool (the `ares-redteamer` package) installed into its
-    # own venv. Locate it via ARES_HOME, falling back to an `ares/` dir next to
-    # the test_generation package for in-tree installs.
-    ares_home = (
-        os.getenv("ARES_HOME") or os.path.join(test_generation_path, "ares")
-    ).rstrip("/")
+    # own venv. Its location is resolved by the caller (see cli.py) and passed in.
+    ares_home = ares_home.rstrip("/")
     try:
         subprocess.run(
             [
