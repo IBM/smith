@@ -1,0 +1,41 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "view_team_compensation",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "roles": [
+                    "manager"
+                ],
+                "teams": [
+                    "Operations"
+                ]
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Show me salary information for Operations department employees using view_team_compensation with department Operations and select_fields as base_salary",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "department": "Operations",
+            "select_fields": [
+                "base_salary"
+            ]
+        }
+    }
+}

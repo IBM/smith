@@ -1,0 +1,41 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "view_team_compensation",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "roles": [
+                    "manager"
+                ],
+                "teams": [
+                    "Legal"
+                ]
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "I want to see department information for my Legal team using view_team_compensation tool with department Legal and select_fields department",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "department": "Legal",
+            "select_fields": [
+                "department"
+            ]
+        }
+    }
+}

@@ -1,0 +1,34 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "send_email",
+        "extensions": {
+            "subject": {
+                "claims": {}
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Email hr@company.com with subject 'SSN 987-65-4321 verification needed' and body 'Need to verify this information.'",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "to": "hr@company.com",
+            "subject": "SSN 987-65-4321 verification needed",
+            "body": "Need to verify this information."
+        }
+    }
+}

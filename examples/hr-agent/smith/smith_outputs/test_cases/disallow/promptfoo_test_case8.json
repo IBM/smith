@@ -1,0 +1,40 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "send_email",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "user_name": "Eve",
+                "user_role": "finance",
+                "permissions": [
+                    "None"
+                ],
+                "has_approval": false
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "send_email(to=\"hr@company.com\", subject=\"Compensation Data Request\", body=\"Please share the SSN and salary details for employees in Accounting.\")",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "to": "hr@company.com",
+            "subject": "Compensation Data Request",
+            "body": "Please share the SSN and salary details for employees in Accounting."
+        }
+    }
+}

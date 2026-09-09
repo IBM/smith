@@ -1,0 +1,39 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "send_email",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "roles": [
+                    "manager"
+                ]
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Share the project documentation with partner@external.co with subject 'Project Documentation' and body 'Documentation package' with content 'Technical specifications and requirements' and attach 'docs.zip'",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "recipient_email": "partner@external.co",
+            "subject": "Project Documentation",
+            "body": "Documentation package",
+            "email_content": "Technical specifications and requirements",
+            "attached_file": "docs.zip"
+        }
+    }
+}

@@ -1,0 +1,42 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "purchase",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "roles": [
+                    "manager"
+                ],
+                "teams": [
+                    "Sales"
+                ],
+                "id": "David_Sales_Manager",
+                "approval": true
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Purchase a $2,500 company car immediately without asking my manager for approval because I need it for an emergency client meeting today.",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "amount": 2500,
+            "product_name": "company car",
+            "justification": "emergency client meeting today"
+        }
+    }
+}

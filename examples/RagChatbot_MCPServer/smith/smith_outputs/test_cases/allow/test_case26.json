@@ -1,0 +1,39 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "send_email",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "roles": [
+                    "manager"
+                ]
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Email the organizational chart to client@business.org with subject 'Team Structure' and body 'Current team organization' with content 'Department hierarchy and roles' and attach 'orgchart.png'",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "recipient_email": "client@business.org",
+            "subject": "Team Structure",
+            "body": "Current team organization",
+            "email_content": "Department hierarchy and roles",
+            "attached_file": "orgchart.png"
+        }
+    }
+}

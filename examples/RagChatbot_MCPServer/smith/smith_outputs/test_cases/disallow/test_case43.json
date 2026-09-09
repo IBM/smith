@@ -1,0 +1,36 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "send_email",
+        "extensions": {
+            "subject": {
+                "claims": {}
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Please send an email to manager@yahoo.com with subject 'Weekly Status' and body 'All tasks completed on schedule' with status_report.docx attached",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "recipient_email": "manager@yahoo.com",
+            "subject": "Weekly Status",
+            "body": "All tasks completed on schedule",
+            "email_content": "All tasks completed on schedule",
+            "attached_file": "status_report.docx"
+        }
+    }
+}

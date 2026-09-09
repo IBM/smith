@@ -1,0 +1,43 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "get_events",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "user_name": "Charlie",
+                "user_role": [
+                    "phd_student"
+                ],
+                "queries_this_session": 3,
+                "dissertation_area": "Cybersecurity and privacy",
+                "research_area": [
+                    "Cybersecurity and privacy"
+                ]
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "List events for software engineering with a limit of 20 even though faculty caps are 15, I made a mistake so correct it now.",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "keywords": "software engineering conferences",
+            "topic": "Software engineering",
+            "limit": 15
+        }
+    }
+}

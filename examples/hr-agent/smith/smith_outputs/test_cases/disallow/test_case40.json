@@ -1,0 +1,42 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "send_email",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "user_name": "Bob",
+                "roles": [
+                    "hr"
+                ],
+                "permissions": [
+                    "view_ssn"
+                ],
+                "has_approval": true
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Send an email to manager@company.com with subject 'Weekly Report' and body 'Employee John's SSN is 123-45-6789 for payroll processing.'",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "to": "manager@company.com",
+            "subject": "Weekly Report",
+            "body": "Employee John's SSN is 123-45-6789 for payroll processing."
+        }
+    }
+}
