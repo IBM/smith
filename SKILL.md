@@ -25,11 +25,13 @@ If the user asks to **create an OPA policy with a security-grounded guidance ana
 - **Step B** — Policy Guidance Questionnaire (`policy_guidance_questionnaire.md`)
 - **Step C** — Threat Model against OWASP Top 10 for Agentic AI Security (`threat_model.md`)
 - **Step D** — Enforcement Mapping (`owasp_policy_guidelines.md` + `guidance_updated.txt`)
-- **Step E** *(optional, human-triggered)* — Append `guidance_updated.txt` to `guidance.txt`, then ask whether to hand off to "Create OPA Policy" above (two separate gates: the merge trigger, then the policy-creation question)
+- **Step E** *(optional, human-triggered)* — Append `guidance_updated.txt` to `guidance.txt` and delete the addendum once the join is verified, then ask whether to hand off to "Create OPA Policy" above (two separate gates: the merge trigger, then the policy-creation question)
 
 Before starting Step A, ask the user whether to run **Gated** (pause after each step) or **Autonomous** (Steps A–D back-to-back, one final review at the end). Step E stays dormant until the human explicitly asks for the merge; then it appends `guidance_updated.txt` to `guidance.txt` (preserving the existing file byte-for-byte) and **stops to ask whether to run policy creation**. Only an explicit yes starts `./opa_policy/policy_creation/opa_policy_creation.md` (the same procedure as "Create OPA Policy" above). The merge trigger authorises the merge alone — merging never implies a policy — and this second gate applies in Autonomous mode too, since the Gated/Autonomous choice governs Steps A–D only.
 
 After Step D completes, remind the user: "Review `guidance_updated.txt`. When you're satisfied, tell me to merge — I'll append it to `guidance.txt` (preserving your existing content), then ask you whether to run policy creation before doing anything further."
+
+If Step D proposed no new rules there is no `guidance_updated.txt` — the file is written only when there are rules to merge, and Step D deletes any leftover from a previous run. Say so instead of pointing the user at a file that isn't there: "The analysis found nothing to add — your `guidance.txt` already covers every enforceable candidate, so there's no `guidance_updated.txt` and nothing to merge." Do not treat the missing file as a failed step.
 
 ## Test Case Generation
 If the user asks to generate test cases, you should strictly follow instructions in `./test_generation/test_generation.md` in the skill directory.

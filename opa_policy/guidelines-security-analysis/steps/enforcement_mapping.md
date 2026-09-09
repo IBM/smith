@@ -623,17 +623,22 @@ this file's consumption path.
 outcome: `guidance.txt` already covers every OPA-enforceable candidate
 STEP 7 produced. Handle it as follows.
 
-- **Write `guidance_updated.txt` empty — exactly zero bytes.** Not a
-  blank line, not a newline, not whitespace: a 0-byte file. Do not
-  delete it either — Step E still reads it, and an empty file makes the
-  append a correct no-op that leaves `guidance.txt` byte-for-byte
-  unchanged. A missing file is an error condition; an empty one is the
-  answer.
+- **Do not create `guidance_updated.txt`. If one is already on disk,
+  delete it.** No file at all — not a 0-byte file, not a blank line, not
+  whitespace. The file's *presence* is what signals that proposed rules
+  are waiting to be merged, so its absence is how "nothing to add" is
+  expressed. Delete it only after the prior-run capture below has logged
+  what the old file contained.
+- **The invariant this maintains:** `guidance_updated.txt` exists if and
+  only if there are unmerged proposed rules. A run that proposes nothing
+  leaves no file; Step E deletes the file once it has merged it. Anyone —
+  human or later step — can therefore read the presence of the file as
+  "there is a pending proposal" without opening it.
 - **There are no exceptions to this, for any target agent.** The empty
   outcome does not vary with `guidance.txt`'s format. Whatever
   `guidance.txt` looks like — flat-numbered, bare-line, or prose with
-  `#`/`##` headers and blockquotes — "no new rules" is written the same
-  way: 0 bytes. Specifically, do NOT write any of the following:
+  `#`/`##` headers and blockquotes — "no new rules" is expressed the same
+  way: no file. Specifically, do NOT write any of the following:
   - a heading such as `## Additional Rules from Security Analysis`,
     with or without content under it;
   - an HTML comment such as `<!-- No new rules proposed -->`, or any
@@ -643,8 +648,9 @@ STEP 7 produced. Handle it as follows.
   - a coverage summary, gap-register row, or rule-to-candidate mapping;
   - a "see also" or "refer to `owasp_policy_guidelines.md`" pointer;
   - a copy of rules that are already in `guidance.txt`.
-  If you have written any of these, the correct file is still 0 bytes —
-  truncate it.
+  If you have written any of these, delete the file — do not truncate it
+  to 0 bytes and leave it behind, because a present-but-empty file still
+  reads as a pending proposal.
 - **Why there is no comment or heading escape hatch.** `decompose` reads
   the guidance with a single `f.read()` and passes the entire file to the
   LLM as one blob. There is no line parsing, no `#` or `<!-- -->` comment
@@ -684,10 +690,12 @@ mechanically:
 2. **Drop every non-rule line.** Delete anything that is not a single
    enforceable rule: headings, comments, blank-line separators, titles,
    status messages, coverage notes, pointers to other artifacts.
-3. **If nothing survives 1-2, write 0 bytes and stop here.** Do not
-   substitute a status message for the empty result; do not fall back to
+3. **If nothing survives 1-2, write no file and stop here** — and delete
+   any `guidance_updated.txt` left over from a previous run. Do not
+   substitute a status message for the empty result, do not write a
+   0-byte file to have something on disk, and do not fall back to
    emitting the covered rules you dropped in test 1 "so the file isn't
-   empty". An empty file is the correct, expected, common answer.
+   empty". No file is the correct, expected, common answer.
 4. **If lines survive, verify the written file against the one permitted
    format.** Read it back and confirm: every line matches
    `^<digits>\. `, the first number is `N+1`, numbering is contiguous,
@@ -709,28 +717,51 @@ only the new numbered rules after it. Test generation and policy
 creation still see a flat numbered-rule list because the append is
 line-oriented and the new rules follow the same numbered format.
 
-Overwrite `guidance_updated.txt` in full on every run rather than
-appending to a prior run's file — this keeps it consistent with the
-current threat model and questionnaire instead of accumulating stale
-entries from earlier iterations.
+When there ARE rules to propose, overwrite `guidance_updated.txt` in full
+rather than appending to a prior run's file — this keeps it consistent
+with the current threat model and questionnaire instead of accumulating
+stale entries from earlier iterations. When there are none, delete it per
+the rules above. Either way the previous run's file does not survive this
+step.
 
-**Before overwriting, read the existing `guidance_updated.txt` if one is
-present and log its numbered rules verbatim.** They are the previous
-run's proposal and the overwrite is the only thing that destroys them —
-STEP 8c compares against this captured copy, and once the write has
-happened there is nothing left on disk to compare against. If no file
-was present, log that instead so STEP 8c can tell a first run from a
-lost capture.
+**Before overwriting or deleting, read the existing
+`guidance_updated.txt` if one is present and log its numbered rules
+verbatim.** They are the previous run's proposal and this step is the only
+thing that destroys them — STEP 8c compares against this captured copy,
+and once the overwrite or delete has happened there is nothing left on
+disk to compare against. This applies equally to the delete path: a run
+that proposes nothing still has to capture what the last run proposed,
+otherwise deleting the file silently discards the only evidence a rule was
+ever dropped.
 
-An **existing but empty** `guidance_updated.txt` is a third, distinct
-case: log it as `prior proposal: empty`. It means either that the last
-run proposed nothing, or that Step E merged the last run's proposal and
-truncated the file afterwards (Step E does this once the append is
-verified). Either way there are no prior rules to regress against, so
-STEP 8c has nothing to compare — but this is not the same as a missing
-file or a skipped capture, and STEP 8c must not report it as one. If you
-need to know whether a merge happened, the merged rules are in
-`guidance.txt`; they are not missing, they succeeded.
+Log exactly one of these states, so STEP 8c can tell them apart:
+
+- **`prior proposal: <N> rules`** — a non-empty file was present.
+  Capture the rules verbatim.
+- **`prior proposal: none (no file)`** — no file on disk. This is a
+  normal state, not a fault, and it is the common one: Step D has never
+  run for this target agent, or the last run proposed nothing, or Step E
+  merged the last proposal and deleted the file. Do not report it as a
+  lost capture or an error, and do not treat it as evidence that
+  something went wrong.
+- **`prior proposal: empty (legacy 0-byte file)`** — a 0-byte file was
+  present. Runs under the current rules never produce this; it is left
+  over from a run that wrote an empty file instead of deleting it. There
+  is nothing to capture. Delete the file as part of this step whichever
+  path you take, so the leftover stops reading as a pending proposal.
+
+In the last two cases there are no prior rules to regress against, so
+STEP 8c has nothing to compare. If you need to know whether a merge
+happened, look at `guidance.txt` — merged rules are there. They are not
+missing; they succeeded.
+
+Absence carries less information under this scheme than a 0-byte file
+would have: "proposed nothing" and "already merged" and "never ran" all
+look identical on disk. That is deliberate — the file is a work queue for
+Step E, not a run log. The durable record of what each run concluded is
+`owasp_policy_guidelines.md` and your STEP 9 summary, so state the
+"no new rules" outcome there rather than trying to encode it in the
+filesystem.
 
 Do NOT modify `guidance.txt` or `policy_guidance_questionnaire.md`
 themselves. `guidance_updated.txt` is a proposal for the human to review
@@ -894,15 +925,27 @@ Record the result as:
 |---|---|---|
 | <rule text from the previous run> | Still proposed / Merged / Dropped / **Regression** | <covering candidate, or rejecting check, or "unexplained"> |
 
-If STEP 8 recorded that no prior `guidance_updated.txt` was present, log
-`Regression check: no prior run to compare against` so the human can
-see the check ran rather than silently passing. If STEP 8 recorded
-`prior proposal: empty`, log `Regression check: prior proposal was empty
-(nothing proposed, or merged and truncated by Step E)` — there is
-nothing to regress against, and this must not be reported as a missing
-file. If STEP 8 recorded nothing either way, say so — that is a skipped
-capture, not a first run, and the three must not be reported the same
-way.
+Report according to what STEP 8 logged:
+
+- `prior proposal: <N> rules` — run the comparison above and record the
+  table.
+- `prior proposal: none (no file)` — log `Regression check: no prior
+  proposal on disk (first run for this agent, or the last run proposed
+  nothing, or the last proposal was merged and deleted)`. This is not a
+  missing-file fault and must not be reported as one. It is the expected
+  state most of the time.
+- `prior proposal: empty (legacy 0-byte file)` — log `Regression check:
+  prior proposal was an empty legacy file, nothing to regress against`.
+- STEP 8 logged nothing either way — say exactly that. It is a skipped
+  capture, which is a real gap in the check, and it must not be reported
+  as any of the states above. Note the trap: under the current rules
+  "no file on disk" is normal and common, so a genuinely skipped capture
+  looks exactly like the normal case unless STEP 8 logged the state
+  explicitly. The log line is the only thing that distinguishes them —
+  never infer `none (no file)` from the absence of a log entry.
+
+Log one of these even when there is nothing to compare, so the human can
+see the check ran rather than silently passing.
 
 ---
 
@@ -918,7 +961,9 @@ passes every existing check, and Step E then merges it into
 `guidance.txt` verbatim. This step closes that hole.
 
 **Re-read the `guidance_updated.txt` you just wrote** — do not check
-your draft from memory, check the bytes on disk — and reject it if any
+your draft from memory, check the bytes on disk. If STEP 8 correctly
+wrote no file because it proposed nothing, confirm that on disk too
+(check 6 below) rather than skipping this step. Reject the file if any
 of the following is true:
 
 1. **A markdown table is present.** Rules are numbered lines or
@@ -942,14 +987,20 @@ of the following is true:
 5. **A cross-reference points outside the file** — "below", "above",
    "see the gap register", "as documented in the table". After Step E's
    append these resolve to nothing, or worse, to unrelated text.
-6. **STEP 8 proposed no new rules, but the file is not zero bytes** —
-   per STEP 8's "When there are no new rules to propose", the file must
-   be exactly 0 bytes, with no exception for any `guidance.txt` format.
-   A heading, an HTML comment, a status line, a coverage mapping, or a
-   gap-register note is content that Step E will append into
-   `guidance.txt` and the decomposer will read as rules. Conversely, if
-   STEP 8 *did* propose rules, an empty file is a lost write — re-run
-   STEP 8 rather than passing the gate.
+6. **STEP 8 proposed no new rules, but a `guidance_updated.txt` exists**
+   — per STEP 8's "When there are no new rules to propose", there must be
+   no file at all, with no exception for any `guidance.txt` format. This
+   check fails on a 0-byte file just as it fails on one holding a
+   heading, an HTML comment, a status line, a coverage mapping, or a
+   gap-register note: the non-empty variants get appended into
+   `guidance.txt` and read as rules, and the empty variant misreports
+   itself to Step E and the next human as a pending proposal. Delete the
+   file. Conversely, if STEP 8 *did* propose rules, a missing or empty
+   file is a lost write — re-run STEP 8 rather than passing the gate.
+   Note that this check cannot be skipped just because there is no file
+   to re-read: "no file" is the passing state here, so confirm it
+   deliberately rather than treating the whole of STEP 8d as
+   inapplicable.
 7. **The file violates the one permitted format.** Every non-empty line
    must match `^<digits>\. ` — one rule per line, numbering contiguous
    and starting at `N+1` where `N` is `guidance.txt`'s last rule number.
@@ -964,13 +1015,15 @@ of the following is true:
    file is a delta; a line that restates or copies an existing rule is a
    defect even though it looks like valid rule text, and appending it
    gives `guidance.txt` two numberings of the same rule. If every line
-   is a duplicate, the correct file is 0 bytes.
+   is a duplicate, there should be no file — delete it.
 
 On any hit: delete the offending section or line from
 `guidance_updated.txt`, confirm the content it carried is present in
 `owasp_policy_guidelines.md`'s Gap Register table (add the row if it is
 not — nothing may be dropped, only relocated), then re-run this check
-against the rewritten file. Do not proceed to STEP 9 until it passes.
+against the rewritten file. Do not proceed to STEP 9 until it passes. If
+the cleanup leaves no rule lines at all, delete the file rather than
+leaving an empty one behind.
 
 Report the outcome in STEP 9 as `Non-rule content gate: passed` or
 `Non-rule content gate: N section(s) removed and relocated to the Gap

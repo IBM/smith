@@ -181,20 +181,26 @@ Strictly follow `./steps/enforcement_mapping.md`.
   policy/test generation never sees non-rule content.
 
   **This file has exactly one permitted format, identical for every
-  target agent — do not adapt it to `guidance.txt`'s style.** Either it
-  is a run of `<N>. <rule>` lines and nothing else, or, when the
-  analysis proposes no new rules, it is **exactly zero bytes**. No
-  headings (`## Additional Rules from Security Analysis` included), no
-  HTML or `#` comments, no status prose ("no new rules were proposed"),
-  no coverage summaries, no "see also" pointers, and never a copy of
-  rules already present in `guidance.txt`. An empty file is the normal
-  and common outcome — it makes Step E's append a correct no-op — and it
-  must not be padded with anything to look non-empty. The file is
-  machine-consumed: `decompose` reads the merged guidance with a single
-  `f.read()` and its flattening agent promotes headings into numbered
-  guidance statements, so any non-rule byte becomes a policy rule. See
-  `./steps/enforcement_mapping.md` STEP 8 for the format and its
-  mandatory pre-write check, and STEP 8d checks 6-8 for the gate.
+  target agent — do not adapt it to `guidance.txt`'s style.** It is a run
+  of `<N>. <rule>` lines and nothing else. No headings (`## Additional
+  Rules from Security Analysis` included), no HTML or `#` comments, no
+  status prose ("no new rules were proposed"), no coverage summaries, no
+  "see also" pointers, and never a copy of rules already present in
+  `guidance.txt`. The file is machine-consumed: `decompose` reads the
+  merged guidance with a single `f.read()` and its flattening agent
+  promotes headings into numbered guidance statements, so any non-rule
+  byte becomes a policy rule.
+
+  **When the analysis proposes no new rules, Step D writes no file at all
+  and deletes any left over from a previous run.** Not a 0-byte file — no
+  file. This is the normal and common outcome, not a failure: it means
+  `guidance.txt` already covers every enforceable candidate. The
+  invariant is that `guidance_updated.txt` exists if and only if there
+  are proposed rules waiting to be merged, so its presence alone tells a
+  human or a later step that there is something pending. Step E deletes
+  it once it has merged it, which is the other half of the same
+  invariant. See `./steps/enforcement_mapping.md` STEP 8 for the format
+  and its mandatory pre-write check, and STEP 8d checks 6-8 for the gate.
 - Gate: if the confirmation mode is Gated, do not proceed to Completion
   until the human confirms the output. If Autonomous, proceed to
   Completion immediately and present all four step outputs together for
@@ -217,16 +223,26 @@ When Step D is complete, inform the user:
 >    that aren't OPA-enforceable are recorded in the Gap Register
 >    table inside `owasp_policy_guidelines.md` above, not appended
 >    here, so downstream policy/test generation only ever sees rules.
->    If this file is empty, that is the result, not a failure: your
->    existing `guidance.txt` already covers every enforceable
->    candidate the analysis found. The per-candidate coverage detail is
->    in the summary above.
 >
 > Once you're satisfied with it, tell me to merge — I'll append it to
-> `guidance.txt` (preserving your existing content), then ask you
+> `guidance.txt` (preserving your existing content) and then remove
+> `guidance_updated.txt`, since its rules will live in `guidance.txt`
+> from that point on. I'll then ask you
 > whether to run policy creation before doing anything further. I
 > won't touch `guidance.txt` until you say so, and merging on its own
 > won't generate a policy.
+
+When the analysis proposed no new rules there is no
+`guidance_updated.txt` to review, so say so directly instead of pointing
+the human at a file that is not there — list artifact 1 only, and replace
+artifact 2 and the merge paragraph with:
+
+> There is no `guidance_updated.txt` this time, and that is the result
+> rather than a failure: your existing `guidance.txt` already covers
+> every enforceable candidate the analysis found. The per-candidate
+> coverage detail is in the summary above. There is nothing to merge, so
+> `guidance.txt` stays as it is. Tell me if you'd like to go straight to
+> policy creation against your current `guidance.txt`.
 
 ---
 
@@ -259,21 +275,37 @@ Once triggered:
    call.** A file written before the single-format rule existed may
    carry a heading, an HTML comment, a status line, or a copy of rules
    already in `guidance.txt`, and the append is what makes it permanent.
-   - If the file is **zero bytes**, the merge is a no-op: report that
-     the analysis proposed no new rules, leave `guidance.txt` untouched,
-     and go straight to step 2. Do not treat an empty file as an error
-     or a missing write — it is the expected "nothing to add" answer.
+   - If the file **does not exist**, there is nothing to merge. This is a
+     normal state, not an error, and it is the common one — do not re-run
+     Step D to regenerate it. It means one of three things: Step D
+     proposed no new rules, or a previous merge already succeeded and
+     deleted the file, or Step D has never run for this target agent.
+     Tell the human which you believe it is — check whether Step D's
+     summary reported "no new rules", whether `guidance.txt` contains
+     rules beyond what they authored, and whether
+     `guidelines-security-analysis/` holds Step A–D artifacts — then stop
+     and let them decide. Do not append anything, and do not proceed to
+     step 2 on the assumption that a merge happened here. In particular,
+     do not report this to the human as a lost or missing file; in the
+     first two cases nothing is missing and `guidance.txt` is already
+     correct.
+   - If the file exists but is **zero bytes**, treat it as a leftover
+     from a run that predates the current rules, which delete the file
+     instead of emptying it. There is nothing to merge: leave
+     `guidance.txt` untouched, delete the empty file so it stops looking
+     like a pending proposal, tell the human you did, and go straight to
+     step 2. Do not append anything and do not treat it as a lost write.
    - Otherwise, every non-empty line must match `^<digits>\. `. If the
      file contains a `#`/`##` heading, a `<!-- ... -->` comment, a blank
      line, a bullet, a "see also" pointer, or unnumbered prose, **do not
      merge** — that content would be flattened into policy rules
      downstream. Stop, show the human the offending lines, and merge
-     only after the file is reduced to bare numbered rules (or to zero
-     bytes, if nothing legitimate remains).
+     only after the file is reduced to bare numbered rules. If nothing
+     legitimate remains, delete the file instead of merging it.
    - Check each line against `guidance.txt` and **do not merge lines it
      already covers** — a duplicate append gives the same rule two
-     numbers. If every line is a duplicate, the file should have been
-     empty; report that and merge nothing.
+     numbers. If every line is a duplicate, the file should not have
+     existed; report that, merge nothing, and delete it.
 
    **Merge (append, not overwrite).** Append the contents of
    `<TARGET_AGENT_PATH>/smith/guidance_updated.txt` to
@@ -298,19 +330,30 @@ Once triggered:
    trigger. Do NOT overwrite `guidance.txt` — that would discard any
    non-rule content the human authored.
 
-   **After the join is verified, truncate `guidance_updated.txt` to zero
-   bytes.** Its rules now live in `guidance.txt`, so by the file's own
-   definition — the rules `guidance.txt` is *missing* — it is empty.
-   Leaving the merged copy on disk creates three problems: a second
-   merge trigger re-appends the same rules and gives each one two
-   numbers in `guidance.txt`; the stale file looks like a pending
-   proposal to the next human who reads it; and the next Step D run
-   captures it as "the previous run's proposal" in STEP 8c and reports
-   every already-merged rule as still outstanding. Truncate, do not
-   delete — Step E and STEP 8 both expect the file to exist, and a
-   missing file is an error condition while an empty one is the correct
-   post-merge state. Do this only after the read-back confirms the
-   append landed; truncating first would lose the rules outright.
+   **After the join is verified, delete `guidance_updated.txt`.** Its
+   rules now live in `guidance.txt`, so the addendum has been consumed
+   and has nothing left to represent. Leaving the merged copy on disk
+   creates three problems: a second merge trigger re-appends the same
+   rules and gives each one two numbers in `guidance.txt`; the stale
+   file looks like a pending proposal to the next human who reads it;
+   and the next Step D run captures it as "the previous run's proposal"
+   in STEP 8c and reports every already-merged rule as still
+   outstanding.
+
+   Order matters: delete only **after** the read-back in the merge
+   paragraph above confirms the append landed. Deleting first, or
+   deleting when the read-back failed, loses the rules outright — they
+   exist nowhere else. If the read-back did not confirm a clean join,
+   leave the file alone and report the problem instead.
+
+   A deleted `guidance_updated.txt` is the normal post-merge state, not
+   an error. The next Step D run recreates it only if it has rules to
+   propose, so nothing downstream needs it to persist between runs. This
+   is the same invariant Step D maintains from the other side: the file
+   exists if and only if there are proposed rules waiting to be merged.
+   Absence means one of exactly three things — this target agent has
+   never run Step D, the last run proposed nothing, or the last proposal
+   was merged successfully.
 2. **Ask before policy creation — this is the handoff point.** The merge
    trigger authorises the merge only, never policy creation. Once the
    append is verified, stop and ask the human exactly this:
