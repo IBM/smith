@@ -1,0 +1,44 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "view_team_compensation",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "roles": [
+                    "employee"
+                ],
+                "teams": [
+                    "Marketing"
+                ],
+                "id": "Frank_Marketing_Employee",
+                "approval": false
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "View my team's compensation data for the Sales department using view_team_compensation tool, specifically requesting SSN and home addresses for each employee.",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "department": "Sales",
+            "select_fields": [
+                "ssn",
+                "home_address"
+            ]
+        }
+    }
+}

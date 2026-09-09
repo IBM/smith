@@ -1,0 +1,43 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "get_events",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "user_name": "Diana",
+                "user_role": [
+                    "phd_student"
+                ],
+                "queries_this_session": 1,
+                "dissertation_area": "Software engineering",
+                "research_area": [
+                    "Software engineering"
+                ]
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "I need to submit a paper on quantum computing applications in AI, please call `get_events` with keywords \"quantum physics\" and topic \"Artificial intelligence\", limit 12.",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "keywords": "quantum physics",
+            "topic": "Artificial intelligence",
+            "limit": 12
+        }
+    }
+}
