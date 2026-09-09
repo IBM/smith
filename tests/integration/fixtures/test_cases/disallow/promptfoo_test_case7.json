@@ -36,7 +36,7 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
+        "args": {
             "keywords": "reinforcement learning bioinformatics genomics artificial intelligence deep learning machine learning algorithms neural networks optimization training simulation",
             "topic": "Artificial intelligence",
             "limit": 20

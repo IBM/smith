@@ -32,7 +32,7 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
+        "args": {
             "keywords": "microservices",
             "topic": "Software engineering",
             "limit": 3

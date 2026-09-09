@@ -1,23 +1,37 @@
 # Copyright 2026 Smith authors
 # SPDX-License-Identifier: Apache-2.0
 
-"""Pytest fixtures for Smith stage-level integration tests.
+"""Pytest fixtures for the Smith test suite.
 
-These tests drive the *real* ``smith`` CLI in place (against the real repo root,
-real Makefile, real OPA server) with controlled, frozen inputs:
+This directory holds **all three** test categories. The marker, not the directory
+name, decides what runs — see ``README.md``:
 
-1. A **session-scoped backup** fixture snapshots the live ``assets/policy.rego``
-   and ``references/test_cases/`` before any integration test runs and restores
-   them afterwards — even if a test crashes — so overwriting those working
-   files during a run is safe.
-2. Frozen inputs live under ``tests/integration/fixtures/``. Because they are
+* ``unit``        — env-free: no ``.env``, no credentials, no external service.
+                    Calls individual functions directly. This is the subset
+                    ``make ci`` runs in GitHub Actions.
+* ``integration`` — exercises each ``smith`` CLI flag's real execution against
+                    the real checkout, using the developer's ``.env`` — including
+                    the tests that call a real LLM, which gate on
+                    ``requires_llm``.
+
+Two fixtures supply the environment, one per lane (both classes live in
+``helpers.py`` and share the same accessors, so a test names ``env.policy``
+whichever lane it is in):
+
+* ``smith_env`` → ``SmithEnv``: the real ``.env`` configuration, for
+  integration tests. Those that overwrite a real artifact protect it with
+  ``backup_file``.
+* ``unit_env`` → ``UnitEnv``: a preset environment whose *inputs* resolve to the
+  frozen ``fixtures/`` tree and whose *outputs* resolve under ``tmp_path``.
+
+Integration tests keep driving the real CLI in place:
+
+1. Frozen inputs live under ``tests/integration/fixtures/``. Because they are
    frozen, each flag's outcome is a known fixed number the tests assert exactly.
-3. A **staging** helper (the ``stage`` fixture) copies the fixture subset a flag
+2. A **staging** helper (the ``stage`` fixture) copies the fixture subset a flag
    needs into the real locations right before invoking the CLI.
-
-Every external dependency (Docker/OPA, LLM, target agent, ARES/Promptfoo) sits
-behind a gating fixture that ``pytest.skip``s when absent, so the suite is safe
-to run with nothing configured.
+3. ``backup_file`` protects each real file a test overwrites, restoring it on
+   teardown — explicitly requested, so unit tests never inherit it.
 
 Shared non-fixture constants/helpers live in ``helpers.py``.
 """
@@ -27,149 +41,133 @@ from __future__ import annotations
 import os
 import shutil
 import subprocess
+import sys
 import time
 from pathlib import Path
 
 import pytest
 
 from helpers import (
-    CASE_FILE,
-    DECOMP_FILE,
-    EXAMPLE,
     FIXTURE_POLICY,
     FIXTURE_TEST_CASES,
-    FLATTEN_FILE,
-    GREY_GUIDANCE_FILE,
-    REAL_POLICY,
-    REAL_TEST_CASES,
-    VARS_FILE,
+    SmithEnv,
+    UnitEnv,
     which,
 )
 
-# ---------------------------------------------------------------------------
-# Snapshot helpers for the session backup/restore.
-# ---------------------------------------------------------------------------
+# The three mutually exclusive primary categories.
+PRIMARY_MARKERS = ("unit", "integration")
+
+#: Cached real environment; built on first use, never at import (see docstring).
+_real_env: SmithEnv | None = None
 
 
-def _snapshot(src: Path, dst: Path) -> None:
-    """Copy a file/dir to dst; record absence with a marker so restore can undo."""
-    if src.is_dir():
-        shutil.copytree(src, dst)
-    elif src.exists():
-        dst.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(src, dst)
-    else:
-        dst.parent.mkdir(parents=True, exist_ok=True)
-        dst.with_suffix(dst.suffix + ".absent").write_text("")
+def real_env() -> SmithEnv:
+    """The real ``.env`` environment, resolved lazily and cached.
 
-
-def _restore(backup: Path, target: Path) -> None:
-    """Restore target from a snapshot produced by ``_snapshot``."""
-    absent_marker = backup.with_suffix(backup.suffix + ".absent")
-    if target.is_dir():
-        shutil.rmtree(target, ignore_errors=True)
-    elif target.exists():
-        target.unlink()
-    if absent_marker.exists():
-        return  # original did not exist; leave target removed
-    if backup.is_dir():
-        shutil.copytree(backup, target)
-    elif backup.exists():
-        target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(backup, target)
-
-
-@pytest.fixture(scope="session", autouse=True)
-def _backup_working_tree(tmp_path_factory):
-    """Snapshot and later restore the live policy + test_cases (whole run)."""
-    backup_dir = tmp_path_factory.mktemp("smith_working_backup")
-    policy_bak = backup_dir / "policy.rego"
-    cases_bak = backup_dir / "test_cases"
-
-    _snapshot(REAL_POLICY, policy_bak)
-    _snapshot(REAL_TEST_CASES, cases_bak)
-    try:
-        yield
-    finally:
-        _restore(policy_bak, REAL_POLICY)
-        _restore(cases_bak, REAL_TEST_CASES)
-
-
-# ---------------------------------------------------------------------------
-# Staging: install frozen fixtures into the real locations for one test.
-# ---------------------------------------------------------------------------
-
-
-class Stager:
-    """Installs frozen fixture inputs into the real repo locations."""
-
-    def stage_policy(self, src: Path = FIXTURE_POLICY) -> Path:
-        REAL_POLICY.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(src, REAL_POLICY)
-        return REAL_POLICY
-
-    def stage_test_cases(self, src: Path = FIXTURE_TEST_CASES) -> dict:
-        """Replace references/test_cases/ with the frozen fixture set."""
-        if REAL_TEST_CASES.exists():
-            shutil.rmtree(REAL_TEST_CASES)
-        shutil.copytree(src, REAL_TEST_CASES)
-        return {
-            label: len(list((REAL_TEST_CASES / label).glob("*.json")))
-            for label in ("allow", "disallow")
-            if (REAL_TEST_CASES / label).is_dir()
-        }
-
-
-@pytest.fixture
-def stage() -> Stager:
-    """Fresh stager per test; the session backup guarantees restore."""
-    return Stager()
-
-
-_GEN_ARTIFACTS = (
-    DECOMP_FILE,
-    FLATTEN_FILE,
-    VARS_FILE,
-    GREY_GUIDANCE_FILE,
-    CASE_FILE,
-)
-
-
-@pytest.fixture
-def isolate_generation_artifacts(tmp_path_factory):
-    """Back up/restore the test_generation intermediate files around one test.
-
-    Combined with the session-level test_cases backup, this leaves references/
-    exactly as the test found it, so running test_generation in the full suite
-    cannot leave stray artifacts that perturb other tests (or vice versa).
+    Only the integration machinery calls this, so a unit-only run never
+    assembles a configured path.
     """
-    backup = tmp_path_factory.mktemp("gen_artifacts_backup")
-    saved = {}
-    for i, f in enumerate(_GEN_ARTIFACTS):
-        if f.exists():
-            dst = backup / f"{i}_{f.name}"
-            shutil.copy2(f, dst)
-            saved[f] = dst
-    try:
-        yield
-    finally:
-        for f in _GEN_ARTIFACTS:
-            if f.exists():
-                f.unlink()
-            if f in saved:
-                shutil.copy2(saved[f], f)
+    global _real_env
+    if _real_env is None:
+        _real_env = SmithEnv()
+    return _real_env
+
+
+# ---------------------------------------------------------------------------
+# Collection-time marker enforcement.
+#
+# ``--strict-markers`` only rejects *unknown* marker names; it neither requires a
+# marker nor forbids two conflicting ones. Exactly one primary category per test,
+# including markers inherited from a class or module.
+# ---------------------------------------------------------------------------
+
+
+def pytest_collection_modifyitems(config, items):
+    problems = []
+    for item in items:
+        found = {m for m in PRIMARY_MARKERS if item.get_closest_marker(m)}
+        if len(found) != 1:
+            problems.append(
+                f"  {item.nodeid}: "
+                + (
+                    "no primary marker"
+                    if not found
+                    else f"conflicting markers {sorted(found)}"
+                )
+            )
+    if problems:
+        raise pytest.UsageError(
+            "Every test needs exactly one primary marker "
+            f"({', '.join(PRIMARY_MARKERS)}):\n" + "\n".join(problems)
+        )
+
+
+@pytest.fixture
+def unit_env(tmp_path) -> UnitEnv:
+    return UnitEnv(tmp_path)
+
+
+@pytest.fixture
+def smith_env() -> SmithEnv:
+    return real_env()
+
+
+# ---------------------------------------------------------------------------
+# The CLI runner.
+#
+# Resolves the CLI from *this* project environment (``sys.executable -m
+# smith.cli``), so the subject under test is the checkout — never an unrelated
+# ``smith`` binary that happens to be first on PATH.
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def smith_cli(smith_env):
+    """Run a ``smith`` flag against the real environment."""
+
+    class Runner:
+        executable = [sys.executable, "-m", "smith.cli"]
+
+        def __call__(self, flag, *extra_args, timeout=900, **overrides):
+            return self.argv("--flag", flag, *extra_args, timeout=timeout, **overrides)
+
+        def argv(self, *args, timeout=900, env=None, **overrides):
+            child_env = smith_env.override(**overrides) if env is None else dict(env)
+            return subprocess.run(
+                [*self.executable, *args],
+                cwd=str(smith_env.base),
+                env=child_env,
+                capture_output=True,
+                text=True,
+                timeout=timeout,
+            )
+
+    return Runner()
+
+
+# ---------------------------------------------------------------------------
+# Backup/restore of real working-tree files.
+#
+# Explicitly requested only — never autouse, so a unit test cannot inherit it.
+# ``backup_file`` is the single implementation; the fixtures below build on it.
+# ---------------------------------------------------------------------------
 
 
 @pytest.fixture
 def backup_file(tmp_path_factory):
-    """Factory fixture: register a path to back up now and restore on teardown."""
+    """Factory: register a real path to back up now and restore on teardown.
+
+    Handles files and directories, and records absence with a marker so a path
+    that did not exist beforehand is removed again rather than left behind.
+    """
     backup_dir = tmp_path_factory.mktemp("file_backup")
     registered = []  # (target, saved_copy_or_None_if_absent)
 
     def _register(path):
         path = Path(path)
         if path.exists():
-            dst = backup_dir / (str(len(registered)) + "_" + path.name)
+            dst = backup_dir / f"{len(registered)}_{path.name}"
             if path.is_dir():
                 shutil.copytree(path, dst)
             else:
@@ -196,20 +194,93 @@ def backup_file(tmp_path_factory):
             shutil.copy2(saved, target)
 
 
+@pytest.fixture
+def backup_working_tree(backup_file):
+    """Protect the live policy + test_cases for one test.
+
+    **Explicitly requested, never autouse.** Unit tests never touch these files,
+    so they must not inherit (or pay for) backup/restore.
+    """
+    env = real_env()
+    backup_file(env.policy)
+    backup_file(env.test_cases)
+    return env
+
+
+@pytest.fixture
+def isolate_generation_artifacts(backup_file):
+    """Protect the ``test_generation`` intermediate files around one test.
+
+    So running generation in the full suite cannot leave stray artifacts that
+    perturb other tests (or vice versa).
+    """
+    for path in real_env().generation_artifacts.values():
+        backup_file(path)
+
+
 # ---------------------------------------------------------------------------
-# Gating fixtures — each skips its test when the dependency is missing.
+# Staging: install frozen fixtures into the real locations for one test.
+# ---------------------------------------------------------------------------
+
+
+class Stager:
+    """Installs frozen fixture inputs into the real repo locations."""
+
+    def __init__(self, env: SmithEnv):
+        self.env = env
+
+    def stage_policy(self, src: Path = FIXTURE_POLICY) -> Path:
+        self.env.policy.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(src, self.env.policy)
+        return self.env.policy
+
+    def stage_test_cases(self, src: Path = FIXTURE_TEST_CASES) -> dict:
+        """Replace references/test_cases/ with the frozen fixture set."""
+        cases = self.env.test_cases
+        if cases.exists():
+            shutil.rmtree(cases)
+        shutil.copytree(src, cases)
+        return {
+            label: len(list((cases / label).glob("*.json")))
+            for label in ("allow", "disallow")
+            if (cases / label).is_dir()
+        }
+
+
+@pytest.fixture
+def stage(backup_working_tree) -> Stager:
+    """Fresh stager per test.
+
+    Depends on ``backup_working_tree`` because staging overwrites the live policy
+    and case set: requesting the stager is what opts a test into restoring them.
+    """
+    return Stager(backup_working_tree)
+
+
+# ---------------------------------------------------------------------------
+# Gating fixtures — each skips its own test when its dependency is missing.
+# Requested explicitly by integration tests; never reachable from a unit test.
 # ---------------------------------------------------------------------------
 
 
 @pytest.fixture
-def requires_llm():
-    missing = [
-        v
-        for v in ("OPENAI_API_KEY", "OPENAI_BASE_URL", "MODEL_SONNET")
-        if not os.getenv(v)
-    ]
+def requires_llm(smith_env):
+    """Smith's own LLM settings — distinct from the example agent's INFERENCE_*."""
+    missing = smith_env.missing("OPENAI_API_KEY", "OPENAI_BASE_URL", "MODEL_SONNET")
     if missing:
-        pytest.skip(f"LLM not configured (missing {', '.join(missing)})")
+        pytest.skip(f"Smith LLM not configured (missing {', '.join(missing)})")
+    return smith_env
+
+
+@pytest.fixture
+def requires_agent_inference(smith_env):
+    """The example agent's own model settings — a different consumer entirely."""
+    missing = smith_env.missing(
+        "INFERENCE_MODEL", "INFERENCE_BASE_URL", "INFERENCE_API_KEY"
+    )
+    if missing:
+        pytest.skip(f"agent inference not configured (missing {', '.join(missing)})")
+    return smith_env
 
 
 @pytest.fixture
@@ -249,8 +320,8 @@ def requires_regal():
 
 
 @pytest.fixture
-def requires_ares():
-    ares_home = os.getenv("ARES_HOME")
+def requires_ares(smith_env):
+    ares_home = smith_env.env.get("ARES_HOME")
     if not ares_home or not Path(ares_home).exists():
         pytest.skip("ARES not installed (ARES_HOME unset or missing)")
 
@@ -262,7 +333,7 @@ def requires_promptfoo():
 
 
 # ---------------------------------------------------------------------------
-# The example target agent (FastAPI + stdio MCP).
+# The example target agent (FastAPI + stdio MCP) — opt-in, integration only.
 # ---------------------------------------------------------------------------
 
 
@@ -292,9 +363,14 @@ def _wait_for_health(url: str, timeout: float) -> bool:
 
 
 @pytest.fixture
-def agent_server():
-    """Boot the call-for-papers example agent (uvicorn + stdio MCP); yield its URL."""
-    example = EXAMPLE
+def agent_server(smith_env):
+    """Boot the call-for-papers example agent (uvicorn + stdio MCP); yield its URL.
+
+    Skips only for a genuinely absent prerequisite. Once the prerequisites hold, a
+    startup failure **fails** the test rather than masquerading as a missing
+    dependency — a broken example agent is a real problem, not a reason to pass.
+    """
+    example = smith_env.example
     if not (example / "agent.py").exists():
         pytest.skip("call-for-papers example not found")
     if not which("uvicorn"):
@@ -318,7 +394,7 @@ def agent_server():
                 out = proc.communicate(timeout=5)[0] or ""
             except subprocess.TimeoutExpired:
                 proc.kill()
-            pytest.skip(f"example agent did not become healthy:\n{out[-800:]}")
+            pytest.fail(f"example agent did not become healthy:\n{out[-1500:]}")
         yield url
     finally:
         proc.terminate()

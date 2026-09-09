@@ -4,7 +4,7 @@ default allow := false
 
 # === Input Accessors ===
 subject := input.extensions.subject
-args := object.get(input, "arguments", {})
+args := object.get(input, "args", {})
 tool_name := input.name
 
 # === Constants ===

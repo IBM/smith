@@ -38,7 +38,7 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
+        "args": {
             "keywords": "firewall",
             "topic": "Cybersecurity and privacy",
             "limit": 30

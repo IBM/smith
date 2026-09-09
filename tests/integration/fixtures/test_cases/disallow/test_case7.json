@@ -36,7 +36,7 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
+        "args": {
             "keywords": "robotics",
             "topic": "Artificial intelligence",
             "limit": 11

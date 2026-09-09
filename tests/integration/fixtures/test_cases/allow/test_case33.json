@@ -36,7 +36,7 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
+        "args": {
             "keywords": "NLP transformers",
             "topic": "Artificial intelligence"
         }

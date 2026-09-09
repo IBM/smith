@@ -38,7 +38,7 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
+        "args": {
             "keywords": "quantum physics computing",
             "topic": "Software engineering",
             "limit": 12

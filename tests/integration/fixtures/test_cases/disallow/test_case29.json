@@ -38,7 +38,7 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
+        "args": {
             "keywords": "materials science nanotechnology",
             "topic": "Cybersecurity and privacy",
             "limit": 20

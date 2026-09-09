@@ -36,7 +36,7 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
+        "args": {
             "keywords": "bioinformatics drug discovery",
             "topic": "Artificial intelligence",
             "limit": 15

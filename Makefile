@@ -15,6 +15,9 @@ UV       ?= uv
 POLICY   := assets/policy.rego
 LICENSE_TOOL := src/smith/tools/license_headers.py
 
+# Interpreter for the pytest suites. The project venv by default
+TEST_PYTHON ?= $(CURDIR)/.venv/bin/python
+
 # The OPA scorecard harness ships inside the package; in a repo/skill checkout
 # it lives under src/. `make test` runs from the skill root (BASE_URL).
 HARNESS  := src/smith/policy_testing
@@ -35,10 +38,12 @@ help:
 	@echo "Lint & format:   lint / format  ruff + black over src/ (lint is read-only)"
 	@echo "                 lint-policy    Lint assets/policy.rego with Regal (or OPA)"
 	@echo "License headers: license / license-check"
-	@echo "Test:            test           Policy scorecard (starts OPA in Docker, runs the harness)"
+	@echo "Test:            unit           Env-free offline pytest subset (run by \`make ci\`; COV=1 adds coverage)"
+	@echo "                 integration    Real CLI vs real services; opt-in, skips what is absent"
+	@echo "                 test           Policy scorecard (starts OPA in Docker, runs the harness)"
 	@echo "                 opaserver/start|stop|status"
 	@echo "Package:         package/dist, wheel, sdist, verify, publish-test, publish, clean"
-	@echo "Gate:            build (CLI smoke), audit, ci (lint + lint-policy + license-check)"
+	@echo "Gate:            build (CLI smoke), audit, ci (lint + lint-policy + license-check + unit)"
 
 # =============================================================================
 # Setup
@@ -118,16 +123,18 @@ test: opaserver/stop opaserver/start
 	@$(MAKE) --no-print-directory opaserver/stop
 	@cat references/scorecard/scorecard_summary.txt 2>/dev/null || true
 
-# Stage-level integration tests: drive the real `smith` CLI against controlled,
-# frozen inputs (a session backup/restore protects the working policy +
-# test_cases). Each test skips cleanly when its dependency (Docker/OPA, LLM,
-# example agent, ARES/Promptfoo) is absent, so this is safe to run anywhere —
-# it just skips what it cannot exercise. Opt-in; not part of `make ci`.
-# Invoked via the venv interpreter so it works even if the venv's console-script
-# shebangs are stale (e.g. a relocated checkout).
+# -----------------------------------------------------------------------------
+# Python test suites
+# -----------------------------------------------------------------------------
+.PHONY: unit
+unit:
+	@$(TEST_PYTHON) -m pytest tests/integration -m unit \
+	  --disable-socket --allow-unix-socket -ra \
+	  $(if $(COV),--cov=smith --cov-branch --cov-report=term-missing --cov-report=xml)
+
 .PHONY: integration
 integration:
-	@$(CURDIR)/.venv/bin/python -m pytest tests/integration -m integration -v -ra
+	@$(TEST_PYTHON) -m pytest tests/integration -m integration -v -ra
 
 .PHONY: audit
 audit:
@@ -178,5 +185,5 @@ build:
 	@$(UV) run smith --help >/dev/null && echo "✅  CLI smoke test passed (smith --help)"
 
 .PHONY: ci
-ci: lint lint-policy license-check
-	@echo "✅  CI gate passed (lint + lint-policy + license-check)"
+ci: lint lint-policy license-check unit
+	@echo "✅  CI gate passed (lint + lint-policy + license-check + unit)"

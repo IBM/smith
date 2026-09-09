@@ -38,7 +38,7 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
+        "args": {
             "keywords": "clinical trials data analysis artificial intelligence",
             "topic": "Artificial Intelligence",
             "limit": 15

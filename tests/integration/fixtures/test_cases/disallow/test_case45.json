@@ -38,7 +38,7 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
+        "args": {
             "keywords": "sociology networks",
             "topic": "Artificial intelligence",
             "limit": 5

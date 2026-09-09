@@ -38,7 +38,7 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
+        "args": {
             "keywords": "network security",
             "topic": "Cybersecurity and privacy"
         }

@@ -38,7 +38,7 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
+        "args": {
             "keywords": "startup expo",
             "topic": "Cybersecurity and privacy",
             "limit": 10

@@ -36,7 +36,7 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
+        "args": {
             "keywords": "trade show hackathon conference workshop symposium",
             "topic": "Software engineering",
             "limit": 20

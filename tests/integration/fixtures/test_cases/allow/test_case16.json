@@ -36,7 +36,7 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
+        "args": {
             "keywords": "algorithms",
             "topic": "Software engineering",
             "limit": 14

@@ -38,7 +38,7 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
+        "args": {
             "keywords": "machine learning renewable energy",
             "topic": "Software engineering"
         }

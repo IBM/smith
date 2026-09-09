@@ -36,7 +36,7 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
+        "args": {
             "keywords": "economics finance marketing supply chain education psychology sociology political science trade shows career fairs startup expos hackathons",
             "topic": "Software engineering",
             "limit": 20

@@ -33,7 +33,7 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
+        "args": {
             "keywords": "cybersecurity privacy security",
             "topic": "Cybersecurity and privacy",
             "limit": 5

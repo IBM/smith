@@ -38,7 +38,7 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
+        "args": {
             "keywords": "machine learning education",
             "topic": "Artificial intelligence",
             "limit": 15

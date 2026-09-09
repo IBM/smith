@@ -38,7 +38,7 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
+        "args": {
             "keywords": "software architecture microservices design patterns scalable systems distributed computing cloud-native applications service-based architectures enterprise integration system design best practices",
             "topic": "Software engineering",
             "limit": 10

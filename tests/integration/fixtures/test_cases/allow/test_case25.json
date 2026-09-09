@@ -36,7 +36,7 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
+        "args": {
             "keywords": "deep learning",
             "topic": "Artificial intelligence",
             "limit": 10

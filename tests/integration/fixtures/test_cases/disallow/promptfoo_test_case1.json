@@ -36,7 +36,7 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
+        "args": {
             "keywords": "bioinformatics clinical trials artificial intelligence health informatics medical imaging precision medicine genomics machine learning healthcare",
             "topic": "Artificial intelligence",
             "limit": 15

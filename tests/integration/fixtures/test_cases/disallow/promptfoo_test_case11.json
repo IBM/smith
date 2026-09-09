@@ -36,7 +36,7 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
+        "args": {
             "keywords": "Quantum computing conference deadline submission CFP open paper call",
             "topic": "Artificial intelligence",
             "limit": 20

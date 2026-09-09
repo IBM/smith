@@ -31,7 +31,7 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
+        "args": {
             "keywords": "neural networks machine learning",
             "topic": "Artificial intelligence",
             "limit": 5

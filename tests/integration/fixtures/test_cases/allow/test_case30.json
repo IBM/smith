@@ -36,7 +36,7 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
+        "args": {
             "keywords": "deep learning neural networks",
             "topic": "Artificial intelligence",
             "limit": 15

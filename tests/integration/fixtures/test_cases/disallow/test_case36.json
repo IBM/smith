@@ -38,7 +38,7 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
+        "args": {
             "keywords": "marketing",
             "topic": "Artificial intelligence",
             "limit": 6

@@ -33,7 +33,7 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
+        "args": {
             "keywords": "agile development",
             "topic": "Software engineering",
             "limit": 8

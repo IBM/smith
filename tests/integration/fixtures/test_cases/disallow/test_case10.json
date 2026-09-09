@@ -38,7 +38,7 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
+        "args": {
             "keywords": "encryption",
             "topic": "Cybersecurity and privacy",
             "limit": 0

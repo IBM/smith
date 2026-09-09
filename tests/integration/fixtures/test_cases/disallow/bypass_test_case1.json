@@ -33,7 +33,7 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
+        "args": {
             "keywords": "distributed ledger blockchain cryptocurrency",
             "topic": "Artificial intelligence",
             "limit": 10
