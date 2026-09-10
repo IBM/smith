@@ -9,7 +9,6 @@ load_dotenv()
 
 
 def _convert_var(value, reference_value):
-    """Convert a var to the correct type based on system_vars.json reference."""
     if isinstance(reference_value, list):
         if isinstance(value, list):
             return value
@@ -77,6 +76,15 @@ def _fill_template(test_case, test_case_template_file, system_vars):
     test_case_template["name"] = test_case["action"]
     test_case_template["extensions"]["agent"]["input"] = test_case["user_input"]
     for key, value in test_case["system_variables"].items():
+        # A null var means the case supplied no value for it
+        if value is None:
+            if isinstance(system_vars.get(key), list):
+                # A list-typed var degrades to the empty collection rather than vanishing
+                test_case_template["extensions"]["subject"][key] = []
+            else:
+                # Drop the key -- the template may ship a placeholder for it
+                test_case_template["extensions"]["subject"].pop(key, None)
+            continue
         if key in system_vars:
             value = _convert_var(value, system_vars[key])
         if isinstance(value, str) and value.lower() in ("true", "false"):

@@ -28,8 +28,10 @@ make license-check   # verify SPDX Apache-2.0 headers (src/smith/tools/license_h
 make build           # editable install + `smith --help` smoke test
 make ci              # the gate: lint + lint-policy + license-check
 make test            # policy scorecard: starts OPA in Docker + runs the packaged harness
+make integration     # stage-level pytest suite (tests/integration); opt-in, not part of `make ci`
 
 # CLI pipeline stages (run from anywhere once installed; reads paths from .env)
+smith --flag get_current_agent      # print the active target_agent path + resolved guidance_file path (read-only)
 smith --flag get_mcp_parameter      # auto-extract MCP tool defs -> <TARGET_AGENT_PATH>/smith/tool_definitions.json
 smith --flag test_generation        # full test-case generation pipeline (includes promptfoo tool classification)
 smith --flag generate_promptfoo_config  # generate/update promptfoo redteam config from guidance
@@ -55,6 +57,8 @@ make opaserver/stop    # stop the OPA server
 ```
 
 `make test` requires the OPA server to be running and curls `localhost:8181/v1/data/mcp/policies/allow` for every JSON case under `references/test_cases/{allow,disallow}/`. A case in `disallow/` is expected to return `allow: false`; `allow/` expects `true`. Results land in `references/scorecard/{scorecard_summary.txt,score_test_failures.txt,tp.txt,fp.txt,tn.txt,fn.txt}`.
+
+`make integration` runs the pytest suite in `tests/integration/` — stage-level tests that drive the real `smith` CLI against frozen fixtures, one per pipeline stage. A session backup/restore protects the working `assets/policy.rego` and `references/test_cases/`. Each test **skips cleanly** when its dependency (Docker/OPA, LLM, example agent, ARES/Promptfoo) is absent, so a bare run is safe anywhere. This is the pytest entry point (it replaced the earlier `make unit` / `tests/unit/`); it is opt-in and deliberately **not** part of `make ci`, since it needs external services.
 
 ## External tools (install separately)
 
@@ -102,7 +106,9 @@ The generated policy may **only** reference data available from tool arguments o
 - `test_case_evaluation/` — three-tier label validation: `tier1_rules.py` (pattern match) → `tier2_semantic.py` (embeddings + NLI) → `tier3_llm_judge.py` (LLM), plus `classify_guidance.py` and `visualization/build_report.py`.
 - `policy_agent/` — refinement engine: `red_feedback/` (DBSCAN clustering of failed cases, tuned by `CLUSTER_EPS`/`CLUSTER_MIN_SAMPLES`), `policy_analysis/regal/` (Regal), `reduce_improve/` (graph + LLM dedup), `policy_evaluation/`.
 - `tools/` — developer utilities: `explorer_server.py` (policy explorer UI bridge, `policy_explorer.html`), `guidance_classifier_server.py` + `classify_guidance_lines.py` + `guidance_classifier.html` (upstream guidance-line → tool-call classifier UI), `license_headers.py`.
-- `tests/integration/` — the `make test` scorecard harness (bash + curl against the OPA server).
+- `policy_testing/` — the OPA scorecard harness (bash + curl against the OPA server) invoked by `smith --flag policy_testing` and `make test`.
+
+Outside the package, `tests/integration/` holds the `make integration` pytest suite: one module per pipeline stage (generation, translation, policy testing/validation, cross-validate, cpex translate, promptfoo config, bypass generation, refinement suggestions, explorer/classifier, snapshot, smoke), with shared setup in `conftest.py`/`helpers.py` and frozen inputs under `fixtures/`. The fixtures are copies of generated example output, not Smith source, so they are excluded from `make license-check`.
 
 ## Refinement workflow (the SKILL.md contract)
 

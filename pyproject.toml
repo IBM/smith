@@ -63,6 +63,8 @@ dev = [
     "pytest>=7.4.0",
     "pytest-asyncio>=0.21.0",
     "pytest-mock>=3.11.0",
+    "pytest-cov>=4.1.0",
+    "pytest-socket>=0.7.0",
     "pip-audit>=2.7.0",
     "build>=1.2.0",
     "twine>=5.0.0",
@@ -100,8 +102,18 @@ src = ["src"]
 target-version = ["py311"]
 
 [tool.pytest.ini_options]
-# Fast, hermetic unit tests only. The OPA policy scorecard is a separate
-# bash harness run via `make test`, not pytest.
-testpaths = ["tests/unit"]
-addopts = "-q"
+# tests/integration holds both categories; the MARKER, not the directory name,
+# decides what runs (see tests/integration/README.md).
+#
+# A bare `pytest` selects the unit subset, which is what `make ci` runs: env-free,
+# offline, no .env / credentials / Docker / OPA / model weights. Pass an explicit
+# `-m integration` to override and run the live suite, which drives the real smith
+# CLI and needs external services (some of it a real LLM, gated on requires_llm).
+testpaths = ["tests/integration"]
+pythonpath = ["src"]
+addopts = "-q --strict-markers -m unit"
 asyncio_mode = "auto"
+markers = [
+    "unit: isolated tests with controlled local inputs and mocked external boundaries; env-free, run by `make ci`.",
+    "integration: real CLI, tool, service, or model tests (incl. real-LLM ones); run by `make integration`.",
+]

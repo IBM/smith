@@ -65,7 +65,6 @@ def cycle_detection(
             {"role": "user", "content": rego_policy},
         ],
         temperature=temperature,
-        top_p=top_p,
     )
 
     feedback = response.choices[0].message.content

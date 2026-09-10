@@ -50,22 +50,21 @@ jobs:
       - name: make license-check
         run: make license-check
 
-  rego-lint:
-    name: Rego lint (Regal)
-    # Disabled: Regal lint is not enforced in CI. Re-enable by restoring the
-    # original `if` condition below (drop the leading `false &&`).
-    if: false && (github.event_name != 'pull_request' || !github.event.pull_request.draft)
+  unit:
+    name: Unit tests (pytest)
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
-      - name: Install Regal
-        run: |
-          curl -fsSL -o regal https://github.com/StyraInc/regal/releases/latest/download/regal_Linux_x86_64
-          chmod +x regal
-          sudo mv regal /usr/local/bin/regal
-      - name: make lint-policy
-        run: make lint-policy
+      - uses: astral-sh/setup-uv@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install Smith with dev extras
+        run: make install
+      - name: make unit
+        run: make unit
 
   build:
     name: Build + CLI smoke
