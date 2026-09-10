@@ -245,12 +245,20 @@ def _validate_llm_output(llm_output):
 # on each run, so config updates stay idempotent instead of appending duplicates.
 _TOOL_PARAMS_MARKER = "[smith:tool-parameters]"
 
+_TOOL_PARAMS_OPENER = (
+    "Each generated prompt MUST include concrete, realistic values for ALL required parameters of the target tool. "
+    "Do not generate vague requests like 'add an employee' — instead include specific names, emails, roles, etc. "
+    "The available tools and their required parameters are:"
+)
+
 
 def _strip_tool_params_instructions(tgi):
     """Remove any previously-appended tool-parameter block from testGenerationInstructions."""
     if not isinstance(tgi, str):
         return ""
     idx = tgi.find(_TOOL_PARAMS_MARKER)
+    if idx == -1:
+        idx = tgi.find(_TOOL_PARAMS_OPENER)
     if idx == -1:
         return tgi.rstrip("\n")
     return tgi[:idx].rstrip("\n")
@@ -265,9 +273,7 @@ def _build_tool_params_instructions(tool_definitions):
         return ""
     lines = [
         _TOOL_PARAMS_MARKER,
-        "Each generated prompt MUST include concrete, realistic values for ALL required parameters of the target tool. "
-        "Do not generate vague requests like 'add an employee' — instead include specific names, emails, roles, etc. "
-        "The available tools and their required parameters are:",
+        _TOOL_PARAMS_OPENER,
     ]
     for t in tools:
         required = [p["name"] for p in t.get("parameters", []) if p.get("required")]

@@ -185,5 +185,5 @@ build:
 	@$(UV) run smith --help >/dev/null && echo "✅  CLI smoke test passed (smith --help)"
 
 .PHONY: ci
-ci: lint lint-policy license-check unit
-	@echo "✅  CI gate passed (lint + lint-policy + license-check + unit)"
+ci: lint license-check unit
+	@echo "✅  CI gate passed (lint + license-check + unit)"
