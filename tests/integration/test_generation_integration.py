@@ -101,8 +101,11 @@ def completed_run():
     cases = env.test_cases
     # A throwaway guidance file, so the example's own guidance.txt is never touched.
     crafted_guidance = Path(env.base) / "references" / "__test_guidance__.txt"
+    # promptfoo's redteam output, pinned away from the example dir by the
+    # PROMPTFOO_OUTPUT_FILE override below.
+    redteam_output = Path(env.base) / "references" / "__test_redteam__.yaml"
 
-    protected = [*artifacts.values(), cases, crafted_guidance]
+    protected = [*artifacts.values(), cases, crafted_guidance, redteam_output]
     backup_dir = Path(tempfile.mkdtemp(prefix="smith_gen_backup_"))
     saved = {}
     for i, path in enumerate(protected):
@@ -131,6 +134,8 @@ def completed_run():
                 GUIDANCE_FILE=f"references/{crafted_guidance.name}",
                 # ARES omitted: it needs a separate install plus its plugins.
                 ATTACK_TOOLS="promptfoo",
+                PROMPTFOO_CONFIG_FILE="tests/integration/fixtures/promptfoo/promptfooconfig.yaml",
+                PROMPTFOO_OUTPUT_FILE="references/__test_redteam__.yaml",
             ),
             capture_output=True,
             text=True,
