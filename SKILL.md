@@ -19,7 +19,7 @@ If the user asks to create an OPA policy, you should strictly follow instruction
 After completion, remind the user: “The policy has been created. Next steps you can take: (1) generate test cases, (2) if you already have test cases, you can ask me to test the policy.”
 
 ## Security-Grounded Guidance Analysis
-If the user asks to **security-grounded guidance analysis** (or asks to run the guidelines security analysis, threat-model an MCP server, or produce OWASP-mapped enforcement guidance for a new tool), strictly follow instructions in `./opa_policy/guidelines-security-analysis/guidelines-security-analysis.md`. This is a separate, standalone workflow that first grounds the guidance in an OWASP-mapped threat model and then, on two explicit human triggers (merge, then policy creation), runs "Create OPA Policy" above against the updated guidance. It runs in order:
+If the user asks to **security-grounded guidance analysis** (or asks to run the guidelines security analysis, threat-model an MCP server, or produce OWASP-mapped enforcement guidance for a new tool), strictly follow instructions in `./opa_policy/guidelines-security-analysis/guidelines-security-analysis.md`. This is a separate, standalone workflow that first grounds the guidance in an OWASP-mapped threat model. Steps A–D produce guidance only and do not generate, modify, or write Rego or any OPA policy. Then, on two explicit human triggers (merge, then policy creation), runs it may hand off to "Create OPA Policy"  above against the updated guidance. It runs in order:
 
 - **Step A** — Architecture Analysis (`architecture.md`)
 - **Step B** — Policy Guidance Questionnaire (`policy_guidance_questionnaire.md`)
