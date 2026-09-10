@@ -1,7 +1,7 @@
 ---
 name: Docs issue
 about: Report a typo, outdated info, unclear instructions, or missing documentation
-title: "[DOCS]: "
+title: "docs: "
 labels: documentation, triage
 assignees: ''
 

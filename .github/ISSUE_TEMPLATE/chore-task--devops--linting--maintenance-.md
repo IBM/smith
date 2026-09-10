@@ -2,7 +2,7 @@
 name: Chore Task (devops, linting, maintenance)
 about: Internal devops, CI/CD, linting, formatting, dependency hygiene, or project
   maintenance
-title: "[CHORE]: "
+title: "chore: "
 labels: chore, triage
 assignees: ''
 

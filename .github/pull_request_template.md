@@ -1,3 +1,5 @@
+<!-- Use a conventional title: feat:, fix:, test:, docs:, chore:, or refactor:. -->
+
 ### Summary
 _What does this PR add or change?_
 
@@ -11,6 +13,7 @@ _List the important changes made in this PR._
 - [ ] `make ci` passes (lint, Rego lint, license headers, build smoke)
 - [ ] `make test` passes (policy scorecard — needed if policy behavior changed)
 - [ ] `CHANGELOG.md` updated under `## [Unreleased]` (if user-facing)
+- [ ] PR title uses a conventional prefix (`feat:`, `fix:`, `test:`, `docs:`, `chore:`, or `refactor:`)
 - [ ] Commits are signed off for the DCO (`git commit -s`)
 
 ### Notes (optional)

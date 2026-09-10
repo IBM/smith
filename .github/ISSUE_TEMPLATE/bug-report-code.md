@@ -1,7 +1,7 @@
 ---
 name: Bug report (code)
 about: Report a bug or unexpected behavior in the Smith CLI, pipelines, or skill
-title: "[BUG]: "
+title: "fix: "
 labels: bug, triage
 assignees: ''
 

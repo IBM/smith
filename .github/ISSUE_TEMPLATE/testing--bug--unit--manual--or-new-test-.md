@@ -1,7 +1,7 @@
 ---
 name: Testing (bug, unit, manual. or new test)
 about: Add or improve unit tests, integration tests, or perform manual testing
-title: "[TESTING]: "
+title: "test: "
 labels: testing, triage
 assignees: ''
 
