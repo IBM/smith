@@ -82,24 +82,19 @@ stage you changed:
 ```bash
 # one stage, verbose, with skip reasons
 source .venv/bin/activate 
-python pytest tests/integration/test_policy_testing_integration.py -m integration -v -ra
+python -m pytest tests/integration/test_policy_testing_integration.py -m integration -v -ra
 
 # a single test inside that file
-python pytest \
+python -m pytest \
   tests/integration/test_policy_testing_integration.py::test_the_confusion_matrix_matches_the_frozen_expectation \
   -m integration -v
 
 # the matching unit file — offline, no .env, fast
-.venv/bin/python -m pytest tests/integration/test_policy_testing_unit.py -m unit
+python -m pytest tests/integration/test_policy_testing_unit.py -m unit
 
 # see what would run without running it
-.venv/bin/python -m pytest tests/integration --collect-only -m integration
+python -m pytest tests/integration --collect-only -m integration
 ```
-
-The file for a flag is `tests/integration/test_<flag>_integration.py`, with a few
-historical names: `test_generation_integration.py` (`test_generation`),
-`test_translation_integration.py` (`test_case_translation`), and
-`test_case_evaluation_integration.py` (`test_case_evaluation`).
 
 ### If you add a new CLI flag
 
@@ -262,7 +257,8 @@ There are three kinds of prose in this repo, and they are maintained differently
 
 ## Changelog
 
-We keep a [`CHANGELOG.md`](CHANGELOG.md). When your change
+We keep a [`CHANGELOG.md`](CHANGELOG.md) in the
+ [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format. When your change
 is user-visible — a new feature, a behavior change, a deprecation/removal, a bug
 fix, or a security fix — add an entry under the `## [Unreleased]` section in the
 appropriate group (**Added**, **Changed**, **Deprecated**, **Removed**,

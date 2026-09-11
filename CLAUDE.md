@@ -83,7 +83,7 @@ make opaserver/stop    # stop the OPA server
 ## Repo conventions
 
 - **Packaging + tool config live in the root `pyproject.toml`**: src layout (`src/smith/`), console entry `smith = smith.cli:main`, declared `[project.dependencies]` (+ `[dev]` extra), `[tool.setuptools.package-data]` shipping the policy_testing harness + `ares_config`, and `[tool.ruff]`/`[tool.black]` config. Black is pinned to `target-version = py311`. Package management uses **uv** (`make install`, `make package`/`make publish` → `uv build`/`uv publish`).
-- **CI** (`.github/workflows/ci.yml`) mirrors `make ci` — jobs for lint, license headers, unit, build smoke, and audit. The linter versions are pinned in the **Makefile**, not the workflow (`RUFF := uvx ruff@0.15.20`, `BLACK := uvx black@26.5.1`), so CI and local runs agree by construction; bump those two lines deliberately alongside a reformat commit. There is **no Rego job in CI**, so `make lint-policy` is local-only.
+- **CI** (`.github/workflows/ci.yml`) mirrors `make ci` — jobs for lint, license headers, unit, build smoke, and audit. 
 - **License headers:** every in-scope file (`.py`, `.rego`, `.sh`, `.yaml`, `.yml`, plus `Makefile`/`Dockerfile`) carries an Apache-2.0 SPDX header. `make license` inserts, `make license-check` verifies (`src/smith/tools/license_headers.py`). Excludes `src/smith/test_generation/ares/`, `examples/`, `references/`, and generated outputs.
 - **DCO sign-off** is required on every commit (`git commit -s`).
 - **Changelog:** user-facing changes get an entry under `## [Unreleased]` in `CHANGELOG.md` (Keep a Changelog); maintainers promote it to a dated version when cutting a release tag.
