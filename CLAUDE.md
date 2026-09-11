@@ -13,6 +13,15 @@ Smith has two layers that must be understood together:
 
 So: high-level control flow lives in markdown guides; deterministic pipeline stages live behind CLI flags.
 
+## Related documents
+
+This file is the source of truth for architecture, configuration, and data flow. Two others cover contributor process, and take precedence in their own areas — keep them in step when you change the commands or layout described here:
+
+- **[`CONTRIBUTING.md`](CONTRIBUTING.md)** — what to run before opening a PR (`make ci` + `make integration`), how to run one stage's tests by hand, what a new `smith --flag` owes in tests, how to validate a change to the skill markdown by running the skill end to end, plus coding standards, license headers, DCO sign-off, and packaging/release.
+- **[`tests/integration/TESTING_GUIDE.md`](tests/integration/TESTING_GUIDE.md)** — the normative recipe for writing a stage's unit + integration test pair. Read it before adding tests; do not infer the conventions from neighbouring files.
+
+`README.md` is the user-facing document (install, configuration, core concepts); `docs/content/docs/` is the published Hugo site.
+
 ## Commands
 
 ```bash
@@ -23,17 +32,19 @@ cp .env_template .env          # then fill in values (see Configuration below)
 # Dev workflow — the root Makefile mirrors CI (.github/workflows/ci.yml); `make ci` is the gate
 make lint            # ruff check + black --check (config in pyproject.toml)
 make format          # ruff --fix + black (apply fixes)
-make lint-policy     # Regal (falls back to OPA) lint of assets/policy.rego
+make lint-policy     # Regal (falls back to OPA) lint of assets/policy.rego; NOT part of `make ci`
 make license-check   # verify SPDX Apache-2.0 headers (src/smith/tools/license_headers.py)
 make build           # editable install + `smith --help` smoke test
-make ci              # the gate: lint + lint-policy + license-check
+make unit            # env-free offline pytest subset (tests/integration, -m unit)
+make ci              # the gate: lint + license-check + unit
 make test            # policy scorecard: starts OPA in Docker + runs the packaged harness
-make integration     # stage-level pytest suite (tests/integration); opt-in, not part of `make ci`
+make integration     # live stage-level pytest suite (-m integration); opt-in, not part of `make ci`
 
 # CLI pipeline stages (run from anywhere once installed; reads paths from .env)
 smith --flag get_current_agent      # print the active target_agent path + resolved guidance_file path (read-only)
 smith --flag get_mcp_parameter      # auto-extract MCP tool defs -> <TARGET_AGENT_PATH>/smith/tool_definitions.json
 smith --flag test_generation        # full test-case generation pipeline (includes promptfoo tool classification)
+smith --flag bypass_case_generation # analyze policy vs guidance for divergences -> synthesize adversarial cases per gap
 smith --flag generate_promptfoo_config  # generate/update promptfoo redteam config from guidance
 smith --flag test_case_evaluation   # classify + validate labels + HTML report
 smith --flag test_case_translation  # resolve tool calls via agent /extract_tool_call
@@ -48,6 +59,7 @@ smith --flag policy_validation_fix --policy_path <file.rego>  # validate and aut
 smith --flag cpex_translate         # translate policy to CPEX input shape (extensions.subject->subject i.e. input.extensions.subject->input.subject; args stays args); writes <policy>_cpex.rego (override with --policy_path/--dest)
 smith --flag open_explorer          # launch the Policy Explorer UI (browse specs, select guidance)
 smith --flag classify_guidance      # launch the Guidance Classifier UI (map each guidance line -> tool call, combine + reset inputs)
+smith --flag save_snapshot --dest <dir>  # copy this run's artifacts (policy, policy_cpex, guidance, tool_definitions, promptfoo config, test_cases/) into <dir>
 
 # Policy-testing OPA server (root Makefile; the packaged harness in
 # src/smith/policy_testing/ is what `smith --flag policy_testing` and `make test` invoke)
@@ -58,7 +70,10 @@ make opaserver/stop    # stop the OPA server
 
 `make test` requires the OPA server to be running and curls `localhost:8181/v1/data/mcp/policies/allow` for every JSON case under `references/test_cases/{allow,disallow}/`. A case in `disallow/` is expected to return `allow: false`; `allow/` expects `true`. Results land in `references/scorecard/{scorecard_summary.txt,score_test_failures.txt,tp.txt,fp.txt,tn.txt,fn.txt}`.
 
-`make integration` runs the pytest suite in `tests/integration/` — stage-level tests that drive the real `smith` CLI against frozen fixtures, one per pipeline stage. A session backup/restore protects the working `assets/policy.rego` and `references/test_cases/`. Each test **skips cleanly** when its dependency (Docker/OPA, LLM, example agent, ARES/Promptfoo) is absent, so a bare run is safe anywhere. This is the pytest entry point (it replaced the earlier `make unit` / `tests/unit/`); it is opt-in and deliberately **not** part of `make ci`, since it needs external services.
+`tests/integration/` holds **both** pytest lanes, and the **marker** — not the directory name — decides what runs. `conftest.py` rejects at collection time any test without exactly one primary marker, so an unmarked or double-marked test fails the run rather than silently disappearing:
+
+- `make unit` (`-m unit`, run by `make ci`) — env-free and offline: no `.env`, no credentials, no network (`--disable-socket`), no Docker/OPA, no model weights. External boundaries are faked via `tests/integration/fakes.py`; inputs come from the committed `fixtures/` tree and every write lands under `tmp_path`. `COV=1` adds coverage.
+- `make integration` (`-m integration`, opt-in) — stage-level tests that drive the real `smith` CLI (`python -m smith.cli`) against real services, one module per pipeline stage. A session backup/restore protects the working `assets/policy.rego` and `references/test_cases/`. Each test **skips cleanly** when its dependency (Docker/OPA, LLM, example agent, ARES/Promptfoo) is absent, so a bare run is safe anywhere.
 
 ## External tools (install separately)
 
@@ -68,7 +83,7 @@ make opaserver/stop    # stop the OPA server
 ## Repo conventions
 
 - **Packaging + tool config live in the root `pyproject.toml`**: src layout (`src/smith/`), console entry `smith = smith.cli:main`, declared `[project.dependencies]` (+ `[dev]` extra), `[tool.setuptools.package-data]` shipping the policy_testing harness + `ares_config`, and `[tool.ruff]`/`[tool.black]` config. Black is pinned to `target-version = py311`. Package management uses **uv** (`make install`, `make package`/`make publish` → `uv build`/`uv publish`).
-- **CI** (`.github/workflows/ci.yml`) mirrors `make ci` and pins `ruff==0.15.20` / `black==26.5.1` — bump these deliberately alongside a reformat commit. The Rego-lint job is currently disabled in CI; still run `make lint-policy` locally.
+- **CI** (`.github/workflows/ci.yml`) mirrors `make ci` — jobs for lint, license headers, unit, build smoke, and audit. The linter versions are pinned in the **Makefile**, not the workflow (`RUFF := uvx ruff@0.15.20`, `BLACK := uvx black@26.5.1`), so CI and local runs agree by construction; bump those two lines deliberately alongside a reformat commit. There is **no Rego job in CI**, so `make lint-policy` is local-only.
 - **License headers:** every in-scope file (`.py`, `.rego`, `.sh`, `.yaml`, `.yml`, plus `Makefile`/`Dockerfile`) carries an Apache-2.0 SPDX header. `make license` inserts, `make license-check` verifies (`src/smith/tools/license_headers.py`). Excludes `src/smith/test_generation/ares/`, `examples/`, `references/`, and generated outputs.
 - **DCO sign-off** is required on every commit (`git commit -s`).
 - **Changelog:** user-facing changes get an entry under `## [Unreleased]` in `CHANGELOG.md` (Keep a Changelog); maintainers promote it to a dated version when cutting a release tag.
@@ -104,11 +119,11 @@ The generated policy may **only** reference data available from tool arguments o
 - `policy_generation/` — MCP tool extraction (`extract_tools.py`) and rego validation (`validate_policy.py`).
 - `test_generation/` — generation pipeline stages run in order by the `test_generation` flag: `decompose` → `grey_condition` → `variable_extraction` → `case_generation` → `attack` (ARES) → `attack_promptfoo` → `classify_promptfoo_tool` → `convert_test_case`. Also `extract_tool_args.py` for translation and `generate_promptfoo_config.py` for config generation.
 - `test_case_evaluation/` — three-tier label validation: `tier1_rules.py` (pattern match) → `tier2_semantic.py` (embeddings + NLI) → `tier3_llm_judge.py` (LLM), plus `classify_guidance.py` and `visualization/build_report.py`.
-- `policy_agent/` — refinement engine: `red_feedback/` (DBSCAN clustering of failed cases, tuned by `CLUSTER_EPS`/`CLUSTER_MIN_SAMPLES`), `policy_analysis/regal/` (Regal), `reduce_improve/` (graph + LLM dedup), `policy_evaluation/`.
-- `tools/` — developer utilities: `explorer_server.py` (policy explorer UI bridge, `policy_explorer.html`), `guidance_classifier_server.py` + `classify_guidance_lines.py` + `guidance_classifier.html` (upstream guidance-line → tool-call classifier UI), `license_headers.py`.
+- `policy_agent/` — refinement engine: `red_feedback/` (DBSCAN clustering of failed cases, tuned by `CLUSTER_EPS`/`CLUSTER_MIN_SAMPLES`), `policy_analysis/regal/` (Regal), `policy_analysis/bypass/` (`analyze_bypass.py` → `detect_bypass_vectors`, `synthesize_cases.py` → `synthesize_bypass_cases`, `schema.py` → `BypassVector`/`BypassReport`; drives the `bypass_case_generation` flag), `reduce_improve/` (graph + LLM dedup), `policy_evaluation/`, `policy_refinement/`. `policy_analysis/` also holds `cycle_detection/`, `dead_rules/`, and `duplication/`.
+- `tools/` — developer utilities: `explorer_server.py` (policy explorer UI bridge, `policy_explorer.html`), `guidance_classifier_server.py` + `classify_guidance_lines.py` + `guidance_classifier.html` (upstream guidance-line → tool-call classifier UI), `save_snapshot.py` (copy a run's artifacts to `--dest`), `license_headers.py`.
 - `policy_testing/` — the OPA scorecard harness (bash + curl against the OPA server) invoked by `smith --flag policy_testing` and `make test`.
 
-Outside the package, `tests/integration/` holds the `make integration` pytest suite: one module per pipeline stage (generation, translation, policy testing/validation, cross-validate, cpex translate, promptfoo config, bypass generation, refinement suggestions, explorer/classifier, snapshot, smoke), with shared setup in `conftest.py`/`helpers.py` and frozen inputs under `fixtures/`. The fixtures are copies of generated example output, not Smith source, so they are excluded from `make license-check`.
+Outside the package, `tests/integration/` holds **both** pytest lanes — a `test_<flag>_unit.py` + `test_<flag>_integration.py` pair per pipeline stage (generation, translation, policy testing/validation, cross-validate, cpex translate, promptfoo config, bypass generation, refinement suggestions, explorer/classifier, snapshot) — with shared setup in `conftest.py`/`helpers.py`, fakes in `fakes.py`, input builders in `data_builders.py`, and frozen inputs under `fixtures/`. The fixtures are copies of generated example output, not Smith source, so they are excluded from `make license-check`; treat them as read-only inputs. `TESTING_GUIDE.md` is the normative recipe for adding a stage's tests.
 
 ## Refinement workflow (the SKILL.md contract)
 
