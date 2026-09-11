@@ -15,13 +15,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
-### Security
-
-- Removed the unused, vulnerable NLTK dependency and updated vulnerable locked dependencies to patched release lines: cryptography 50+, Pillow 12.3, pip 26.2+, setuptools 83+, and PyTorch 2.13.
-
 ### Fixed
 
-- Test-case translation no longer crashes the whole `test_generation` run when a generated case supplies `null` for a numeric system variable. `_convert_var` (`src/smith/test_generation/convert_test_case.py`) previously called `int(None)`/`float(None)`, raising `TypeError` and aborting the pipeline after all the expensive generation work had completed (seen with adversarial Promptfoo cases that omit an integer field like `queries_this_session`). It now returns `None` for a null value, leaving the field absent for OPA.
+- Fixed handling of `null` system variables in test-case translation (`src/smith/test_generation/convert_test_case.py`). A null previously reached `_convert_var`, where `int(None)`/`float(None)` raised `TypeError` and aborted the whole `test_generation` run after all the expensive generation work had completed; a null that survived was written to the case as a JSON `null`, which OPA treats differently from a missing field, so the case tested the wrong policy outcome. Null variables are now handled in `_fill_template` before any coercion: the field is omitted (clearing any placeholder the case template ships), or set to `[]` for a list-typed variable.
+- Repeated `generate_promptfoo_config` runs no longer append duplicate tool-parameter blocks to `testGenerationInstructions`. De-duplication only recognised the `[smith:tool-parameters]` marker, so a block written before that marker existed was treated as user-authored prose and kept, with a second block appended after it — leaving stale tool names in the instructions. The block's opening line now serves as a fallback anchor, and is shared with the builder so the two cannot drift apart.
 - Tier-3 label validation no longer aborts the entire loop on a single LLM error. Transient failures now fall back for that case and continue; the loop only aborts after N consecutive failures (default 5, configurable via `run_validation`) indicating the LLM is genuinely unavailable. On abort, the remaining un-evaluated cases are still recorded as uncertain so validation metrics no longer silently shrink.
 - OPA scorecard no longer silently scores request failures as "deny". Added a curl timeout and exit-code checking; failed requests are logged to `errors.txt` and excluded from TP/FP/TN/FN counts.
 - Invalid `ATTACK_TOOLS` values now fail with an actionable error instead of silently disabling red-teaming, and the CLI prints which attack tools are enabled vs skipped.
@@ -34,26 +31,32 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
-- **CPEX policy translation** (`smith --flag cpex_translate`): translates a generated OPA policy into a CPEX-compatible input shape and writes a `*_cpex.rego` copy next to the original.
-- **Integration test suite** (`tests/integration/`, run via `make integration`): one test per pipeline stage, driving the real `smith` CLI against frozen fixtures. 
+- **Test suite** (`tests/integration/`): two lanes selected by pytest marker, one pair of modules (`test_<flag>_unit.py` + `test_<flag>_integration.py`) per pipeline stage. `make unit` is offline with external boundaries faked, and is now part of `make ci`; `make integration` drives the real `smith` CLI against real services and skips cleanly when a dependency is absent. `tests/integration/TESTING_GUIDE.md` documents how to add a stage's tests.
 - **Policy-bypass test-case generation** (`smith --flag bypass_case_generation`): a new pipeline that analyzes the current policy against the guidance to find divergences, then synthesizes adversarial cases targeting each gap.
   - New package `src/smith/policy_agent/policy_analysis/bypass/`: `analyze_bypass.py` (`detect_bypass_vectors`), `synthesize_cases.py` (`synthesize_bypass_cases`), `schema.py` (`BypassVector`/`BypassReport`).
   - `cli.py`: new `generate_bypass_cases()` function and the `bypass_case_generation` flag (detect → synthesize → convert), guarded against a missing/empty policy.
   - `convert_test_case.py`: new `convert_bypass_case()` routes bypass cases into `disallow/` or `allow/` with a `bypass_test_case` prefix.
   - `.env_template`: new vars `BYPASS_CASE_FILE` and `BYPASS_REPORT_DIR`.
   - `test_generation.md` rewritten to ask up front which cases to generate. User can choose general test cases (legitimate allow, disallow, ares, promptfoo), or/and bypass test cases.
-- Integrated Promptfoo policy plugin for generating malicious test cases from guidances, with translation support for string-typed variables.
-- `ATTACK_TOOLS` environment variable to select which red-teaming tools to run (`ares`, `promptfoo`, `ares,promptfoo`, or `none`).
-- Clean-up bash script (`scripts/clean_generated.sh`) to reset generated intermediates when switching examples.
-- Added an employee hub agent example. 
-- **Promptfoo config auto-generation** (`smith --flag generate_promptfoo_config`): generates or updates a Promptfoo redteam configuration file from guidance and system variables, with a customizable template (`PROMPTFOO_CONFIG_TEMPLATE`). Also appends tool parameter definitions to `testGenerationInstructions` so Promptfoo generates prompts that include concrete values for all required parameters.
-- LLM-based tool classification for promptfoo cases: during test generation, promptfoo cases are now classified to a target tool name via a single LLM call against the MCP tool definitions, removing the hardcoded "Promptfoo" placeholder. This steps aims to make test translation apply the same tool-name mismatch check to all cases uniformly.
+- **`ATTACK_TOOLS`** environment variable to select which red-teaming tools to run (`ares`, `promptfoo`, `ares,promptfoo`, or `none`).
+- **Promptfoo Improvements**
+  - Integrated Promptfoo policy plugin for generating malicious test cases from guidances, with translation support for string-typed variables.
+  - Promptfoo config auto-generation (`smith --flag generate_promptfoo_config`): generates or updates a Promptfoo redteam configuration file from guidance and system variables, with a customizable template (`PROMPTFOO_CONFIG_TEMPLATE`). Also appends tool parameter definitions to `testGenerationInstructions` so Promptfoo generates prompts that include concrete values for all required parameters.
+  - LLM-based tool classification for promptfoo cases**: during test generation, promptfoo cases are now classified to a target tool name via a single LLM call against the MCP tool definitions, removing the hardcoded "Promptfoo" placeholder. This steps aims to make test translation apply the same tool-name mismatch check to all cases uniformly.
+- **Tools**
+  - Clean-up bash script (`scripts/clean_generated.sh`) to reset generated intermediates when switching examples.
+  - Artifact snapshots (`smith --flag save_snapshot --dest <dir>`): copies a run's key artifacts — policy, its `_cpex` variant, guidance, tool definitions, promptfoo config, and translated test cases — flat into a destination directory. Missing sources are skipped with a warning rather than failing the snapshot.
+
+- **Added agent examples**
+  - Added an employee hub agent example. 
+  - Added an HR agent example (`examples/hr-agent/`), the reference example for **CPEX support**: it demonstrates the per-tool policy workflow end to end, generating a Rego policy and its CPEX-translated `policy_cpex.rego` per tool under `smith/smith_outputs/{get_compensation,search_repo,send_email}/`. `policy-opa-2.yaml` then deploys those as an in-process OPA PDP on a policy gateway, one package per tool route (`data.compensation.allow`, `data.search_repo.allow`, `data.send_email.allow`). Includes a `README.md` walking through the Guidance Classifier and the full workflow. The agent speaks both A2A and the Smith HTTP shim (`/chat`, `/extract_tool_call`), and serves its tool definitions at `GET /tool_definitions` (`MCP_TRANSPORT=http`, no MCP server needed).
+- **CPEX policy translation** (`smith --flag cpex_translate`): translates a generated OPA policy into a CPEX-compatible input shape and writes a `*_cpex.rego` copy next to the original.
+- **Guidance Classifier UI** (`smith --flag classify_guidance`): maps each line of a guidance document to the tool call it constrains, then combines the selected lines into the guidance for the targeted tool(s). Serves on port 8110; the uploaded document is never modified. `src/smith/tools/guidance_classifier_server.py` + `classify_guidance_lines.py` + `guidance_classifier.html`.
 - **Policy Explorer UI bridge**: `src/smith/tools/explorer_server.py` serves an interactive HTML view of the policy alongside IR (intermediate representation) data for visual inspection.
 - **Session config for IR and selected tools** (`SESSION_CONFIG_FILE`, default `references/session_config.json`): when working with IR-generated specs via the Policy Explorer UI, the explorer writes this file with `use_ir` and `selected_tools`. During test generation, `translate_case` filters out test cases whose target tool is not in `selected_tools`.
 
 ### Changed
 
-- Updated the minimum supported versions of `mcp`, `networkx`, `sentence-transformers`, `pip-audit`, and `build`, and upgraded the CI Python/uv setup actions to v7.
 - Made ARES and Promptfoo optional dependencies — either tool can be used independently or skipped entirely.
 - Cross-validation now focuses on arguments and subject fields only, improving accuracy. "Remove" decision category in cross-validation for ambiguous/invalid test cases. Cross-validation now also discards failed adversarial probes instead of relabeling them: for bypass and promptfoo cases, any audit verdict other than `keep` is collapsed to `remove` (with a marker appended to the reason), since their intent is malicious and a failed probe should not pollute the ordinary case set.
 - Cluster indexing uses sequential numbers; noise group appears as the last numbered cluster instead of `-1`.
@@ -63,6 +66,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - `test_case_translation` skips cases that already carry an `arguments` block (already translated), making translation re-runnable and avoiding a full-corpus re-translation when only newly-added bypass cases need it.
 - Reset `assets/policy.rego` to empty as a fresh starting point for policy creation.
 - `get_tool_definitions()` helper in `cli.py` to deduplicate MCP tool extraction across `test_generation`, `bypass_case_generation`, and `get_mcp_parameter` flags.
+- `make ci` is now `lint + license-check + unit` (was `lint + lint-policy + license-check`). `make lint-policy` is no longer in the gate and has no CI job, so run it locally when changing a `.rego` file. 
 
 
 ## [0.1.1] - 2026-06-29
