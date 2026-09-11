@@ -15,6 +15,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Security
+
+- Removed the unused, vulnerable NLTK dependency and updated vulnerable locked dependencies to patched release lines: cryptography 50+, Pillow 12.3, pip 26.2+, setuptools 83+, and PyTorch 2.13.
+
 ### Fixed
 
 - Test-case translation no longer crashes the whole `test_generation` run when a generated case supplies `null` for a numeric system variable. `_convert_var` (`src/smith/test_generation/convert_test_case.py`) previously called `int(None)`/`float(None)`, raising `TypeError` and aborting the pipeline after all the expensive generation work had completed (seen with adversarial Promptfoo cases that omit an integer field like `queries_this_session`). It now returns `None` for a null value, leaving the field absent for OPA.
@@ -49,6 +53,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- Updated the minimum supported versions of `mcp`, `networkx`, `sentence-transformers`, `pip-audit`, and `build`, and upgraded the CI Python/uv setup actions to v7.
 - Made ARES and Promptfoo optional dependencies — either tool can be used independently or skipped entirely.
 - Cross-validation now focuses on arguments and subject fields only, improving accuracy. "Remove" decision category in cross-validation for ambiguous/invalid test cases. Cross-validation now also discards failed adversarial probes instead of relabeling them: for bypass and promptfoo cases, any audit verdict other than `keep` is collapsed to `remove` (with a marker appended to the reason), since their intent is malicious and a failed probe should not pollute the ordinary case set.
 - Cluster indexing uses sequential numbers; noise group appears as the last numbered cluster instead of `-1`.

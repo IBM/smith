@@ -31,7 +31,7 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
+      - uses: astral-sh/setup-uv@v7
       # `make lint` runs ruff/black via `uvx` with versions pinned in the
       # Makefile (ruff 0.15.20 / black 26.5.1); bump those alongside a reformat.
       - name: make lint
@@ -44,7 +44,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.11"
       - name: make license-check
@@ -57,8 +57,8 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
-      - uses: actions/setup-python@v5
+      - uses: astral-sh/setup-uv@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.11"
       - name: Install Smith with dev extras
@@ -73,8 +73,8 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
-      - uses: actions/setup-python@v5
+      - uses: astral-sh/setup-uv@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.11"
       - name: Install Smith (uv) and smoke-test the CLI
@@ -90,6 +90,6 @@ jobs:
     continue-on-error: true
     steps:
       - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
+      - uses: astral-sh/setup-uv@v7
       - name: pip-audit
         run: make audit
