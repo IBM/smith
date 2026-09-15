@@ -14,6 +14,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 > - **Security**: in case of vulnerabilities.
 
 ## [Unreleased]
+### Security
+
+- Removed the unused, vulnerable NLTK dependency and updated vulnerable locked dependencies to patched release lines: cryptography 50+, Pillow 12.3, pip 26.2+, setuptools 83+, and PyTorch 2.13.
 
 ### Fixed
 
