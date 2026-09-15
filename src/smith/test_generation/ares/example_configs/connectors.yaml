@@ -18,7 +18,10 @@ connectors:
         max_new_tokens: 50
         temperature: 0.00000001
     seed: 42
-    device: auto
+    # "auto" resolves to MPS on Apple Silicon, where loading these weights
+    # segfaults (exit 139) inside from_pretrained regardless of dtype. CPU loads
+    # fine; switch back to auto on a machine with CUDA.
+    device: cpu
   watsonx_agent:
     type: ares.connectors.watsonx_agent_connector.WatsonxAgentConnector
     name: watsonx_agent

@@ -7,6 +7,26 @@ import os
 import csv
 
 
+def _read_attack_prompts(handle):
+    """Read one of ARES's generate() outputs as JSON or JSONL."""
+    text = handle.read()
+    try:
+        parsed = json.loads(text)
+        return parsed if isinstance(parsed, list) else [parsed]
+    except json.JSONDecodeError:
+        pass
+    records = []
+    for number, line in enumerate(text.splitlines(), start=1):
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            records.append(json.loads(line))
+        except json.JSONDecodeError as exc:
+            print(f"  WARNING: skipping unparseable line {number}: {exc}")
+    return records
+
+
 def attack(
     output_file_case,
     output_file_attack,
@@ -71,8 +91,7 @@ def attack(
         file_path = os.path.join(ares_home, "assets", attack_file + ".json")
         if os.path.exists(file_path):
             with open(file_path, "r") as f:
-                attack_prompts = json.load(f)
-                for attack_prompt_dict in attack_prompts:
+                for attack_prompt_dict in _read_attack_prompts(f):
                     if (
                         attack_prompt_dict["goal"]
                         not in attack_prompt_map[attack_file].keys()
