@@ -23,8 +23,6 @@ If the user asks for **security-grounded guidance analysis** — or to run the g
 
 This is a separate, standalone workflow that produces guidance only: **it never generates, modifies, or writes Rego or any OPA policy**, unless the human explicitly triggers the handoff to "Create OPA Policy" above at the end.
 
-That file is the single source of truth for the workflow's stages and their order, its confirmation modes, its human gates, and its user-facing messages. Read it and follow it as written — do not run the workflow from this summary.
-
 ## Test Case Generation
 If the user asks to generate test cases, you should strictly follow instructions in `./test_generation/test_generation.md` in the skill directory.
 
