@@ -13,7 +13,7 @@ Building a trustworthy test suite takes three stages, run in order:
 
 1. **Generation** — Turn the guidance into a broad set of test cases: benign inputs that *should* be allowed or denied, plus adversarial inputs from red-teaming tools that try to bypass the rules. *Why:* a policy is only as good as the cases you test it against — this stage creates that coverage.
 
-2. **Translation** — Resolve each case into a concrete tool call by asking the agent what tool and arguments the prompt actually triggers. *Why:* the policy is evaluated against real tool calls (`input.name`, `input.arguments.*`), not raw prompts. Translation grounds every case in what the agent would truly do, and drops cases that don't map to the expected tool.
+2. **Translation** — Resolve each case into a concrete tool call by asking the agent what tool and arguments the prompt actually triggers. *Why:* the policy is evaluated against real tool calls (`input.name`, `input.args.*`), not raw prompts. Translation grounds every case in what the agent would truly do, and drops cases that don't map to the expected tool.
 
 3. **Evaluation** — Classify each case against a guidance rule and verify its allow/disallow label is correct. *Why:* generated labels can be wrong, and a mislabeled case makes a correct policy look broken (or hides a real gap). This stage cleans the labels so policy-testing results are meaningful.
 

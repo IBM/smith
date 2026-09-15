@@ -1,0 +1,5 @@
+1. Only faculty and phd_student may use the get_events tool; a guest must never be allowed to call it.
+2. get_events may only be called with a topic that is exactly one of the approved research areas: Artificial intelligence, Cybersecurity and privacy, Software engineering. Any other topic must be denied.
+3. Faculty may request a limit of up to 15 results; phd_student may request up to 10.
+4. get_events accepts only the arguments keywords, topic and limit. A call carrying any other argument must be denied.
+5. Keywords unrelated to the department's research areas -- for example bioinformatics, genomics, quantum physics, finance or marketing -- must be denied.

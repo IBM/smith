@@ -1,222 +1,209 @@
 # HR Agent — Smith Example
 
-An HR copilot agent with an HTTP/JSON-RPC MCP tool server exposing
-compensation, directory, repo-search, and email tools. The agent
-speaks A2A on the inbound side and calls MCP `tools/call` on the
-outbound side; this example demonstrates the full Smith workflow
-(policy creation, test generation, testing, and refinement) plus the
-security-grounded guidance analysis skill against a deliberately
-sparse `smith/guidance.txt`.
+For reproducibility: The per-tool artifacts this
+produces live under `smith/smith_outputs/{get_compensation,search_repo,send_email}/`.
 
-## MCP Tools
+---
 
-The MCP server ([`server.py`](server.py)) is a FastAPI app that speaks
-MCP-shaped JSON-RPC 2.0 over HTTP. It listens on `POST /mcp` and
-exposes five tools:
+## What has been changed in this agent
 
-| Tool | Description |
-|------|-------------|
-| `get_compensation` | Return salary, bonus, department, and optionally SSN for an employee. `include_ssn=true` returns the SSN and is only permitted for callers with the `view_ssn` permission; otherwise the SSN is redacted before tool execution. |
-| `display_compensation` | Display a compensation band summary for an employee (band only, no salary figures). |
-| `get_directory` | List the employee directory, optionally filtered by department. |
-| `send_email` | Send an email. Must not carry SSNs or data the caller accessed earlier as sensitive in the same session. |
-| `search_repos` | Search internal GitHub Enterprise repositories by name and visibility. Access is limited to repositories the caller's team is authorized for. |
+The agent (`agent.py`) speaks two protocols from a single codebase now:
 
-## Starting the Agent
+- **A2A (original, no change)** (`python agent.py` / `main()`) 
+- **A Smith HTTP shim (Added)** (`uvicorn agent:app`) — the two endpoints every Smith
+  example exposes:
+  - `POST /chat` — runs a full agent turn (LLM + tool execution), used by promptfoo.
+  - `POST /extract_tool_call` — returns the model's intended `{tool_name, arguments}`
+    **without executing it** (used by `smith --flag test_case_translation`).
 
-**Note:** Before starting a new example, run the clean script from the
-repo root to remove generated artifacts left over from a previous
-example. It clears everything under `references/` (preserving
-`test_case_template.json`) and the generated ARES assets:
+### New access-control guidance
+
+We translated the test cases into seven
+rules across several tools (`whole_guidance.txt`):
+
+```
+1. Only HR employee can access compensation records (e.g., salary)
+2. Only employees with `view_ssn` permission can view SSNs in compensation records. SSNs must be redacted if the HR does not have view_ssn.
+3. Only employees in engineer or security team can search repositories. 
+4. Engineers can only read internal repos. Security team member can search both internal and external repo.
+5. Employees cannot send SSNs through email. Email containing SSNs must be blocked
+```
+
+`smith/guidance.txt` (the file `.env`'s `GUIDANCE_FILE` currently points at)
+holds a slice of selected guidances, this is the output of the
+Guidance Classifier described below.
+
+---
+
+## Prerequisites
+
+**1. Installation of Skills**
 
 ```bash
-bash scripts/clean_generated.sh
+cd ./bob/skills/
+git clone <smith's most recent version>
 ```
 
-Prerequisites: Ollama (or another OpenAI-compatible LLM endpoint)
-running locally with the model pulled.
+Place the entire `smith` folder under the `skills/` or `plugin/` directory of your code agent (Claude Code, Bob, Aider, etc.). The coding agent automatically recognizes Smith as an open skill.
+
+**2. Python environment**
 
 ```bash
-cd examples/hr-agent
-ollama pull qwen3.5
-pip install -r requirements.txt
+cd ./smith
+python -m venv .venv
+source .venv/bin/activate
 ```
 
-Start the MCP tool server (in a separate terminal with the same
-virtualenv):
+**3. Ares environment (optional in this example)**
+```bash
+cd src/smith/test_generation/ares
+python -m venv .venv
+source .venv/bin/activate
+curl https://raw.githubusercontent.com/IBM/ares/refs/heads/main/install.sh | bash
+ares install-plugin ares-autodan
+ares install-plugin ares-human-jailbreak
+ares install-plugin ares-garak
+deactivate
+# Setup ares configuration
+cp ../ares_config/qwen-owasp-llm-01.yaml ./example_configs
+cp ../ares_config/human_jailbreaks.json ./assets
+export ARES_HOME=/absolute/path/to/smith/src/smith/test_generation/ares
+# Switch back to the original Python environment
+cd ../../../../
+source .venv/bin/activate
+```
+**4. Promptfoo**.
 
 ```bash
-uvicorn server:app --host 0.0.0.0 --port 9100
+npm install -g promptfoo
+# To disable promptfoo remote connection:
+export PROMPTFOO_DISABLE_TELEMETRY=1
+export PROMPTFOO_DISABLE_REDTEAM_REMOTE_GENERATION=true
+export PROMPTFOO_DISABLE_SHARING=true
 ```
 
-Start the agent:
+---
+
+## Install Smith CLI
+
+Smith uses [uv](https://docs.astral.sh/uv/) for package management. From the repo root:
 
 ```bash
-python agent.py
+make install        # creates a uv venv and installs Smith (editable) + dev tools
 ```
 
-The agent exposes:
-- `POST /chat` — full agentic chat (executes tools via MCP)
-- `POST /extract_tool_call` — extracts intended tool call without executing it
+Or install directly (dependencies are declared in `pyproject.toml`):
 
-Under the hood the agent also speaks A2A `message/send` on the
-inbound side — the containerized deployment routes through an
-authbridge-cpex sidecar, but the local run connects directly.
-
-Default configuration:
-- Agent URL: `http://localhost:8001`
-- MCP transport: `http`
-- MCP endpoint: `http://localhost:9100/mcp`
-
-## Smith Files (`smith/` directory)
-
-| File | Description |
-|------|-------------|
-| `guidance.txt` | Natural language policy rules — this example ships with a **deliberately sparse** two-line guidance file about internal-repo access. Source of truth for policy generation. Use it as-is, or run the security-grounded guidance analysis workflow (Step 1.2 below) to enrich it. |
-| `system_vars.json` | System variables available in the agent session (`user_name`, `roles`, `permissions`, `has_approval`). Maps to `input.extensions.subject.*` in the OPA policy. |
-| `tool_definitions.json` | MCP tool definitions with parameters. Ships pre-generated here because `smith --flag get_mcp_parameter` currently expects a `/tool_definitions` endpoint that this HTTP MCP server doesn't yet expose — see the note under **Smith CLI Commands** below. Maps to `input.arguments.*`. |
-| `promptfooconfig.yaml` | Promptfoo configuration for red-team test generation against this agent. Can be auto-generated with `smith --flag generate_promptfoo_config` (LLM + deterministic — review output before use). |
-| `redteam.yaml` | Promptfoo red-team output file. |
-| `policy_generated.rego` | The OPA policy generated from `guidance.txt`. |
-| `smith_outputs/` | Intermediate results generated when running Smith (see below). |
-
-Also present at the example root:
-- `whole_guidance.txt` — a longer 7-line reference version of the
-  guidance (compensation records, SSN visibility, repo search per
-  team, email SSN block, compensation-adjustment approval
-  thresholds). Use it as ground truth when comparing what the
-  security-analysis workflow surfaces against what a fuller ruleset
-  would look like.
-
-### `smith/smith_outputs/` (generated artifacts)
-
-`smith/smith_outputs/` in this example is organised per tool (one
-subdirectory per MCP tool), each containing that tool's Smith
-intermediates:
-
-- `get_compensation/`
-- `search_repo/`
-- `send_email/`
-
-Under each you may find `tool_definitions.json`, `policy_generated.rego`,
-`policy_revised.rego`, `bypass_report.json`, etc., depending on which
-CLI stages you have run.
-
-## Smith CLI Commands
-
-Make sure your `.env` points to this example:
-
+```bash
+uv pip install -e .   # or: pip install -e .
 ```
+
+This installs the `smith` CLI command.
+
+## Configure `.env` for the HR agent
+
+Copy the template and point Smith at this example:
+
+```bash
+cp .env_template .env
+```
+
+Set these values in `.env` (paths are relative to `BASE_URL`, which is the
+absolute path to the skill folder **with a trailing slash**):
+
+```dotenv
+# --- where the skill lives ---
+BASE_URL=/absolute/path/to/.bob/skills/smith/
+
+# --- LLM used by Smith's own pipelines ---
+OPENAI_API_KEY=<your key>
+OPENAI_BASE_URL=<your LLM endpoint>
+MODEL_SONNET=<model used across pipelines>
+
+# --- the target agent (the HR agent's Smith shim) ---
+AGENT_URL=http://localhost:9000
+
+# --- point Smith at THIS example ---
 TARGET_AGENT_PATH=examples/hr-agent/
 GUIDANCE_FILE=examples/hr-agent/smith/guidance.txt
 SYSTEM_VAR_FILE=examples/hr-agent/smith/system_vars.json
 PROMPTFOO_CONFIG_FILE=examples/hr-agent/smith/promptfooconfig.yaml
 PROMPTFOO_OUTPUT_FILE=examples/hr-agent/smith/redteam.yaml
+
+# --- MCP transport ---
+# hr-agent exposes its tool definitions directly at GET /tool_definitions, so the
+# http transport just fetches that endpoint (no MCP server needed).
 MCP_TRANSPORT=http
-MCP_URL=http://localhost:9100/mcp
+MCP_URL=http://localhost:9000/tool_definitions
 ```
 
-Confirm with:
+---
+
+## Start the agent and MCP server
+
+Install the agent's dependencies and start Ollama with the model pulled:
 
 ```bash
-smith --flag get_current_agent
+cd examples/hr-agent
+pip install -r requirements.txt
+ollama pull qwen3.5
 ```
 
-**Note on `smith --flag get_mcp_parameter`:** Smith's `http`
-transport expects a `/tool_definitions` endpoint that returns tool
-defs in Smith's shape ([extract_tools.py:122-124](../../src/smith/policy_generation/extract_tools.py#L122-L124)).
-This example's [`server.py`](server.py) only exposes `/mcp`
-(JSON-RPC 2.0 `tools/call`) and `/healthz`, so `get_mcp_parameter`
-won't work out-of-the-box against a running hr-agent server. The
-shipped [`smith/tool_definitions.json`](smith/tool_definitions.json)
-is what downstream Smith stages use.
-
-## How to Test Smith (End-to-End Workflow)
-
-### Step 1: Generate Policy and Test Cases
-
-#### Step 1.1: Generate Policy
-
-Ask your coding agent to use skill Smith to generate an OPA policy
-from the guidance file.
-
-#### Step 1.2: (Recommended for this example) Security-Grounded Guidance Analysis
-
-`smith/guidance.txt` here is intentionally sparse — two lines about
-internal-repo access. Running the OWASP-grounded analysis before
-policy generation surfaces the compensation/SSN/email rules that a
-full ruleset should include (compare with `whole_guidance.txt` at
-the example root). Same workflow as `SKILL.md`'s "Create an OPA
-Policy with a Security-Grounded Guidance Analysis" entry.
-
-Ask your coding agent:
-
-> Create an OPA policy for this MCP server with a security-grounded guidance analysis.
-
-The agent asks whether to run **Gated** (pause after each step) or
-**Autonomous** (Steps A–D back-to-back with one final review), then
-produces four artifacts under `smith/guidelines-security-analysis/`:
-
-| Step | Output |
-|------|--------|
-| A — Architecture Analysis | `smith/guidelines-security-analysis/architecture.md` |
-| B — Policy Guidance Questionnaire | `smith/guidelines-security-analysis/policy_guidance_questionnaire.md` |
-| C — Threat Model against OWASP Top 10 for Agentic AI Security | `smith/guidelines-security-analysis/threat_model.md` |
-| D — Enforcement Mapping | `smith/guidelines-security-analysis/owasp_policy_guidelines.md` + `smith/guidance_updated.txt` |
-
-Review `smith/guidance_updated.txt` when the workflow completes.
-When you're satisfied, tell the agent to merge — Step E appends
-`smith/guidance_updated.txt` to `smith/guidance.txt` (preserving your
-existing content byte-for-byte) and continues into Policy Creation
-automatically.
-
-#### Step 1.3: Generate Test Cases
-
-To generate test cases, there are three options:
-
-1. You can ask Smith to generate test cases after it finishes policy generation.
-
-2. You can generate test cases via CLI when Smith is generating the policy:
+Start the MCP server (separate terminal):
 
 ```bash
-smith --flag generate_promptfoo_config # optional: auto-generate promptfoo config (LLM + deterministic — review before use)
-smith --flag test_generation          # guidance-targeted cases
-smith --flag bypass_case_generation    # optional: policy-bypass cases (requires an existing, non-empty policy)
-smith --flag test_case_evaluation      # optional, does not affect results
-smith --flag test_case_translation     # shared; translates all cases, skipping any already translated
+uvicorn server:app --host 0.0.0.0 --port 9100
 ```
 
-3. You can reuse existing test cases (skip the test case generation).
-   For each example, generated test cases live in `./smith/test_cases/`
-   for reuse. To use them, copy them to `references/test_cases/` and
-   overwrite existing test cases.
-
-### Step 2: Test the Policy
-
-Run policy testing (via CLI or ask Smith):
+Start the agent (separate terminal):
 
 ```bash
-smith --flag policy_testing
+uvicorn agent:app --host 0.0.0.0 --port 9000
+```
+---
+
+## Run Smith (Refer to demo video if there is any problem)
+
+### Select guidances
+
+Launch the UI (serves on **port 8110**):
+
+```bash
+smith --flag classify_guidance
 ```
 
-### Step 2.5: Cross-Validation (if needed)
+Then open `http://127.0.0.1:8110/` — in VS Code, `Cmd+Shift+P → open browser`.
 
-- **If 0 test cases or 100% failure** — the policy has
-  structural/syntax issues. Ask Smith to cross-validate the policy
-  (it will follow `opa_policy/policy_cross_validation/policy_cross_validation.md`).
-- **If mixed pass/fail** — some test case labels may be wrong. Ask
-  Smith to cross-validate test cases before running the refinement
-  loop (it should follow `test_generation/cross_validate.md`). This
-  step can be time consuming depending on the number of failed test
-  cases.
+**What you do in the UI:**
 
-### Step 3: Improve the Policy
+1. **Upload** a guidance document (e.g. `whole_guidance.txt`). The file on disk is never modified.
+2. **Browse lines grouped by tool**, select the lines you want, and **combine** them into the guidance text for the tool(s) you're targeting.
+3. Click **Reset**, to setup smith for selected guidancies.
 
-If Smith identifies failed test cases, ask it to:
+Run the normal Smith workflow (below) against it, then repeat the Classifier for the next
+tool. The results for each tool are what you see saved under
+`smith/smith_outputs/get_compensation/`, `.../search_repo/`, and `.../send_email/`
+(each with its own `guidance.txt`, `tool_definitions.json`, `policy.rego`, and a
+CPEX-translated `policy_cpex.rego`).
 
-1. **Fix failed test cases** — patch the policy to handle cases that should be denied but are currently allowed.
-2. **Remove duplication** — eliminate redundant rules with overlapping logic.
-3. **Fix formatting issues** — resolve Regal lint warnings and `opa fmt` differences.
+---
 
-Smith follows its refinement workflow: patch → regal format →
-deduplication, running tests after each change.
+### End-to-end Smith workflow
+
+1. Ask smith to generate an opa policy for your target agent. 
+2. Ask smith to generate test cases. 
+3. Follow the instruction from smith, run `smith --flag generate_promptfoo_config` to generate promptfoo config for test case generation.
+4. Ask smith to generate both kinds of test cases. 
+5. (optional) evaluate test case generation quality.
+6. Ask smith to test the policy after you have both test cases and policy.
+7. Cross validate test cases and policy. 
+8. Ask smith to patch, lint, deduplicate policy. 
+9. Ask smith to translate policy into cpex format.
+10. Ask smith to save copies, give smith the target save path.
+
+## Deploying the generated policy (CPEX / OPA gateway)
+
+`policy-opa-2.yaml` shows the end goal: the per-tool Rego policies Smith
+generates (`smith_outputs/*/policy.rego`) are deployed as an in-process OPA PDP
+on a policy gateway. Each tool route queries its package —
+`data.compensation.allow`, `data.search_repo.allow`, `data.send_email.allow`. 

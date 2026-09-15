@@ -31,6 +31,8 @@ env/
 
 # ---- Node / Promptfoo ----
 node_modules/
+unreachable.dot
+redteam.yaml
 
 # ---- Generated: test cases & generation pipeline (references/) ----
 # Keep tracked inputs (e.g. references/test_case_template.json); ignore generated artifacts.
@@ -45,15 +47,34 @@ references/decomp_attack_file_promptfoo.json
 references/decomp_attack_file_promptfoo_classified.json
 references/label_validation_results.json
 references/test_case_report.html
+references/scorecard
+
+# ---- Examples outputs----
+examples/call-for-papers-mcp/smith/test_cases
+examples/car-price-mcp-main/smith/test_cases
+examples/employee/smith/test_cases
+examples/hr-agent/smith/test_cases
+examples/RagChatbot=MCPServer/smith/test_cases
+examples/sre/
 
 # ---- Generated: OPA intermediate results (assets/opa/outputs/) ----
 assets/opa/outputs/
 
 # ---- Generated: ARES red-teaming artifacts ----
 src/smith/test_generation/ares/assets/*generate*.json
+src/smith/test_generation/ares/assets/safety_behaviors_text_subset.csv
 
 # ---- Generated: policy testing scorecard output ----
 scripts/tests/integration/*.txt
 
+# ---- Generated: pipeline run logs (scripts/run_smith_pipeline.sh) ----
+logs/
+
 # ---- Misc ----
 .sketchpad
+
+# ---- Generated: pytest coverage (make unit COV=1) ----
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/

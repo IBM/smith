@@ -1,0 +1,16 @@
+{
+  "action_list": ["get_events", "other"],
+  "action_description": {
+    "get_events": "Searches for academic conferences matching given keywords and a research topic. Accepts 'keywords' (string, required), 'topic' (string, required) and 'limit' (integer, optional).",
+    "other": "Any other general question."
+  },
+  "user_name": "Bob",
+  "user_role": ["faculty", "phd_student", "guest"],
+  "queries_this_session": 1,
+  "dissertation_area": "Artificial intelligence",
+  "research_area": [
+    "Artificial intelligence",
+    "Cybersecurity and privacy",
+    "Software engineering"
+  ]
+}

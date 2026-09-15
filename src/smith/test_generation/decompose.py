@@ -12,11 +12,7 @@ load_dotenv()
 
 
 def remove_empty_line(str_list):
-    new_str_list = []
-    for strr in str_list:
-        if len(strr) != 0:
-            new_str_list.append(strr)
-    return new_str_list
+    return [line for line in str_list if line.strip()]
 
 
 def flatten_guidance(

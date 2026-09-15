@@ -35,7 +35,7 @@ The policy references fields that don't exist in test cases.
    | Wrong | Correct |
    |-------|---------|
    | `input.tool` / `input.tool_name` | `input.name` |
-   | `input.params.*` / `input.parameters.*` | `input.arguments.*` |
+   | `input.params.*` / `input.parameters.*` / `input.arguments.*` | `input.args.*` |
    | `input.user.*` / `input.subject.*` | `input.extensions.subject.*` |
    | `input.method` / `input.operation` | `input.action` |
    | `input.type` | `input.kind` |
@@ -43,7 +43,7 @@ The policy references fields that don't exist in test cases.
 4. Ensure standard accessors:
    ```rego
    subject := input.extensions.subject
-   args := object.get(input, "arguments", {})
+   args := object.get(input, "args", {})
    ```
 
 ### Step 2B: Fix Syntax / Grammar Issues
@@ -66,8 +66,8 @@ The policy loads but produces wrong results for every case.
    | Bug | Fix |
    |-----|-----|
    | `role == valid_roles` (set) | `role in valid_roles` |
-   | `user_role == "admin"` (user_role is array) | `"admin" in user_role` |
-   | `input.arguments.field` (may be undefined) | Use `object.get(input, "arguments", {})` |
+   | `role == "admin"` (user_role is array) | `"admin" in role` |
+   | `input.args.field` (may be undefined) | Use `object.get(input, "args", {})` |
 
 4. Fix all issues
 

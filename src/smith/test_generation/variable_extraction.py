@@ -67,9 +67,14 @@ def variable_extraction(
     guidances = {}
     with open(output_file_decompose, "r") as f:
         guidances = json.load(f)
-    # print(system_variables)
-    del system_variables["action_list"]
-    del system_variables["action_description"]
+    # Filter into a LOCAL copy rather than deleting from the caller's dict: these
+    # two keys are Smith-internal plumbing the model must not see, but `del` here
+    # mutated the dict the caller still owns, so a second call raised KeyError.
+    system_variables = {
+        key: value
+        for key, value in system_variables.items()
+        if key not in ("action_list", "action_description")
+    }
 
     http_client = httpx.Client(verify=False, timeout=300.0)
     client = OpenAI(api_key=api_key, base_url=openai_base_url, http_client=http_client)

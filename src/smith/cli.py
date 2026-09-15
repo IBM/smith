@@ -219,6 +219,8 @@ def generate_test(
     output_file_cases,
     output_promptfoo,
     case_generation_batch_size,
+    ares_home,
+    promptfoo_config_file,
     tool_definitions=None,
     batch_processing=False,
     batch_size=10,
@@ -284,6 +286,7 @@ def generate_test(
             output_file_attack,
             output_file_attack_csv,
             test_generation_path,
+            ares_home,
         )
 
     if "promptfoo" in attack_tools:
@@ -292,6 +295,7 @@ def generate_test(
             output_promptfoo,
             output_file_attack_promptfoo,
             test_generation_path,
+            promptfoo_config_file,
         )
         classify_promptfoo_tool(
             api_key,
@@ -489,6 +493,8 @@ def main():
     output_promptfoo = base_url + os.getenv("PROMPTFOO_OUTPUT_FILE")
     output_file_attack_promptfoo = base_url + os.getenv("ATTACK_FILE_PROMPT")
     test_generation_path = base_url + os.getenv("TEST_GENERATION_PATH")
+    ares_home = os.getenv("ARES_HOME") or os.path.join(test_generation_path, "ares")
+    promptfoo_config_file = os.getenv("PROMPTFOO_CONFIG_FILE", "")
     test_case_path = base_url + os.getenv("TEST_CASE_PATH", "references/test_cases/")
     bypass_cases_file = base_url + os.getenv(
         "BYPASS_CASE_FILE", "references/bypass_cases.json"
@@ -568,6 +574,8 @@ def main():
             output_file_cases,
             output_promptfoo,
             case_generation_batch_size,
+            ares_home,
+            promptfoo_config_file,
             tool_definitions,
             batch_processing,
             batch_size,

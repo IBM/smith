@@ -64,6 +64,9 @@ EXCLUDE_DIRS = (
     # code (e.g. call-for-papers-mcp ships an upstream MIT license), so Smith does
     # not stamp its Apache header on them. Only Smith core is headered.
     "examples",
+    # Integration-test fixtures are frozen copies of generated example outputs
+    # (a policy + test cases), not Smith source, so they are not headered.
+    "tests/integration/fixtures",
 )
 
 

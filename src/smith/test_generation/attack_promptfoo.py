@@ -4,7 +4,6 @@
 import subprocess
 import yaml
 import json
-import os
 
 # Smith-internal system variables that must never reach a test case's subject
 # (regular cases drop them in variable_extraction; strip them here too as a
@@ -12,9 +11,11 @@ import os
 _SMITH_INTERNAL_VARS = {"action_list", "action_description"}
 
 
-def run_attack(base_skill_url, test_generation_path, output_promptfoo):
-    promptfoo_config = str(os.getenv("PROMPTFOO_CONFIG_FILE"))
-    promptfoo_config = base_skill_url + promptfoo_config
+def run_attack(
+    base_skill_url, test_generation_path, output_promptfoo, promptfoo_config_file
+):
+    # The config's location is resolved by the caller (see cli.py) and passed in.
+    promptfoo_config = base_skill_url + promptfoo_config_file
     try:
         subprocess.run(
             [
@@ -54,7 +55,13 @@ def read_test_cases(output_file_attack_promptfoo, output_promptfoo):
 
 
 def create_promptfoo_cases(
-    base_skill_url, output_promptfoo, output_file_attack_promptfoo, test_generation_path
+    base_skill_url,
+    output_promptfoo,
+    output_file_attack_promptfoo,
+    test_generation_path,
+    promptfoo_config_file,
 ):
-    run_attack(base_skill_url, test_generation_path, output_promptfoo)
+    run_attack(
+        base_skill_url, test_generation_path, output_promptfoo, promptfoo_config_file
+    )
     read_test_cases(output_file_attack_promptfoo, output_promptfoo)
