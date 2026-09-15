@@ -113,10 +113,11 @@ make integration    # stage-level tests driving the real smith CLI (opt-in)
 ```
 
 `tests/integration/` holds both lanes — the pytest **marker** decides which runs, and a bare
-`pytest` selects the unit lane. Every pipeline stage has a pair of modules,
+`pytest` selects the unit lane. Most pipeline stages have a pair of modules,
 Unit tests fake the
 external boundaries and run against frozen fixtures; integration tests use the real services
 and skip cleanly when one (Docker/OPA, an LLM, the example agent, ARES, Promptfoo) is absent.
+If a pipeline stage just simply reads variables from .env or start an online server, a unit test is not needed. 
 
 The separate `make test` target is the OPA policy scorecard, which scores the current
 policy against your generated test cases rather than testing Smith itself.
