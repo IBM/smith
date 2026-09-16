@@ -448,3 +448,144 @@ def test_cases_for_unselected_tools_are_filtered_out(unit_env, capsys):
     )
     assert len(list(root.rglob("test_case*.json"))) == 1
     assert "Filtered 1 test cases" in capsys.readouterr().out
+
+
+# ===========================================================================
+# STEP 7 · incremental regeneration — appending, and the guidance map
+# ===========================================================================
+
+
+def _translate_incremental(unit_env, cases, start_index=None, map_file=None, ares=None):
+    cases_file = write_json(unit_env.root / "references" / "cases.json", cases)
+    out = str(unit_env.root / "references" / "test_cases") + "/"
+    written = translate_case(
+        str(cases_file),
+        str(unit_env.case_template),
+        out,
+        str(ares) if ares else None,
+        None,
+        {},
+        None,
+        start_index,
+        str(map_file) if map_file else None,
+    )
+    return unit_env.root / "references" / "test_cases", written
+
+
+def test_without_a_start_index_numbering_begins_at_zero(unit_env):
+    """The fresh-mode guard: this path must not change.
+
+    ``test_case0.json`` is asserted by the scorecard harness and by the tests
+    above, so a default that shifted the first index would break both.
+    """
+    root, _ = _translate_incremental(unit_env, [abstract_case(label="allow")])
+    assert (root / "allow" / "test_case0.json").exists()
+
+
+def test_a_start_index_appends_after_the_existing_cases(unit_env):
+    root, _ = _translate_incremental(
+        unit_env, [abstract_case(label="allow")], start_index={"allow": 7}
+    )
+    assert (root / "allow" / "test_case7.json").exists()
+    assert not (root / "allow" / "test_case0.json").exists()
+
+
+def test_appending_leaves_the_surviving_cases_untouched(unit_env):
+    """The core no-rewrite contract: untouched guidance keeps its exact files."""
+    root = unit_env.root / "references" / "test_cases"
+    (root / "allow").mkdir(parents=True, exist_ok=True)
+    survivor = write_json(
+        root / "allow" / "test_case0.json", {"input": {"name": "survivor"}}
+    )
+    before = survivor.read_bytes()
+
+    _translate_incremental(
+        unit_env, [abstract_case(label="allow")], start_index={"allow": 1}
+    )
+
+    assert survivor.read_bytes() == before
+    assert (root / "allow" / "test_case1.json").exists()
+
+
+def test_each_label_takes_its_own_offset(unit_env):
+    root, _ = _translate_incremental(
+        unit_env,
+        [abstract_case(label="allow"), abstract_case(label="disallow")],
+        start_index={"allow": 3, "disallow": 11},
+    )
+    assert (root / "allow" / "test_case3.json").exists()
+    assert (root / "disallow" / "test_case11.json").exists()
+
+
+def test_the_written_paths_are_reported_per_label(unit_env):
+    _, written = _translate_incremental(unit_env, [abstract_case(label="allow")])
+    assert written["allow"] == ["allow/test_case0.json"]
+
+
+def test_the_guidance_map_records_which_rule_produced_which_case(unit_env):
+    map_file = unit_env.root / "references" / "map.json"
+    _translate_incremental(
+        unit_env,
+        [abstract_case(label="allow", guidance="Faculty may search events.")],
+        map_file=map_file,
+    )
+    assert json.loads(map_file.read_text()) == {
+        "Faculty may search events.": ["allow/test_case0.json"]
+    }
+
+
+def test_two_cases_from_one_rule_share_its_map_entry(unit_env):
+    map_file = unit_env.root / "references" / "map.json"
+    rule = "Faculty may search events."
+    _translate_incremental(
+        unit_env,
+        [
+            abstract_case(label="allow", guidance=rule),
+            abstract_case(label="disallow", guidance=rule),
+        ],
+        map_file=map_file,
+    )
+    assert json.loads(map_file.read_text()) == {
+        rule: ["allow/test_case0.json", "disallow/test_case0.json"]
+    }
+
+
+def test_the_guidance_map_is_only_written_when_asked_for(unit_env):
+    root, _ = _translate_incremental(unit_env, [abstract_case()])
+    assert not list(root.parent.glob("map.json"))
+
+
+def test_an_ares_attack_is_mapped_to_the_guidance_it_descends_from(unit_env):
+    """ARES derives each attack from one disallow case, so it inherits its rule.
+
+    That inheritance is what lets an update run delete the attacks belonging to
+    guidance that changed -- without it they would linger, unattributable.
+    """
+    rule = "Nobody may search outside the approved areas."
+    ares_file = write_json(
+        unit_env.root / "references" / "ares.json",
+        [
+            {
+                "guidance": rule,
+                "action": "get_events",
+                "condition": "outside approved areas",
+                "label": "disallow",
+                "system_variables": {"user_role": ["faculty"]},
+                "user_input": "search bioinformatics",
+                "attack_conditions": {"direct_requests_generate": ["ATTACK ONE"]},
+            }
+        ],
+    )
+    map_file = unit_env.root / "references" / "map.json"
+
+    _translate_incremental(
+        unit_env,
+        [abstract_case(label="disallow", guidance=rule)],
+        map_file=map_file,
+        ares=ares_file,
+    )
+
+    assert json.loads(map_file.read_text())[rule] == [
+        "disallow/test_case0.json",
+        "ares_malicious/test_case0.json",
+    ]
