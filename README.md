@@ -7,12 +7,13 @@
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 
-An open skill for AI code agents that automates OPA policy creation, test generation, testing, and iterative refinement.
+An open skill for AI code agents that supports security-grounded guidance analysis and automates OPA policy creation, test generation, testing, and iterative refinement.
 
 ## What's Smith?
 
 Smith is a skill (plugin) for AI code agents that manages the full lifecycle of [Open Policy Agent (OPA)](https://www.openpolicyagent.org/) policies (more types of policies will be supported). It enables agents to:
 
+- **Analyze** MCP servers and guidance through an OWASP-mapped threat model and enforcement review without modifying a policy.
 - **Create** OPA policies from natural language guidance and an agent description.
 - **Generate** both synthetic legitimate and adversarial test cases using LLM-based fuzzing and existing red-teaming tools, plus
 policy-bypass cases that target divergences between the guidance and the current policy.
@@ -21,8 +22,9 @@ policy-bypass cases that target divergences between the guidance and the current
 
 ```
 Guidance (NLP) + Agent Description
-   → [optional] Security-Grounded Guidance Analysis (A → B → C → D → E)
-   → Enforceable Policy Creation → Test Generation → Policy Testing ⇄ Policy Refinement
+   → [optional] Security-Grounded Guidance Analysis (A → B → C → D)
+   → [separate human approval] Policy Creation
+   → Test Generation → Policy Testing ⇄ Policy Refinement
 ```
 
 ## What Smith Needs from You
@@ -229,9 +231,10 @@ A separate, standalone workflow that grounds guidance in an OWASP-mapped threat 
 2. **Step B — Policy Guidance Questionnaire** → `policy_guidance_questionnaire.md`. Turns `guidance.txt` plus the architecture into a structured Q&A covering roles, hard limits, rate limits, and response filtering, with confidence tags on every answer.
 3. **Step C — Threat Model** → `threat_model.md`. Evaluates all 10 OWASP Top 10 for Agentic AI Security categories (ASI01–ASI10) against the architecture and questionnaire, producing concrete threat instances with source citations back into `architecture.md`.
 4. **Step D — Enforcement Mapping** → `owasp_policy_guidelines.md` and, only when missing rules are found, `guidance_updated.txt`. Maps each threat to the layer that can enforce it (OPA vs. Agent / Tool implementation / Infra), writes concrete OPA-scope rule specifications, and produces a proposed `guidance_updated.txt` addendum containing ONLY the missing OPA-enforceable rules for `guidance.txt`. Non-OPA-enforceable findings are recorded in the Gap Register table inside `owasp_policy_guidelines.md`, NOT in `guidance_updated.txt`, so downstream policy and test generation only ever see rule content. When no new rules are proposed, `guidance_updated.txt` is not created.
-5. **Step E** *(optional, human-triggered)* — On the human's explicit go-ahead, validates and appends `guidance_updated.txt` to `guidance.txt`, preserving the existing file byte-for-byte. After the merge, the agent separately asks whether to start Policy Creation; merging guidance does not generate a policy or imply approval to do so.
 
-The four required steps can be run **Gated** (pause after each step) or **Autonomous** (Steps A–D back-to-back, one final review at the end). Step E has its own separate trigger. The four analysis artifacts live under `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/`; when generated, the proposed addendum lives at `<TARGET_AGENT_PATH>/smith/guidance_updated.txt` next to `guidance.txt`.
+The four steps can be run **Gated** (pause after each step) or **Autonomous** (Steps A–D back-to-back, one final review at the end). The four analysis artifacts live under `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/`; when generated, the proposed addendum lives at `<TARGET_AGENT_PATH>/smith/guidance_updated.txt` next to `guidance.txt`.
+
+After the analysis is complete, the human may separately ask the agent to validate and append `guidance_updated.txt` to `guidance.txt`, preserving the existing file byte-for-byte. The agent then asks separately whether to start Policy Creation; merging guidance does not generate a policy or imply approval to do so.
 
 ### Test Case Generation
 
