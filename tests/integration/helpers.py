@@ -59,6 +59,7 @@ EXPECTED = {
 def which(binary: str) -> bool:
     return shutil.which(binary) is not None
 
+
 class EnvBase:
     """Shared behavior for both lanes: path resolution and env overriding.
 
@@ -164,7 +165,22 @@ class EnvBase:
             "grey": self.path("GREY_GUIDANCE_FILE"),
             "cases": self.path("CASE_FILE"),
             "promptfoo_attack": self.path("ATTACK_FILE_PROMPT"),
+            "guidance_map": self.path("GUIDANCE_MAP_FILE"),
+            "guidance_snapshot": self.path("GUIDANCE_SNAPSHOT_FILE"),
+            "guidance_raw_snapshot": self.path("GUIDANCE_RAW_SNAPSHOT_FILE"),
         }
+
+    @property
+    def guidance_map(self) -> Path:
+        return self.path("GUIDANCE_MAP_FILE")
+
+    @property
+    def guidance_snapshot(self) -> Path:
+        return self.path("GUIDANCE_SNAPSHOT_FILE")
+
+    @property
+    def guidance_raw_snapshot(self) -> Path:
+        return self.path("GUIDANCE_RAW_SNAPSHOT_FILE")
 
     @property
     def bypass_report_dir(self) -> Path:
@@ -232,13 +248,16 @@ class UnitEnv(EnvBase):
         "CROSS_VALIDATE_OUTPUT": "references/cross_validate_report.json",
         "BYPASS_REPORT_DIR": "references/bypass/",
         "BYPASS_CASE_FILE": "references/bypass_cases.json",
+        "GUIDANCE_MAP_FILE": "references/guidance_case_map.json",
+        "GUIDANCE_SNAPSHOT_FILE": "references/guidance_snapshot.txt",
+        "GUIDANCE_RAW_SNAPSHOT_FILE": "references/guidance_raw_snapshot.txt",
     }
 
     def __init__(self, tmp_root: Path, fixtures: Path = FIXTURES):
         self.root = Path(tmp_root)
         # Smith concatenates BASE_URL with relative paths, so the trailing
         # separator is part of the value's contract.
-        self.base = str(fixtures) + os.sep # for input, BASE_URL for output. 
+        self.base = str(fixtures) + os.sep  # for input, BASE_URL for output.
         self.out_base = str(self.root) + os.sep
         outputs = {k: v for k, v in self.OUTPUTS.items() if v is not None}
         self.env = {**self.INPUTS, **outputs, "BASE_URL": self.out_base}

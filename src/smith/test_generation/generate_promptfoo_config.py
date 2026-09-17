@@ -70,6 +70,9 @@ Rules:
 - Cover every distinct permission boundary in the guidance (e.g. if HR has
   special access, create at least one HR context and one non-HR context).
 - Include at least one context per distinct role/department/organization mentioned.
+- Do not emit two contexts that differ only in variables the guidance does not
+  use to allow or deny (e.g. a different user_name or user_id). The policy cannot
+  tell them apart, so they add no coverage.
 - For scalar variables like user_name or user_id, use reasonable defaults
   (e.g. "Bob", 1).
 - The system variables may contain LIST values (e.g. "roles": ["hr", "engineer"]).
@@ -104,6 +107,9 @@ Rules for generating contexts:
 - Cover every distinct permission boundary in the guidance (e.g. if HR has
   special access, create at least one HR context and one non-HR context).
 - Include at least one context per distinct role/department/organization mentioned.
+- Do not emit two contexts that differ only in variables the guidance does not
+  use to allow or deny (e.g. a different user_name or user_id). The policy cannot
+  tell them apart, so they add no coverage.
 - For scalar variables like user_name or user_id, use reasonable defaults
   (e.g. "Bob", 1).
 - The system variables may contain LIST values (e.g. "roles": ["hr", "engineer"]).

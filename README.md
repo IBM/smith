@@ -261,6 +261,14 @@ This generates `purpose`, `contexts`, and `policy` text from your guidance and s
 smith --flag test_generation
 ```
 
+Add `--mode update` to regenerate only the test cases whose guidance changed since the last run, instead of rebuilding the whole suite:
+
+```bash
+smith --flag test_generation --mode update
+```
+
+Guidance that was removed or edited loses its test cases; guidance that was added or edited is regenerated and appended, so every other case is left untouched. Reformatting guidance is not a content change, and an unchanged guidance file stops the run before any model call. Update mode needs the snapshots a previous run wrote (`references/guidance_snapshot.txt` and `references/guidance_raw_snapshot.txt`); without them it says so and exits, so a first run must use `--mode fresh` (the default).
+
 This runs the following stages:
 
 1. **Decomposition** — Break guidance into testable atomic conditions

@@ -5,6 +5,8 @@ import json
 import os
 from dotenv import load_dotenv
 
+from smith.test_generation import guidance_map
+
 load_dotenv()
 
 
@@ -28,6 +30,8 @@ def translate_case(
     output_file_attack_promptfoo,
     system_vars=None,
     selected_tools=None,
+    start_index=None,
+    guidance_map_file=None,
 ):
     if system_vars is None:
         system_vars = {}
@@ -57,12 +61,22 @@ def translate_case(
                 f"Filtered {filtered} test cases not targeting selected tools: {sorted(selected_tools)}"
             )
 
+    guidance_by_label = {label: [] for label in test_cases_translated}
+
     for test_case in test_cases:
         filled = _fill_template(test_case, test_case_template_file, system_vars)
-        test_cases_translated[test_case["label"]].append(filled)
+        label = test_case["label"]
+        test_cases_translated[label].append(filled)
+        guidance_by_label[label].append(test_case.get("guidance", ""))
 
-    test_cases = test_case_field_mapping(test_cases_translated, output_file_ready_cases)
-    return test_cases
+    written = test_case_field_mapping(
+        test_cases_translated, output_file_ready_cases, start_index
+    )
+
+    if guidance_map_file:
+        guidance_map.merge_mapping(guidance_map_file, written, guidance_by_label)
+
+    return written
 
 
 def _fill_template(test_case, test_case_template_file, system_vars):
@@ -149,6 +163,7 @@ def merge_with_ares(test_cases, output_file_attack):
         formatted_test_case["condition"] = test_cluster["condition"]
         formatted_test_case["system_variables"] = test_cluster["system_variables"]
         formatted_test_case["label"] = "ares_malicious"
+        formatted_test_case["guidance"] = test_cluster.get("guidance", "")
 
         for attack_kind in test_cluster["attack_conditions"].keys():
             if len(test_cluster["attack_conditions"][attack_kind]) > 0:
@@ -180,8 +195,11 @@ def merge_with_promptfoo(test_cases, output_file_attack_promptfoo):
     return test_cases
 
 
-def test_case_field_mapping(test_cases_translated, output_file_ready_cases):
+def test_case_field_mapping(
+    test_cases_translated, output_file_ready_cases, start_index=None
+):
     """Write each translated case to <output_file_ready_cases><label>/<prefix><N>.json."""
+    written = {}
     for condition in test_cases_translated.keys():
         test_cases = test_cases_translated[condition]
         if condition == "promptfoo_malicious":
@@ -196,18 +214,16 @@ def test_case_field_mapping(test_cases_translated, output_file_ready_cases):
         else:
             output_dir = condition
             prefix = "test_case"
-        for test_case_index in range(len(test_cases)):
+        base = (start_index or {}).get(condition, 0)
+        written[condition] = []
+        for offset in range(len(test_cases)):
+            test_case_index = base + offset
             test_case_template_final = {}
-            test_case_template_final["input"] = test_cases[test_case_index]
+            test_case_template_final["input"] = test_cases[offset]
             os.makedirs(output_file_ready_cases + output_dir, exist_ok=True)
-            with open(
-                output_file_ready_cases
-                + output_dir
-                + "/"
-                + prefix
-                + str(test_case_index)
-                + ".json",
-                "w",
-            ) as f:
+            relative = output_dir + "/" + prefix + str(test_case_index) + ".json"
+            with open(output_file_ready_cases + relative, "w") as f:
                 json.dump(test_case_template_final, f, indent=4)
+            written[condition].append(relative)
     print("test case generation finished.")
+    return written
