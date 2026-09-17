@@ -249,7 +249,9 @@ def _remove_matching(case_root, buckets, prefix, description):
 
 
 def clean_promptfoo_cases(case_root):
-    return _remove_matching(case_root, ("disallow",), "promptfoo_test_case", "promptfoo")
+    return _remove_matching(
+        case_root, ("disallow",), "promptfoo_test_case", "promptfoo"
+    )
 
 
 def clean_bypass_cases(case_root):

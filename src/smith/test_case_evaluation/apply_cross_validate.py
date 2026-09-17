@@ -57,12 +57,12 @@ def apply_cross_validate_results(
     # Case-tree-relative old path -> new path, or None when deleted. Handed to the
     # guidance map afterwards so it keeps pointing at files that exist.
     moves = {}
- 
+
     def _relative(absolute):
         return os.path.relpath(absolute, test_case_base_path).replace(os.sep, "/")
 
     def _free_destination(directory, name):
-        # if the file exists, should warn and add suffixes 
+        # if the file exists, should warn and add suffixes
         candidate = os.path.join(directory, name)
         if not os.path.exists(candidate):
             return candidate

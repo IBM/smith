@@ -458,6 +458,42 @@ def test_only_promptfoo_cases_are_cleared(tmp_path):
     assert (root / "allow/cv_test_case0.json").exists()
 
 
+def test_a_cross_validated_promptfoo_case_is_cleared_too(tmp_path):
+    """A moved case keeps its identity under a ``cv_`` prefix and a ``_N`` suffix.
+
+    Matching only the pristine name would leave those behind for the scorecard to
+    keep counting after the set was supposedly rebuilt.
+    """
+    root = case_tree(
+        tmp_path,
+        "disallow/promptfoo_test_case0.json",
+        "disallow/cv_promptfoo_test_case1.json",
+        "disallow/cv_promptfoo_test_case2_2.json",
+        "disallow/test_case0.json",
+    )
+    removed = gm.clean_promptfoo_cases(str(root) + "/")
+
+    assert removed == 3
+    assert (root / "disallow/test_case0.json").exists()
+
+
+def test_bypass_cases_are_cleared_from_both_buckets(tmp_path):
+    """Bypass runs rebuild the whole set, and it spans allow/ and disallow/."""
+    root = case_tree(
+        tmp_path,
+        "disallow/bypass_test_case0.json",
+        "allow/bypass_test_case0.json",
+        "allow/cv_bypass_test_case1.json",
+        "allow/test_case0.json",
+        "disallow/promptfoo_test_case0.json",
+    )
+    removed = gm.clean_bypass_cases(str(root) + "/")
+
+    assert removed == 3
+    assert (root / "allow/test_case0.json").exists()
+    assert (root / "disallow/promptfoo_test_case0.json").exists()
+
+
 def test_clearing_the_tree_removes_every_case_but_keeps_the_directory(tmp_path):
     """Downstream writes assume the bucket root exists."""
     root = case_tree(
