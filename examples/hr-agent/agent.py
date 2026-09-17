@@ -82,7 +82,7 @@ PORT = int(os.environ.get("PORT", "8001"))
 # routes the call through it (the sidecar forward proxy) so cpex governs it.
 # Defaults to a local server.py so a plain `uvicorn agent:app` + `uvicorn
 # server:app` works with no sidecar; the cpex Pod manifest overrides this env.
-MCP_URL = os.environ.get("MCP_URL", "http://localhost:9100/mcp")
+MCP_URL = os.environ.get("MCP_CALL_URL", "http://localhost:9100/mcp")
 # The sidecar forward proxy. ONLY the MCP client uses this — never as a global
 # HTTP_PROXY (that would drag inference through cpex too). Empty by default: a
 # local run connects directly to MCP_URL. The cpex Pod manifest sets this to the
