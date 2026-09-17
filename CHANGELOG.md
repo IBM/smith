@@ -21,6 +21,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- `apply_cross_validate` no longer silently overwrites an existing case when a moved file's `cv_` name is already taken. Both buckets routinely hold the same index, so a case moving to `allow/cv_test_case5.json` could land on one an earlier run had already moved there — `shutil.move` overwrote it without a word, losing a test case. The destination is now checked first: the run warns and writes `cv_test_case5_2.json` instead.
+- ARES attack cases now carry the guidance line they descend from, so they are recorded in the guidance map alongside their parent case. Previously `merge_with_ares` dropped the `guidance` field, leaving ARES cases untraceable and therefore un-prunable by an incremental run.
+- `attack` now reads ARES's generate output as JSON Lines. ARES ≥ 0.2.2 writes those files one object per line (via `jsonlines`) while keeping the `.json` extension, so `json.load` failed with `Extra data: line 2 column 1`. Both the JSONL and the older single-array shape are accepted.
+- ARES's Qwen connector now pins `device: cpu` instead of `auto`, which resolved to MPS on Apple Silicon and segfaulted while loading the model weights (exit 139, no traceback), leaving the run with no attack files. Switch back to `auto` on a CUDA machine.
 - Test-case translation no longer crashes the whole `test_generation` run when a generated case supplies `null` for a numeric system variable. `_convert_var` (`src/smith/test_generation/convert_test_case.py`) previously called `int(None)`/`float(None)`, raising `TypeError` and aborting the pipeline after all the expensive generation work had completed (seen with adversarial Promptfoo cases that omit an integer field like `queries_this_session`). It now returns `None` for a null value, leaving the field absent for OPA.
 - Tier-3 label validation no longer aborts the entire loop on a single LLM error. Transient failures now fall back for that case and continue; the loop only aborts after N consecutive failures (default 5, configurable via `run_validation`) indicating the LLM is genuinely unavailable. On abort, the remaining un-evaluated cases are still recorded as uncertain so validation metrics no longer silently shrink.
 - OPA scorecard no longer silently scores request failures as "deny". Added a curl timeout and exit-code checking; failed requests are logged to `errors.txt` and excluded from TP/FP/TN/FN counts.
@@ -34,6 +38,23 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- **Incremental test-case generation** (`smith --flag test_generation --mode update`): regenerates only the test cases whose guidance changed, instead of rebuilding the whole suite. `--mode fresh` (the default) keeps the previous generation behaviour.
+  - New module `src/smith/test_generation/guidance_map.py`: the guidance diff, the guidance → test-case mapping, snapshot IO, filename-index allocation, and the update orchestration.
+  - Three new artifacts under `references/`, configurable via `GUIDANCE_MAP_FILE`, `GUIDANCE_SNAPSHOT_FILE` and `GUIDANCE_RAW_SNAPSHOT_FILE`: a map of each guidance line to the case files it produced, plus snapshots of the flattened and raw guidance the run generated from.
+  - **Fresh mode** clears `references/test_cases/` and rebuilds the map from scratch, so a smaller run cannot leave higher-numbered cases behind for the scorecard to keep counting. Re-run `bypass_case_generation` and `apply_cross_validate` afterwards if you were relying on their output.
+  - **Update mode** resolves to one of four outcomes:
+    - *no change* — stops without calling the model and leaves every artifact alone;
+    - *deletions only* — removes the affected cases and their mapping entries, advances the snapshots, and skips regeneration;
+    - *edits* — removes the affected cases, then regenerates and appends replacements;
+    - *additions* — generates and appends, leaving existing cases untouched.
+    Deletions, edits and additions can all occur in the same run.
+  - New cases are **appended** after the existing ones, so untouched guidance keeps its case files byte-for-byte. Only the changed guidance reaches decomposition, variable extraction and case generation, so an edit costs a few lines' worth of LLM calls rather than a full run.
+  - Diffing happens **after** flattening, since the flattened text is what the pipeline decomposes. Update mode asks the flatten step to *edit* its previous output rather than rewrite it — handing it the computed source diff instead of two documents to compare — so untouched rules keep their exact wording. Reformatting guidance (renumbering, reordering, bullet style, blank lines) is not a content change and regenerates nothing.
+  - **Promptfoo** cases are removed and regenerated whenever the guidance changed at all, since they red-team the agent as a whole and are not attributable to individual guidance lines. A run that finds no change leaves them alone.
+  - **ARES** attack cases are pruned selectively: each one now records the guidance line its parent case came from, so an update run deletes the attacks belonging to changed guidance and regenerates from the changed prompts (ARES's input is rebuilt from the current `test_cases.json`).
+  - `apply_cross_validate` reports the files it moves and removes to the guidance map, so the guidance → test-case relation keeps pointing at files that exist.
+- Test generation now offers to regenerate the promptfoo config for the user (`smith --flag generate_promptfoo_config`) instead of just reminding them to do it themselves. Asked only when promptfoo is enabled.
+- `smith --flag bypass_case_generation` now clears the previous bypass cases before generating. Bypass cases target the policy-vs-guidance divergence as a whole rather than individual guidance lines, so every run rebuilds the set and numbering restarts at 0 — without the clear, a shorter run left the old higher-numbered cases behind for the scorecard to keep counting. The promptfoo and bypass cleaners also match the names later stages give a case (cross-validation's `cv_` prefix and its `_2`/`_3` collision suffix).
 - **CPEX policy translation** (`smith --flag cpex_translate`): translates a generated OPA policy into a CPEX-compatible input shape and writes a `*_cpex.rego` copy next to the original.
 - **Integration test suite** (`tests/integration/`, run via `make integration`): one test per pipeline stage, driving the real `smith` CLI against frozen fixtures. 
 - **Policy-bypass test-case generation** (`smith --flag bypass_case_generation`): a new pipeline that analyzes the current policy against the guidance to find divergences, then synthesizes adversarial cases targeting each gap.

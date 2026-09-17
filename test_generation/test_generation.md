@@ -34,21 +34,16 @@ Only ask this if the user chose (1) guidance-targeted or (3) both. Policy-bypass
 
 Ask: "Fresh or update? **Fresh** regenerates from your whole guidance file. **Update** compares your guidance against the snapshot from the last run and only regenerates the lines you changed, leaving every other test case untouched."
 
-- **fresh** — the default, and the only option on a first run.
-- **update** — needs the snapshots from a previous run (`./references/guidance_snapshot.txt` and `./references/guidance_raw_snapshot.txt`). If either is missing, the command says so and exits without changing anything; re-run with fresh.
-
-Tell the user two things when they pick update:
-
-- Only guidance-derived cases are refreshed. ARES/promptfoo attack cases are left as they are — use fresh mode when those need regenerating.
-- Reformatting guidance (renumbering, reordering, bullet style, blank lines) is not a content change and regenerates nothing. If the guidance file is unchanged, the command stops without calling the model at all.
-
 ## Generation
 
 ### Guidance-targeted cases
-
+If the user chose fresh mode, run: 
 ```bash
 smith --flag test_generation --mode fresh
-# or, to regenerate only what changed since the last run:
+```
+
+If the user choose update mode, run: or, 
+```bash
 smith --flag test_generation --mode update
 ```
 

@@ -223,23 +223,39 @@ def delete_cases(case_root, relative_paths):
     return removed
 
 
-def clean_promptfoo_cases(case_root):
-    directory = os.path.join(case_root, "disallow")
-    if not os.path.isdir(directory):
-        return 0
-    matcher = re.compile(r"^promptfoo_test_case\d+\.json$")
+def _case_matcher(prefix):
+    return re.compile(r"^(?:cv_)?" + re.escape(prefix) + r"\d+(?:_\d+)?\.json$")
+
+
+def _remove_matching(case_root, buckets, prefix, description):
+    """Delete every case in ``buckets`` whose name matches ``prefix``."""
+    matcher = _case_matcher(prefix)
     removed = 0
-    for name in os.listdir(directory):
-        if not matcher.match(name):
+    for bucket in buckets:
+        directory = os.path.join(case_root, bucket)
+        if not os.path.isdir(directory):
             continue
-        try:
-            os.remove(os.path.join(directory, name))
-            removed += 1
-        except OSError as exc:
-            print(f"  WARNING: could not delete disallow/{name}: {exc}")
+        for name in os.listdir(directory):
+            if not matcher.match(name):
+                continue
+            try:
+                os.remove(os.path.join(directory, name))
+                removed += 1
+            except OSError as exc:
+                print(f"  WARNING: could not delete {bucket}/{name}: {exc}")
     if removed:
-        print(f"Removed {removed} promptfoo case(s) for regeneration.")
+        print(f"Removed {removed} {description} case(s) for regeneration.")
     return removed
+
+
+def clean_promptfoo_cases(case_root):
+    return _remove_matching(case_root, ("disallow",), "promptfoo_test_case", "promptfoo")
+
+
+def clean_bypass_cases(case_root):
+    return _remove_matching(
+        case_root, ("allow", "disallow"), "bypass_test_case", "bypass"
+    )
 
 
 def clean_generated_cases(case_root):

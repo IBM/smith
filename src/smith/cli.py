@@ -405,6 +405,11 @@ def generate_bypass_cases(
         print(f"Bypass case generation skipped: policy at {policy_path} is empty.")
         return ""
 
+    # Every run rebuilds the whole bypass set, so clear the previous one first:
+    # numbering restarts at 0, and without this a shorter run would leave the old
+    # higher-numbered cases behind for the scorecard to keep counting.
+    guidance_map.clean_bypass_cases(output_file_ready_cases)
+
     bypass_report = detect_bypass_vectors(
         api_key,
         bypass_report_dir,

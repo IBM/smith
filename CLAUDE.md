@@ -34,6 +34,7 @@ make integration     # stage-level pytest suite (tests/integration); opt-in, not
 smith --flag get_current_agent      # print the active target_agent path + resolved guidance_file path (read-only)
 smith --flag get_mcp_parameter      # auto-extract MCP tool defs -> <TARGET_AGENT_PATH>/smith/tool_definitions.json
 smith --flag test_generation        # full test-case generation pipeline (includes promptfoo tool classification)
+smith --flag test_generation --mode update  # regenerate only the cases whose guidance changed (default: --mode fresh)
 smith --flag generate_promptfoo_config  # generate/update promptfoo redteam config from guidance
 smith --flag test_case_evaluation   # classify + validate labels + HTML report
 smith --flag test_case_translation  # resolve tool calls via agent /extract_tool_call
@@ -93,16 +94,48 @@ Each target agent under `examples/<agent>/` carries its Smith inputs in a `smith
 
 The generated policy may **only** reference data available from tool arguments or system variables. A guidance rule needing context absent from both is logged as a suggestion, not encoded into the policy.
 
+## Incremental test generation (`--mode update`)
+
+`smith --flag test_generation` takes `--mode fresh` (default) or `--mode update`. The
+orchestration lives in `src/smith/test_generation/guidance_map.py`; `decompose_guidance`
+calls into it, and `cli.py::generate_test` branches on what it returns.
+
+**Fresh** clears `references/test_cases/` and rebuilds the guidance map from scratch, so a
+shorter run cannot leave higher-numbered cases behind for the scorecard to keep counting.
+Re-run `bypass_case_generation` and `apply_cross_validate` afterwards if you need their
+output back.
+
+**Update** diffs the guidance and acts on the difference:
+
+| Guidance change | Effect |
+|---|---|
+| nothing | stop before any model call; every artifact left alone |
+| removed only | delete those cases + their map entries, advance snapshots, skip regeneration |
+| edited | delete those cases, then regenerate and **append** replacements |
+| added | generate and append; existing cases untouched |
+
+All three kinds can occur in one run. Only the changed guidance reaches decomposition,
+variable extraction and case generation, so untouched cases are never rewritten.
+
+ARES cases inherit their parent case's `guidance` so they are pruned selectively, while
+promptfoo and bypass cases target the agent (or the policy-vs-guidance divergence) as a whole
+and are therefore cleared and fully regenerated on every run that produces them.
+
+`apply_cross_validate` moves and removes case files, so it reports those changes to the map
+(`relocate_cases`) to keep it pointing at files that exist. It also refuses to overwrite an
+existing case: a colliding `cv_` name gets a numeric suffix and a warning.
+
 ## Data flow (where artifacts live)
 
 - `assets/policy.rego` — **the policy under management** (the target of all testing/refinement).
 - `assets/opa/` — OPA intermediate results: AST (`ast.json`), graph (`ast.dot`), backups.
 - `references/` — all generated intermediates: `decomp_file.json`, `vars_file.json`, `test_cases.json`, attack files, `label_validation_results.json`, `test_case_report.html`, and final `test_cases/{allow,disallow,malicious}/`.
+- `references/guidance_case_map.json`, `guidance_snapshot.txt`, `guidance_raw_snapshot.txt` — the traceability set `--mode update` reads and writes: which guidance line produced which case file, plus the flattened and raw guidance the last run generated from. Paths are configurable (`GUIDANCE_MAP_FILE`, `GUIDANCE_SNAPSHOT_FILE`, `GUIDANCE_RAW_SNAPSHOT_FILE`).
 
 ## src/smith/ package map
 
 - `policy_generation/` — MCP tool extraction (`extract_tools.py`) and rego validation (`validate_policy.py`).
-- `test_generation/` — generation pipeline stages run in order by the `test_generation` flag: `decompose` → `grey_condition` → `variable_extraction` → `case_generation` → `attack` (ARES) → `attack_promptfoo` → `classify_promptfoo_tool` → `convert_test_case`. Also `extract_tool_args.py` for translation and `generate_promptfoo_config.py` for config generation.
+- `test_generation/` — generation pipeline stages run in order by the `test_generation` flag: `decompose` → `grey_condition` → `variable_extraction` → `case_generation` → `attack` (ARES) → `attack_promptfoo` → `classify_promptfoo_tool` → `convert_test_case`. Also `extract_tool_args.py` for translation, `generate_promptfoo_config.py` for config generation, and `guidance_map.py` for incremental regeneration (see below).
 - `test_case_evaluation/` — three-tier label validation: `tier1_rules.py` (pattern match) → `tier2_semantic.py` (embeddings + NLI) → `tier3_llm_judge.py` (LLM), plus `classify_guidance.py` and `visualization/build_report.py`.
 - `policy_agent/` — refinement engine: `red_feedback/` (DBSCAN clustering of failed cases, tuned by `CLUSTER_EPS`/`CLUSTER_MIN_SAMPLES`), `policy_analysis/regal/` (Regal), `reduce_improve/` (graph + LLM dedup), `policy_evaluation/`.
 - `tools/` — developer utilities: `explorer_server.py` (policy explorer UI bridge, `policy_explorer.html`), `guidance_classifier_server.py` + `classify_guidance_lines.py` + `guidance_classifier.html` (upstream guidance-line → tool-call classifier UI), `license_headers.py`.
