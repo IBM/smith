@@ -24,7 +24,7 @@ substitute one from elsewhere.
   `parameters` array lists only the arguments that tool accepts. STEP 6
   verifies every cited field against it. Required — if it is absent,
   stop and tell the user to run `smith --flag get_mcp_parameter`.
-- Input 5: `<TARGET_AGENT_PATH>/smith/system_vars.json` — the
+- Input 5: `<SYSTEM_VAR_FILE>` — the
   authoritative schema for runtime-provided
   `input.extensions.subject.*` field names, used in the same field-existence
   verification. It does not by itself establish how those values are

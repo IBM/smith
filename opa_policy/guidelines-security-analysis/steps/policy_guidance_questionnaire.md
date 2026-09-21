@@ -15,11 +15,11 @@ data flow rather than asking the user to look up source files.
 from other folders. If a required file is missing here, stop and ask; do
 not substitute one from elsewhere.
 - Input: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/architecture.md`
-- Input (optional): `<TARGET_AGENT_PATH>/smith/guidance.txt` — **primary source
+- Input (optional): `<GUIDANCE_FILE>` — **primary source
   of policy intent**. If present, read every rule and map each one to the
   questionnaire section it belongs to. Rules in guidance.txt take precedence
   over inferences from architecture.md.
-- Input (optional): `<TARGET_AGENT_PATH>/smith/system_vars.json` — use for
+- Input (optional): `<SYSTEM_VAR_FILE>` — use for
   exact `input.extensions.subject.*` field names and types in Sections 2
   and 5. These fields are runtime-provided; do not reclassify them as
   self-reported because application source does not read them.
@@ -35,15 +35,14 @@ not substitute one from elsewhere.
 
 #### STEP 1 — Read inputs
 
-Read `architecture.md` in full. If any of the following exist under
-`<TARGET_AGENT_PATH>/smith/`, read them too — do NOT proceed until all
-available files are read:
-- `guidance.txt` — **read this first among the smith/ files**. Parse
+Read `architecture.md` in full, then read each of these resolved inputs when
+present; do not search for similarly named substitutes:
+- `<GUIDANCE_FILE>` — **read this first**. Parse
   every numbered rule. For each rule, note which questionnaire section
   it maps to (see mapping below) and what OPA-enforceable condition it
   implies.
-- `system_vars.json`
-- `tool_definitions.json`
+- `<SYSTEM_VAR_FILE>`
+- `<TARGET_AGENT_PATH>/smith/tool_definitions.json`
 
 **guidance.txt → questionnaire mapping:**
 | guidance.txt rule type | Questionnaire section |

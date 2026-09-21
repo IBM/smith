@@ -30,6 +30,14 @@ the active `target_agent:` (the `<TARGET_AGENT_PATH>`) and
 values everywhere `<TARGET_AGENT_PATH>` and `<GUIDANCE_FILE>` appear
 below.
 
+The existing lookup does not print `SYSTEM_VAR_FILE`. Without changing the
+CLI, set `<SYSTEM_VAR_FILE>` to
+`<TARGET_AGENT_PATH>/smith/system_vars.json` when that file exists. If it does
+not exist and subject context is needed, ask the user for the configured path;
+do not inspect `.env` or search outside `<TARGET_AGENT_PATH>`. Define
+`<GUIDANCE_UPDATE_FILE>` as the file named `guidance_updated.txt` beside the
+resolved `<GUIDANCE_FILE>`.
+
 Then run `smith --flag get_mcp_parameter` to generate
 `<TARGET_AGENT_PATH>/smith/tool_definitions.json`. This connects to the
 MCP server and extracts every tool's name, parameters, types, and
@@ -57,8 +65,8 @@ All generated artifacts live under:
 
 Source inputs remain at:
 ```
-<TARGET_AGENT_PATH>/smith/guidance.txt
-<TARGET_AGENT_PATH>/smith/system_vars.json
+<GUIDANCE_FILE>
+<SYSTEM_VAR_FILE>
 <TARGET_AGENT_PATH>/smith/tool_definitions.json
 ```
 Steps A–D never modify any of these. Step E is the one exception: on
@@ -75,7 +83,9 @@ starting this workflow for a new tool:
 
 Strictly follow `./steps/architecture_analysis.md`.
 
-- Input: MCP server directory (e.g. `examples/call-for-papers-mcp/`)
+- Input: `<TARGET_AGENT_PATH>`. Step A discovers relevant server, agent,
+  implementation, and external-client source by behavior rather than filename,
+  language, or transport; it does not read every source file.
 - Output: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/architecture.md`
   — besides the layer/trust-boundary/enforcement sections, this step is
   the **only** one that reads the server implementation, so three of its
@@ -99,8 +109,9 @@ After Step A is confirmed, or if `smith/guidelines-security-analysis/architectur
 Strictly follow `./steps/policy_guidance_questionnaire.md`.
 
 - Input: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/architecture.md`
-- Input (optional): `<TARGET_AGENT_PATH>/smith/guidance.txt` — primary source of policy intent; read before all other smith/ files
-- Input (optional): `<TARGET_AGENT_PATH>/smith/system_vars.json`
+- Input (optional): `<GUIDANCE_FILE>` — primary source of policy intent; read
+  before other Smith artifacts
+- Input (optional): `<SYSTEM_VAR_FILE>`
 - Input (optional): `<TARGET_AGENT_PATH>/smith/tool_definitions.json`
 - Output: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/policy_guidance_questionnaire.md`
 - Gate: if the confirmation mode is Gated, do not proceed to Step C until
@@ -127,7 +138,7 @@ Strictly follow `./steps/threat_model.md`.
   concrete threat vectors written into `threat_model.md` — it is not
   optional context, it is the taxonomy the whole step is structured around.
 - Input: `<TARGET_AGENT_PATH>/smith/tool_definitions.json` and
-  `<TARGET_AGENT_PATH>/smith/system_vars.json` — this step's STEP 6
+  `<SYSTEM_VAR_FILE>` — this step's STEP 6
   verifies every field cited in a threat instance or evidence line
   against the **governing tool's own** parameter list, not against the
   file as a whole. It runs before Step D, so an unverified evidence line
@@ -164,18 +175,18 @@ Strictly follow `./steps/enforcement_mapping.md`.
   STEP 7 verify every candidate rule against it: a rule may only
   reference arguments the governing tool actually declares. Required — if
   it is missing, stop and run `smith --flag get_mcp_parameter`.
-- Input: `<TARGET_AGENT_PATH>/smith/system_vars.json` — the authoritative
+- Input: `<SYSTEM_VAR_FILE>` — the authoritative
   schema for runtime-provided `input.extensions.subject.*`, used in the same
   field-existence verification. This provenance is distinct from any
   authentication or integrity mechanism, which Step A records separately.
-- Input (optional): `<TARGET_AGENT_PATH>/smith/guidance.txt` — the same
+- Input (optional): `<GUIDANCE_FILE>` — the same
   existing per-target-agent guidance file already read in Step B, not a
   new file. Used here only to check which of this step's candidate rules
   (from both sources above) are not yet represented in it. If it does not
   exist, skip that check.
 - Output: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/owasp_policy_guidelines.md`
-- Output: `<TARGET_AGENT_PATH>/smith/guidance_updated.txt` — written next
-  to `guidance.txt` itself (not under `guidelines-security-analysis/`):
+- Output: `<GUIDANCE_UPDATE_FILE>` — written beside `<GUIDANCE_FILE>`
+  (not under `guidelines-security-analysis/`):
   contains ONLY the newly proposed OPA-scope rules that `guidance.txt`
   is missing, numbered as an addendum that continues from
   `guidance.txt`'s last rule number. It is not a replacement for
@@ -263,7 +274,7 @@ finished — wait for the explicit instruction.
 Once triggered:
 
 1. **Gate before merging.** Re-read
-   `<TARGET_AGENT_PATH>/smith/guidance_updated.txt` and apply Step D's
+   `<GUIDANCE_UPDATE_FILE>` and apply Step D's
    STEP 8d checks to it: markdown tables, non-rule headings such as
    "Blind Spot Register" or "Known Limitations", lines asserting that
    something cannot be enforced, variables absent from
@@ -313,8 +324,7 @@ Once triggered:
      existed; report that, merge nothing, and delete it.
 
    **Merge (append, not overwrite).** Append the contents of
-   `<TARGET_AGENT_PATH>/smith/guidance_updated.txt` to
-   `<TARGET_AGENT_PATH>/smith/guidance.txt`. `guidance_updated.txt` is
+   `<GUIDANCE_UPDATE_FILE>` to `<GUIDANCE_FILE>`. `guidance_updated.txt` is
    built (Step D, STEP 8) to contain ONLY the newly proposed numbered
    rules, so this merge is a straight append — the existing
    `guidance.txt` (including any headings, blank lines, comments, or

@@ -26,7 +26,7 @@ substitute one from elsewhere.
   does not need to map to any OWASP category to be worth enforcing — STEP
   7 pulls these in as a second source of candidate rules, independent of
   the OWASP path in STEP 2-6.
-- Input 5 (optional): `<TARGET_AGENT_PATH>/smith/guidance.txt` — the
+- Input 5 (optional): `<GUIDANCE_FILE>` — the
   target's existing natural-language guidance, if present. Used only in
   STEP 7 to check which candidate rules (from STEP 5 and from the
   questionnaire) are not yet represented in it. If absent, note the gap
@@ -39,15 +39,15 @@ substitute one from elsewhere.
   against it. This input is required, not optional — without it no rule
   can be verified. If it is absent, stop and tell the user to run
   `smith --flag get_mcp_parameter`.
-- Input 7: `<TARGET_AGENT_PATH>/smith/system_vars.json` — the
+- Input 7: `<SYSTEM_VAR_FILE>` — the
   authoritative schema for runtime-provided
   `input.extensions.subject.*` field names. It takes precedence over what is
   inferred from source code. Field presence establishes runtime provenance and
   OPA visibility, not a cryptographic verification mechanism. If absent, fall
   back to `architecture.md`'s Runtime Subject Context table and note the gap.
 - Output 1: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/owasp_policy_guidelines.md`
-- Output 2: `<TARGET_AGENT_PATH>/smith/guidance_updated.txt` — written next
-  to `guidance.txt`, not under `guidelines-security-analysis/`
+- Output 2: `<GUIDANCE_UPDATE_FILE>` — written beside `<GUIDANCE_FILE>`, not
+  under `guidelines-security-analysis/`
 
 ### OPA Enforcement Boundary (non-negotiable)
 
@@ -451,7 +451,7 @@ STEP 8 consumes it as input, and STEP 9 references it in the summary.
 
 #### STEP 8 — Reconcile candidates against guidance.txt
 
-Read `<TARGET_AGENT_PATH>/smith/guidance.txt` if it exists. If it does
+Read `<GUIDANCE_FILE>` if it exists. If it does
 not exist, skip the coverage check and write `guidance_updated.txt`
 containing only STEP 7's candidate list, numbered starting from 1, with
 their source tags preserved.
@@ -588,7 +588,7 @@ below surfaces the same table for the reviewer. Nothing from the OWASP
 analysis is dropped; it just doesn't ride along in a file whose only
 consumer is Rego generation.
 
-Write `<TARGET_AGENT_PATH>/smith/guidance_updated.txt` containing ONLY
+Write `<GUIDANCE_UPDATE_FILE>` containing ONLY
 the newly proposed rules — the missing candidates STEP 8 identified
 above. Do NOT copy the existing `guidance.txt` rules into this file;
 do NOT append natural-language notes about OWASP findings (those live
