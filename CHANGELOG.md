@@ -43,6 +43,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- **Smith context profiler** (`smith-context-profile`): uses the official Claude Agent SDK to compare continuous and isolated-context Security-Grounded Guidance Analysis runs in disposable workspaces, reporting per-phase token usage, cost, and categorized read bytes without retaining prompt or tool-result content.
 - **Parallel test-case generation**: the four batched stages of `smith --flag test_generation` (decomposition, grey space, variable extraction, case generation) now dispatch their batches concurrently instead of one at a time, controlled by the new `GENERATION_CONCURRENCY` variable. 
 - **Incremental test-case generation** (`smith --flag test_generation --mode update`): regenerates only the test cases whose guidance changed, instead of rebuilding the whole suite. `--mode fresh` (the default) keeps the previous generation behaviour.
   - New module `src/smith/test_generation/guidance_map.py`: the guidance diff, the guidance → test-case mapping, snapshot IO, filename-index allocation, and the update orchestration.
