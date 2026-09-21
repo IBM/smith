@@ -53,6 +53,8 @@ The sections below list these alongside the optional variables in context. Anyth
 | `INFERENCE_BASE_URL` | Base URL for the agent's LLM API | `http://localhost:11434/v1` |
 | `INFERENCE_API_KEY` | API key for the agent's LLM (use `ollama` for local Ollama) | `ollama` |
 
+The agent can run on a local model (Ollama) or an online one; `.env_template` includes an option that points `INFERENCE_BASE_URL`/`INFERENCE_API_KEY` at the same gateway as `OPENAI_BASE_URL`/`OPENAI_API_KEY`, which also lets you raise `TRANSLATION_CONCURRENCY` to translate test cases in parallel.
+
 ## MCP Settings
 
 | Variable | Description | Default |
@@ -94,6 +96,7 @@ The sections below list these alongside the optional variables in context. Anyth
 | `BATCH_PROCESSING` | Enable batch processing | `true` |
 | `BATCH_SIZE` | Batch size for processing | `10` |
 | `CASE_GENERATION_BATCH_SIZE` | Batch size for case generation | `5` |
+| `TRANSLATION_CONCURRENCY` | Concurrent `/extract_tool_call` requests during `test_case_translation`. Use `-1` (or `1`) for a local model, which is compute-bound and gains nothing from concurrency; raise it for an online model to cut translation wall-clock. | `-1` |
 
 ## Test Case Evaluation
 

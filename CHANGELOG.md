@@ -34,6 +34,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- **Parallel test-case translation**: `smith --flag test_case_translation` can now send its `/extract_tool_call` requests concurrently, controlled by the new `TRANSLATION_CONCURRENCY` variable (`-1`, the default, keeps today's one-at-a-time behavior for local models; raising it cuts wall-clock when the target agent runs an online model). `.env_template` also gains an online-model option for the agent that reuses the existing `OPENAI_BASE_URL`/`OPENAI_API_KEY` gateway.
 - **CPEX policy translation** (`smith --flag cpex_translate`): translates a generated OPA policy into a CPEX-compatible input shape and writes a `*_cpex.rego` copy next to the original.
 - **Integration test suite** (`tests/integration/`, run via `make integration`): one test per pipeline stage, driving the real `smith` CLI against frozen fixtures. 
 - **Policy-bypass test-case generation** (`smith --flag bypass_case_generation`): a new pipeline that analyzes the current policy against the guidance to find divergences, then synthesizes adversarial cases targeting each gap.
