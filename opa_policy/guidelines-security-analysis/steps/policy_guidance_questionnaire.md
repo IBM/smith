@@ -35,14 +35,22 @@ not substitute one from elsewhere.
 
 #### STEP 1 — Read inputs
 
-Read `architecture.md` in full, then read each of these resolved inputs when
-present; do not search for similarly named substitutes:
-- `<GUIDANCE_FILE>` — **read this first**. Parse
+Read `<GUIDANCE_FILE>` first when present. Parse
   every numbered rule. For each rule, note which questionnaire section
   it maps to (see mapping below) and what OPA-enforceable condition it
   implies.
-- `<SYSTEM_VAR_FILE>`
-- `<TARGET_AGENT_PATH>/smith/tool_definitions.json`
+
+Then load only the sections needed to answer the questionnaire:
+
+- `architecture.md`: Layers, Runtime Subject Context, Tool Arguments, Prompt
+  Inputs, External Data, Data Flow, and Enforcement Points. Defer Undeclared
+  Fields to Step D.
+- `<SYSTEM_VAR_FILE>`: subject keys and types for Sections 2 and 5.
+- `tool_definitions.json`: tool names, descriptions, and parameter
+  names/types/schemas for Sections 1, 3, and 4.
+
+Do not search for similarly named substitutes or reread source code; Step A's
+artifact is the source for architectural behavior.
 
 **guidance.txt → questionnaire mapping:**
 | guidance.txt rule type | Questionnaire section |

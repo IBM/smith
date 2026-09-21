@@ -15,10 +15,8 @@ substitute one from elsewhere.
 - Input 2: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/policy_guidance_questionnaire.md`
 - Input 3: `src/smith/data/owasp_10_ai_catalog.json` — repo-relative, not
   per-target-agent. This is the OWASP Top 10 for Agentic AI Security
-  catalog (ASI01–ASI10). It is the single source of truth for category
-  names, definitions, and reference threat data — do not hardcode or
-  duplicate its content into this skill file or into `threat_model.md`
-  beyond the short citations STEP 4 asks for.
+  catalog (ASI01–ASI10). It is the single source of truth, but this phase
+  consumes only the projection defined in STEP 1.
 - Input 4: `<TARGET_AGENT_PATH>/smith/tool_definitions.json` — the
   authoritative source for `input.args.*`, **per tool**: each entry's
   `parameters` array lists only the arguments that tool accepts. STEP 6
@@ -37,16 +35,26 @@ substitute one from elsewhere.
 
 #### STEP 1 — Read inputs
 
-Read `architecture.md`, `policy_guidance_questionnaire.md`, the full
-`owasp_10_ai_catalog.json` catalog, `tool_definitions.json`, and
-`system_vars.json` before proceeding.
-On a missing file, apply the Authoritative Paths guard above.
+Load only the input sections needed by this phase:
 
-The catalog's `threats` array has exactly 10 entries, `id` ASI01 through
-ASI10, in order. Each entry carries `name`, `description`, `impact`,
-`mitigations`, `attack_scenarios`, `business_impact`, and
-`threat_aliases`. Every one of these fields is used somewhere in this
-workflow — do not skim any of them.
+- `architecture.md`: Layers, Trust Boundaries, Data Flow, Enforcement Points,
+  and Undeclared Fields.
+- questionnaire: Q1-Q19 plus the confidence marker on each answer. Q20-Q22 are
+  not needed for threat discovery.
+- `tool_definitions.json`: tool names and parameter names/types for citation
+  verification; defer detailed descriptions and enums to Step D.
+- `<SYSTEM_VAR_FILE>`: subject keys and types.
+- OWASP catalog: query only `id`, `name`, `description`, `attack_scenarios`,
+  `business_impact`, and `threat_aliases` for all ten entries. For example:
+
+  ```bash
+  jq '[.threats[] | {id, name, description, attack_scenarios, business_impact, threat_aliases}]' \
+    src/smith/data/owasp_10_ai_catalog.json
+  ```
+
+Do not load `impact`, `mitigations`, catalog metadata, or other fields in this
+phase. Query the existing catalog in place; do not create a copied or split
+catalog file. On a missing required input, apply the Authoritative Paths guard.
 
 ---
 

@@ -5,425 +5,141 @@ description: Policy-foundation workflow for a new MCP tool — architecture, gui
 
 ## Overview
 
-This skill runs the foundation pipeline for any new MCP server: it turns
-raw architecture and guidance into an OWASP-mapped enforcement spec.
-Each step produces an artifact under `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/`.
-That subfolder is created automatically on first write. Do not skip steps
-or reorder them.
-
-Step D is the last of the four required steps. Its outputs
-(`owasp_policy_guidelines.md` and `guidance_updated.txt`) are the final
-artifacts of the required pipeline; this workflow does not write any
-Rego itself. An optional Step E appends `guidance_updated.txt` to
-`guidance.txt` itself and can then hand off to policy creation — but
-only once the human explicitly asks for the merge to happen; it never
-starts on its own, in either confirmation mode. Step E carries two
-separate human gates: the merge trigger, and then a second explicit
-question before policy creation runs. Merging never implies a policy.
+Run Steps A-D in order to turn an MCP server's architecture and policy intent
+into OWASP-grounded enforcement guidance. Each step writes its artifact under
+`<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/`; the workflow does
+not generate Rego. Step E is an optional, separately authorized merge and
+policy-creation handoff.
 
 ## Prerequisites
 
-Run `smith --flag get_current_agent` to confirm the active target agent
-path and guidance file path (do not read `.env` for these). It prints
-the active `target_agent:` (the `<TARGET_AGENT_PATH>`) and
-`guidance_file:` (the resolved `<GUIDANCE_FILE>` path). Use those two
-values everywhere `<TARGET_AGENT_PATH>` and `<GUIDANCE_FILE>` appear
-below.
+Run:
 
-The existing lookup does not print `SYSTEM_VAR_FILE`. Without changing the
-CLI, set `<SYSTEM_VAR_FILE>` to
-`<TARGET_AGENT_PATH>/smith/system_vars.json` when that file exists. If it does
-not exist and subject context is needed, ask the user for the configured path;
-do not inspect `.env` or search outside `<TARGET_AGENT_PATH>`. Define
-`<GUIDANCE_UPDATE_FILE>` as the file named `guidance_updated.txt` beside the
-resolved `<GUIDANCE_FILE>`.
-
-Then run `smith --flag get_mcp_parameter` to generate
-`<TARGET_AGENT_PATH>/smith/tool_definitions.json`. This connects to the
-MCP server and extracts every tool's name, parameters, types, and
-descriptions — Step A treats it as the authoritative source for
-`input.args.*` field names, Step B fills questionnaire Q4 from it,
-and Steps C/D cite it during their citation-verification passes. Run
-this command even if `tool_definitions.json` already exists, so the
-extracted shapes match the server actually running.
-
-Before starting Step A, ask the user how they want the four steps to
-run:
-- **Gated** — pause after each step and wait for the human to confirm the
-  output before starting the next step.
-- **Autonomous** — run Step A through Step D back-to-back with no pauses,
-  then present all four outputs together at the end for one final review.
-
-Use the answer for the entire run; do not ask again per step, and do not
-switch modes mid-run unless the user explicitly asks to change it. Each
-step below refers to this as "the confirmation mode."
-
-All generated artifacts live under:
-```
-<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/
+```bash
+smith --flag get_current_agent
+smith --flag get_mcp_parameter
 ```
 
-Source inputs remain at:
-```
-<GUIDANCE_FILE>
-<SYSTEM_VAR_FILE>
-<TARGET_AGENT_PATH>/smith/tool_definitions.json
-```
-Steps A–D never modify any of these. Step E is the one exception: on
-an explicit human trigger, it appends `guidance_updated.txt` to
-`guidance.txt`, preserving the existing file byte-for-byte and adding
-the newly proposed rules after it — see Step E below.
+The first command reports `target_agent:` (`<TARGET_AGENT_PATH>`) and the
+resolved `guidance_file:` (`<GUIDANCE_FILE>`). Do not read `.env` directly.
+The current command does not expose `SYSTEM_VAR_FILE`, so use
+`<TARGET_AGENT_PATH>/smith/system_vars.json` as `<SYSTEM_VAR_FILE>` when it
+exists; otherwise ask the user for the configured path instead of searching
+outside the target. `<GUIDANCE_UPDATE_FILE>` is `guidance_updated.txt` beside
+`<GUIDANCE_FILE>`.
 
----
+The second command refreshes
+`<TARGET_AGENT_PATH>/smith/tool_definitions.json`, the authoritative per-tool
+source for `input.args.*` names, types, and descriptions. Run it even when the
+file already exists.
 
-# Step A — Architecture Analysis
+Ask once for the confirmation mode:
 
-If the user asks to analyse the architecture of an MCP server, or when
-starting this workflow for a new tool:
+- **Gated:** pause for confirmation after each of Steps A-D.
+- **Autonomous:** run Steps A-D without intermediate pauses and present all
+  results at Completion.
 
-Strictly follow `./steps/architecture_analysis.md`.
+Do not switch modes unless the user asks. The mode never authorizes Step E.
 
-- Input: `<TARGET_AGENT_PATH>`. Step A discovers relevant server, agent,
-  implementation, and external-client source by behavior rather than filename,
-  language, or transport; it does not read every source file.
-- Output: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/architecture.md`
-  — besides the layer/trust-boundary/enforcement sections, this step is
-  the **only** one that reads the server implementation, so three of its
-  findings are load-bearing for Step D and cannot be reconstructed
-  later: the canonical `input.args.*` entries and **Disposition** column
-  in the Tool Arguments table (does the governing tool act on an argument,
-  merely echo it, or ignore it), the separate Runtime Subject Context table
-  for `input.extensions.subject.*`, and the **Undeclared Fields** table
-  (fields existing guidance depends on that no tool declares, or that the
-  governing tool does not declare).
-- Gate: if the confirmation mode is Gated, do not proceed to Step B until
-  the human confirms the output. If Autonomous, continue to Step B
-  immediately.
+## Step A — Architecture Analysis
 
----
+Follow `./steps/architecture_analysis.md`.
 
-# Step B — Policy Guidance Questionnaire
+- Input: `<TARGET_AGENT_PATH>` plus the resolved inputs above.
+- Output: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/architecture.md`.
+- Purpose: discover only relevant source by behavior, then capture actual
+  layers, canonical input paths, tool-argument disposition, runtime subject
+  context, enforcement points, and undeclared fields.
 
-After Step A is confirmed, or if `smith/guidelines-security-analysis/architecture.md` already exists:
+Apply the configured gate before Step B.
 
-Strictly follow `./steps/policy_guidance_questionnaire.md`.
+## Step B — Policy Guidance Questionnaire
 
-- Input: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/architecture.md`
-- Input (optional): `<GUIDANCE_FILE>` — primary source of policy intent; read
-  before other Smith artifacts
-- Input (optional): `<SYSTEM_VAR_FILE>`
-- Input (optional): `<TARGET_AGENT_PATH>/smith/tool_definitions.json`
-- Output: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/policy_guidance_questionnaire.md`
-- Gate: if the confirmation mode is Gated, do not proceed to Step C until
-  the human confirms the questionnaire is complete. If Autonomous,
-  continue to Step C immediately — fill any remaining blanks per STEP 3
-  of `policy_guidance_questionnaire.md` using its confidence markers
-  (never guess without an `[inferred — low confidence]` tag) rather than
-  pausing to ask.
+Follow `./steps/policy_guidance_questionnaire.md`.
 
----
+- Inputs: `architecture.md`, optional `<GUIDANCE_FILE>`, optional
+  `<SYSTEM_VAR_FILE>`, and `tool_definitions.json`.
+- Output:
+  `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/policy_guidance_questionnaire.md`.
+- Purpose: capture policy intent with source-confidence markers. In Autonomous
+  mode, unsupported answers use `[inferred — low confidence]`; never leave an
+  untagged guess.
 
-# Step C — Threat Model
+Apply the configured gate before Step C.
 
-After Step B is confirmed, or if `smith/guidelines-security-analysis/policy_guidance_questionnaire.md` already exists:
+## Step C — Threat Model
 
-Strictly follow `./steps/threat_model.md`.
+Follow `./steps/threat_model.md`.
 
-- Input: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/architecture.md`
-- Input: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/policy_guidance_questionnaire.md`
-- Input: `src/smith/data/owasp_10_ai_catalog.json` — repo-relative, not
-  per-target-agent. The OWASP Top 10 for Agentic AI Security catalog
-  (ASI01–ASI10). This step evaluates all 10 catalog categories against
-  the tool's architecture and questionnaire answers to produce the
-  concrete threat vectors written into `threat_model.md` — it is not
-  optional context, it is the taxonomy the whole step is structured around.
-- Input: `<TARGET_AGENT_PATH>/smith/tool_definitions.json` and
-  `<SYSTEM_VAR_FILE>` — this step's STEP 6
-  verifies every field cited in a threat instance or evidence line
-  against the **governing tool's own** parameter list, not against the
-  file as a whole. It runs before Step D, so an unverified evidence line
-  is inherited downstream as established fact.
-- Output: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/threat_model.md`
-- Gate: if the confirmation mode is Gated, do not proceed to Step D until
-  the human confirms the output. If Autonomous, continue to Step D
-  immediately.
+- Inputs: `architecture.md`, `policy_guidance_questionnaire.md`,
+  `tool_definitions.json`, `<SYSTEM_VAR_FILE>`, and the Step C field projection
+  from `src/smith/data/owasp_10_ai_catalog.json`.
+- Output: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/threat_model.md`.
+- Purpose: evaluate ASI01-ASI10, produce concrete threat instances, and verify
+  every cited field against its governing tool or runtime subject schema.
 
----
+Apply the configured gate before Step D.
 
-# Step D — Enforcement Mapping
+## Step D — Enforcement Mapping
 
-After Step C is confirmed, or if `smith/guidelines-security-analysis/threat_model.md` already exists:
+Follow `./steps/enforcement_mapping.md`.
 
-Strictly follow `./steps/enforcement_mapping.md`.
+- Inputs: the three prior artifacts, `tool_definitions.json`,
+  `<SYSTEM_VAR_FILE>`, optional `<GUIDANCE_FILE>`, and the Step D mitigation
+  projection from the OWASP catalog.
+- Outputs:
+  - `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/owasp_policy_guidelines.md`
+  - `<GUIDANCE_UPDATE_FILE>` only when verified, uncovered rules are pending.
+- Purpose: separate OPA-enforceable controls from other-layer gaps, validate
+  candidates, and reconcile them against existing guidance.
 
-- Input: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/architecture.md`
-- Input: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/threat_model.md`
-- Input: `src/smith/data/owasp_10_ai_catalog.json` — repo-relative, not
-  per-target-agent. Source of the `mitigations` this step grounds its
-  policy-rule requirements in.
-- Input: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/policy_guidance_questionnaire.md`
-  — the same file produced in Step B, not a new file. Step D's STEP 7
-  (Build the combined candidate-rule list) pulls Sections 3-6's answers
-  (Q9-Q19, including Q13b's approval paths) in directly as a second,
-  independent source of candidate rules (they don't need to map to an
-  OWASP category to be worth enforcing).
-  Low-confidence questionnaire answers are excluded from the candidate
-  list. Step D's STEP 8 (Reconcile candidates against guidance.txt) is
-  the only step that touches guidance.txt.
-- Input: `<TARGET_AGENT_PATH>/smith/tool_definitions.json` — the
-  authoritative, per-tool source for `input.args.*`. Step D's STEP 6b and
-  STEP 7 verify every candidate rule against it: a rule may only
-  reference arguments the governing tool actually declares. Required — if
-  it is missing, stop and run `smith --flag get_mcp_parameter`.
-- Input: `<SYSTEM_VAR_FILE>` — the authoritative
-  schema for runtime-provided `input.extensions.subject.*`, used in the same
-  field-existence verification. This provenance is distinct from any
-  authentication or integrity mechanism, which Step A records separately.
-- Input (optional): `<GUIDANCE_FILE>` — the same
-  existing per-target-agent guidance file already read in Step B, not a
-  new file. Used here only to check which of this step's candidate rules
-  (from both sources above) are not yet represented in it. If it does not
-  exist, skip that check.
-- Output: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/owasp_policy_guidelines.md`
-- Output: `<GUIDANCE_UPDATE_FILE>` — written beside `<GUIDANCE_FILE>`
-  (not under `guidelines-security-analysis/`):
-  contains ONLY the newly proposed OPA-scope rules that `guidance.txt`
-  is missing, numbered as an addendum that continues from
-  `guidance.txt`'s last rule number. It is not a replacement for
-  `guidance.txt` — Step E appends it, preserving the original file.
-  Gap-register items (OWASP findings that are not OPA-enforceable) do
-  NOT go into this file; their durable home is
-  `owasp_policy_guidelines.md`'s Gap Register table so downstream
-  policy/test generation never sees non-rule content.
+The single `guidance_updated.txt` format and absence-on-no-results contract are
+defined only in enforcement_mapping STEP 8 and validated by STEP 8d. Gap
+Register content remains in `owasp_policy_guidelines.md`.
 
-  **This file has exactly one permitted format, identical for every
-  target agent — do not adapt it to `guidance.txt`'s style.** It is a run
-  of `<N>. <rule>` lines and nothing else. No headings (`## Additional
-  Rules from Security Analysis` included), no HTML or `#` comments, no
-  status prose ("no new rules were proposed"), no coverage summaries, no
-  "see also" pointers, and never a copy of rules already present in
-  `guidance.txt`. The file is machine-consumed: `decompose` reads the
-  merged guidance with a single `f.read()` and its flattening agent
-  promotes headings into numbered guidance statements, so any non-rule
-  byte becomes a policy rule.
+Apply the configured gate, then proceed to Completion.
 
-  **When the analysis proposes no new rules, Step D writes no file at all
-  and deletes any left over from a previous run.** Not a 0-byte file — no
-  file. This is the normal and common outcome, not a failure: it means
-  `guidance.txt` already covers every enforceable candidate. The
-  invariant is that `guidance_updated.txt` exists if and only if there
-  are proposed rules waiting to be merged, so its presence alone tells a
-  human or a later step that there is something pending. Step E deletes
-  it once it has merged it, which is the other half of the same
-  invariant. See `./steps/enforcement_mapping.md` STEP 8 for the format
-  and its mandatory pre-write check, and STEP 8d checks 6-8 for the gate.
-- Gate: if the confirmation mode is Gated, do not proceed to Completion
-  until the human confirms the output. If Autonomous, proceed to
-  Completion immediately and present all four step outputs together for
-  one final review.
+## Completion
 
----
+Report `owasp_policy_guidelines.md` and, when it exists,
+`<GUIDANCE_UPDATE_FILE>`. Explain that the latter is a proposal and that no
+merge or policy creation has occurred. If no addendum exists, report that
+existing guidance already covers all enforceable candidates and there is
+nothing to merge.
 
-# Completion
+## Step E — Merge and policy-creation handoff (optional)
 
-When Step D is complete, inform the user:
+Step E starts only when the user explicitly asks to merge. The Gated or
+Autonomous choice does not authorize it.
 
-> This workflow is finished. Two artifacts are ready for review:
->
-> 1. `smith/guidelines-security-analysis/owasp_policy_guidelines.md` —
->    the enforcement specification (architecture + questionnaire +
->    threat model + enforcement mapping), all confirmed.
-> 2. `smith/guidance_updated.txt` — the newly proposed OPA-scope
->    rules Step D found missing from `guidance.txt`, numbered as an
->    addendum. This is a proposal for you to review. OWASP findings
->    that aren't OPA-enforceable are recorded in the Gap Register
->    table inside `owasp_policy_guidelines.md` above, not appended
->    here, so downstream policy/test generation only ever sees rules.
->
-> Once you're satisfied with it, tell me to merge — I'll append it to
-> `guidance.txt` (preserving your existing content) and then remove
-> `guidance_updated.txt`, since its rules will live in `guidance.txt`
-> from that point on. I'll then ask you
-> whether to run policy creation before doing anything further. I
-> won't touch `guidance.txt` until you say so, and merging on its own
-> won't generate a policy.
+1. Re-read `<GUIDANCE_UPDATE_FILE>` and apply enforcement_mapping STEP 8d.
+   Also reject any rule already covered by `<GUIDANCE_FILE>` and stop if STEP
+   8b reported an unresolved Overlap or Conflict. If the file is absent, report
+   that no proposal is pending and stop; do not recreate it. If it is a legacy
+   empty file, delete it and report that no rules were merged. Stop on any
+   other validation failure.
+2. Append the validated addendum to `<GUIDANCE_FILE>` without altering its
+   existing bytes. Add a separating newline when needed, read the result back,
+   and confirm the old final line and first new rule remain separate.
+3. Delete `<GUIDANCE_UPDATE_FILE>` only after the read-back confirms the
+   append. On failure, preserve the addendum and report the problem.
+4. Ask: “`guidance.txt` now has the merged rules. Do you want me to run policy
+   creation against it now, or stop here?” The merge authorizes no further
+   action.
+5. Only after an explicit yes, follow
+   `../policy_creation/opa_policy_creation.md`. Preserve that workflow's own
+   confirmation point and handoff; do not continue into testing or refinement.
 
-When the analysis proposed no new rules there is no
-`guidance_updated.txt` to review, so say so directly instead of pointing
-the human at a file that is not there — list artifact 1 only, and replace
-artifact 2 and the merge paragraph with:
+## General rules
 
-> There is no `guidance_updated.txt` this time, and that is the result
-> rather than a failure: your existing `guidance.txt` already covers
-> every enforceable candidate the analysis found. The per-candidate
-> coverage detail is in the summary above. There is nothing to merge, so
-> `guidance.txt` stays as it is. Tell me if you'd like to go straight to
-> policy creation against your current `guidance.txt`.
-
----
-
-# Step E — Merge and Hand Off to Policy Creation (optional, human-triggered)
-
-This step does not start automatically, in either confirmation mode, and
-it is not covered by the Step A–D Gate logic above. It stays dormant
-until the human explicitly asks for the merge to be applied (e.g.
-"merge"/ "yes"). Do not infer this from
-silence, and do not merge on your own initiative just because Step D
-finished — wait for the explicit instruction.
-
-Once triggered:
-
-1. **Gate before merging.** Re-read
-   `<GUIDANCE_UPDATE_FILE>` and apply Step D's
-   STEP 8d checks to it: markdown tables, non-rule headings such as
-   "Blind Spot Register" or "Known Limitations", lines asserting that
-   something cannot be enforced, variables absent from
-   `system_vars.json` and from the tool definitions, and
-   cross-references like "below" or "see the gap register". The file may
-   have been produced by an earlier run that predates that gate, and
-   this append is what makes any such content permanent in
-   `guidance.txt`. If anything trips the checks, stop and report it to
-   the human instead of merging; the fix is to correct
-   `guidance_updated.txt` first — relocating the content to
-   `owasp_policy_guidelines.md`'s Gap Register — and then merge.
-
-   **Then apply the format gate — this is mechanical, not a judgement
-   call.** A file written before the single-format rule existed may
-   carry a heading, an HTML comment, a status line, or a copy of rules
-   already in `guidance.txt`, and the append is what makes it permanent.
-   - If the file **does not exist**, there is nothing to merge. This is a
-     normal state, not an error, and it is the common one — do not re-run
-     Step D to regenerate it. It means one of three things: Step D
-     proposed no new rules, or a previous merge already succeeded and
-     deleted the file, or Step D has never run for this target agent.
-     Tell the human which you believe it is — check whether Step D's
-     summary reported "no new rules", whether `guidance.txt` contains
-     rules beyond what they authored, and whether
-     `guidelines-security-analysis/` holds Step A–D artifacts — then stop
-     and let them decide. Do not append anything, and do not proceed to
-     step 2 on the assumption that a merge happened here. In particular,
-     do not report this to the human as a lost or missing file; in the
-     first two cases nothing is missing and `guidance.txt` is already
-     correct.
-   - If the file exists but is **zero bytes**, treat it as a leftover
-     from a run that predates the current rules, which delete the file
-     instead of emptying it. There is nothing to merge: leave
-     `guidance.txt` untouched, delete the empty file so it stops looking
-     like a pending proposal, tell the human you did, and go straight to
-     step 2. Do not append anything and do not treat it as a lost write.
-   - Otherwise, every non-empty line must match `^<digits>\. `. If the
-     file contains a `#`/`##` heading, a `<!-- ... -->` comment, a blank
-     line, a bullet, a "see also" pointer, or unnumbered prose, **do not
-     merge** — that content would be flattened into policy rules
-     downstream. Stop, show the human the offending lines, and merge
-     only after the file is reduced to bare numbered rules. If nothing
-     legitimate remains, delete the file instead of merging it.
-   - Check each line against `guidance.txt` and **do not merge lines it
-     already covers** — a duplicate append gives the same rule two
-     numbers. If every line is a duplicate, the file should not have
-     existed; report that, merge nothing, and delete it.
-
-   **Merge (append, not overwrite).** Append the contents of
-   `<GUIDANCE_UPDATE_FILE>` to `<GUIDANCE_FILE>`. `guidance_updated.txt` is
-   built (Step D, STEP 8) to contain ONLY the newly proposed numbered
-   rules, so this merge is a straight append — the existing
-   `guidance.txt` (including any headings, blank lines, comments, or
-   paragraphs of context beyond the numbered rules) is preserved
-   byte-for-byte, and the new rules land after it with their numbering
-   already continuing from where `guidance.txt` left off. Ensure
-   there is a trailing newline on `guidance.txt` before the append so
-   the first new rule starts on its own line, then **verify the join by
-   reading the merged file back**: the last line of the original and the
-   first line of the addendum must be two separate lines. When the
-   original lacks its trailing newline the append silently fuses them
-   (`...200 frequent flyer points.# guidance_updated.txt — Security-Grounded
-   Addendum`), which corrupts that final rule for both `decompose` and
-   policy creation and produces no error. Checking the newline before
-   writing is not sufficient on its own — confirm the result. This is the one
-   exception to "Steps A–D never modify guidance.txt" in the Overview
-   above — it happens only here, and only after the explicit human
-   trigger. Do NOT overwrite `guidance.txt` — that would discard any
-   non-rule content the human authored.
-
-   **After the join is verified, delete `guidance_updated.txt`.** Its
-   rules now live in `guidance.txt`, so the addendum has been consumed
-   and has nothing left to represent. Leaving the merged copy on disk
-   creates three problems: a second merge trigger re-appends the same
-   rules and gives each one two numbers in `guidance.txt`; the stale
-   file looks like a pending proposal to the next human who reads it;
-   and the next Step D run captures it as "the previous run's proposal"
-   in STEP 8c and reports every already-merged rule as still
-   outstanding.
-
-   Order matters: delete only **after** the read-back in the merge
-   paragraph above confirms the append landed. Deleting first, or
-   deleting when the read-back failed, loses the rules outright — they
-   exist nowhere else. If the read-back did not confirm a clean join,
-   leave the file alone and report the problem instead.
-
-   A deleted `guidance_updated.txt` is the normal post-merge state, not
-   an error. The next Step D run recreates it only if it has rules to
-   propose, so nothing downstream needs it to persist between runs. This
-   is the same invariant Step D maintains from the other side: the file
-   exists if and only if there are proposed rules waiting to be merged.
-   Absence means one of exactly three things — this target agent has
-   never run Step D, the last run proposed nothing, or the last proposal
-   was merged successfully.
-2. **Ask before policy creation — this is the handoff point.** The merge
-   trigger authorises the merge only, never policy creation. Once the
-   append is verified, stop and ask the human exactly this:
-
-   > `guidance.txt` now has the merged rules. Do you want me to run
-   > policy creation against it now, or stop here?
-
-   Then wait for the answer. Treat only an explicit yes as approval to
-   continue; on "stop", "not yet", silence, or anything ambiguous, stop
-   here and report that the merge is done and `guidance.txt` is ready
-   whenever they want the policy generated. Do not infer approval from
-   the earlier merge trigger, from the human having reviewed
-   `guidance_updated.txt`, or from the fact that the merge succeeded —
-   the merge and policy creation are two separate decisions with two
-   separate triggers. Ask this even in Autonomous mode: the Step A–D
-   confirmation mode governs Steps A–D only and never waives this gate.
-3. **Policy creation (only after an explicit yes in step 2).** Strictly
-   follow `../policy_creation/opa_policy_creation.md` to generate
-   `<TARGET_AGENT_PATH>/smith/policy_generated.rego` from the
-   just-merged `guidance.txt`. Start that skill directly — do not
-   re-summarise the guidance or ask the human to re-confirm the merge
-   first. This is the same procedure `SKILL.md`'s "Create OPA Policy"
-   section already describes — this step exists only to trigger it
-   against the guidance this workflow just updated, not to redefine
-   policy creation. Note that `opa_policy_creation.md` has its own
-   internal confirmation point after it maps rules to tool arguments and
-   system variables; that checkpoint belongs to policy creation and does
-   not replace the gate in step 2.
-4. **Hand off.** After it completes, hand off exactly as `SKILL.md`
-   prescribes: tell the user, "The policy has been created. Next steps
-   you can take: (1) generate test cases, (2) if you already have test
-   cases, you can ask me to test the policy." Do not continue on your
-   own into test generation, policy testing, or refinement
-   (patch/regal/dedup) — those remain separate, human-requested steps
-   per `SKILL.md`.
-
-## General Rules
-
-- Never skip a Step A–D step. Step E is optional and only ever runs on
-  an explicit human trigger; it is not subject to "never skip."
-- Follow the confirmation mode (Gated or Autonomous) chosen before Step A
-  for every Step A–D Gate — do not stop for confirmation in Autonomous
-  mode, and do not skip a confirmation pause in Gated mode. Step E
-  ignores this setting: it has two human gates of its own — the merge
-  trigger, and the policy-creation question in its step 2 — and both
-  apply in Autonomous mode as well as Gated.
-- If any input file is missing, stop and tell the user exactly which
-  file is needed and which step produces it — this applies regardless of
-  confirmation mode.
-- Do not modify any existing file other than writing the designated
-  output for each step, except Step E's sanctioned append to
-  `guidance.txt` on explicit human trigger. Appending is the only
-  sanctioned modification — never overwrite `guidance.txt`.
-- All writes go to `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/`, except Step E's
-  merge into `guidance.txt` and its `policy_generated.rego` output, which
-  per `opa_policy_creation.md` are both written to
-  `<TARGET_AGENT_PATH>/smith/` directly. Never write generated artifacts
-  directly to the MCP server root.
+- Never skip or reorder Steps A-D.
+- Follow the selected confirmation mode for Steps A-D; Step E retains its two
+  explicit human gates in both modes.
+- On a missing required input, identify the missing file and producing step,
+  then stop.
+- Steps A-D write only their designated outputs and never modify existing
+  inputs. Step E may append to `<GUIDANCE_FILE>` only after explicit approval;
+  it never overwrites that file.
+- Write analysis artifacts only under
+  `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/`, except for the
+  addendum beside `<GUIDANCE_FILE>` and policy creation's documented output.
