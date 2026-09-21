@@ -20,7 +20,9 @@ not substitute one from elsewhere.
   questionnaire section it belongs to. Rules in guidance.txt take precedence
   over inferences from architecture.md.
 - Input (optional): `<TARGET_AGENT_PATH>/smith/system_vars.json` — use for
-  exact field names and types in Sections 2 and 5
+  exact `input.extensions.subject.*` field names and types in Sections 2
+  and 5. These fields are runtime-provided; do not reclassify them as
+  self-reported because application source does not read them.
 - Input (optional): `<TARGET_AGENT_PATH>/smith/tool_definitions.json` — use
   for exact parameter names and types in Section 1
 - Output: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/policy_guidance_questionnaire.md`
@@ -49,7 +51,7 @@ available files are read:
 | Role-based tool access (who can/cannot use a tool) | Section 3, Q9 |
 | Field-level restrictions (which fields are forbidden per role) | Section 3, Q10 + Section 6, Q17–Q18 |
 | Scope restrictions (e.g. manager's own team only) | Section 3, Q9 — add as a sub-condition |
-| Hard parameter blocks (external_sharing, blocked domains) | Section 4, Q12 |
+| Hard parameter blocks (`input.args.external_sharing`, blocked domains) | Section 4, Q12 |
 | Numeric caps (purchase amounts) | Section 4, Q13 |
 | Approval paths (action allowed with approval flag) | Section 4, Q13b — note approval field name |
 | Prompt injection / keyword blocks | Section 4, Q14 |
@@ -68,6 +70,12 @@ with exactly one confidence marker so Step C knows what it can rely on:
   evidence.
 - Leave the answer blank only in Gated mode when nothing supports even a
   low-confidence inference.
+
+Whenever an answer names structured policy input, use its canonical OPA path:
+`input.name` for the invoked tool, `input.args.<argument>` for tool arguments,
+and `input.extensions.subject.<field>` for runtime subject context. Do not use
+an unqualified argument or subject-field name in tables that downstream steps
+consume.
 
 ---
 
@@ -108,12 +116,12 @@ works and who should be able to use it.
 
 ---
 
-**Q4. What are its parameters? For each: name, type, required or optional,
-what counts as a valid value?**
+**Q4. What are its parameters? For each: governing tool, policy path, type,
+required or optional, and what counts as a valid value?**
 
-| Parameter | Type | Required | Valid values |
-|-----------|------|----------|--------------|
-| <name> | <type> | Yes / No | <description> |
+| Tool | Policy path | Type | Required | Valid values |
+|------|-------------|------|----------|--------------|
+| `<tool name>` | `input.args.<argument>` | <type> | Yes / No | <description> |
 
 ---
 
@@ -125,15 +133,23 @@ what counts as a valid value?**
 
 ---
 
-**Q6. Are those roles verified by your system, or supplied by the user themselves?**
+**Q6. How does each runtime subject field reach the policy boundary, and what
+verification or integrity mechanism protects it?**
 
-> <Verified / Self-reported> — <explain mechanism>
+| Policy path | Provider | Provenance | Verification / integrity mechanism |
+|-------------|----------|------------|------------------------------------|
+| `input.extensions.subject.<field>` | <runtime/provider or "not documented"> | Runtime-provided | <mechanism or "not documented"> |
+
+> Runtime provenance and verification are separate facts. Do not describe a
+> field declared in `system_vars.json` as self-reported merely because the
+> application source does not read it, and do not infer cryptographic
+> verification without evidence.
 
 ---
 
 **Q7. Is there a user ID? Where does it come from?**
 
-> <yes/no, field name, source, how it is used>
+> <yes/no, canonical policy path, provider, how it is used>
 
 ---
 
@@ -190,7 +206,7 @@ approval field is set?**
 
 > | Parameter condition | Approval field | guidance.txt rule |
 > |---------------------|----------------|-------------------|
-> | <e.g. amount >= 200, role=employee> | <e.g. subject.approval == true> | Rule N |
+> | <e.g. `input.args.amount >= 200`, `input.extensions.subject.role == employee`> | <e.g. `input.extensions.subject.approval == true`> | Rule N |
 
 ---
 
@@ -198,7 +214,7 @@ approval field is set?**
 must always be rejected?** Free-text content only — a specific blocked
 parameter value belongs in Q12, and a numeric ceiling in Q13.
 
-> <list them with the free-text field they appear in, or "none">
+> <list them with the canonical `input.args.<argument>` path of the free-text field, or "none">
 
 ---
 
@@ -218,7 +234,7 @@ a single conversation session?**
 **Q16. Who keeps track of how many times the tool has been called —
 your app, or should the policy enforce it?**
 
-> <explain the mechanism; name the field the policy should read>
+> <explain the mechanism; name the canonical policy path the policy should read>
 
 ---
 

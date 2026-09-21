@@ -40,10 +40,11 @@ substitute one from elsewhere.
   can be verified. If it is absent, stop and tell the user to run
   `smith --flag get_mcp_parameter`.
 - Input 7: `<TARGET_AGENT_PATH>/smith/system_vars.json` — the
-  authoritative source for `input.extensions.subject.*` field names. It
-  takes precedence over what is inferred from source code. If absent,
-  fall back to `architecture.md`'s Trust Boundaries table and note the
-  gap.
+  authoritative schema for runtime-provided
+  `input.extensions.subject.*` field names. It takes precedence over what is
+  inferred from source code. Field presence establishes runtime provenance and
+  OPA visibility, not a cryptographic verification mechanism. If absent, fall
+  back to `architecture.md`'s Runtime Subject Context table and note the gap.
 - Output 1: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/owasp_policy_guidelines.md`
 - Output 2: `<TARGET_AGENT_PATH>/smith/guidance_updated.txt` — written next
   to `guidance.txt`, not under `guidelines-security-analysis/`
@@ -273,9 +274,10 @@ For every rule under "Policy Rules (OPA scope only)":
       prevent.
    c. Every `input.extensions.subject.<x>` (or any other
       `input.extensions.*`) must appear in `system_vars.json` or in
-      `architecture.md`'s Trust Boundaries table, spelled exactly as the
-      key spells it — if the key is `roles`, the field is
-      `subject.roles`, never `subject.role`. Do not singularize,
+      `architecture.md`'s Runtime Subject Context table, spelled exactly as
+      the key spells it — if the key is `roles`, the field is
+      `input.extensions.subject.roles`, never
+      `input.extensions.subject.role`. Do not singularize,
       pluralize, or otherwise rename a declared key.
    d. Where the declared input enumerates a field's permitted values,
       the values the rule depends on must appear in THAT tool's own
@@ -293,7 +295,8 @@ For every rule under "Policy Rules (OPA scope only)":
    e. If the rule's ALLOW path depends on the tool acting on an
       argument — that is, the rule permits the call *because* a
       protective flag is set — confirm from `architecture.md` that the
-      tool actually acts on it. `architecture.md` is Step A's reading of
+      Tool Arguments table says the governing tool acts on that canonical
+      `input.args.<argument>` path. `architecture.md` is Step A's reading of
       the server implementation and is this step's only sanctioned view
       of it; do not open the server source here. If `architecture.md`
       does not say either way, treat the argument as unverified: note
@@ -308,12 +311,14 @@ For every rule under "Policy Rules (OPA scope only)":
       deny on and worthless to permit on.
 
       Worked example: `email_compensation_report` declares
-      `encryption_required: bool = True`, and the implementation only
+      `input.args.encryption_required` (declared as a boolean with default
+      `true`), and the implementation only
       interpolates it into its response string — nothing is encrypted.
       A rule blocking the call when the flag is explicitly `false` looks
       enforceable and passes every check above, yet the permitted call
       sends exactly the same unencrypted data. Contrast
-      `external_sharing` on the same tool, equally un-acted-upon: a rule
+      `input.args.external_sharing` on the same tool, equally
+      un-acted-upon: a rule
       denying when it is `true` is sound, because the denial stops the
       call outright.
 
@@ -485,7 +490,7 @@ following:
 
 1. **Same structured field.** The `input.*` path the candidate would
    check must correspond to the field the guidance.txt rule constrains
-   (e.g. both talk about the `amount` argument, or both talk about the
+   (e.g. both talk about `input.args.amount`, or both talk about the
    caller's role). Different fields → not covered, even if the rule
    sounds thematically similar.
 2. **Same operator / matching semantics.** Exact-equality, substring,
@@ -509,7 +514,7 @@ audit the call:
 
 | Candidate | Verified (tool, field) | Field | Operator | Value set | Matching guidance.txt rule # | Covered? |
 |---|---|---|---|---|---|---|
-| <one-line candidate> | <tool>.<param> / subject.<key> | <input.*> | <exact / substring / ...> | <values> | <rule # or "—"> | Yes / No |
+| <one-line candidate> | <tool>: `input.args.<argument>` / `input.extensions.subject.<field>` | <canonical input path> | <exact / substring / ...> | <values> | <rule # or "—"> | Yes / No |
 
 The "Verified (tool, field)" column carries forward the STEP 6b
 criterion 1 result for that candidate — the governed tool(s) it survived

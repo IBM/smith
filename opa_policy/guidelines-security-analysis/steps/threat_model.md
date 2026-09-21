@@ -25,8 +25,10 @@ substitute one from elsewhere.
   verifies every cited field against it. Required — if it is absent,
   stop and tell the user to run `smith --flag get_mcp_parameter`.
 - Input 5: `<TARGET_AGENT_PATH>/smith/system_vars.json` — the
-  authoritative source for `input.extensions.subject.*` field names,
-  used in the same verification.
+  authoritative schema for runtime-provided
+  `input.extensions.subject.*` field names, used in the same field-existence
+  verification. It does not by itself establish how those values are
+  authenticated or integrity-protected.
 - Output: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/threat_model.md`
 
 ### Workflow (follow strictly)
@@ -58,24 +60,37 @@ exhaustive.
 
 Extract, in this order:
 
-1. **Every row of the Trust Boundaries table** whose classification is
-   not "Trusted". Self-reported, LLM-generated, External/untrusted, and
-   Not-actually-live entries all count.
-2. **Every non-trusted edge in the Data Flow** — every point where an
+1. **Every Tool Arguments row** that can be influenced by the caller or
+   LLM. Preserve its canonical `input.args.<argument>` path and governing
+   tool. Include unknown influence unless the architecture establishes that
+   the value is fixed by trusted application code.
+2. **Every Prompt Inputs row** that can be influenced by callers or external
+   content, including free text interpolated into a system prompt.
+3. **Every External Data row** without a documented integrity mechanism.
+4. **Runtime Subject Context rows only when evidence identifies a threat to
+   the subject-delivery channel.** A field declared by `system_vars.json` is
+   runtime-provided and is not an attack surface merely because application
+   source does not read it. Include `input.extensions.subject.<field>` only
+   when the architecture documents caller influence, tampering, an untrusted
+   provider, or another concrete integrity weakness. Missing documentation may
+   justify an assurance gap, but not a claim that the field is self-reported or
+   prompt-injectable.
+5. **Every non-trusted edge in the Data Flow** — every point where an
    input crosses a trust boundary between layers (e.g. caller → agent,
    agent → tool, tool → external service, external → tool → agent).
-3. **Every input into every Layer** — HTTP API, Agent, MCP Tool, Tool
+6. **Every input into every Layer** — HTTP API, Agent, MCP Tool, Tool
    Implementation, External Service (adapt to the actual layer names in
-   `architecture.md`). Include indirect inputs, e.g. a system prompt
-   that embeds a Self-reported field is an input to the Agent layer's
-   reasoning even though it doesn't arrive as an argument.
+   `architecture.md`). Include indirect inputs, such as caller-provided text
+   embedded in a system prompt even though it does not arrive as a tool
+   argument. The Runtime Subject Context rule in item 4 still applies; do not
+   reintroduce those fields here without evidence of a vulnerable channel.
 
 Produce the Attack Surfaces list as a table:
 
-| # | Field or Data Point | Source Layer | Classification | Enters where |
+| # | Field or Data Point | Source Layer | Provenance / influence | Enters where |
 |---|---|---|---|---|
 | 1 | `user_profile.*` (all keys the caller may set) | HTTP API | Self-reported | Agent layer (embedded in system prompt) |
-| 2 | `keywords` (LLM-generated tool argument) | Agent | Self-reported | Tool → External |
+| 2 | `input.args.keywords` | Agent | LLM-generated / caller-influenced | Tool → External |
 | ... | ... | ... | ... | ... |
 
 Draft this list now — it becomes the "Attack Surfaces" section of
@@ -128,8 +143,9 @@ architecture has the relevant substrate, produce a matching instance.
 instance, identify the actor that initiates or executes the attack:
 
 - **Caller** — a user or upstream system sending crafted input in a
-  Self-reported field (prompt injection via `user_profile`, forged
-  session data, etc.).
+  caller-controlled prompt or influencing an `input.args.*` value. Treat
+  runtime subject context as caller-forgeable only when the architecture
+  provides evidence that its provider or delivery channel permits it.
 - **LLM** — the agent's model reasoning incorrectly, hallucinating,
   falling for a prompt injection, or picking dangerous tool arguments
   from an otherwise-benign user question.
@@ -143,7 +159,7 @@ instance, identify the actor that initiates or executes the attack:
 A single ASI category can and often does have threat instances at
 multiple actors. Reason each one separately — do NOT blur "the caller
 or the LLM does X" into a single instance. If the same attack surface
-is exploitable by two actors (e.g. `keywords` can be tainted by the
+is exploitable by two actors (e.g. `input.args.keywords` can be tainted by the
 caller via prompt injection AND fabricated by the LLM on its own),
 that is two distinct threat instances.
 
@@ -191,10 +207,10 @@ Coverage sweep from architecture.md's Trust Boundaries and Data Flow.
 Every row must be referenced in at least one ASI threat instance below,
 or explicitly marked "N/A — <reason>" in the Covered-in column.
 
-| # | Field or Data Point | Source Layer | Classification | Enters where | Covered in |
+| # | Field or Data Point | Source Layer | Provenance / influence | Enters where | Covered in |
 |---|---|---|---|---|---|
 | 1 | `user_profile.*` | HTTP API | Self-reported | Agent layer | ASI01, ASI03 |
-| 2 | `keywords` | Agent (LLM) | Self-reported | Tool → External | ASI02 |
+| 2 | `input.args.keywords` | Agent (LLM) | LLM-generated / caller-influenced | Tool → External | ASI02 |
 | ... | ... | ... | ... | ... | ... |
 
 ---
@@ -250,7 +266,7 @@ that genuinely don't apply, add an N/A entry).
    must appear in at least one threat instance's `Attack surface:
    row #N` reference. Any row that no instance references must be
    annotated in the table's Covered-in column as "N/A — <reason>". A
-   Self-reported or untrusted surface with no ASI at all is almost
+   Caller-influenced or untrusted surface with no ASI at all is almost
    always a real miss, not a genuine N/A — treat that outcome with
    suspicion.
 2. **Architecture layer coverage.** Every non-terminal layer in
@@ -269,13 +285,15 @@ that genuinely don't apply, add an N/A entry).
    check whether more than one actor (Caller/LLM/Tool/External) could
    plausibly cause the harm this category describes. If yes, confirm
    the corresponding threat instances exist. This is where "the caller
-   can prompt-inject via a Self-reported field" gets picked up
+   can prompt-inject via a caller-controlled prompt input" gets picked up
    alongside "the LLM can hallucinate the same argument on its own".
 5. **Severity sanity.** Scan the assigned severities across the
    document. If every Applicable ASI has only Low or Medium instances,
    double-check — either the tool has genuinely low blast radius (rare
-   for anything that touches an external service or self-reported
-   identity), or the severity rubric is being under-applied.
+   for anything that touches an external service or caller-controlled
+   identity), or the severity rubric is being under-applied. Do not treat a
+   runtime-provided subject field as caller-controlled without evidence about
+   its provider or delivery channel.
 
 Loop back to STEP 3 for anything missing, then re-run this critic on
 the updated draft. Do not proceed to STEP 6 until this pass finds no
@@ -304,13 +322,15 @@ For every threat instance and every "Evidence:" line:
      array in `tool_definitions.json`. Do not accept the field merely
      appearing somewhere in the file — many tools share a parameter
      name, and a field declared on one tool says nothing about another.
-     A threat instance citing `args.department` as evidence against a
-     tool that has no `department` argument is a fabricated evidence
+     A threat instance citing `input.args.department` as evidence against a
+     tool that has no `input.args.department` argument is a fabricated evidence
      line, even though the name exists elsewhere.
    - For `input.extensions.subject.<x>` and other subject fields:
      confirm the key appears in `system_vars.json` or
-     architecture.md's Trust Boundaries table, spelled exactly as that
-     source spells it (`roles`, not `role`).
+     architecture.md's Runtime Subject Context table, spelled exactly as
+     that source spells it (`roles`, not `role`). Presence establishes that
+     the runtime supplies the field; it does not establish or refute a
+     cryptographic verification mechanism.
 
    This check runs here as well as in the enforcement_mapping step
    because it runs *first*. A threat instance that verifies clean here

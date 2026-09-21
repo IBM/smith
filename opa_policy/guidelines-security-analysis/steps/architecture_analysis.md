@@ -11,7 +11,9 @@ other folders. If a required file is missing here, stop and tell the user
 which file is needed and which step produces it; do not substitute one
 from elsewhere.
 - `agent.py`, `server.py`, `app.py`, `README.md`, `SYSTEM_VARIABLES.md` — read if present
-- `smith/system_vars.json` — authoritative source for subject fields, if present
+- `smith/system_vars.json` — authoritative schema for runtime-provided
+  subject fields, if present. Its presence establishes field provenance and
+  OPA visibility, not a cryptographic verification mechanism.
 - `smith/tool_definitions.json` — read if present. Used to confirm which
   tool arguments are visible at invocation time when identifying
   enforcement points.
@@ -38,8 +40,10 @@ root) if they exist:
 - `smith/system_vars.json` — runtime schema of all fields available in
   `input.extensions.subject.*` at tool-call time. If present, this is the
   authoritative source for subject field names and types; it takes precedence
-  over what is inferred from source code. If absent, note this gap — the
-  enforcement_mapping skill will need to rely on source code inference instead.
+  over what is inferred from source code. Treat these fields as
+  runtime-provided subject context even when application source does not read
+  them. If absent, note this gap — the enforcement_mapping skill will need to
+  rely on source code inference instead.
 - `smith/tool_definitions.json` — if present, the authoritative source
   for `input.args.*` field names and types.
 - `smith/guidance.txt` — if present, the existing policy intent for this
@@ -74,18 +78,36 @@ Standard layers for MCP servers in this repo:
 
 #### STEP 3 — Document trust boundaries
 
-Identify every field that flows into the system and classify each as:
+Separate fields by how they enter the policy boundary. Do not place runtime
+subject context, tool arguments, prompt inputs, and external data in one trust
+classification table: they have different provenance and require different
+analysis.
 
-- **Verified** — cryptographically authenticated or validated by a trusted system
-- **Self-reported** — supplied by the caller with no external verification
-- **External/untrusted** — returned by an external service with no integrity guarantee
+**Runtime subject context.** Record every key declared by
+`smith/system_vars.json` using its canonical policy path,
+`input.extensions.subject.<key>`. Mark its provenance as
+**Runtime-provided** and name the runtime/provider when the inputs document
+one. `system_vars.json` is authoritative for the available field names and
+types. A subject field's absence from `agent.py`, server code, or tool
+implementation code does not make it caller-supplied, self-reported, or
+prompt-injectable: those layers need not read context attached by the runtime
+at the policy boundary.
 
-Pay particular attention to:
-- Role and identity fields (where do they come from, who sets them?)
-- Session counters or quotas (who maintains them?)
-- Parameter values that are passed directly to external calls
+Record verification/integrity separately from provenance. State the documented
+authentication, signature, token-validation, or trusted-runtime mechanism; if
+none is documented, write `not documented`. Do not turn `not documented` into
+`self-reported`, and do not claim cryptographic verification merely because a
+field is runtime-provided. Also record whether the field is visible to OPA at
+tool-call time.
 
-Then, for every tool argument, record its **disposition** — what the
+**Tool arguments.** Record every declared argument under its canonical policy
+path, `input.args.<argument>`, and name the governing tool. Describe its
+origin/influence as LLM-generated, caller-influenced, application-generated,
+or unknown based on the observed data flow. A caller's natural-language input
+may influence an LLM-generated argument, but that does not turn runtime subject
+context into a tool argument.
+
+For every tool argument, record its **disposition** — what the
 implementation actually does with the value:
 
 - **Acts on** — the value changes what the tool does: it filters or
@@ -102,7 +124,7 @@ server implementation — the later steps see `tool_definitions.json`,
 which reports a parameter's name, type and default but cannot say
 whether the code honours it. A protective-sounding flag that is merely
 echoed will otherwise pass every downstream check and yield a rule that
-guarantees nothing (e.g. an `encryption_required: bool = True` argument
+guarantees nothing (e.g. an `input.args.encryption_required` boolean argument
 that the tool interpolates into its response text without encrypting
 anything). The enforcement_mapping step relies on this column to refuse
 such rules.
@@ -113,6 +135,18 @@ substituted, never what the code does with it. When the body is unclear,
 record `Unclear` with a one-line note rather than guessing — a wrong
 "acts on" is worse than an admitted unknown, because it licenses a rule
 downstream.
+
+**Prompt inputs.** Record user prompts, profile text, system-prompt
+interpolations, and other free text that enters model reasoning. Name their
+source, consumer, and whether callers or external content can influence them.
+Do not label a runtime subject field prompt-injectable unless the architecture
+shows that the field's value is separately interpolated into a prompt; if so,
+record that prompt flow here without changing the subject field's runtime
+provenance.
+
+**External data.** Record responses or content returned by external systems,
+including the integrity mechanism when one is documented and the layer that
+consumes the data.
 
 ---
 
@@ -173,7 +207,9 @@ belongs to the enforcement_mapping step and ultimately to the human.
 #### STEP 5 — Write architecture.md
 
 Write the output file to `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/architecture.md` using exactly
-this structure:
+this structure. Use canonical policy paths for every structured field:
+`input.name`, `input.args.<argument>`, and
+`input.extensions.subject.<field>`.
 
 ```
 # Architecture: <tool-name>
@@ -191,11 +227,31 @@ this structure:
 
 ## Trust Boundaries
 
-| Field | Source | Classification | Disposition |
+### Runtime Subject Context
+
+| Field | Provider | Provenance | Verification / integrity | OPA-visible? |
+|---|---|---|---|---|
+| `input.extensions.subject.<field>` | <runtime/provider or "not documented"> | Runtime-provided | <documented mechanism or "not documented"> | Yes / No / Unknown |
+
+### Tool Arguments
+
+| Field | Tool | Origin / influence | Disposition |
 |---|---|---|---|
-| <field> | <who sets it> | Verified / Self-reported / External | Acts on / Echoed / Ignored / Unclear |
-[one row per field; Disposition applies to tool arguments — write "n/a"
- for subject and session fields the tool never receives]
+| `input.args.<argument>` | `<tool name>` | LLM-generated / Caller-influenced / Application-generated / Unknown | Acts on / Echoed / Ignored / Unclear |
+
+### Prompt Inputs
+
+| Field or data | Source | Consumer | Trust / influence |
+|---|---|---|---|
+| <prompt, profile text, or interpolated data> | <who supplies it> | <model/layer> | <who can influence it> |
+[or "none" when the architecture exposes no prompt input]
+
+### External Data
+
+| Data | Source | Verification / integrity | Consumer |
+|---|---|---|---|
+| <response/content> | <external system> | <documented mechanism or "not documented"> | <layer> |
+[or "none" when the tool consumes no external data]
 
 ## Data Flow
 
@@ -217,7 +273,7 @@ this structure:
 
 | Field | Referenced by guidance rule # | Declared by | Consequence |
 |---|---|---|---|
-| <field> | <rule #> | <tool name(s), or "no tool"> | Rule enforceable for fewer tools than claimed / can never fire |
+| <canonical input path> | <rule #> | <tool name(s), runtime subject schema, or "none"> | Rule enforceable for fewer tools than claimed / can never fire |
 [or "none" if every referenced field is declared by the tool its rule governs]
 ```
 
@@ -227,7 +283,9 @@ this structure:
 
 Present a one-paragraph summary of the key findings:
 - How many layers exist
-- Which fields are self-reported (most important for policy)
+- Which `input.extensions.subject.*` fields are runtime-provided and whether
+  their verification/integrity mechanism is documented
+- Which `input.args.*` fields are caller- or LLM-influenced
 - Where OPA can be placed
 - What the main blind spots are
 - Any argument whose disposition is **Echoed**, **Ignored** or

@@ -78,12 +78,14 @@ Strictly follow `./steps/architecture_analysis.md`.
 - Input: MCP server directory (e.g. `examples/call-for-papers-mcp/`)
 - Output: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/architecture.md`
   — besides the layer/trust-boundary/enforcement sections, this step is
-  the **only** one that reads the server implementation, so two of its
+  the **only** one that reads the server implementation, so three of its
   findings are load-bearing for Step D and cannot be reconstructed
-  later: the **Disposition** column on the Trust Boundaries table (does
-  the tool act on an argument, merely echo it, or ignore it) and the
-  **Undeclared Fields** table (fields existing guidance depends on that
-  no tool declares, or that the governing tool does not declare).
+  later: the canonical `input.args.*` entries and **Disposition** column
+  in the Tool Arguments table (does the governing tool act on an argument,
+  merely echo it, or ignore it), the separate Runtime Subject Context table
+  for `input.extensions.subject.*`, and the **Undeclared Fields** table
+  (fields existing guidance depends on that no tool declares, or that the
+  governing tool does not declare).
 - Gate: if the confirmation mode is Gated, do not proceed to Step B until
   the human confirms the output. If Autonomous, continue to Step B
   immediately.
@@ -163,7 +165,9 @@ Strictly follow `./steps/enforcement_mapping.md`.
   reference arguments the governing tool actually declares. Required — if
   it is missing, stop and run `smith --flag get_mcp_parameter`.
 - Input: `<TARGET_AGENT_PATH>/smith/system_vars.json` — the authoritative
-  source for `input.extensions.subject.*`, used in the same verification.
+  schema for runtime-provided `input.extensions.subject.*`, used in the same
+  field-existence verification. This provenance is distinct from any
+  authentication or integrity mechanism, which Step A records separately.
 - Input (optional): `<TARGET_AGENT_PATH>/smith/guidance.txt` — the same
   existing per-target-agent guidance file already read in Step B, not a
   new file. Used here only to check which of this step's candidate rules
