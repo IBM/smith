@@ -56,6 +56,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- Batched Architecture Analysis discovery and selected-file reads, and grouped
+  unresolved questionnaire items into one clarification round to reduce
+  workflow latency without narrowing coverage.
 - Consolidated shared security-analysis path, missing-input, write-scope, and
   phase-stop constraints into one worker contract instead of repeating them in
   every phase guide.

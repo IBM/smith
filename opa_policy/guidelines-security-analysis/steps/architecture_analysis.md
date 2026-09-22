@@ -24,15 +24,23 @@ The envelope's Shared Phase Contract applies.
 
 #### STEP 1 — Identify source files
 
-Start from `<TARGET_AGENT_PATH>` and inventory file names only. Prefer
-`rg --files`; do not open every file during discovery. The implementation may use
-Python, JavaScript, TypeScript, or another language, and its entrypoint may use
-any filename or MCP transport.
+Use this batched discovery sequence and maintain a `seen paths` set:
 
-Use `tool_definitions.json` as the seed for targeted source discovery. Search
-for the extracted tool names, MCP framework registration, transport setup, and
-the functions or handlers behind those registrations. Follow imports or calls
-only far enough to identify code that performs one of these roles:
+1. Inventory names once with `rg --files <TARGET_AGENT_PATH>`; do not open files
+   during inventory.
+2. Extract every tool name from `tool_definitions.json` once. Search all tool
+   names, MCP registration/transport markers, policy interception, and runtime
+   context markers in one path-only batch (`rg -l` with repeated `-e` patterns).
+   Do not emit matching source lines during discovery.
+3. Deduplicate and rank the matching paths, then read independent selections
+   concurrently when supported. Read every selected source file at most once.
+4. Collect unresolved import/call targets from those reads and resolve them in
+   one path-only search batch per hop. Deduplicate against `seen paths` before
+   reading the new selections together.
+
+The implementation may use Python, JavaScript, TypeScript, another language,
+or any filename or MCP transport. Follow imports or calls only far enough to
+identify code that performs one of these roles:
 
 - **MCP server entrypoint** — creates the MCP server, registers tools, and
   selects stdio, HTTP, SSE, or another transport.
@@ -58,16 +66,15 @@ implement enforcement. Use README and package/build metadata only to clarify
 an entrypoint, transport, dependency, or external integration; they are not
 evidence of runtime behavior on their own.
 
-Read the selected source files, `<SYSTEM_VAR_FILE>` when present,
-`tool_definitions.json`, and `<GUIDANCE_FILE>` when present. Record the selected
-source paths and the evidence for each assigned role. If a role remains
-ambiguous after targeted search, record it as unknown rather than broadening
-the read to every source file.
+After discovery, read `<SYSTEM_VAR_FILE>` and `<GUIDANCE_FILE>` once when
+present, and reuse the loaded `tool_definitions.json` data. Record selected
+source paths and evidence for each role. If a role remains ambiguous, record it
+as unknown rather than broadening the read to every source file.
 
-Bound discovery to two call/import hops from each registered tool and at most
-20 implementation files. Deduplicate files reached from multiple tools. If the
-bound would omit a file needed to establish a role or enforcement path, record
-the omitted candidate and reason instead of expanding silently.
+Bound discovery to two batched call/import hops from each registered tool and
+at most 20 unique implementation files. If the bound would omit a file needed
+to establish a role or enforcement path, record the omitted candidate and
+reason instead of expanding silently.
 
 ---
 

@@ -19,10 +19,10 @@ The envelope's Shared Phase Contract applies.
   over inferences from architecture.md.
 - Input (optional): `<SYSTEM_VAR_FILE>` — use for
   exact `input.extensions.subject.*` field names and types in Q6, Q7, Q13b,
-  and Q16 as applicable. These fields are runtime-provided; do not reclassify them as
-  self-reported because application source does not read them.
+  and Q16 as applicable. These fields are runtime-provided; do not reclassify
+  them as self-reported because application source does not read them.
 - Input (optional): `<TARGET_AGENT_PATH>/smith/tool_definitions.json` — use
-  for exact parameter names and types in Q4
+  for exact tool and parameter names and types in Q1 and Q4
 - Output: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/policy_guidance_questionnaire.md`
 
 ---
@@ -34,7 +34,7 @@ The envelope's Shared Phase Contract applies.
 #### STEP 1 — Read inputs
 
 Read `<GUIDANCE_FILE>` first when present. Parse
-  every numbered rule. For each rule, note which questionnaire section
+  every numbered rule. For each rule, note which questionnaire item
   it maps to (see mapping below) and what OPA-enforceable condition it
   implies.
 
@@ -43,9 +43,9 @@ Then load only the sections needed to answer the questionnaire:
 - `architecture.md`: Run Context, Layers, Runtime Subject Context, Tool
   Arguments, Prompt Inputs, External Data, Data Flow, and Enforcement Points.
   Defer Undeclared Fields to Step D.
-- `<SYSTEM_VAR_FILE>`: subject keys and types for Sections 2 and 5.
+- `<SYSTEM_VAR_FILE>`: subject keys and types for Q6, Q7, Q13b, and Q16.
 - `tool_definitions.json`: tool names, descriptions, and parameter
-  names/types/schemas for Sections 1, 3, and 4.
+  names/types/schemas for Q1 and Q4.
 
 Do not search for similarly named substitutes or reread source code; Step A's
 artifact is the source for architectural behavior.
@@ -87,8 +87,11 @@ consume.
 #### STEP 2 — Fill the questionnaire
 
 Write the output file to `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/policy_guidance_questionnaire.md`
-using exactly this structure. Pre-fill where possible; ask the user only
-for answers that cannot be derived from the input files.
+using exactly this structure. Pre-fill every supported answer first. Put all
+remaining questions into one numbered clarification request; do not ask them
+one at a time. Apply the response in one pass. Ask at most one consolidated
+follow-up for contradictory or incomplete answers, then preserve unresolved
+items as documented blanks.
 
 ```
 # OPA Policy Guidance Questionnaire
