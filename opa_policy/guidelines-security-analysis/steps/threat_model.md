@@ -5,17 +5,9 @@ MCP server and produces `threat_model.md`. Requires `architecture.md` and
 `policy_guidance_questionnaire.md` to be present in
 `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/`.
 
-### Authoritative Paths
+### Phase inputs and output
 
-**Inputs:** Use ONLY these exact files. Do NOT read similarly-named files
-from other folders. If a required file is missing here, stop and tell
-the user which file is needed and which step produces it; do not
-substitute one from elsewhere.
-
-Require concrete paths in the phase envelope and cross-check them against
-`architecture.md`'s Run Context. Stop with `FAIL` on an unresolved placeholder,
-omitted value, or conflict. Treat an optional path as absent only when the
-envelope explicitly says `ABSENT`.
+The envelope's Shared Phase Contract applies.
 - Input 1: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/architecture.md` (from architecture_analysis skill)
 - Input 2: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/policy_guidance_questionnaire.md`
 - Input 3: `src/smith/data/owasp_10_ai_catalog.json` — repo-relative, not
@@ -44,8 +36,9 @@ Load only the input sections needed by this phase:
 
 - `architecture.md`: Run Context, Layers, Trust Boundaries, Data Flow,
   Enforcement Points, and Undeclared Fields.
-- questionnaire: Q1-Q19 plus the confidence marker on each answer. Q20-Q22 are
-  not needed for threat discovery.
+- questionnaire: Answer Register rows Q1-Q19, their confidence markers, and
+  only the detail tables referenced by those rows. Q20-Q22 are not needed for
+  threat discovery.
 - `tool_definitions.json`: tool names and parameter names/types for citation
   verification; defer detailed descriptions and enums to Step D.
 - `<SYSTEM_VAR_FILE>`: subject keys and types.
@@ -59,7 +52,7 @@ Load only the input sections needed by this phase:
 
 Do not load `impact`, `mitigations`, catalog metadata, or other fields in this
 phase. Query the existing catalog in place; do not create a copied or split
-catalog file. On a missing required input, apply the Authoritative Paths guard.
+catalog file.
 
 ---
 
@@ -145,14 +138,10 @@ decomposition, 3d severity assignment.
 calibration.** For every scenario in this ASI's `attack_scenarios`
 array, ask: "does an analog of this scenario exist against this tool?"
 This is a per-scenario coverage check — do not treat the scenarios as
-mere shape examples. For each scenario:
-- If yes → produce a threat instance that names the specific field or
-  layer of *this* tool that the scenario maps onto.
-- If no → record a one-line reason (e.g. "no downstream agent to
-  propagate to", "no persistent memory store"). These reasons go under
-  "Scenarios considered but not applicable" in STEP 4. Do not silently
-  skip a scenario; the completeness critic in STEP 5 checks that every
-  scenario has been either matched or explicitly excluded.
+mere shape examples. Record one compact coverage row per scenario: map it to a
+threat ID when applicable, otherwise write `N/A` and a one-line reason. Do not
+repeat the catalog scenario text. The completeness critic in STEP 5 checks
+that every scenario index has a disposition.
 
 Then do the same for `threat_aliases`: if an alias names a specific
 sub-risk (e.g. "Cross-Agent Trust Exploitation" for ASI03) and the
@@ -186,7 +175,8 @@ Deduplicate equivalent instances before writing. Within one ASI, instances are
 equivalent when actor, attack-surface row, vulnerable field/layer, attack
 vector, and impact are the same. Keep one instance and attach every matching
 catalog scenario index; do not duplicate prose merely because two catalog
-scenarios describe the same system-specific exploit.
+scenarios describe the same system-specific exploit. Assign stable document-
+wide IDs (`T01`, `T02`, ...) after deduplication.
 
 **3d — Assign severity.** For every threat instance, assign
 Critical / High / Medium / Low, grounded in this ASI's `business_impact`
@@ -228,50 +218,54 @@ Source catalog: src/smith/data/owasp_10_ai_catalog.json (OWASP Top 10 for Agenti
 
 ## Attack Surfaces
 
-Coverage sweep from architecture.md's Trust Boundaries and Data Flow.
-Every row must be referenced in at least one ASI threat instance below,
-or explicitly marked "N/A — <reason>" in the Covered-in column.
-
-| # | Field or Data Point | Source Layer | Provenance / influence | Enters where | Covered in |
+| # | Field or Data Point | Source Layer | Provenance / influence | Enters where | Threat IDs / N/A |
 |---|---|---|---|---|---|
-| 1 | `user_profile.*` | HTTP API | Self-reported | Agent layer | ASI01, ASI03 |
-| 2 | `input.args.keywords` | Agent (LLM) | LLM-generated / caller-influenced | Tool → External | ASI02 |
+| 1 | `user_profile.*` | HTTP API | Self-reported | Agent layer | T01, T03 |
+| 2 | `input.args.keywords` | Agent (LLM) | LLM-generated / caller-influenced | Tool → External | T02 |
 | ... | ... | ... | ... | ... | ... |
 
----
+## Evidence Index
+
+Give each distinct source citation one ID and state it once. Reuse the ID in
+all threat rows that depend on the same evidence.
+
+| ID | Source | Grounded fact |
+|---|---|---|
+| E01 | `architecture.md` — Tool Arguments row N | <concise fact> |
+| E02 | questionnaire Q9 | <concise confirmed intent> |
 
 ## ASI01 — <name from catalog>
 **Applicable:** Yes / Partial / No
 **OWASP:** <one-sentence paraphrase of catalog `description`>
-**Evidence:** <cite specific field, file, or behaviour from architecture.md / questionnaire>
 **Threat instances:**
-- **[Severity]** **Actor: Caller/LLM/Tool/External** — <concrete
-  description naming the specific field/layer and attack vector>.
-  *(Attack surface: row #N; Catalog scenario: <index into `attack_scenarios`> / novel-to-this-system)*
-- [second instance, if a distinct actor or attack vector applies]
-**Scenarios considered but not applicable:**
-- <catalog scenario summary> — <one-line reason it doesn't apply here>
-- [one bullet per scenario in the catalog `attack_scenarios` array that
-  was NOT matched to a threat instance above]
-**Not covered:** <one to two sentences on what this category as a whole
-does not touch for this tool>
+
+| ID | Severity | Actor | Surface | Catalog basis | Evidence | Concrete threat |
+|---|---|---|---|---|---|---|
+| T01 | High | Caller | #2 | 1, 3 | E01, E02 | <field/layer, vector, and impact> |
+
+**Scenario coverage:**
+
+| Scenario | Disposition |
+|---|---|
+| 1 | T01 |
+| 2 | N/A — <one-line system-specific reason> |
+
+**Boundary:** <optional; one sentence identifying a relevant layer or sub-risk
+outside this category>
 
 [repeat for ASI02 through ASI10, using each catalog entry's own `name`]
 ```
 
 Rules for writing threat instances:
-- Every instance must name (a) a specific field or layer, (b) an actor,
-  and (c) a severity — no exceptions.
-- Every instance must reference an Attack Surfaces row number and
-  either a catalog `attack_scenarios` index or the word "novel".
+- Each threat row must name a specific field/layer, actor, severity, Attack
+  Surface row, evidence ID, and catalog basis: scenario indexes, an alias, or
+  `novel`.
+- Cite each distinct fact once in the Evidence Index; reuse its ID rather than
+  repeating the citation or grounded fact in category prose.
 - Do not write generic agentic-risk statements.
-- If a category is Not Applicable, still list the catalog scenarios you
-  considered under "Scenarios considered but not applicable" so the
-  completeness critic can verify. "Not applicable" is a conclusion, not
-  a shortcut for skipping analysis.
-- Partial means some sub-risks apply and some do not — split them
-  explicitly (threat instances for the sub-risks that apply; "Scenarios
-  considered but not applicable" for the rest).
+- Every catalog scenario gets exactly one Scenario coverage row. A threat ID
+  means applicable; `N/A — <reason>` means considered but inapplicable.
+- Partial means some scenario rows map to threats and others are N/A.
 
 ---
 
@@ -288,24 +282,20 @@ to STEP 3 and add the missing threat instance (or, for scenarios/fields
 that genuinely don't apply, add an N/A entry).
 
 1. **Attack surface coverage.** Every row in the "Attack Surfaces" table
-   must appear in at least one threat instance's `Attack surface:
-   row #N` reference. Any row that no instance references must be
-   annotated in the table's Covered-in column as "N/A — <reason>". A
+   must appear in at least one threat row's `Surface` cell. Any row that no
+   instance references must be
+   annotated in the table's final column as "N/A — <reason>". A
    Caller-influenced or untrusted surface with no ASI at all is almost
    always a real miss, not a genuine N/A — treat that outcome with
    suspicion.
 2. **Architecture layer coverage.** Every non-terminal layer in
-   architecture.md's Layers section must be referenced by at least one
-   threat instance's actor, evidence line, or attack-surface entry.
-   Layers that genuinely contribute nothing (pure passthrough with no
-   input transformation) get an explicit note in "Not covered" for the
-   most applicable ASI.
+   architecture.md's Layers section must be referenced by an attack-surface,
+   Evidence Index, or threat row. For a genuine pure passthrough, add one
+   `Boundary` sentence to the most applicable ASI.
 3. **Catalog scenario coverage.** For every ASI where Applicable = Yes
-   or Partial, every entry in the catalog's `attack_scenarios` array
-   must be either matched to a threat instance or listed under
-   "Scenarios considered but not applicable" with a reason. Silent
-   skipping is the most common source of the miss this critic exists
-   to catch.
+   or Partial, every catalog scenario index must have exactly one Scenario
+   coverage disposition: one or more valid threat IDs, or `N/A` with a reason.
+   For a Not Applicable ASI, every scenario must be N/A.
 4. **Multi-actor consideration.** For every ASI where Applicable = Yes,
    check whether more than one actor (Caller/LLM/Tool/External) could
    plausibly cause the harm this category describes. If yes, confirm
@@ -337,7 +327,7 @@ Walk every citation in `threat_model.md` and confirm it exists in its
 source. This catches fabricated fields and misattributed evidence
 before they propagate into Step D.
 
-For every threat instance and every "Evidence:" line:
+For every Evidence Index row and threat row:
 
 1. If it names an `input.args.<x>`, an `input.extensions.subject.<x>`,
    or any other structured field, confirm that exact field is declared
@@ -362,17 +352,19 @@ For every threat instance and every "Evidence:" line:
    is inherited downstream as established, and enforcement_mapping's
    own threat-linkage check will then find genuine upstream support for
    a rule built on a field that tool never receives.
-2. If it cites `architecture.md` (a layer, file, or behaviour), confirm
+2. If an evidence row cites `architecture.md` (a layer, file, or behaviour), confirm
    the citation matches text actually present in `architecture.md`.
 3. If it cites a questionnaire answer (e.g. "per Q9"), confirm that
    question is answered — not blank, and not `[inferred — low
    confidence]`. Low-confidence answers must NOT be cited as evidence;
    remove or rewrite the threat instance if that is its only support.
-4. If it cites a catalog `attack_scenarios` index or a `threat_aliases`
+4. If a threat or coverage row cites a catalog `attack_scenarios` index or a `threat_aliases`
    entry, confirm that index/alias exists in the catalog entry for
    that ASI.
-5. If it cites an Attack Surfaces row number, confirm the row exists
+5. If a threat row cites an Attack Surfaces row number, confirm the row exists
    and matches the description.
+6. Confirm every threat row cites at least one valid Evidence Index ID; remove
+   duplicate Evidence Index rows that state the same grounded fact.
 
 Any citation that fails verification: either fix the citation (pointing
 to a real field/section) or delete the threat instance. Cite-and-hope
@@ -404,6 +396,7 @@ Append:
 ## Phase Handoff
 
 - Status: PASS / FAIL
+- Artifact schema: threat-model-v2
 - OWASP categories evaluated: 10/10
 - Applicable categories: <count and IDs>
 - Threat instances: <count after deduplication>
@@ -413,6 +406,3 @@ Append:
 - Repair passes: <0 or 1>
 - Open gaps: <none, or concise list>
 ```
-
-Return this handoff to the orchestrator and stop; do not load the next phase
-guide.

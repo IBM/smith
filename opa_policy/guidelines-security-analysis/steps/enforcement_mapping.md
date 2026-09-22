@@ -4,15 +4,10 @@ Maps threat instances and confirmed questionnaire intent to their enforcement
 layer, writes `owasp_policy_guidelines.md`, and proposes only missing,
 OPA-enforceable rules in `guidance_updated.txt`.
 
-### Authoritative inputs
+### Phase inputs and outputs
 
-Use only these paths; never substitute similarly named files:
-
-Require concrete paths in the phase envelope and cross-check them against
-`architecture.md`'s Run Context. Stop with `FAIL` on an unresolved placeholder,
-omitted value, or conflict. In particular, `<GUIDANCE_FILE>` is absent only
-when the envelope explicitly says `ABSENT`; an unresolved or omitted path must
-not cause STEP 8 to skip guidance reconciliation.
+The envelope's Shared Phase Contract applies. In particular, STEP 8 requires
+`<GUIDANCE_FILE>` to be either a resolved path or explicitly `ABSENT`.
 
 - `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/architecture.md`
 - `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/threat_model.md`
@@ -47,15 +42,15 @@ tool implementation, or infrastructure.
 
 Do not reread every input in full:
 
-- From `architecture.md`, load Run Context, Architecture Summary/Layers,
+- From `architecture.md`, load Run Context, Layers,
   Runtime Subject Context, Tool Arguments (especially Disposition), Enforcement
   Points, and Undeclared Fields.
-- From `threat_model.md`, load the Attack Surfaces table plus each category's
-  applicability, evidence, and applicable threat instances. Do not load
-  detailed scenario-exclusion prose for categories with no applicable
-  instance.
-- From the questionnaire, load Q9-Q19 and Q22. Load another answer only when a
-  cited threat or candidate depends on it.
+- From `threat_model.md`, load the Attack Surfaces and Evidence Index tables,
+  then each category's applicability and Threat instances table. Do not load
+  Scenario coverage tables or Boundary prose.
+- From the questionnaire, load Answer Register rows Q9-Q19 and Q22 plus only
+  the detail tables they reference. Load another answer only when a cited
+  threat or candidate depends on it.
 - From `tool_definitions.json`, load tool names and only the parameter records
   needed by threat or questionnaire candidates, including their schemas,
   descriptions, and enums.
@@ -73,11 +68,9 @@ Do not reread every input in full:
   split catalog file.
 - Defer `<GUIDANCE_FILE>` until STEP 8.
 
-Apply the missing-input rules from Authoritative inputs before continuing.
-
 #### STEP 2 — Map each threat to an enforcement layer
 
-For every applicable threat instance:
+For every applicable threat ID:
 
 1. Name the structured field carrying its evidence, if any.
 2. If a pre-execution deny can be decided solely from an allowed OPA input
@@ -85,13 +78,20 @@ For every applicable threat instance:
 3. Otherwise assign it to Agent, Tool implementation, or Infrastructure and
    state why OPA cannot enforce it.
 
+Record that decision once:
+
+| Threat ID | Field / surface | Owner | Reason |
+|---|---|---|---|
+| T01 | `input.args.<field>` / #N | OPA / Agent / Tool / Infrastructure | <one line> |
+
 #### STEP 3 — Build the scoping table
 
-Write one row per OWASP category:
+Summarize one row per OWASP category, referencing threat IDs instead of
+restating their descriptions:
 
-| OWASP Category | In OPA scope? | Scope note | Out-of-scope owner |
-|---|---|---|---|
-| ASI01 | Yes / Partial / No | <OPA-visible portion> | Agent / Tool impl / Infra / N/A |
+| OWASP | Scope | OPA threat IDs | Other-layer threat IDs | Reason / owner |
+|---|---|---|---|---|
+| ASI01 | Yes / Partial / No | T01 | T02 | <one line> |
 
 Use Partial only when the category has both OPA-enforceable and out-of-scope
 instances.
@@ -101,9 +101,9 @@ instances.
 Record every out-of-scope instance here; these rows never become guidance
 rules:
 
-| Threat | Layer | Recommended action |
+| Threat ID | Layer | Recommended action |
 |---|---|---|
-| <specific instance> | Agent / Tool impl / Infra | <one-line action> |
+| T02 | Agent / Tool impl / Infra | <one-line action> |
 
 #### STEP 5 — Derive OPA policy requirements
 
@@ -130,25 +130,19 @@ Preserve this output structure:
 ---
 
 ## Architecture Summary
-<two-sentence layer and trust summary>
+<one-sentence layer and trust summary>
 
----
+## Threat Disposition
+
+| Threat ID | Field / surface | Owner | Reason |
+|---|---|---|---|
+| T01 | `input.args.<field>` / #N | OPA / Agent / Tool / Infrastructure | <one line> |
 
 ## OWASP Top 10 for Agentic AI Security — Scope Assessment
 
-### <Category name>
-**Risk:** <one sentence>
-**Verdict:** <In scope / Partial / Out of scope> — <reason>
-
-[repeat for all categories]
-
----
-
-## Summary Table
-
-| OWASP Category | In OPA scope? | Out-of-scope owner |
-|---|---|---|
-| ... | ... | ... |
+| OWASP | Scope | OPA threat IDs | Other-layer threat IDs | Reason / owner |
+|---|---|---|---|---|
+| ASI01 | In scope / Partial / Out | T01 | T02 | <one line> |
 
 Categories flowing into the OPA policy: <list>
 
@@ -156,9 +150,9 @@ Categories flowing into the OPA policy: <list>
 
 ## Gap Register
 
-| Threat | Layer | Recommended action |
+| Threat ID | Layer | Recommended action |
 |---|---|---|
-| ... | ... | ... |
+| T02 | Agent / Tool impl / Infra | <one-line action> |
 
 ---
 
@@ -174,6 +168,7 @@ Categories flowing into the OPA policy: <list>
 
 ### Rule: <violation code>
 - OWASP: <category>
+- Threats: <T IDs>
 - Severity: Hard block / Soft block
 - Condition: <plain-English condition>
 - Matching: <exact / substring / regex / numeric comparison / set membership>
@@ -230,17 +225,18 @@ Combine and deduplicate:
   low-confidence answers and fields or tools that fail STEP 6b.
 
 Two candidates are equivalent when they constrain the same field with the same
-operator and overlapping value set. Keep one candidate with both source tags.
-For every candidate record its sources, governed tools, canonical field,
-operator, and value set. Do not read `<GUIDANCE_FILE>` yet.
+operator and overlapping value set. Keep one candidate with all source IDs.
+Assign stable IDs (`C01`, `C02`, ...) and record sources (threat IDs or
+question numbers), governed tools, canonical field, operator, and value set.
+Do not repeat source prose or read `<GUIDANCE_FILE>` yet.
 
 #### STEP 8 — Reconcile with existing guidance and write the addendum
 
 Read `<GUIDANCE_FILE>` once. For each candidate, record:
 
-| Candidate | Verified tool/field | Field | Operator | Value set | Covering rule | Covered? |
-|---|---|---|---|---|---|---|
-| <candidate> | <tool and path> | <input path> | <operator> | <values> | <rule or —> | Yes / No |
+| Candidate ID | Tool | Field | Operator | Values | Sources | Covering rule | Covered? |
+|---|---|---|---|---|---|---|---|
+| C01 | <tool> | <input path> | <operator> | <values> | T01, Q13 | <rule or —> | Yes / No |
 
 A candidate is covered when an existing rule either:
 
@@ -292,9 +288,9 @@ set. For each pair on the same tool/field, report:
 - **Contradictory correction:** candidate removes values or narrows scope;
   emit no addendum line and report the required edit to the existing rule.
 
-Do not resolve overlaps or conflicts automatically. Log the compared rules,
-verdict, field, operator, and value relationship for human review. Any
-unresolved Overlap or Conflict blocks Step E.
+Do not resolve overlaps or conflicts automatically. Log candidate/rule IDs,
+verdict, field, operator, and value relationship; do not copy their full prose.
+Any unresolved Overlap or Conflict blocks Step E.
 
 #### STEP 8c — Check regressions against the captured proposal
 
@@ -341,6 +337,7 @@ rejected non-decisions explicitly. End `owasp_policy_guidelines.md` with:
 ## Phase Handoff
 
 - Status: PASS / FAIL
+- Artifact schema: enforcement-mapping-v2
 - Applicable threats mapped: <mapped>/<total>
 - OPA candidates after deduplication: <count>
 - Newly proposed rules: <count>
@@ -351,5 +348,5 @@ rejected non-decisions explicitly. End `owasp_policy_guidelines.md` with:
 ```
 
 Mark the phase `FAIL` when addendum validation fails or any blocking overlap,
-conflict, or regression remains. Return the handoff to the orchestrator and
-stop. Step D does not merge guidance or start policy creation.
+conflict, or regression remains. Step D does not merge guidance or start policy
+creation.

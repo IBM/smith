@@ -57,24 +57,32 @@ GUIDANCE_UPDATE_FILE: <resolved path beside GUIDANCE_FILE> | ABSENT
 PREDECESSOR_ARTIFACTS: <resolved paths, or none for Step A>
 ```
 
-Also give the worker only its step guide and the inputs named by that guide. Do
-not pass prior conversation, scratch analysis, or another step's guide. The
-worker must stop with `FAIL` if an envelope value remains unresolved or
-conflicts with `architecture.md`'s Run Context. `ABSENT` is an explicit result;
-a missing envelope value must never be interpreted as an absent optional file.
+Attach this Shared Phase Contract verbatim to every worker envelope. This is the
+single definition; step guides do not restate it:
 
-The worker writes its designated artifact, returns the `Phase Handoff`, and
-stops. If fresh workers are unavailable, run one step in the current
-invocation, report its checkpoint, and require a new invocation for the next
-step. Do not fall back to a continuous A-D context.
+1. Use only the envelope paths and the current guide's named inputs. Do not read
+   `.env`, search for substitutes, load another step guide, or inherit prior
+   conversation or scratch analysis.
+2. Stop with `FAIL` on an unresolved, omitted, missing, or conflicting required
+   value. An optional path is absent only when explicitly set to `ABSENT`.
+3. Cross-check the envelope against `architecture.md`'s Run Context when that
+   artifact is a predecessor.
+4. For a Markdown predecessor, first index its headings with
+   `rg -n '^#{1,3} ' <path>`, then read only the line ranges for sections named
+   by the current guide. Do not open the whole file merely to locate sections.
+5. Write only the current guide's designated outputs, return its `Phase
+   Handoff`, and stop.
+
+If fresh workers are unavailable, run one step in the current invocation,
+report its checkpoint, and require a new invocation for the next step. Do not
+fall back to a continuous A-D context.
 
 Resume from the first missing or explicitly requested artifact. Before using an
-existing artifact, confirm that it has a successful `Phase Handoff` and that
-every required predecessor exists. Re-run only a stale, failed, or explicitly
-requested step; never regenerate an earlier artifact merely to continue. For a
-legacy artifact without a handoff, validate its required sections once and
-append the checkpoint in place; re-run the phase only when that validation
-fails.
+existing artifact, confirm that its `Phase Handoff` is successful, its
+`Artifact schema` matches the current guide, and every required predecessor
+exists. Re-run only a stale, failed, schema-mismatched, or explicitly requested
+step. For a legacy artifact without a handoff, validate its required sections
+once and append the current checkpoint; re-run the phase when validation fails.
 
 ## Phase routing
 
@@ -132,7 +140,4 @@ mode does not authorize it.
 
 - Run Steps A-D in order unless the user requests one phase and its required
   predecessors already exist.
-- A phase writes only the outputs declared by its guide and never modifies its
-  inputs.
-- On a missing input or failed checkpoint, report the producing step and stop.
 - Step E retains its explicit merge and policy-creation gates in every mode.

@@ -3,14 +3,9 @@
 Produces `architecture.md` for a target MCP server. This document is the
 required input for the threat_model and enforcement_mapping skills.
 
-### Authoritative Paths
+### Phase inputs and output
 
-Use the paths resolved by the top-level workflow; do not read `.env` directly
-and do not substitute similarly named files from elsewhere.
-
-The phase envelope must contain concrete values for every path below. Stop with
-`FAIL` if it contains an unresolved placeholder or omits a value. An optional
-path is absent only when its value is explicitly `ABSENT`.
+The envelope's Shared Phase Contract applies.
 
 - `<TARGET_AGENT_PATH>` — root within which source discovery is allowed.
 - `<SYSTEM_VAR_FILE>` — authoritative schema for runtime-provided subject
@@ -243,14 +238,9 @@ this structure. Use canonical policy paths for every structured field:
 
 ## Layers
 
-### <Layer Name>
-- File: <filename>
-- Role: <one sentence>
-- Inputs: <field list>
-- Outputs: <field list>
-- Current enforcement: <description or "none">
-
-[repeat for each layer]
+| Layer | File | Role | Inputs | Outputs | Current enforcement |
+|---|---|---|---|---|---|
+| <name> | <path> | <one sentence> | <fields> | <fields> | <control or "none"> |
 
 ## Trust Boundaries
 
@@ -287,14 +277,9 @@ this structure. Use canonical policy paths for every structured field:
 
 ## Enforcement Points
 
-### Current
-- <layer>: <what is enforced>
-
-### Available (OPA-interceptable)
-- <layer>: <what could be enforced and what fields are visible>
-
-### Blind Spots
-- <layer>: <what cannot be enforced and why>
+| Layer | Current | Available (OPA-interceptable) | Blind spots |
+|---|---|---|---|
+| <layer> | <current controls or "none"> | <possible control and visible fields or "none"> | <unavailable control and reason or "none"> |
 
 ## Undeclared Fields
 
@@ -328,6 +313,7 @@ Append this compact checkpoint to `architecture.md`:
 ## Phase Handoff
 
 - Status: PASS / FAIL
+- Artifact schema: architecture-v2
 - Sources inspected: <count and paths>
 - Tools covered: <count and names>
 - Layers: <count and names>
@@ -338,5 +324,4 @@ Append this compact checkpoint to `architecture.md`:
 ```
 
 Mark `PASS` only when the required sections are present and each extracted tool
-has a governing implementation or an explicit unknown finding. Return this
-handoff to the orchestrator and stop; do not load the next phase guide.
+has a governing implementation or an explicit unknown finding.
