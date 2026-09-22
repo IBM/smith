@@ -47,9 +47,9 @@ Read `<GUIDANCE_FILE>` first when present. Parse
 
 Then load only the sections needed to answer the questionnaire:
 
-- `architecture.md`: Layers, Runtime Subject Context, Tool Arguments, Prompt
-  Inputs, External Data, Data Flow, and Enforcement Points. Defer Undeclared
-  Fields to Step D.
+- `architecture.md`: Run Context, Layers, Runtime Subject Context, Tool
+  Arguments, Prompt Inputs, External Data, Data Flow, and Enforcement Points.
+  Defer Undeclared Fields to Step D.
 - `<SYSTEM_VAR_FILE>`: subject keys and types for Sections 2 and 5.
 - `tool_definitions.json`: tool names, descriptions, and parameter
   names/types/schemas for Sections 1, 3, and 4.

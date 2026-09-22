@@ -47,9 +47,9 @@ tool implementation, or infrastructure.
 
 Do not reread every input in full:
 
-- From `architecture.md`, load Architecture Summary/Layers, Runtime Subject
-  Context, Tool Arguments (especially Disposition), Enforcement Points, and
-  Undeclared Fields.
+- From `architecture.md`, load Run Context, Architecture Summary/Layers,
+  Runtime Subject Context, Tool Arguments (especially Disposition), Enforcement
+  Points, and Undeclared Fields.
 - From `threat_model.md`, load the Attack Surfaces table plus each category's
   applicability, evidence, and applicable threat instances. Do not load
   detailed scenario-exclusion prose for categories with no applicable

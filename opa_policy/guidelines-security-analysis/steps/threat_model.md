@@ -42,8 +42,8 @@ envelope explicitly says `ABSENT`.
 
 Load only the input sections needed by this phase:
 
-- `architecture.md`: Layers, Trust Boundaries, Data Flow, Enforcement Points,
-  and Undeclared Fields.
+- `architecture.md`: Run Context, Layers, Trust Boundaries, Data Flow,
+  Enforcement Points, and Undeclared Fields.
 - questionnaire: Q1-Q19 plus the confidence marker on each answer. Q20-Q22 are
   not needed for threat discovery.
 - `tool_definitions.json`: tool names and parameter names/types for citation
