@@ -60,8 +60,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   phase-stop constraints into one worker contract instead of repeating them in
   every phase guide.
 - Reduced generated-artifact amplification with compact questionnaire,
-  architecture, scenario-coverage, evidence, threat, and enforcement tables;
-  downstream phases now reuse stable IDs instead of repeating source prose.
+  architecture, global scenario-coverage, evidence, threat, and enforcement
+  tables; downstream phases reuse stable IDs, filtered JSON projections, and a
+  single validation matrix instead of repeating source or validation prose.
 - Security-Grounded Guidance Analysis now runs Steps A-D as resumable,
   isolated-context phases with compact artifact handoffs, bounded discovery and
   repair passes, and deduplication of equivalent threat instances.

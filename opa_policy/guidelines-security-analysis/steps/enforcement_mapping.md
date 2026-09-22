@@ -45,27 +45,40 @@ Do not reread every input in full:
 - From `architecture.md`, load Run Context, Layers,
   Runtime Subject Context, Tool Arguments (especially Disposition), Enforcement
   Points, and Undeclared Fields.
-- From `threat_model.md`, load the Attack Surfaces and Evidence Index tables,
-  then each category's applicability and Threat instances table. Do not load
-  Scenario coverage tables or Boundary prose.
+- From `threat_model.md`, load Attack Surfaces, Evidence Index, Category
+  Assessment, and Threat Instances. Do not load Scenario Coverage.
 - From the questionnaire, load Answer Register rows Q9-Q19 and Q22 plus only
   the detail tables they reference. Load another answer only when a cited
   threat or candidate depends on it.
-- From `tool_definitions.json`, load tool names and only the parameter records
-  needed by threat or questionnaire candidates, including their schemas,
-  descriptions, and enums.
-- From `<SYSTEM_VAR_FILE>`, load subject keys and types.
-- From the OWASP catalog, query only `id`, `name`, and `mitigations`; do not
-  load descriptions, impacts, scenarios, aliases, or other fields. For example:
+- From `tool_definitions.json`, make one query for only the tool/field pairs
+  named by threat or questionnaire candidates. Populate `wanted` from those
+  candidates:
 
   ```bash
-  jq '[.threats[] | {id, name, mitigations}]' \
+  jq --argjson wanted '[{"tool":"<tool>","fields":["<field>"]}]' \
+    '[.tools[] as $tool |
+      ($wanted[] | select(.tool == $tool.name)) as $selection |
+      {name: $tool.name,
+       parameters: [$tool.parameters[] |
+         select(.name as $name | $selection.fields | index($name))],
+       input_schema: {properties: ($tool.input_schema.properties |
+         with_entries(.key as $key |
+           select($selection.fields | index($key))))}}]' \
+    <TOOL_DEFINITIONS_FILE>
+  ```
+- From `<SYSTEM_VAR_FILE>`, load subject keys and types.
+- From the OWASP catalog, query `id`, `name`, and `mitigations` only for ASIs
+  represented by applicable Threat Instances or confirmed questionnaire
+  candidates. Populate the JSON ID list from those inputs:
+
+  ```bash
+  jq --argjson ids '["ASI01", "ASI03"]' \
+    '[.threats[] | select(.id as $id | $ids | index($id)) |
+      {id, name, mitigations}]' \
     src/smith/data/owasp_10_ai_catalog.json
   ```
 
-  If practical, filter that projection to categories having applicable threat
-  instances. Query the existing catalog in place; do not create a copied or
-  split catalog file.
+  Query the existing catalog in place; do not create a copied or split file.
 - Defer `<GUIDANCE_FILE>` until STEP 8.
 
 #### STEP 2 — Map each threat to an enforcement layer
@@ -166,55 +179,48 @@ Categories flowing into the OPA policy: <list>
 ### Known values
 <sets, enums, or term lists used by rules>
 
-### Rule: <violation code>
-- OWASP: <category>
-- Threats: <T IDs>
-- Severity: Hard block / Soft block
-- Condition: <plain-English condition>
-- Matching: <exact / substring / regex / numeric comparison / set membership>
+### Rules
 
-[repeat per rule]
+| Code | OWASP | Threat IDs | Severity | Tool(s) / field | Condition | Matching |
+|---|---|---|---|---|---|---|
+| <code> | <ASI> | <T IDs> | Hard / Soft | <tools and canonical path> | <plain-English deny condition> | exact / substring / regex / numeric / set |
 
----
+## Candidate Reconciliation
 
-## Violation Code Reference
-
-| Code | OWASP | Severity |
-|---|---|---|
-| ... | ... | ... |
+| Candidate ID | Tool | Field | Operator | Values | Sources | Related rule | Verdict |
+|---|---|---|---|---|---|---|---|
+| C01 | <tool> | <input path> | <operator> | <values> | T01, Q13 | <rule or —> | <verdict> |
 ```
 
 Use canonical OPA paths. Do not include Rego syntax, Rego built-ins, file
 organization, helpers, or test-generation advice.
 
+#### Validation matrix
+
+Apply each row at the named stage and follow its Failure action; only rows that
+explicitly say so block Step E.
+
+| Stage | Check | Pass condition | Failure action |
+|---|---|---|---|
+| Candidate | Tool/field | Tool exists; argument belongs to that tool, or subject field exists and is OPA-visible before execution | Narrow tool scope or move to Gap Register |
+| Candidate | Value domain | Trigger value is allowed by schema, enum, and description | Narrow or drop |
+| Candidate | Argument behavior | Protective allow-path argument is `Acts on`; an OPA deny may enforce independently | Drop unsafe allow path |
+| Candidate | Mitigation | Matching ASI mitigation supports the control | Drop |
+| Candidate | Threat | Applicable threat ID supports the rule | Drop |
+| Candidate | Confidence | Questionnaire source is not low-confidence | Require confirmation or drop |
+| Reconciliation | Reducibility | Rule reduces to field, operator, value, and deny-on-match | Move to Gap Register |
+| Reconciliation | Existing coverage | No existing rule covers the same or broader condition | Mark covered; do not emit |
+| Reconciliation | Relationship | Unique or additive; no unresolved overlap, conflict, or contradictory correction | Report and block Step E |
+| Reconciliation | Prior proposal | Still proposed, merged, or deliberately dropped by a named check | Report regression and block Step E |
+| On disk | Format | Numbered single-line rules only; contiguous required numbering | Correct once, then fail |
+| On disk | Semantics | Declared, OPA-visible fields; uncovered and enforceable; no gap content | Correct once, then fail |
+| On disk | Presence | Non-empty candidate set has a file; empty set has no file | Correct once, then fail |
+
 #### STEP 6b — Verify every rule
 
-Apply all checks before a rule can enter the candidate list:
-
-1. **Tool and field:** every governed tool exists. For each tool separately,
-   each `input.args.<x>` exists in that tool's parameters; each
-   `input.extensions.subject.<x>` exists in `<SYSTEM_VAR_FILE>` or the Runtime
-   Subject Context table. A subject field is enforceable only when
-   architecture.md also marks it OPA-visible at the pre-execution boundary;
-   `No` or `Unknown` visibility makes the candidate an other-layer gap, not an
-   active rule. Preserve exact spelling.
-2. **Value domain:** every trigger value is possible for that tool according to
-   its schema, enum, and parameter description.
-3. **Argument behavior:** when an allow path relies on a protective argument,
-   architecture.md's Tool Arguments table must mark it Acts on. Echoed,
-   Ignored, or Unclear arguments cannot justify an allow. This restriction does
-   not invalidate a deny whose enforcement is the OPA block itself.
-4. **Mitigation grounding:** the cited mitigation appears in the matching
-   catalog entry's `mitigations` projection.
-5. **Threat linkage:** the rule's actual justification traces to an applicable
-   threat instance; similarity to another policy rule is not a threat.
-6. **Questionnaire confidence:** questionnaire-derived values are not
-   `[inferred — low confidence]`; otherwise drop the rule or mark it pending
-   human confirmation rather than active.
-
-Fix a citation, narrow a rule to the tools where it verifies, or drop it. Never
-retain a rule for a tool where its field or value cannot occur. Record dropped
-tools and a one-line verification count.
+Apply all Candidate rows in the matrix before STEP 7. Preserve exact field
+spelling and validate each tool separately; a field existing on another tool
+does not pass. Record narrowed/dropped tools and a one-line verification count.
 
 #### STEP 7 — Build one candidate list
 
@@ -232,11 +238,8 @@ Do not repeat source prose or read `<GUIDANCE_FILE>` yet.
 
 #### STEP 8 — Reconcile with existing guidance and write the addendum
 
-Read `<GUIDANCE_FILE>` once. For each candidate, record:
-
-| Candidate ID | Tool | Field | Operator | Values | Sources | Covering rule | Covered? |
-|---|---|---|---|---|---|---|---|
-| C01 | <tool> | <input path> | <operator> | <values> | T01, Q13 | <rule or —> | Yes / No |
+Read `<GUIDANCE_FILE>` once and fill the Candidate Reconciliation table from
+STEP 6.
 
 A candidate is covered when an existing rule either:
 
@@ -277,67 +280,45 @@ the addendum.
 
 #### STEP 8b — Check post-merge redundancy and conflicts
 
-Compare existing guidance plus the proposed addendum as the post-merge rule
-set. For each pair on the same tool/field, report:
+Apply the Reconciliation rows to existing guidance plus the proposal. Classify
+same-tool/field pairs with this vocabulary:
 
-- **Overlap:** same operator with overlapping values.
-- **Conflict:** incompatible outcomes or thresholds without distinguishing
-  scope.
-- **Additive correction:** candidate only adds values; emit only the added
-  values as a normal rule.
-- **Contradictory correction:** candidate removes values or narrows scope;
-  emit no addendum line and report the required edit to the existing rule.
+| Verdict | Meaning / action |
+|---|---|
+| Unique | No related existing rule; emit the candidate. |
+| Covered | Existing rule denies the same or broader condition; emit nothing. |
+| Additive | Candidate only adds values; emit only the added values. |
+| Overlap | Same operator has overlapping, non-identical values; report and block. |
+| Conflict | Outcomes or thresholds are incompatible without distinct scope; report and block. |
+| Contradictory correction | Candidate removes values or narrows scope; emit nothing, identify the required existing-rule edit, and block. |
 
-Do not resolve overlaps or conflicts automatically. Log candidate/rule IDs,
-verdict, field, operator, and value relationship; do not copy their full prose.
-Any unresolved Overlap or Conflict blocks Step E.
+Log IDs, field, operator, and value relationship without copying full rule
+prose.
 
 #### STEP 8c — Check regressions against the captured proposal
 
-For every previously proposed rule, classify it as Still proposed, Merged into
-current guidance, Deliberately dropped by a named check, or Regression. Report
-unexplained regressions without re-adding them. If no prior rules exist, log
-that state explicitly; do not infer it when STEP 8 failed to capture a state.
+Apply the Prior proposal row in the matrix to every captured rule. If no prior
+rules exist, log that explicit state. Do not re-add unexplained regressions.
 
 #### STEP 8d — Validate the addendum on disk
 
-Re-read the actual file, or confirm its required absence. Verify the single
-contract in STEP 8 plus these invariants:
-
-- every line names only declared fields and is not semantically covered by
-  existing guidance;
-- every line is OPA-visible and enforceable according to architecture.md, with
-  no unresolved visibility or runtime-update caveat;
-- numbering is contiguous and begins at the required value;
-- Gap Register content remains in `owasp_policy_guidelines.md`;
-- a non-empty candidate set has a non-empty file, while an empty candidate set
-  has no file.
-
-Correct violations once and rerun this check. If violations remain, mark the
-phase `FAIL` instead of starting another repair loop. If cleanup removes all
-rules, delete the file. Report whether the gate passed directly or after the
-single cleanup pass.
+Re-read the actual file, or confirm its required absence, and apply all On disk
+rows in the matrix plus the STEP 8 addendum contract. Correct once and recheck;
+then fail if any violation remains. Delete the file if cleanup removes all
+rules, and report whether validation passed directly or after cleanup.
 
 #### STEP 9 — Human review
 
-Present:
-
-- category scope summary and violation codes;
-- candidate list and newly proposed rules, or the explicit no-new-rules result;
-- Gap Register;
-- verification narrowing or dropped tools;
-- overlaps, conflicts, additive/contradictory corrections;
-- regressions; and
-- addendum validation result.
-
-Call out conflicts, contradictory edits to existing guidance, regressions, and
-rejected non-decisions explicitly. End `owasp_policy_guidelines.md` with:
+Do not repeat tables already written. Direct the reviewer to Threat
+Disposition, Scope Assessment, Gap Register, Policy Rules, and the candidate
+reconciliation table. Call out only blockers, dropped/narrowed candidates, and
+the no-new-rules result when applicable. End the artifact with:
 
 ```markdown
 ## Phase Handoff
 
 - Status: PASS / FAIL
-- Artifact schema: enforcement-mapping-v2
+- Artifact schema: enforcement-mapping-v3
 - Applicable threats mapped: <mapped>/<total>
 - OPA candidates after deduplication: <count>
 - Newly proposed rules: <count>

@@ -150,19 +150,15 @@ architecture has the relevant substrate, produce a matching instance.
 **3c — Decompose each attack surface by actor.** For every threat
 instance, identify the actor that initiates or executes the attack:
 
-- **Caller** — a user or upstream system sending crafted input in a
-  caller-controlled prompt or influencing an `input.args.*` value. Treat
-  runtime subject context as caller-forgeable only when the architecture
-  provides evidence that its provider or delivery channel permits it.
-- **LLM** — the agent's model reasoning incorrectly, hallucinating,
-  falling for a prompt injection, or picking dangerous tool arguments
-  from an otherwise-benign user question.
-- **Tool** — the tool implementation processing input unsafely
-  (unsanitized outbound query construction, missing bounds checks,
-  unpinned dependencies).
-- **External** — an external service returning adversarial content
-  (poisoned scrape, spoofed response, compromised or typosquatted
-  dependency).
+| Actor | Meaning |
+|---|---|
+| Caller | User/upstream system supplies crafted prompts or influences tool arguments. |
+| LLM | Model is manipulated, hallucinates, or selects dangerous arguments. |
+| Tool | Tool implementation processes input or dependencies unsafely. |
+| External | External service or dependency returns adversarial content. |
+
+Treat runtime subject context as caller-forgeable only when architecture
+evidence identifies a vulnerable provider or delivery channel.
 
 A single ASI category can and often does have threat instances at
 multiple actors. Reason each one separately — do NOT blur "the caller
@@ -182,21 +178,16 @@ wide IDs (`T01`, `T02`, ...) after deduplication.
 Critical / High / Medium / Low, grounded in this ASI's `business_impact`
 entry from the catalog. Use this rubric:
 
-- **Critical** — data loss, financial loss, safety impact, or
-  compromise of an authentication boundary; matches the catalog's most
-  severe `business_impact` example for this ASI.
-- **High** — bypass of an intended access-control rule, or of a policy
-  the tool exists to enforce (role gating, disallowed-topic filter,
-  hard limit cap).
-- **Medium** — bypass of a soft guardrail (naming conventions,
-  advisory quotas), reliability degradation, or information leakage
-  that is not confidential.
-- **Low** — nuisance, defense-in-depth concern, or a threat that is
-  real but has no material impact on this tool's mission.
+| Severity | Criterion |
+|---|---|
+| Critical | Data, financial, safety, or authentication-boundary compromise matching the category's highest business impact. |
+| High | Intended access-control or mission-critical policy bypass. |
+| Medium | Soft-guardrail bypass, reliability degradation, or non-confidential leakage. |
+| Low | Nuisance or defense-in-depth risk without material mission impact. |
 
 Pull from the catalog entry with matching `id`:
-- `name` — the category display name used in the output heading
-- `description` — paraphrase into one sentence for the "OWASP:" line;
+- `name` — the Category Assessment `Name`
+- `description` — paraphrase into its one-sentence `OWASP summary`;
   do not quote the multi-paragraph field verbatim
 - `attack_scenarios` — 3b uses these directly, per scenario
 - `threat_aliases` — 3b uses these to check for named sub-risks
@@ -234,26 +225,24 @@ all threat rows that depend on the same evidence.
 | E01 | `architecture.md` — Tool Arguments row N | <concise fact> |
 | E02 | questionnaire Q9 | <concise confirmed intent> |
 
-## ASI01 — <name from catalog>
-**Applicable:** Yes / Partial / No
-**OWASP:** <one-sentence paraphrase of catalog `description`>
-**Threat instances:**
+## Category Assessment
 
-| ID | Severity | Actor | Surface | Catalog basis | Evidence | Concrete threat |
-|---|---|---|---|---|---|---|
-| T01 | High | Caller | #2 | 1, 3 | E01, E02 | <field/layer, vector, and impact> |
+| ASI | Name | Applicability | OWASP summary | Boundary (optional) |
+|---|---|---|---|---|
+| ASI01 | <catalog name> | Yes / Partial / No | <one-sentence description paraphrase> | <one sentence or —> |
 
-**Scenario coverage:**
+## Threat Instances
 
-| Scenario | Disposition |
-|---|---|
-| 1 | T01 |
-| 2 | N/A — <one-line system-specific reason> |
+| ID | ASI | Severity | Actor | Surface | Catalog basis | Evidence | Concrete threat |
+|---|---|---|---|---|---|---|---|
+| T01 | ASI01 | High | Caller | #2 | 1, 3 | E01, E02 | <field/layer, vector, and impact> |
 
-**Boundary:** <optional; one sentence identifying a relevant layer or sub-risk
-outside this category>
+## Scenario Coverage
 
-[repeat for ASI02 through ASI10, using each catalog entry's own `name`]
+| ASI | Scenario | Disposition |
+|---|---|---|
+| ASI01 | 1 | T01 |
+| ASI01 | 2 | N/A — <one-line system-specific reason> |
 ```
 
 Rules for writing threat instances:
@@ -263,7 +252,8 @@ Rules for writing threat instances:
 - Cite each distinct fact once in the Evidence Index; reuse its ID rather than
   repeating the citation or grounded fact in category prose.
 - Do not write generic agentic-risk statements.
-- Every catalog scenario gets exactly one Scenario coverage row. A threat ID
+- Category Assessment has exactly one row for each ASI01-ASI10. Every catalog
+  scenario gets exactly one Scenario Coverage row. A threat ID
   means applicable; `N/A — <reason>` means considered but inapplicable.
 - Partial means some scenario rows map to threats and others are N/A.
 
@@ -291,7 +281,7 @@ that genuinely don't apply, add an N/A entry).
 2. **Architecture layer coverage.** Every non-terminal layer in
    architecture.md's Layers section must be referenced by an attack-surface,
    Evidence Index, or threat row. For a genuine pure passthrough, add one
-   `Boundary` sentence to the most applicable ASI.
+   note in the most applicable Category Assessment `Boundary` cell.
 3. **Catalog scenario coverage.** For every ASI where Applicable = Yes
    or Partial, every catalog scenario index must have exactly one Scenario
    coverage disposition: one or more valid threat IDs, or `N/A` with a reason.
@@ -378,17 +368,9 @@ or `Citations verified: 15/18 — 3 fabricated fields removed`).
 
 #### STEP 7 — Human review
 
-Present the completeness result from STEP 5, the citation verification
-result from STEP 6, and a summary table:
-
-| Category | Applicable | # Threat instances | Severity distribution |
-|---|---|---|---|
-| ASI01 | Yes/Partial/No | N | Critical: A, High: B, Medium: C, Low: D |
-| ... | ... | ... | ... |
-
-Also log the overall Attack Surfaces coverage figure (e.g. "12/12
-covered, 0 marked N/A") so the reviewer can see the coverage stance at
-a glance.
+Do not produce another category summary: Category Assessment already contains
+the reviewable result. Append the checkpoint below; call out only failed
+checks or open gaps that require human attention.
 
 Append:
 
@@ -396,10 +378,11 @@ Append:
 ## Phase Handoff
 
 - Status: PASS / FAIL
-- Artifact schema: threat-model-v2
+- Artifact schema: threat-model-v3
 - OWASP categories evaluated: 10/10
 - Applicable categories: <count and IDs>
 - Threat instances: <count after deduplication>
+- Severity distribution: Critical <n>, High <n>, Medium <n>, Low <n>
 - Attack surfaces covered: <covered>/<total>; N/A: <count>
 - Catalog scenarios accounted for: <covered>/<total>
 - Citations verified: <verified>/<total>, or not run after a failed critic
