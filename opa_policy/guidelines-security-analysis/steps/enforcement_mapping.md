@@ -47,8 +47,8 @@ Do not reread every input in full:
   Points, and Undeclared Fields.
 - From `threat_model.md`, load Attack Surfaces, Evidence Index, Category
   Assessment, and Threat Instances. Do not load Scenario Coverage.
-- From the questionnaire, load Answer Register rows Q9-Q19 and Q22 plus only
-  the detail tables they reference. Load another answer only when a cited
+- From the questionnaire, load Answer Register rows Q9-Q19, Q21, and Q22 plus
+  only the detail tables they reference. Load another answer only when a cited
   threat or candidate depends on it.
 - From `tool_definitions.json`, make one query for only the tool/field pairs
   named by threat or questionnaire candidates. Populate `wanted` from those
@@ -111,12 +111,20 @@ instances.
 
 #### STEP 4 — Build the gap register
 
-Record every out-of-scope instance here; these rows never become guidance
-rules:
+Record every out-of-scope instance and every unresolved human decision needed
+to interpret or classify a candidate. These rows never become guidance rules.
 
-| Threat ID | Layer | Recommended action |
+Always evaluate Q21 and its confidence marker. Unless a direct user answer or a
+guidance-derived answer explicitly defines the required Hard-block versus
+Soft-block behavior, add Q21 as a `Guidance (human decision)` gap. This includes
+blank, low-confidence, and incomplete answers. Ask the human to define the
+tiers and which controls use them; do not infer a warn-and-proceed behavior or
+emit the decision in `<GUIDANCE_UPDATE_FILE>`.
+
+| Finding ID | Layer | Recommended action |
 |---|---|---|
 | T02 | Agent / Tool impl / Infra | <one-line action> |
+| Q21 | Guidance (human decision) | Define Hard- versus Soft-block behavior and which controls use each tier. |
 
 #### STEP 5 — Derive OPA policy requirements
 
@@ -163,9 +171,10 @@ Categories flowing into the OPA policy: <list>
 
 ## Gap Register
 
-| Threat ID | Layer | Recommended action |
+| Finding ID | Layer | Recommended action |
 |---|---|---|
 | T02 | Agent / Tool impl / Infra | <one-line action> |
+| Q21 | Guidance (human decision) | Define Hard- versus Soft-block behavior and which controls use each tier. |
 
 ---
 
@@ -318,11 +327,11 @@ the no-new-rules result when applicable. End the artifact with:
 ## Phase Handoff
 
 - Status: PASS / FAIL
-- Artifact schema: enforcement-mapping-v3
+- Artifact schema: enforcement-mapping-v4
 - Applicable threats mapped: <mapped>/<total>
 - OPA candidates after deduplication: <count>
 - Newly proposed rules: <count>
-- Other-layer gaps: <count>
+- Gap-register entries: <count>
 - Addendum validation: PASS / FAIL / not created
 - Blocking overlaps, conflicts, or regressions: <none, or concise list>
 - Open gaps: <none, or concise list>

@@ -56,6 +56,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- Enforcement Mapping now records unresolved Q21 severity tiering in the Gap
+  Register as a human decision instead of inferring enforcement behavior.
 - Batched Architecture Analysis discovery and selected-file reads, and grouped
   unresolved questionnaire items into one clarification round to reduce
   workflow latency without narrowing coverage.

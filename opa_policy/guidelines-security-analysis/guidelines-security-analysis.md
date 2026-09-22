@@ -93,7 +93,7 @@ Load only the guide for the current step:
 | A | `./steps/architecture_analysis.md` | `architecture.md` | `architecture-v2` |
 | B | `./steps/policy_guidance_questionnaire.md` | `policy_guidance_questionnaire.md` | `questionnaire-v2` |
 | C | `./steps/threat_model.md` | `threat_model.md` | `threat-model-v3` |
-| D | `./steps/enforcement_mapping.md` | `owasp_policy_guidelines.md` | `enforcement-mapping-v3` |
+| D | `./steps/enforcement_mapping.md` | `owasp_policy_guidelines.md` | `enforcement-mapping-v4` |
 
 Each guide is the single source of truth for that phase's inputs, output
 format, validation, and bounds. After a worker returns, apply the user's chosen
