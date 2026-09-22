@@ -8,6 +8,12 @@ OPA-enforceable rules in `guidance_updated.txt`.
 
 Use only these paths; never substitute similarly named files:
 
+Require concrete paths in the phase envelope and cross-check them against
+`architecture.md`'s Run Context. Stop with `FAIL` on an unresolved placeholder,
+omitted value, or conflict. In particular, `<GUIDANCE_FILE>` is absent only
+when the envelope explicitly says `ABSENT`; an unresolved or omitted path must
+not cause STEP 8 to skip guidance reconciliation.
+
 - `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/architecture.md`
 - `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/threat_model.md`
 - `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/policy_guidance_questionnaire.md`
@@ -193,7 +199,10 @@ Apply all checks before a rule can enter the candidate list:
 1. **Tool and field:** every governed tool exists. For each tool separately,
    each `input.args.<x>` exists in that tool's parameters; each
    `input.extensions.subject.<x>` exists in `<SYSTEM_VAR_FILE>` or the Runtime
-   Subject Context table. Preserve exact spelling.
+   Subject Context table. A subject field is enforceable only when
+   architecture.md also marks it OPA-visible at the pre-execution boundary;
+   `No` or `Unknown` visibility makes the candidate an other-layer gap, not an
+   active rule. Preserve exact spelling.
 2. **Value domain:** every trigger value is possible for that tool according to
    its schema, enum, and parameter description.
 3. **Argument behavior:** when an allow path relies on a protective argument,
@@ -244,6 +253,10 @@ any candidate that lacks a verified tool/field or cannot reduce to
 `field · operator · value · deny on match`. Put monitoring, logging,
 definitions, cross-rule interpretation, and other non-decisions in the Gap
 Register or Input Schema/Known values as appropriate.
+
+Never write a candidate described anywhere in the analysis as unenforceable,
+not OPA-visible, pending runtime integration, or dependent on a counter that is
+not updated before evaluation. Such a candidate belongs in the Gap Register.
 
 Before replacing any existing addendum, capture its numbered rules and log one
 of: `prior proposal: <N> rules`, `prior proposal: none (no file)`, or
@@ -297,6 +310,8 @@ contract in STEP 8 plus these invariants:
 
 - every line names only declared fields and is not semantically covered by
   existing guidance;
+- every line is OPA-visible and enforceable according to architecture.md, with
+  no unresolved visibility or runtime-update caveat;
 - numbering is contiguous and begins at the required value;
 - Gap Register content remains in `owasp_policy_guidelines.md`;
 - a non-empty candidate set has a non-empty file, while an empty candidate set

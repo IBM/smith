@@ -11,6 +11,11 @@ MCP server and produces `threat_model.md`. Requires `architecture.md` and
 from other folders. If a required file is missing here, stop and tell
 the user which file is needed and which step produces it; do not
 substitute one from elsewhere.
+
+Require concrete paths in the phase envelope and cross-check them against
+`architecture.md`'s Run Context. Stop with `FAIL` on an unresolved placeholder,
+omitted value, or conflict. Treat an optional path as absent only when the
+envelope explicitly says `ABSENT`.
 - Input 1: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/architecture.md` (from architecture_analysis skill)
 - Input 2: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/policy_guidance_questionnaire.md`
 - Input 3: `src/smith/data/owasp_10_ai_catalog.json` — repo-relative, not

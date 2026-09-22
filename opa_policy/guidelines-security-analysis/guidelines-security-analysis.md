@@ -44,10 +44,27 @@ this orchestration state in the parent context:
 - the artifact's `Phase Handoff` section; and
 - pass/fail status.
 
-Give a worker only the resolved paths, its step guide, and the inputs named by
-that guide. Do not pass prior conversation, scratch analysis, or another step's
-guide. The worker writes its designated artifact, returns the `Phase Handoff`,
-and stops. If fresh workers are unavailable, run one step in the current
+Give every worker this phase envelope with concrete values; never pass literal
+`<PLACEHOLDER>` text or omit an optional path silently:
+
+```text
+PHASE: A | B | C | D
+TARGET_AGENT_PATH: <resolved path>
+GUIDANCE_FILE: <resolved path> | ABSENT
+SYSTEM_VAR_FILE: <resolved path> | ABSENT
+TOOL_DEFINITIONS_FILE: <TARGET_AGENT_PATH>/smith/tool_definitions.json
+GUIDANCE_UPDATE_FILE: <resolved path beside GUIDANCE_FILE> | ABSENT
+PREDECESSOR_ARTIFACTS: <resolved paths, or none for Step A>
+```
+
+Also give the worker only its step guide and the inputs named by that guide. Do
+not pass prior conversation, scratch analysis, or another step's guide. The
+worker must stop with `FAIL` if an envelope value remains unresolved or
+conflicts with `architecture.md`'s Run Context. `ABSENT` is an explicit result;
+a missing envelope value must never be interpreted as an absent optional file.
+
+The worker writes its designated artifact, returns the `Phase Handoff`, and
+stops. If fresh workers are unavailable, run one step in the current
 invocation, report its checkpoint, and require a new invocation for the next
 step. Do not fall back to a continuous A-D context.
 

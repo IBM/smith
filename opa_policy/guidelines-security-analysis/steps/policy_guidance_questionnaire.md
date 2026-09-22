@@ -14,6 +14,11 @@ data flow rather than asking the user to look up source files.
 **Inputs:** Use ONLY these exact files. Do NOT read similarly-named files
 from other folders. If a required file is missing here, stop and ask; do
 not substitute one from elsewhere.
+
+Require concrete paths in the phase envelope and cross-check them against
+`architecture.md`'s Run Context. Stop with `FAIL` on an unresolved placeholder,
+omitted value, or conflict. Treat an optional path as absent only when the
+envelope explicitly says `ABSENT`.
 - Input: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/architecture.md`
 - Input (optional): `<GUIDANCE_FILE>` — **primary source
   of policy intent**. If present, read every rule and map each one to the

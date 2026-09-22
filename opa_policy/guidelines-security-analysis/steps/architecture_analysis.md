@@ -8,6 +8,10 @@ required input for the threat_model and enforcement_mapping skills.
 Use the paths resolved by the top-level workflow; do not read `.env` directly
 and do not substitute similarly named files from elsewhere.
 
+The phase envelope must contain concrete values for every path below. Stop with
+`FAIL` if it contains an unresolved placeholder or omits a value. An optional
+path is absent only when its value is explicitly `ABSENT`.
+
 - `<TARGET_AGENT_PATH>` — root within which source discovery is allowed.
 - `<SYSTEM_VAR_FILE>` — authoritative schema for runtime-provided subject
   fields, if present. Its presence establishes field provenance and OPA
@@ -229,6 +233,13 @@ this structure. Use canonical policy paths for every structured field:
 
 ```
 # Architecture: <tool-name>
+
+## Run Context
+
+- Target agent: `<TARGET_AGENT_PATH>`
+- Guidance: `<GUIDANCE_FILE>` or `ABSENT`
+- System variables: `<SYSTEM_VAR_FILE>` or `ABSENT`
+- Tool definitions: `<TARGET_AGENT_PATH>/smith/tool_definitions.json`
 
 ## Layers
 
