@@ -157,9 +157,18 @@ See `.env_template` for the full list, including model sampling (`TEMP`, `TOP_P`
 
 Detailed instructions for each agent example can be found in the `examples/<agent>/README.md`.
 
-Smith talks to a **running** target agent (for `/chat` and `/extract_tool_call`) and to its MCP server (to extract tool definitions). Start both before running any `smith` flag.
+Smith uses a target agent for workflows that call `/chat` or
+`/extract_tool_call`, and it connects to the MCP server when extracting tool
+definitions. Start only the processes required by the command you are running;
+for example, `get_current_agent` is a configuration lookup, while
+`get_mcp_parameter` requires the configured MCP server to be reachable.
 
-Each example under `examples/<agent>/` ships its own `agent.py` (a FastAPI app exposing `/chat` and `/extract_tool_call`), `server.py` (the MCP server), and a `requirements.txt`. Using `call-for-papers-mcp` as a concrete example:
+Example layouts vary: an MCP server may use Python, JavaScript, or TypeScript;
+may run over stdio, HTTP, or SSE; and may use entrypoint names such as
+`server.py`, `mcp_server.py`, or `index.js`. Some targets also contain an agent
+or UI, while standalone MCP servers may not. Follow the selected example's
+README rather than assuming fixed filenames. Using `call-for-papers-mcp` as a
+concrete example:
 
 ```bash
 cd examples/call-for-papers-mcp
@@ -227,12 +236,12 @@ The policy only references data available from tool arguments and system variabl
 
 A separate, standalone workflow that grounds guidance in an OWASP-mapped threat model. It produces guidance only and never generates, modifies, or writes Rego or an OPA policy. Use it when you want an OWASP review of the guidance itself, to threat-model an MCP server, to produce enforcement guidance for a new tool, or to run any individual analysis stage. Policy Creation remains a separate workflow and starts only after an explicit human-approved handoff. The agent follows `opa_policy/guidelines-security-analysis/guidelines-security-analysis.md`, which runs in this order:
 
-1. **Step A — Architecture Analysis** → `architecture.md`. Reads the MCP server's source and produces a layer-by-layer breakdown (HTTP API / Agent / MCP Tool / Tool Implementation / External Service) with trust boundaries, data flow, and available enforcement points.
+1. **Step A — Architecture Analysis** → `architecture.md`. Uses the configured target and extracted tool definitions to discover only source files that implement relevant roles, regardless of filename, language, or MCP transport. It then describes the layers actually present, with trust boundaries, data flow, and available enforcement points. UI-only, test, dependency, and generated files are skipped unless they participate in tool invocation or enforcement.
 2. **Step B — Policy Guidance Questionnaire** → `policy_guidance_questionnaire.md`. Turns `guidance.txt` plus the architecture into a structured Q&A covering roles, hard limits, rate limits, and response filtering, with confidence tags on every answer.
-3. **Step C — Threat Model** → `threat_model.md`. Evaluates all 10 OWASP Top 10 for Agentic AI Security categories (ASI01–ASI10) against the architecture and questionnaire, producing concrete threat instances with source citations back into `architecture.md`.
-4. **Step D — Enforcement Mapping** → `owasp_policy_guidelines.md` and, only when missing rules are found, `guidance_updated.txt`. Maps each threat to the layer that can enforce it (OPA vs. Agent / Tool implementation / Infra), writes concrete OPA-scope rule specifications, and produces a proposed `guidance_updated.txt` addendum containing ONLY the missing OPA-enforceable rules for `guidance.txt`. Non-OPA-enforceable findings are recorded in the Gap Register table inside `owasp_policy_guidelines.md`, NOT in `guidance_updated.txt`, so downstream policy and test generation only ever see rule content. When no new rules are proposed, `guidance_updated.txt` is not created.
+3. **Step C — Threat Model** → `threat_model.md`. Evaluates all 10 OWASP Top 10 for Agentic AI Security categories (ASI01–ASI10) against the architecture and questionnaire, producing concrete threat instances with source citations back into `architecture.md`. It queries only the catalog fields used for threat discovery.
+4. **Step D — Enforcement Mapping** → `owasp_policy_guidelines.md` and, only when missing rules are found, `guidance_updated.txt`. Maps each threat to the layer that can enforce it (OPA vs. Agent / Tool implementation / Infra), loading only mitigation fields for relevant OWASP categories. It writes concrete OPA-scope rule specifications and produces a proposed `guidance_updated.txt` addendum containing ONLY the missing OPA-enforceable rules for `guidance.txt`. Non-OPA-enforceable findings are recorded in the Gap Register table inside `owasp_policy_guidelines.md`, NOT in `guidance_updated.txt`, so downstream policy and test generation only ever see rule content. When no new rules are proposed, `guidance_updated.txt` is not created.
 
-The four steps can be run **Gated** (pause after each step) or **Autonomous** (Steps A–D back-to-back, one final review at the end). The four analysis artifacts live under `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/`; when generated, the proposed addendum lives at `<TARGET_AGENT_PATH>/smith/guidance_updated.txt` next to `guidance.txt`.
+The four steps can be run **Gated** (pause after each step) or **Autonomous** (Steps A–D back-to-back, one final review at the end). The four analysis artifacts live under `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/`; when generated, the proposed `guidance_updated.txt` addendum lives beside the configured `GUIDANCE_FILE`.
 
 After the analysis is complete, the human may separately ask the agent to validate and append `guidance_updated.txt` to `guidance.txt`, preserving the existing file byte-for-byte. The agent then asks separately whether to start Policy Creation; merging guidance does not generate a policy or imply approval to do so.
 
