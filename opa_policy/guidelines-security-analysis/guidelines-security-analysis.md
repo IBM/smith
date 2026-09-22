@@ -33,71 +33,52 @@ The second command refreshes
 source for `input.args.*` names, types, and descriptions. Run it even when the
 file already exists.
 
-Ask once for the confirmation mode:
+## Phase isolation and resumption
 
-- **Gated:** pause for confirmation after each of Steps A-D.
-- **Autonomous:** run Steps A-D without intermediate pauses and present all
-  results at Completion.
+Steps A-D are separate jobs. Never execute two steps in the same model context.
+For a full workflow, use a fresh isolated worker for each step and keep only
+this orchestration state in the parent context:
 
-Do not switch modes unless the user asks. The mode never authorizes Step E.
+- resolved authoritative paths;
+- completed step and artifact path;
+- the artifact's `Phase Handoff` section; and
+- pass/fail status.
 
-## Step A — Architecture Analysis
+Give a worker only the resolved paths, its step guide, and the inputs named by
+that guide. Do not pass prior conversation, scratch analysis, or another step's
+guide. The worker writes its designated artifact, returns the `Phase Handoff`,
+and stops. If fresh workers are unavailable, run one step in the current
+invocation, report its checkpoint, and require a new invocation for the next
+step. Do not fall back to a continuous A-D context.
 
-Follow `./steps/architecture_analysis.md`.
+Resume from the first missing or explicitly requested artifact. Before using an
+existing artifact, confirm that it has a successful `Phase Handoff` and that
+every required predecessor exists. Re-run only a stale, failed, or explicitly
+requested step; never regenerate an earlier artifact merely to continue. For a
+legacy artifact without a handoff, validate its required sections once and
+append the checkpoint in place; re-run the phase only when that validation
+fails.
 
-- Input: `<TARGET_AGENT_PATH>` plus the resolved inputs above.
-- Output: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/architecture.md`.
-- Purpose: discover only relevant source by behavior, then capture actual
-  layers, canonical input paths, tool-argument disposition, runtime subject
-  context, enforcement points, and undeclared fields.
+## Phase routing
 
-Apply the configured gate before Step B.
+Load only the guide for the current step:
 
-## Step B — Policy Guidance Questionnaire
+| Step | Guide | Existing checkpoint |
+|---|---|---|
+| A | `./steps/architecture_analysis.md` | `architecture.md` |
+| B | `./steps/policy_guidance_questionnaire.md` | `policy_guidance_questionnaire.md` |
+| C | `./steps/threat_model.md` | `threat_model.md` |
+| D | `./steps/enforcement_mapping.md` | `owasp_policy_guidelines.md` |
 
-Follow `./steps/policy_guidance_questionnaire.md`.
+Each guide is the single source of truth for that phase's inputs, output
+format, validation, and bounds. After a worker returns, apply the user's chosen
+review mode:
 
-- Inputs: `architecture.md`, optional `<GUIDANCE_FILE>`, optional
-  `<SYSTEM_VAR_FILE>`, and `tool_definitions.json`.
-- Output:
-  `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/policy_guidance_questionnaire.md`.
-- Purpose: capture policy intent with source-confidence markers. In Autonomous
-  mode, unsupported answers use `[inferred — low confidence]`; never leave an
-  untagged guess.
+- **Gated:** present the checkpoint and wait for approval.
+- **Isolated autonomous:** start the next fresh worker after a successful
+  checkpoint without pausing.
 
-Apply the configured gate before Step C.
-
-## Step C — Threat Model
-
-Follow `./steps/threat_model.md`.
-
-- Inputs: `architecture.md`, `policy_guidance_questionnaire.md`,
-  `tool_definitions.json`, `<SYSTEM_VAR_FILE>`, and the Step C field projection
-  from `src/smith/data/owasp_10_ai_catalog.json`.
-- Output: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/threat_model.md`.
-- Purpose: evaluate ASI01-ASI10, produce concrete threat instances, and verify
-  every cited field against its governing tool or runtime subject schema.
-
-Apply the configured gate before Step D.
-
-## Step D — Enforcement Mapping
-
-Follow `./steps/enforcement_mapping.md`.
-
-- Inputs: the three prior artifacts, `tool_definitions.json`,
-  `<SYSTEM_VAR_FILE>`, optional `<GUIDANCE_FILE>`, and the Step D mitigation
-  projection from the OWASP catalog.
-- Outputs:
-  - `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/owasp_policy_guidelines.md`
-  - `<GUIDANCE_UPDATE_FILE>` only when verified, uncovered rules are pending.
-- Purpose: separate OPA-enforceable controls from other-layer gaps, validate
-  candidates, and reconcile them against existing guidance.
-
-The single `guidance_updated.txt` format and absence-on-no-results contract are
-defined only in enforcement_mapping STEP 8 and validated by STEP 8d. Gap
-Register content remains in `owasp_policy_guidelines.md`.
-
-Apply the configured gate, then proceed to Completion.
+Ask for the review mode once. Neither mode authorizes Step E.
 
 ## Completion
 
@@ -109,8 +90,8 @@ nothing to merge.
 
 ## Step E — Merge and policy-creation handoff (optional)
 
-Step E starts only when the user explicitly asks to merge. The Gated or
-Autonomous choice does not authorize it.
+Step E starts only when the user explicitly asks to merge. The selected review
+mode does not authorize it.
 
 1. Re-read `<GUIDANCE_UPDATE_FILE>` and apply enforcement_mapping STEP 8d.
    Also reject any rule already covered by `<GUIDANCE_FILE>` and stop if STEP
@@ -130,16 +111,11 @@ Autonomous choice does not authorize it.
    `../policy_creation/opa_policy_creation.md`. Preserve that workflow's own
    confirmation point and handoff; do not continue into testing or refinement.
 
-## General rules
+## Workflow invariants
 
-- Never skip or reorder Steps A-D.
-- Follow the selected confirmation mode for Steps A-D; Step E retains its two
-  explicit human gates in both modes.
-- On a missing required input, identify the missing file and producing step,
-  then stop.
-- Steps A-D write only their designated outputs and never modify existing
-  inputs. Step E may append to `<GUIDANCE_FILE>` only after explicit approval;
-  it never overwrites that file.
-- Write analysis artifacts only under
-  `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/`, except for the
-  addendum beside `<GUIDANCE_FILE>` and policy creation's documented output.
+- Run Steps A-D in order unless the user requests one phase and its required
+  predecessors already exist.
+- A phase writes only the outputs declared by its guide and never modifies its
+  inputs.
+- On a missing input or failed checkpoint, report the producing step and stop.
+- Step E retains its explicit merge and policy-creation gates in every mode.

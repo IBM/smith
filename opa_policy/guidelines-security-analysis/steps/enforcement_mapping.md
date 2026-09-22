@@ -302,8 +302,10 @@ contract in STEP 8 plus these invariants:
 - a non-empty candidate set has a non-empty file, while an empty candidate set
   has no file.
 
-Correct violations and rerun this check. If cleanup removes all rules, delete
-the file. Report whether the gate passed directly or after cleanup.
+Correct violations once and rerun this check. If violations remain, mark the
+phase `FAIL` instead of starting another repair loop. If cleanup removes all
+rules, delete the file. Report whether the gate passed directly or after the
+single cleanup pass.
 
 #### STEP 9 — Human review
 
@@ -318,5 +320,21 @@ Present:
 - addendum validation result.
 
 Call out conflicts, contradictory edits to existing guidance, regressions, and
-rejected non-decisions explicitly. Hand control back to the top-level workflow;
-Step D does not merge guidance or start policy creation.
+rejected non-decisions explicitly. End `owasp_policy_guidelines.md` with:
+
+```markdown
+## Phase Handoff
+
+- Status: PASS / FAIL
+- Applicable threats mapped: <mapped>/<total>
+- OPA candidates after deduplication: <count>
+- Newly proposed rules: <count>
+- Other-layer gaps: <count>
+- Addendum validation: PASS / FAIL / not created
+- Blocking overlaps, conflicts, or regressions: <none, or concise list>
+- Open gaps: <none, or concise list>
+```
+
+Mark the phase `FAIL` when addendum validation fails or any blocking overlap,
+conflict, or regression remains. Return the handoff to the orchestrator and
+stop. Step D does not merge guidance or start policy creation.

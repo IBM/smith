@@ -75,8 +75,8 @@ with exactly one confidence marker so Step C knows what it can rely on:
   partial signals (naming conventions, similar tools, generic patterns)
   without a direct source. Downstream steps MUST NOT cite this answer as
   evidence.
-- Leave the answer blank only in Gated mode when nothing supports even a
-  low-confidence inference.
+- Leave the answer blank when nothing supports even a low-confidence inference;
+  do not invent an answer merely to complete the phase.
 
 Whenever an answer names structured policy input, use its canonical OPA path:
 `input.name` for the invoked tool, `input.args.<argument>` for tool arguments,
@@ -308,13 +308,22 @@ another policy)?**
 #### STEP 3 — Finalise
 
 Fill in any remaining blanks using the confidence markers defined in
-STEP 1. In Autonomous mode, do not leave answers empty — use
-`[inferred — low confidence]` when a real basis is missing rather than
-guessing without a tag. In Gated mode, leaving an answer blank is
-preferred over a low-confidence guess.
+STEP 1. A low-confidence answer still needs a stated basis; otherwise leave it
+blank and include it in Open gaps.
 
 Log a one-line breakdown at the end: how many answers are
 `[derived from guidance.txt]`, `[derived from architecture]`,
-`[inferred — low confidence]`, and blank. Then hand control back to the
-top-level workflow, which decides (per confirmation mode) whether to
-proceed to Step C.
+`[inferred — low confidence]`, and blank. Then append:
+
+```markdown
+## Phase Handoff
+
+- Status: PASS / FAIL
+- Questions answered: <count>/22
+- Confidence: <guidance count> guidance, <architecture count> architecture, <inferred count> inferred, <blank count> blank
+- Tools covered: <count and names>
+- Open gaps: <none, or unanswered question numbers>
+```
+
+`PASS` permits documented blanks but must identify them as gaps. Return this
+handoff to the orchestrator and stop; do not load the next phase guide.

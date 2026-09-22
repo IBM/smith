@@ -101,6 +101,12 @@ Produce the Attack Surfaces list as a table:
 | 2 | `input.args.keywords` | Agent | LLM-generated / caller-influenced | Tool → External |
 | ... | ... | ... | ... | ... |
 
+Keep one row per unique field/data point, source layer, provenance, and entry
+boundary. When several tools expose the same field shape, retain separate rows
+only when their provenance or behavior differs; otherwise list the tools in one
+row. Expand an instance across actors only when architecture evidence shows a
+distinct actor path. Do not manufacture every actor/surface combination.
+
 Draft this list now — it becomes the "Attack Surfaces" section of
 `threat_model.md` in STEP 4, and the completeness critic in STEP 5
 checks every entry against the threat instances.
@@ -170,6 +176,12 @@ or the LLM does X" into a single instance. If the same attack surface
 is exploitable by two actors (e.g. `input.args.keywords` can be tainted by the
 caller via prompt injection AND fabricated by the LLM on its own),
 that is two distinct threat instances.
+
+Deduplicate equivalent instances before writing. Within one ASI, instances are
+equivalent when actor, attack-surface row, vulnerable field/layer, attack
+vector, and impact are the same. Keep one instance and attach every matching
+catalog scenario index; do not duplicate prose merely because two catalog
+scenarios describe the same system-specific exploit.
 
 **3d — Assign severity.** For every threat instance, assign
 Critical / High / Medium / Low, grounded in this ASI's `business_impact`
@@ -303,9 +315,9 @@ that genuinely don't apply, add an N/A entry).
    runtime-provided subject field as caller-controlled without evidence about
    its provider or delivery channel.
 
-Loop back to STEP 3 for anything missing, then re-run this critic on
-the updated draft. Do not proceed to STEP 6 until this pass finds no
-gaps.
+Repair gaps once, then re-run this critic. If gaps remain after the second
+critic pass, record them and mark the phase `FAIL`; do not start an unbounded
+repair loop or proceed to STEP 6.
 
 Log a one-line result (e.g. `Completeness: 12/12 attack surfaces,
 30/30 catalog scenarios, no gaps found` or `Completeness: added 2
@@ -381,5 +393,21 @@ Also log the overall Attack Surfaces coverage figure (e.g. "12/12
 covered, 0 marked N/A") so the reviewer can see the coverage stance at
 a glance.
 
-Hand control back to the top-level workflow, which decides (per
-confirmation mode) whether to proceed to the next step.
+Append:
+
+```markdown
+## Phase Handoff
+
+- Status: PASS / FAIL
+- OWASP categories evaluated: 10/10
+- Applicable categories: <count and IDs>
+- Threat instances: <count after deduplication>
+- Attack surfaces covered: <covered>/<total>; N/A: <count>
+- Catalog scenarios accounted for: <covered>/<total>
+- Citations verified: <verified>/<total>, or not run after a failed critic
+- Repair passes: <0 or 1>
+- Open gaps: <none, or concise list>
+```
+
+Return this handoff to the orchestrator and stop; do not load the next phase
+guide.

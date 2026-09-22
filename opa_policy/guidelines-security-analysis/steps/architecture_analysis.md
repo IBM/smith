@@ -65,6 +65,11 @@ source paths and the evidence for each assigned role. If a role remains
 ambiguous after targeted search, record it as unknown rather than broadening
 the read to every source file.
 
+Bound discovery to two call/import hops from each registered tool and at most
+20 implementation files. Deduplicate files reached from multiple tools. If the
+bound would omit a file needed to establish a role or enforcement path, record
+the omitted candidate and reason instead of expanding silently.
+
 ---
 
 #### STEP 2 — Map the layers
@@ -306,5 +311,21 @@ Present a one-paragraph summary of the key findings:
 - Any row in the **Undeclared Fields** table, with the guidance rule
   that depends on it (or "none")
 
-Log the summary and hand control back to the top-level workflow, which
-decides (per confirmation mode) whether to proceed to the next step.
+Append this compact checkpoint to `architecture.md`:
+
+```markdown
+## Phase Handoff
+
+- Status: PASS / FAIL
+- Sources inspected: <count and paths>
+- Tools covered: <count and names>
+- Layers: <count and names>
+- Canonical tool fields: <count>
+- Runtime subject fields: <count>
+- Undeclared fields: <count and paths, or none>
+- Open gaps: <none, or concise list>
+```
+
+Mark `PASS` only when the required sections are present and each extracted tool
+has a governing implementation or an explicit unknown finding. Return this
+handoff to the orchestrator and stop; do not load the next phase guide.

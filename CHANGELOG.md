@@ -53,6 +53,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- Security-Grounded Guidance Analysis now runs Steps A-D as resumable,
+  isolated-context phases with compact artifact handoffs, bounded discovery and
+  repair passes, and deduplication of equivalent threat instances.
 - Clarified Security-Grounded Guidance Analysis as a standalone four-step guidance-only workflow, with guidance merging and policy creation requiring separate approval.
 - Updated the minimum supported versions of `mcp`, `networkx`, `sentence-transformers`, `pip-audit`, and `build`, and upgraded the CI Python/uv setup actions to v7.
 - Made ARES and Promptfoo optional dependencies — either tool can be used independently or skipped entirely.
