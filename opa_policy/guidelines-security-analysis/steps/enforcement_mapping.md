@@ -261,7 +261,19 @@ Normalize once before comparing:
    states, and explicit domain predicates.
 5. Deduplicate candidates against one another before reading guidance. Keep one
    tuple with every source ID; when one deny covers another, retain the one
-   covering the larger request set. Assign stable IDs (`C01`, `C02`, ...).
+   covering the larger request set.
+6. Within an identical tool, subject scope, field expression, and action,
+   replace multiple deny conditions with one simpler condition when their union
+   is exactly equivalent and expressible with a canonical operator. Preserve
+   every source ID. For example, the union of the conditions
+   `eq manager` and `not_in {employee, manager}` is `neq employee`. Prove
+   equivalence using the same value domain, case handling, and missing/null
+   semantics; otherwise keep the
+   candidates separate. Never union conditions across tools, subject scopes,
+   field expressions, actions, or conjunctive field groups, and never broaden
+   or narrow the denied request set merely to shorten wording.
+7. Assign stable IDs (`C01`, `C02`, ...) after deduplication and exact union
+   simplification.
 
 For domain rules, an explicit allowlist complement such as
 `destination.domain != ibm.com` subsumes a denylist containing only non-IBM
@@ -308,6 +320,9 @@ of: `prior proposal: <N> rules`, `prior proposal: none (no file)`, or
 - Emit only candidates classified Novel or Additive, and for Additive emit only
   the uncovered value/tool/scope difference. Never emit Duplicate, Covered,
   Clarification, Overlap, Conflict, or Contradictory correction rows.
+- Before writing, confirm that no emitted group with the same tool, subject
+  scope, field expression, and action has an exactly equivalent single-condition
+  union. Apply STEP 7's union simplification when it does.
 - Each non-empty line is exactly `<number>. <single-line rule>`. Numbering is
   contiguous from one after the highest existing rule number; if existing
   guidance has no numbered lines, start after its count of rule-bearing lines.
@@ -363,7 +378,7 @@ the no-new-rules result when applicable. End the artifact with:
 ## Phase Handoff
 
 - Status: PASS / FAIL
-- Artifact schema: enforcement-mapping-v5
+- Artifact schema: enforcement-mapping-v6
 - Applicable threats mapped: <mapped>/<total>
 - OPA candidates after deduplication: <count>
 - Newly proposed rules: <count>
