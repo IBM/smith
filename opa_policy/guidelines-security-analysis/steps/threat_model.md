@@ -14,11 +14,12 @@ The envelope's Shared Phase Contract applies.
   per-target-agent. This is the OWASP Top 10 for Agentic AI Security
   catalog (ASI01–ASI10). It is the single source of truth, but this phase
   consumes only the projection defined in STEP 1.
-- Input 4: `<TARGET_AGENT_PATH>/smith/tool_definitions.json` — the
+- Input 4: `<TARGET_AGENT_PATH>/smith/smith_outputs/tool_definitions.json` — the
   authoritative source for `input.args.*`, **per tool**: each entry's
   `parameters` array lists only the arguments that tool accepts. STEP 6
   verifies every cited field against it. Required — if it is absent,
-  stop and tell the user to run `smith --flag get_mcp_parameter`.
+  stop and request that this canonical artifact be refreshed outside the
+  workflow; do not use a root-level substitute.
 - Input 5: `<SYSTEM_VAR_FILE>` — the
   authoritative schema for runtime-provided
   `input.extensions.subject.*` field names, used in the same field-existence

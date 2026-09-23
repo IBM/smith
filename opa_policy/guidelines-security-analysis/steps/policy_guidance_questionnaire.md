@@ -21,7 +21,7 @@ The envelope's Shared Phase Contract applies.
   exact `input.extensions.subject.*` field names and types in Q6, Q7, Q13b,
   and Q16 as applicable. These fields are runtime-provided; do not reclassify
   them as self-reported because application source does not read them.
-- Input (optional): `<TARGET_AGENT_PATH>/smith/tool_definitions.json` — use
+- Input: `<TARGET_AGENT_PATH>/smith/smith_outputs/tool_definitions.json` — use
   for exact tool and parameter names and types in Q1 and Q4
 - Output: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/policy_guidance_questionnaire.md`
 

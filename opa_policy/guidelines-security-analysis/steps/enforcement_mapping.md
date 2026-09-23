@@ -13,9 +13,10 @@ The envelope's Shared Phase Contract applies. In particular, STEP 8 requires
 - `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/threat_model.md`
 - `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/policy_guidance_questionnaire.md`
 - `src/smith/data/owasp_10_ai_catalog.json`
-- `<TARGET_AGENT_PATH>/smith/tool_definitions.json` — required, authoritative
-  per-tool source for `input.args.*`; if absent, run
-  `smith --flag get_mcp_parameter`.
+- `<TARGET_AGENT_PATH>/smith/smith_outputs/tool_definitions.json` — required, authoritative
+  per-tool source for `input.args.*`; if absent, request that this canonical
+  artifact be refreshed outside the workflow and do not use a root-level
+  substitute.
 - `<SYSTEM_VAR_FILE>` — authoritative schema for runtime-provided
   `input.extensions.subject.*`; if absent, use architecture.md's Runtime
   Subject Context table and record the gap.
@@ -196,9 +197,9 @@ Categories flowing into the OPA policy: <list>
 
 ## Candidate Reconciliation
 
-| Candidate ID | Tool | Field | Operator | Values | Sources | Related rule | Verdict |
-|---|---|---|---|---|---|---|---|
-| C01 | <tool> | <input path> | <operator> | <values> | T01, Q13 | <rule or —> | <verdict> |
+| Candidate ID | Tool | Subject scope | Field expression | Operator | Values | Action | Sources | Related rule | Verdict |
+|---|---|---|---|---|---|---|---|---|---|
+| C01 | <one tool> | <roles or all> | <canonical path(s)> | <canonical operator> | <normalized values> | deny | T01, Q13 | <rule or —> | <verdict> |
 ```
 
 Use canonical OPA paths. Do not include Rego syntax, Rego built-ins, file
@@ -218,8 +219,8 @@ explicitly say so block Step E.
 | Candidate | Threat | Applicable threat ID supports the rule | Drop |
 | Candidate | Confidence | Questionnaire source is not low-confidence | Require confirmation or drop |
 | Reconciliation | Reducibility | Rule reduces to field, operator, value, and deny-on-match | Move to Gap Register |
-| Reconciliation | Existing coverage | No existing rule covers the same or broader condition | Mark covered; do not emit |
-| Reconciliation | Relationship | Unique or additive; no unresolved overlap, conflict, or contradictory correction | Report and block Step E |
+| Reconciliation | Semantic coverage | No candidate or existing rule already denies every request this candidate would deny | Mark Duplicate/Covered; do not emit |
+| Reconciliation | Relationship | Novel or Additive; no unresolved Overlap, Conflict, or Contradictory correction | Report and block Step E |
 | Reconciliation | Prior proposal | Still proposed, merged, or deliberately dropped by a named check | Report regression and block Step E |
 | On disk | Format | Numbered single-line rules only; contiguous required numbering | Correct once, then fail |
 | On disk | Semantics | Declared, OPA-visible fields; uncovered and enforceable; no gap content | Correct once, then fail |
@@ -239,22 +240,52 @@ Combine and deduplicate:
 - OPA-enforceable questionnaire answers from Q9-Q19, including Q13b, excluding
   low-confidence answers and fields or tools that fail STEP 6b.
 
-Two candidates are equivalent when they constrain the same field with the same
-operator and overlapping value set. Keep one candidate with all source IDs.
-Assign stable IDs (`C01`, `C02`, ...) and record sources (threat IDs or
-question numbers), governed tools, canonical field, operator, and value set.
-Do not repeat source prose or read `<GUIDANCE_FILE>` yet.
+Normalize once before comparing:
+
+1. Expand a multi-tool proposal into one atomic candidate per tool. Keep fields
+   together when they form one conjunctive condition; never split a condition
+   into a broader rule.
+2. Validate each atomic candidate against that tool. Remove impossible
+   tool/field/value combinations rather than retaining values supported only by
+   another tool. If tools have different behavior or value domains, keep
+   separate rules.
+3. Record one tuple in Candidate Reconciliation:
+   `tool | subject scope | sorted field expression | canonical operator |
+   normalized values | deny`. Canonical operators are `eq`, `neq`, `in`,
+   `not_in`, `contains_any`, `lt`, `lte`, `gt`, `gte`, and
+   `missing/null/empty`. Normalize value case only when matching is explicitly
+   case-insensitive.
+4. Group by tool, field expression, and action. Compare subject scopes by set
+   inclusion (`all` contains every named role), then compare conditions using
+   set inclusion, numeric intervals, Boolean equality, missing/null/empty
+   states, and explicit domain predicates.
+5. Deduplicate candidates against one another before reading guidance. Keep one
+   tuple with every source ID; when one deny covers another, retain the one
+   covering the larger request set. Assign stable IDs (`C01`, `C02`, ...).
+
+For domain rules, an explicit allowlist complement such as
+`destination.domain != ibm.com` subsumes a denylist containing only non-IBM
+domains. Do not claim implication when domain parsing, case handling, subdomain
+handling, or another matching semantic is unspecified; record an unresolved
+overlap instead. Do not repeat source prose or read `<GUIDANCE_FILE>` yet.
 
 #### STEP 8 — Reconcile with existing guidance and write the addendum
 
-Read `<GUIDANCE_FILE>` once and fill the Candidate Reconciliation table from
-STEP 6.
+Read `<GUIDANCE_FILE>` once. Normalize each explicit existing rule into the same
+tuple. Expand a general or multi-tool existing rule per tool only when
+`tool_definitions.json` makes that mapping unambiguous; otherwise classify the
+comparison as unresolved. Use the questionnaire's guidance-rule mapping and
+architecture's canonical paths to resolve explicit natural-language aliases;
+do not guess between multiple plausible fields or tools. Compare only within
+matching tool/field/action groups and fill Candidate Reconciliation without
+restating rule prose.
 
-A candidate is covered when an existing rule either:
-
-- denies the same tool under a broader condition for the same subjects; or
-- matches the same structured field, operator semantics, and triggering value
-  set.
+A candidate is Covered when an existing rule's subject scope contains the
+candidate scope and every request denied by the candidate is already denied by
+the existing rule. This includes a broader deny on the same field, not merely
+identical wording. A candidate is a Clarification when it only makes an
+existing decision more implementable without changing behavior; recommend
+editing the existing rule and emit no addendum line.
 
 Similar wording, category, or intent is insufficient. Before writing, reject
 any candidate that lacks a verified tool/field or cannot reduce to
@@ -274,6 +305,9 @@ of: `prior proposal: <N> rules`, `prior proposal: none (no file)`, or
 
 - `<GUIDANCE_UPDATE_FILE>` contains only uncovered, verified, reducible rules;
   never Gap Register content or copies of existing guidance.
+- Emit only candidates classified Novel or Additive, and for Additive emit only
+  the uncovered value/tool/scope difference. Never emit Duplicate, Covered,
+  Clarification, Overlap, Conflict, or Contradictory correction rows.
 - Each non-empty line is exactly `<number>. <single-line rule>`. Numbering is
   contiguous from one after the highest existing rule number; if existing
   guidance has no numbered lines, start after its count of rule-bearing lines.
@@ -294,9 +328,11 @@ same-tool/field pairs with this vocabulary:
 
 | Verdict | Meaning / action |
 |---|---|
-| Unique | No related existing rule; emit the candidate. |
-| Covered | Existing rule denies the same or broader condition; emit nothing. |
+| Novel | No related existing rule; emit the candidate. |
+| Duplicate | Same normalized tuple exists in the candidate set; retain one tuple with all source IDs. |
+| Covered | Every request this row would deny is already denied by another candidate or existing rule; emit nothing. |
 | Additive | Candidate only adds values; emit only the added values. |
+| Clarification | Same behavior with more precise wording or field naming; recommend an edit in the Gap Register and emit nothing. |
 | Overlap | Same operator has overlapping, non-identical values; report and block. |
 | Conflict | Outcomes or thresholds are incompatible without distinct scope; report and block. |
 | Contradictory correction | Candidate removes values or narrows scope; emit nothing, identify the required existing-rule edit, and block. |
@@ -327,7 +363,7 @@ the no-new-rules result when applicable. End the artifact with:
 ## Phase Handoff
 
 - Status: PASS / FAIL
-- Artifact schema: enforcement-mapping-v4
+- Artifact schema: enforcement-mapping-v5
 - Applicable threats mapped: <mapped>/<total>
 - OPA candidates after deduplication: <count>
 - Newly proposed rules: <count>

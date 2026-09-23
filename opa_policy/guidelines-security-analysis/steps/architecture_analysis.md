@@ -11,8 +11,9 @@ The envelope's Shared Phase Contract applies.
 - `<SYSTEM_VAR_FILE>` — authoritative schema for runtime-provided subject
   fields, if present. Its presence establishes field provenance and OPA
   visibility, not a cryptographic verification mechanism.
-- `<TARGET_AGENT_PATH>/smith/tool_definitions.json` — authoritative per-tool
-  source for visible `input.args.*` names and types.
+- `<TARGET_AGENT_PATH>/smith/smith_outputs/tool_definitions.json` — required,
+  authoritative per-tool source for visible `input.args.*` names and types.
+  Read it in place; do not generate, copy, or rewrite it.
 - `<GUIDANCE_FILE>` — existing policy intent, if present. Use it only in
   STEP 4 to check field visibility; do not carry its content into the
   descriptive layers, trust boundaries, or data flow.
@@ -37,6 +38,13 @@ Use this batched discovery sequence and maintain a `seen paths` set:
 4. Collect unresolved import/call targets from those reads and resolve them in
    one path-only search batch per hop. Deduplicate against `seen paths` before
    reading the new selections together.
+
+Compare the manifest's tool names and parameter names with MCP registrations
+and signatures established by the selected source. If source evidence proves
+that an entry is missing, extra, or differently shaped, report the exact
+mismatch and stop with `FAIL`; do not repair the generated artifact in this
+phase. Do not declare it stale merely because a dynamic wrapper prevents a
+complete static comparison.
 
 The implementation may use Python, JavaScript, TypeScript, another language,
 or any filename or MCP transport. Follow imports or calls only far enough to
@@ -241,7 +249,7 @@ this structure. Use canonical policy paths for every structured field:
 - Target agent: `<TARGET_AGENT_PATH>`
 - Guidance: `<GUIDANCE_FILE>` or `ABSENT`
 - System variables: `<SYSTEM_VAR_FILE>` or `ABSENT`
-- Tool definitions: `<TARGET_AGENT_PATH>/smith/tool_definitions.json`
+- Tool definitions: `<TARGET_AGENT_PATH>/smith/smith_outputs/tool_definitions.json`
 
 ## Layers
 
