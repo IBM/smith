@@ -199,172 +199,121 @@ Categories flowing into the OPA policy: <list>
 | Candidate ID | Tool | Subject scope | Field expression | Operator | Values | Action | Sources | Related rule | Verdict |
 |---|---|---|---|---|---|---|---|---|---|
 | C01 | <one tool> | <roles or all> | <canonical path(s)> | <canonical operator> | <normalized values> | deny | T01, Q13 | <rule or —> | <verdict> |
+
+## Existing Guidance Normalization
+
+| Existing ID | Rule number | Tool | Subject scope | Field expression | Operator | Values | Action |
+|---|---|---|---|---|---|---|---|
+| E01 | <guidance rule number> | <one tool> | <roles or all> | <canonical path(s)> | <canonical operator> | <normalized values> | deny |
+
+## Prior Proposal Reconciliation
+
+| Prior ID | Original number | Normalized rule | Disposition | Candidate / reason |
+|---|---|---|---|---|
+| P01 | <number> | <normalized decision tuple> | Proposed / Merged / Dropped | <candidate ID or named validation reason> |
 ```
 
 Use canonical OPA paths. Do not include Rego syntax, Rego built-ins, file
 organization, helpers, or test-generation advice.
 
-#### Validation matrix
+#### STEP 6b — Verify semantic support
 
-Apply each row at the named stage and follow its Failure action; only rows that
-explicitly say so block Step E.
-
-| Stage | Check | Pass condition | Failure action |
-|---|---|---|---|
-| Candidate | Tool/field | Tool exists; argument belongs to that tool, or subject field exists and is OPA-visible before execution | Narrow tool scope or move to Gap Register |
-| Candidate | Value domain | Trigger value is allowed by schema, enum, and description | Narrow or drop |
-| Candidate | Argument behavior | Protective allow-path argument is `Acts on`; an OPA deny may enforce independently | Drop unsafe allow path |
-| Candidate | Mitigation | Matching ASI mitigation supports the control | Drop |
-| Candidate | Threat | Applicable threat ID supports the rule | Drop |
-| Candidate | Confidence | Questionnaire source is not low-confidence | Require confirmation or drop |
-| Reconciliation | Reducibility | Rule reduces to field, operator, value, and deny-on-match | Move to Gap Register |
-| Reconciliation | Semantic coverage | No candidate or existing rule already denies every request this candidate would deny | Mark Duplicate/Covered; do not emit |
-| Reconciliation | Relationship | Novel or Additive; no unresolved Overlap, Conflict, or Contradictory correction | Report and block Step E |
-| Reconciliation | Prior proposal | Still proposed, merged, or deliberately dropped by a named check | Report regression and block Step E |
-| On disk | Format | Numbered single-line rules only; contiguous required numbering | Correct once, then fail |
-| On disk | Semantics | Declared, OPA-visible fields; uncovered and enforceable; no gap content | Correct once, then fail |
-| On disk | Presence | Non-empty candidate set has a file; empty set has no file | Correct once, then fail |
-
-#### STEP 6b — Verify every rule
-
-Apply all Candidate rows in the matrix before STEP 7. Preserve exact field
-spelling and validate each tool separately; a field existing on another tool
-does not pass. Record narrowed/dropped tools and a one-line verification count.
+Keep only candidates whose argument behavior, matching OWASP mitigation,
+applicable threat, and non-low-confidence questionnaire evidence support the
+deny. A protective allow-path argument must be `Acts on`; otherwise drop it.
+Move non-reducible or unavailable-runtime-data requirements to the Gap
+Register. The CLI checks field spelling, per-tool membership, value domains,
+and cross-artifact IDs later, so do not repeat those mechanical scans.
 
 #### STEP 7 — Build one candidate list
 
-Combine and deduplicate:
+Combine:
 
 - verified rules from STEP 6; and
 - OPA-enforceable questionnaire answers from Q9-Q19, including Q13b, excluding
   low-confidence answers and fields or tools that fail STEP 6b.
 
-Normalize once before comparing:
-
-1. Expand a multi-tool proposal into one atomic candidate per tool. Keep fields
-   together when they form one conjunctive condition; never split a condition
-   into a broader rule.
-2. Validate each atomic candidate against that tool. Remove impossible
-   tool/field/value combinations rather than retaining values supported only by
-   another tool. If tools have different behavior or value domains, keep
-   separate rules.
-3. Record one tuple in Candidate Reconciliation:
-   `tool | subject scope | sorted field expression | canonical operator |
-   normalized values | deny`. Canonical operators are `eq`, `neq`, `in`,
-   `not_in`, `contains_any`, `lt`, `lte`, `gt`, `gte`, and
-   `missing/null/empty`. Normalize value case only when matching is explicitly
-   case-insensitive.
-4. Group by tool, field expression, and action. Compare subject scopes by set
-   inclusion (`all` contains every named role), then compare conditions using
-   set inclusion, numeric intervals, Boolean equality, missing/null/empty
-   states, and explicit domain predicates.
-5. Deduplicate candidates against one another before reading guidance. Keep one
-   tuple with every source ID; when one deny covers another, retain the one
-   covering the larger request set.
-6. Within an identical tool, subject scope, field expression, and action,
-   replace multiple deny conditions with one simpler condition when their union
-   is exactly equivalent and expressible with a canonical operator. Preserve
-   every source ID. For example, the union of the conditions
-   `eq manager` and `not_in {employee, manager}` is `neq employee`. Prove
-   equivalence using the same value domain, case handling, and missing/null
-   semantics; otherwise keep the
-   candidates separate. Never union conditions across tools, subject scopes,
-   field expressions, actions, or conjunctive field groups, and never broaden
-   or narrow the denied request set merely to shorten wording.
-7. Assign stable IDs (`C01`, `C02`, ...) after deduplication and exact union
-   simplification.
-
-For domain rules, an explicit allowlist complement such as
-`destination.domain != ibm.com` subsumes a denylist containing only non-IBM
-domains. Do not claim implication when domain parsing, case handling, subdomain
-handling, or another matching semantic is unspecified; record an unresolved
-overlap instead. Do not repeat source prose or read `<GUIDANCE_FILE>` yet.
+Expand multi-tool proposals into one row per tool, preserving conjunctive field
+groups. Normalize each row to the Candidate Reconciliation columns using only
+the documented canonical operators. Preserve case, missing, and null semantics;
+do not simplify ambiguous domain or subdomain matching. Assign stable IDs after
+the reconciliation command has identified duplicates and exact unions. Do not
+read `<GUIDANCE_FILE>` yet.
 
 #### STEP 8 — Reconcile with existing guidance and write the addendum
 
-Read `<GUIDANCE_FILE>` once. Normalize each explicit existing rule into the same
-tuple. Expand a general or multi-tool existing rule per tool only when
-`tool_definitions.json` makes that mapping unambiguous; otherwise classify the
-comparison as unresolved. Use the questionnaire's guidance-rule mapping and
+Read `<GUIDANCE_FILE>` once. Use the questionnaire's guidance-rule mapping and
 architecture's canonical paths to resolve explicit natural-language aliases;
-do not guess between multiple plausible fields or tools. Compare only within
-matching tool/field/action groups and fill Candidate Reconciliation without
-restating rule prose.
+do not guess between multiple plausible fields or tools.
 
-A candidate is Covered when an existing rule's subject scope contains the
-candidate scope and every request denied by the candidate is already denied by
-the existing rule. This includes a broader deny on the same field, not merely
-identical wording. A candidate is a Clarification when it only makes an
-existing decision more implementable without changing behavior; recommend
-editing the existing rule and emit no addendum line.
+##### Semantic deduplication
 
-Similar wording, category, or intent is insufficient. Before writing, reject
-any candidate that lacks a verified tool/field or cannot reduce to
-`field · operator · value · deny on match`. Put monitoring, logging,
-definitions, cross-rule interpretation, and other non-decisions in the Gap
-Register or Input Schema/Known values as appropriate.
+Normalize every reducible existing rule into Existing Guidance Normalization
+and every candidate into Candidate Reconciliation as:
+
+`tool | subject scope | field | operator | values | action`
+
+Compare rules only when tool, field semantics, action, case handling, and
+missing/null behavior are compatible.
+
+- If an existing rule covers a candidate, emit nothing.
+- If one candidate covers another, retain only the broader candidate and
+  combine their sources.
+- If a candidate broadens an existing rule, emit only the uncovered difference.
+  If that difference cannot be expressed independently, record a replacement
+  recommendation instead of appending the broader rule.
+- Do not infer role precedence or other unspecified semantics; classify those
+  cases as unresolved.
+- Keep rules separate when they enforce different tools, fields, conditions,
+  scopes, formats, or security constraints.
+
+A rule covers another only when every request denied by the narrower rule is
+also denied by the broader rule. Expand a general or multi-tool rule per tool
+only when `tool_definitions.json` makes the mapping unambiguous. Fill Candidate
+Reconciliation without restating rule prose.
+
+Classify with this vocabulary:
+
+| Verdict | Meaning / action |
+|---|---|
+| Novel | No related existing rule; emit. |
+| Duplicate / Covered | Same or broader behavior already exists; emit nothing. |
+| Additive | Emit only the uncovered values, tool, or scope. |
+| Clarification | Behavior is unchanged; recommend an edit in the Gap Register. |
+| Overlap / Conflict / Contradictory correction | Record the relationship, emit nothing, and block Step E. |
+
+After writing the normalized Candidate Reconciliation table to
+`owasp_policy_guidelines.md`, run:
+
+```bash
+smith --flag guidance_reconciliation
+```
+
+It performs the deterministic field, value, duplicate, coverage, overlap,
+conflict, and exact-union checks without writing files or calling a model.
+Apply its suggestions once and rerun only when the table changed. Missing or
+malformed inputs fail the phase; findings themselves are review results.
 
 Never write a candidate described anywhere in the analysis as unenforceable,
 not OPA-visible, pending runtime integration, or dependent on a counter that is
 not updated before evaluation. Such a candidate belongs in the Gap Register.
 
-Before replacing any existing addendum, capture its numbered rules and log one
-of: `prior proposal: <N> rules`, `prior proposal: none (no file)`, or
-`prior proposal: empty (legacy 0-byte file)`.
+Before replacing any existing addendum, capture its numbered rules in Prior
+Proposal Reconciliation. Use one row per prior rule and give every row a
+`Proposed`, `Merged`, or `Dropped` disposition with a candidate link or named
+validation reason. When no prior rules exist, leave the table empty and log one
+of: `prior proposal: none (no file)` or `prior proposal: empty (legacy 0-byte
+file)`.
 
-**Single authoritative addendum contract:**
-
-- `<GUIDANCE_UPDATE_FILE>` contains only uncovered, verified, reducible rules;
-  never Gap Register content or copies of existing guidance.
-- Emit only candidates classified Novel or Additive, and for Additive emit only
-  the uncovered value/tool/scope difference. Never emit Duplicate, Covered,
-  Clarification, Overlap, Conflict, or Contradictory correction rows.
-- Before writing, confirm that no emitted group with the same tool, subject
-  scope, field expression, and action has an exactly equivalent single-condition
-  union. Apply STEP 7's union simplification when it does.
-- Each non-empty line is exactly `<number>. <single-line rule>`. Numbering is
-  contiguous from one after the highest existing rule number; if existing
-  guidance has no numbered lines, start after its count of rule-bearing lines.
-- The file contains no headings, comments, blank lines, provenance tags,
-  violation codes, status text, tables, cross-references, or Rego syntax.
-- If rules remain, overwrite the previous addendum completely. If none remain,
-  do not create the file and delete any prior or legacy empty addendum.
-- Never modify `<GUIDANCE_FILE>` or the questionnaire in Step D.
+Write `<GUIDANCE_UPDATE_FILE>` with only Novel or Additive uncovered decisions,
+one numbered single-line rule per candidate and no headings or metadata. Start
+after the highest existing rule number. If no rule remains, leave the file
+absent. Never modify `<GUIDANCE_FILE>` or the questionnaire in Step D; the phase
+checkpoint owns format, numbering, presence, and duplicate validation.
 
 The file's presence means unmerged rules are pending. Human-facing status and
 out-of-scope findings belong in STEP 9 and `owasp_policy_guidelines.md`, not in
 the addendum.
-
-#### STEP 8b — Check post-merge redundancy and conflicts
-
-Apply the Reconciliation rows to existing guidance plus the proposal. Classify
-same-tool/field pairs with this vocabulary:
-
-| Verdict | Meaning / action |
-|---|---|
-| Novel | No related existing rule; emit the candidate. |
-| Duplicate | Same normalized tuple exists in the candidate set; retain one tuple with all source IDs. |
-| Covered | Every request this row would deny is already denied by another candidate or existing rule; emit nothing. |
-| Additive | Candidate only adds values; emit only the added values. |
-| Clarification | Same behavior with more precise wording or field naming; recommend an edit in the Gap Register and emit nothing. |
-| Overlap | Same operator has overlapping, non-identical values; report and block. |
-| Conflict | Outcomes or thresholds are incompatible without distinct scope; report and block. |
-| Contradictory correction | Candidate removes values or narrows scope; emit nothing, identify the required existing-rule edit, and block. |
-
-Log IDs, field, operator, and value relationship without copying full rule
-prose.
-
-#### STEP 8c — Check regressions against the captured proposal
-
-Apply the Prior proposal row in the matrix to every captured rule. If no prior
-rules exist, log that explicit state. Do not re-add unexplained regressions.
-
-#### STEP 8d — Validate the addendum on disk
-
-Re-read the actual file, or confirm its required absence, and apply all On disk
-rows in the matrix plus the STEP 8 addendum contract. Correct once and recheck;
-then fail if any violation remains. Delete the file if cleanup removes all
-rules, and report whether validation passed directly or after cleanup.
 
 #### STEP 9 — Human review
 
@@ -377,7 +326,7 @@ the no-new-rules result when applicable. End the artifact with:
 ## Phase Handoff
 
 - Status: PASS / FAIL
-- Artifact schema: enforcement-mapping-v6
+- Artifact schema: enforcement-mapping-v8
 - Applicable threats mapped: <mapped>/<total>
 - OPA candidates after deduplication: <count>
 - Newly proposed rules: <count>
@@ -390,3 +339,12 @@ the no-new-rules result when applicable. End the artifact with:
 Mark the phase `FAIL` when addendum validation fails or any blocking overlap,
 conflict, or regression remains. Step D does not merge guidance or start policy
 creation.
+
+After the addendum and Phase Handoff are final, run:
+
+```bash
+smith --flag security_analysis_checkpoint --phase D
+```
+
+The phase is complete only when this command passes and refreshes the single
+`analysis_state.json` handoff.

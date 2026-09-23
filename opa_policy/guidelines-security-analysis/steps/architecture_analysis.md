@@ -340,3 +340,8 @@ Append this compact checkpoint to `architecture.md`:
 
 Mark `PASS` only when the required sections are present and each extracted tool
 has a governing implementation or an explicit unknown finding.
+
+Run `smith --flag security_analysis_checkpoint --phase A` after writing the
+handoff. Continue only when it passes. The command validates the artifact and
+refreshes the shared compact `analysis_state.json`; it does not alter the
+human-readable artifact.

@@ -399,6 +399,11 @@ def main():
         "--dest",
         help="destination directory for the snapshot (for save_snapshot)",
     )
+    parser.add_argument(
+        "--phase",
+        choices=("A", "B", "C", "D"),
+        help="security-analysis phase to checkpoint",
+    )
     args = parser.parse_args()
 
     if not args.flag:
@@ -464,6 +469,47 @@ def main():
                 + os.getenv("TEST_CASE_PATH", "references/test_cases/"),
             },
         )
+        sys.exit(0)
+
+    if args.flag == "guidance_reconciliation":
+        from smith.tools.guidance_reconciliation import (
+            ReconciliationError,
+            reconcile_from_environment,
+        )
+
+        try:
+            print(reconcile_from_environment())
+        except ReconciliationError as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            sys.exit(1)
+        sys.exit(0)
+
+    if args.flag == "security_analysis_checkpoint":
+        from smith.tools.guidance_reconciliation import ReconciliationError
+        from smith.tools.security_analysis_checkpoint import checkpoint_from_environment
+
+        if not args.phase:
+            print(
+                "ERROR: security_analysis_checkpoint requires --phase A, B, C, or D.",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+        try:
+            print(checkpoint_from_environment(args.phase))
+        except ReconciliationError as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            sys.exit(1)
+        sys.exit(0)
+
+    if args.flag == "guidance_merge":
+        from smith.tools.guidance_merge import merge_from_environment
+        from smith.tools.guidance_reconciliation import ReconciliationError
+
+        try:
+            print(merge_from_environment())
+        except ReconciliationError as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            sys.exit(1)
         sys.exit(0)
 
     # model settings
@@ -778,6 +824,9 @@ def main():
         "save_snapshot",
         "generate_promptfoo_config",
         "get_current_agent",
+        "guidance_reconciliation",
+        "security_analysis_checkpoint",
+        "guidance_merge",
     ]
     if args.flag and args.flag not in allowed_flags:
         print(f"ERROR: '{args.flag}' is not a valid flag.")

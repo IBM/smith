@@ -207,3 +207,8 @@ Log a one-line breakdown at the end: how many answers are
 ```
 
 `PASS` permits documented blanks but must identify them as gaps.
+
+Run `smith --flag security_analysis_checkpoint --phase B` after writing the
+handoff. Continue only when it passes. Read reusable predecessor tables from
+`analysis_state.json`; open Markdown predecessor prose only for the named
+sections that are not represented there.

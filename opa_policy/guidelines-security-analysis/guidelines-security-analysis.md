@@ -9,7 +9,10 @@ Run Steps A-D in order to turn an MCP server's architecture and policy intent
 into OWASP-grounded enforcement guidance. Each step writes its artifact under
 `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/`; the workflow does
 not generate Rego. Step E is an optional, separately authorized merge and
-policy-creation handoff.
+policy-creation handoff. A single generated `analysis_state.json` in that
+directory holds compact, machine-readable tables, phase handoffs, and artifact
+hashes; each phase checkpoint updates it in place rather than creating scratch
+copies or archives.
 
 ## Prerequisites
 
@@ -70,7 +73,8 @@ single definition; step guides do not restate it:
    artifact is a predecessor.
 4. For a Markdown predecessor, first index its headings with
    `rg -n '^#{1,3} ' <path>`, then read only the line ranges for sections named
-   by the current guide. Do not open the whole file merely to locate sections.
+   by the current guide. When `analysis_state.json` contains the required table,
+   read it there instead. Do not open the whole file merely to locate sections.
 5. Write only the current guide's designated outputs, return its `Phase
    Handoff`, and stop.
 
@@ -94,11 +98,14 @@ Load only the guide for the current step:
 | A | `./steps/architecture_analysis.md` | `architecture.md` | `architecture-v2` |
 | B | `./steps/policy_guidance_questionnaire.md` | `policy_guidance_questionnaire.md` | `questionnaire-v2` |
 | C | `./steps/threat_model.md` | `threat_model.md` | `threat-model-v3` |
-| D | `./steps/enforcement_mapping.md` | `owasp_policy_guidelines.md` | `enforcement-mapping-v6` |
+| D | `./steps/enforcement_mapping.md` | `owasp_policy_guidelines.md` | `enforcement-mapping-v8` |
 
 Each guide is the single source of truth for that phase's inputs, output
-format, validation, and bounds. After a worker returns, apply the user's chosen
-review mode:
+format, validation, and bounds. At the end of each phase, run
+`smith --flag security_analysis_checkpoint --phase <A|B|C|D>`. The command
+validates all artifacts through that phase and atomically refreshes
+`analysis_state.json`; do not proceed on failure. After a worker returns, apply
+the user's chosen review mode:
 
 - **Gated:** present the checkpoint and wait for approval.
 - **Isolated autonomous:** start the next fresh worker after a successful
@@ -119,21 +126,17 @@ nothing to merge.
 Step E starts only when the user explicitly asks to merge. The selected review
 mode does not authorize it.
 
-1. Re-read `<GUIDANCE_UPDATE_FILE>` and apply enforcement_mapping STEP 8d.
-   Also reject any rule already covered by `<GUIDANCE_FILE>` and stop if STEP
-   8b reported an unresolved Overlap or Conflict. If the file is absent, report
-   that no proposal is pending and stop; do not recreate it. If it is a legacy
-   empty file, delete it and report that no rules were merged. Stop on any
-   other validation failure.
-2. Append the validated addendum to `<GUIDANCE_FILE>` without altering its
-   existing bytes. Add a separating newline when needed, read the result back,
-   and confirm the old final line and first new rule remain separate.
-3. Delete `<GUIDANCE_UPDATE_FILE>` only after the read-back confirms the
-   append. On failure, preserve the addendum and report the problem.
-4. Ask: “`guidance.txt` now has the merged rules. Do you want me to run policy
+1. Confirm that Phase D and its deterministic checkpoint passed. If the
+   addendum is absent, report that no proposal is pending and stop.
+2. Run `smith --flag guidance_merge`. This explicit command rejects a stale
+   Phase D checkpoint, malformed or non-contiguous numbering, duplicate rules,
+   and an empty addendum. It then atomically appends the validated bytes,
+   verifies the result, and deletes `<GUIDANCE_UPDATE_FILE>` only after the
+   read-back passes. Do not reproduce these file operations manually.
+3. Ask: “`guidance.txt` now has the merged rules. Do you want me to run policy
    creation against it now, or stop here?” The merge authorizes no further
    action.
-5. Only after an explicit yes, follow
+4. Only after an explicit yes, follow
    `../policy_creation/opa_policy_creation.md`. Preserve that workflow's own
    confirmation point and handoff; do not continue into testing or refinement.
 

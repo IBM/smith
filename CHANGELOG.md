@@ -37,6 +37,17 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- Added `smith --flag guidance_reconciliation`, an offline, read-only Step D
+  validator that compares normalized candidates with normalized existing
+  guidance, checks both against tool and subject schemas, and reports
+  duplicates, coverage, additive conditions, overlaps, conflicts, and safe
+  exact-union simplifications without modifying guidance.
+- Added deterministic A-D phase checkpoints that validate artifact schemas,
+  scenario coverage, citations, cross-phase joins, addendum format, and prior
+  proposal dispositions while maintaining one compact `analysis_state.json`.
+- Added an explicitly gated `guidance_merge` command that rejects stale or
+  malformed proposals and atomically appends a verified addendum without
+  changing any pre-existing guidance bytes.
 - **CPEX policy translation** (`smith --flag cpex_translate`): translates a generated OPA policy into a CPEX-compatible input shape and writes a `*_cpex.rego` copy next to the original.
 - **Integration test suite** (`tests/integration/`, run via `make integration`): one test per pipeline stage, driving the real `smith` CLI against frozen fixtures. 
 - **Policy-bypass test-case generation** (`smith --flag bypass_case_generation`): a new pipeline that analyzes the current policy against the guidance to find divergences, then synthesizes adversarial cases targeting each gap.

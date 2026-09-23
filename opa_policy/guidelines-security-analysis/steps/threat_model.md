@@ -261,108 +261,28 @@ Rules for writing threat instances:
 
 #### STEP 5 — Completeness critic
 
-Before verifying citations, run an independent self-check pass on the
-draft. This step exists because it is easy to write a threat model that
-covers the categories you thought of and silently omits the ones you
-didn't — and that omission is invisible to citation verification, which
-only checks that what you *did* write is well-grounded.
+Run one semantic critic pass that automation cannot perform: check whether
+each applicable ASI needs distinct Caller, LLM, Tool, or External instances;
+whether every non-terminal architecture layer is represented or explicitly a
+passthrough; and whether severity matches the documented business impact. Do
+not classify runtime-provided subject data as caller-controlled without
+evidence about its delivery channel. Repair once; if semantic gaps remain,
+record them and mark the phase `FAIL`.
 
-Check every one of the following. Anything that fails is a gap; go back
-to STEP 3 and add the missing threat instance (or, for scenarios/fields
-that genuinely don't apply, add an N/A entry).
-
-1. **Attack surface coverage.** Every row in the "Attack Surfaces" table
-   must appear in at least one threat row's `Surface` cell. Any row that no
-   instance references must be
-   annotated in the table's final column as "N/A — <reason>". A
-   Caller-influenced or untrusted surface with no ASI at all is almost
-   always a real miss, not a genuine N/A — treat that outcome with
-   suspicion.
-2. **Architecture layer coverage.** Every non-terminal layer in
-   architecture.md's Layers section must be referenced by an attack-surface,
-   Evidence Index, or threat row. For a genuine pure passthrough, add one
-   note in the most applicable Category Assessment `Boundary` cell.
-3. **Catalog scenario coverage.** For every ASI where Applicable = Yes
-   or Partial, every catalog scenario index must have exactly one Scenario
-   coverage disposition: one or more valid threat IDs, or `N/A` with a reason.
-   For a Not Applicable ASI, every scenario must be N/A.
-4. **Multi-actor consideration.** For every ASI where Applicable = Yes,
-   check whether more than one actor (Caller/LLM/Tool/External) could
-   plausibly cause the harm this category describes. If yes, confirm
-   the corresponding threat instances exist. This is where "the caller
-   can prompt-inject via a caller-controlled prompt input" gets picked up
-   alongside "the LLM can hallucinate the same argument on its own".
-5. **Severity sanity.** Scan the assigned severities across the
-   document. If every Applicable ASI has only Low or Medium instances,
-   double-check — either the tool has genuinely low blast radius (rare
-   for anything that touches an external service or caller-controlled
-   identity), or the severity rubric is being under-applied. Do not treat a
-   runtime-provided subject field as caller-controlled without evidence about
-   its provider or delivery channel.
-
-Repair gaps once, then re-run this critic. If gaps remain after the second
-critic pass, record them and mark the phase `FAIL`; do not start an unbounded
-repair loop or proceed to STEP 6.
-
-Log a one-line result (e.g. `Completeness: 12/12 attack surfaces,
-30/30 catalog scenarios, no gaps found` or `Completeness: added 2
-threat instances after critic pass — user_profile-into-system-prompt
-(ASI01) and requests/beautifulsoup4 supply chain (ASI04)`).
+The phase checkpoint performs the mechanical completeness checks for unique
+IDs, all ten category rows, attack-surface dispositions, and every catalog
+scenario. Do not duplicate those counts manually beyond the Phase Handoff.
 
 ---
 
 #### STEP 6 — Verify citations
 
-Walk every citation in `threat_model.md` and confirm it exists in its
-source. This catches fabricated fields and misattributed evidence
-before they propagate into Step D.
-
-For every Evidence Index row and threat row:
-
-1. If it names an `input.args.<x>`, an `input.extensions.subject.<x>`,
-   or any other structured field, confirm that exact field is declared
-   where the threat instance needs it:
-   - For `input.args.<x>`: name the tool the threat instance concerns,
-     then confirm the field appears in **that tool's own** `parameters`
-     array in `tool_definitions.json`. Do not accept the field merely
-     appearing somewhere in the file — many tools share a parameter
-     name, and a field declared on one tool says nothing about another.
-     A threat instance citing `input.args.department` as evidence against a
-     tool that has no `input.args.department` argument is a fabricated evidence
-     line, even though the name exists elsewhere.
-   - For `input.extensions.subject.<x>` and other subject fields:
-     confirm the key appears in `system_vars.json` or
-     architecture.md's Runtime Subject Context table, spelled exactly as
-     that source spells it (`roles`, not `role`). Presence establishes that
-     the runtime supplies the field; it does not establish or refute a
-     cryptographic verification mechanism.
-
-   This check runs here as well as in the enforcement_mapping step
-   because it runs *first*. A threat instance that verifies clean here
-   is inherited downstream as established, and enforcement_mapping's
-   own threat-linkage check will then find genuine upstream support for
-   a rule built on a field that tool never receives.
-2. If an evidence row cites `architecture.md` (a layer, file, or behaviour), confirm
-   the citation matches text actually present in `architecture.md`.
-3. If it cites a questionnaire answer (e.g. "per Q9"), confirm that
-   question is answered — not blank, and not `[inferred — low
-   confidence]`. Low-confidence answers must NOT be cited as evidence;
-   remove or rewrite the threat instance if that is its only support.
-4. If a threat or coverage row cites a catalog `attack_scenarios` index or a `threat_aliases`
-   entry, confirm that index/alias exists in the catalog entry for
-   that ASI.
-5. If a threat row cites an Attack Surfaces row number, confirm the row exists
-   and matches the description.
-6. Confirm every threat row cites at least one valid Evidence Index ID; remove
-   duplicate Evidence Index rows that state the same grounded fact.
-
-Any citation that fails verification: either fix the citation (pointing
-to a real field/section) or delete the threat instance. Cite-and-hope
-is not acceptable — the enforcement_mapping step will turn these
-citations into policy rules.
-
-Log a one-line verification result (e.g. `Citations verified: 18/18`
-or `Citations verified: 15/18 — 3 fabricated fields removed`).
+Verify only source meaning that requires judgment: each architecture citation
+must support the stated behavior, and each catalog alias or scenario must
+support the claimed threat. Fix or remove unsupported claims. The phase
+checkpoint checks the remaining mechanical links: Evidence IDs, surface IDs,
+questionnaire confidence, catalog indexes, and tool-specific argument and
+subject-field declarations. Record its verified/total result in the handoff.
 
 ---
 
@@ -389,3 +309,9 @@ Append:
 - Repair passes: <0 or 1>
 - Open gaps: <none, or concise list>
 ```
+
+Run `smith --flag security_analysis_checkpoint --phase C` after writing the
+handoff. Continue only when it passes. The checkpoint deterministically checks
+category and scenario coverage, internal evidence references, structured
+fields, and predecessor questionnaire citations, then refreshes
+`analysis_state.json`.
