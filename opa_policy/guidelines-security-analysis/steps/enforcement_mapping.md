@@ -13,10 +13,9 @@ The envelope's Shared Phase Contract applies. In particular, STEP 8 requires
 - `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/threat_model.md`
 - `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/policy_guidance_questionnaire.md`
 - `src/smith/data/owasp_10_ai_catalog.json`
-- `<TARGET_AGENT_PATH>/smith/smith_outputs/tool_definitions.json` — required, authoritative
-  per-tool source for `input.args.*`; if absent, request that this canonical
-  artifact be refreshed outside the workflow and do not use a root-level
-  substitute.
+- `<TARGET_AGENT_PATH>/smith/tool_definitions.json` — required, authoritative
+  per-tool source for `input.args.*`; if absent, run
+  `smith --flag get_mcp_parameter`.
 - `<SYSTEM_VAR_FILE>` — authoritative schema for runtime-provided
   `input.extensions.subject.*`; if absent, use architecture.md's Runtime
   Subject Context table and record the gap.

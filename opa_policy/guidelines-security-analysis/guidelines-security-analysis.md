@@ -17,9 +17,10 @@ Run:
 
 ```bash
 smith --flag get_current_agent
+smith --flag get_mcp_parameter
 ```
 
-The command reports `target_agent:` (`<TARGET_AGENT_PATH>`) and the
+The first command reports `target_agent:` (`<TARGET_AGENT_PATH>`) and the
 resolved `guidance_file:` (`<GUIDANCE_FILE>`). Do not read `.env` directly.
 The current command does not expose `SYSTEM_VAR_FILE`, so use
 `<TARGET_AGENT_PATH>/smith/system_vars.json` as `<SYSTEM_VAR_FILE>` when it
@@ -27,13 +28,11 @@ exists; otherwise ask the user for the configured path instead of searching
 outside the target. `<GUIDANCE_UPDATE_FILE>` is `guidance_updated.txt` beside
 `<GUIDANCE_FILE>`.
 
-Reuse `<TARGET_AGENT_PATH>/smith/smith_outputs/tool_definitions.json` as the
-authoritative per-tool source for `input.args.*` names, types, and
-descriptions. Steps A-D must not invoke `smith --flag get_mcp_parameter`,
-create a root-level `smith/tool_definitions.json`, copy this artifact, or
-rewrite it. Step A validates the existing artifact against source evidence. If
-it is missing or demonstrably stale, stop and request that the canonical file
-be refreshed outside this workflow; do not substitute another location.
+The second command refreshes `<TARGET_AGENT_PATH>/smith/tool_definitions.json`,
+the authoritative per-tool source for `input.args.*` names, types, and
+descriptions. Run it even when the file already exists so the manifest matches
+the configured MCP server. Steps A-D read this file in place and must not copy
+or relocate it.
 
 ## Phase isolation and resumption
 
@@ -54,7 +53,7 @@ PHASE: A | B | C | D
 TARGET_AGENT_PATH: <resolved path>
 GUIDANCE_FILE: <resolved path> | ABSENT
 SYSTEM_VAR_FILE: <resolved path> | ABSENT
-TOOL_DEFINITIONS_FILE: <TARGET_AGENT_PATH>/smith/smith_outputs/tool_definitions.json
+TOOL_DEFINITIONS_FILE: <TARGET_AGENT_PATH>/smith/tool_definitions.json
 GUIDANCE_UPDATE_FILE: <resolved path beside GUIDANCE_FILE> | ABSENT
 PREDECESSOR_ARTIFACTS: <resolved paths, or none for Step A>
 ```

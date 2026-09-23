@@ -11,7 +11,7 @@ The envelope's Shared Phase Contract applies.
 - `<SYSTEM_VAR_FILE>` — authoritative schema for runtime-provided subject
   fields, if present. Its presence establishes field provenance and OPA
   visibility, not a cryptographic verification mechanism.
-- `<TARGET_AGENT_PATH>/smith/smith_outputs/tool_definitions.json` — required,
+- `<TARGET_AGENT_PATH>/smith/tool_definitions.json` — required,
   authoritative per-tool source for visible `input.args.*` names and types.
   Read it in place; do not generate, copy, or rewrite it.
 - `<GUIDANCE_FILE>` — existing policy intent, if present. Use it only in
@@ -249,7 +249,7 @@ this structure. Use canonical policy paths for every structured field:
 - Target agent: `<TARGET_AGENT_PATH>`
 - Guidance: `<GUIDANCE_FILE>` or `ABSENT`
 - System variables: `<SYSTEM_VAR_FILE>` or `ABSENT`
-- Tool definitions: `<TARGET_AGENT_PATH>/smith/smith_outputs/tool_definitions.json`
+- Tool definitions: `<TARGET_AGENT_PATH>/smith/tool_definitions.json`
 
 ## Layers
 
