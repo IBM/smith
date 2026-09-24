@@ -24,6 +24,7 @@ HEADERS = (
     "related rule",
     "verdict",
 )
+GROUPED_HEADERS = HEADERS[:-1] + ("guidance group", "verdict")
 EXISTING_HEADERS = (
     "existing id",
     "rule number",
@@ -67,6 +68,7 @@ class Candidate:
     sources: tuple[str, ...]
     related_rule: str
     verdict: str
+    guidance_group: str
 
     @property
     def group(self) -> tuple[str, tuple[str, ...], str]:
@@ -159,64 +161,34 @@ def _parse_scope(value: str) -> frozenset[str] | None:
     return frozenset(_split_values(value))
 
 
-def parse_candidate_table(markdown: str) -> list[Candidate]:
-    """Parse Step D's normalized Candidate Reconciliation Markdown table."""
-    heading = re.search(r"(?im)^##\s+Candidate Reconciliation\s*$", markdown)
-    if not heading:
-        raise ReconciliationError("Candidate Reconciliation section is missing")
-    section = markdown[heading.end() :]
-    next_heading = re.search(r"(?m)^#{1,2}\s+", section)
-    if next_heading:
-        section = section[: next_heading.start()]
-    lines = [line for line in section.splitlines() if line.strip()]
-    header_index = next(
-        (
-            index
-            for index, line in enumerate(lines)
-            if tuple(cell.casefold() for cell in _split_markdown_row(line)) == HEADERS
-        ),
-        None,
-    )
-    if header_index is None or header_index + 1 >= len(lines):
-        raise ReconciliationError(
-            "Candidate Reconciliation table is missing or malformed"
-        )
-    separator = _split_markdown_row(lines[header_index + 1])
-    if len(separator) != len(HEADERS) or not all(
-        re.fullmatch(r":?-{3,}:?", cell) for cell in separator
-    ):
-        raise ReconciliationError("Candidate Reconciliation separator is malformed")
+def _row_value(row: dict[str, Any], name: str) -> str:
+    for key, value in row.items():
+        if str(key).casefold() == name.casefold():
+            return _plain(str(value))
+    return ""
 
+
+def parse_candidate_rows(rows: Iterable[dict[str, Any]]) -> list[Candidate]:
+    """Parse normalized candidates from structured phase state."""
     candidates: list[Candidate] = []
     seen_ids: set[str] = set()
-    for line in lines[header_index + 2 :]:
-        if not line.lstrip().startswith("|"):
-            break
-        cells = _split_markdown_row(line)
-        if len(cells) != len(HEADERS):
-            raise ReconciliationError(
-                f"Candidate Reconciliation row has {len(cells)} cells; expected 10"
-            )
-        if all(cell.startswith("<") and cell.endswith(">") for cell in cells[:2]):
-            continue
-        (
-            candidate_id,
-            tool,
-            scope,
-            expression,
-            operator,
-            values,
-            action,
-            sources,
-            related,
-            verdict,
-        ) = (_plain(cell) for cell in cells)
+    for row in rows:
+        candidate_id = _row_value(row, "Candidate ID")
+        tool = _row_value(row, "Tool")
+        scope = _row_value(row, "Subject scope")
+        expression = _row_value(row, "Field expression")
+        operator = _row_value(row, "Operator").casefold()
+        values = _row_value(row, "Values")
+        action = _row_value(row, "Action")
+        sources = _row_value(row, "Sources")
+        related = _row_value(row, "Related rule")
+        verdict = _row_value(row, "Verdict")
+        guidance_group = _row_value(row, "Guidance group") or candidate_id
         if not candidate_id or not tool or not expression or not action:
-            raise ReconciliationError("Candidate row has an empty required cell")
+            raise ReconciliationError("Candidate row has an empty required field")
         if candidate_id in seen_ids:
             raise ReconciliationError(f"Duplicate Candidate ID: {candidate_id}")
         seen_ids.add(candidate_id)
-        operator = operator.casefold()
         if operator not in OPERATORS:
             raise ReconciliationError(
                 f"{candidate_id} uses unsupported operator {operator!r}"
@@ -239,56 +211,25 @@ def parse_candidate_table(markdown: str) -> list[Candidate]:
                 sources=_split_values(sources),
                 related_rule=related,
                 verdict=verdict,
+                guidance_group=guidance_group,
             )
         )
     return candidates
 
 
-def parse_existing_guidance_table(markdown: str) -> list[Candidate]:
-    """Parse existing guidance normalized by Step D into candidate tuples."""
-    heading = re.search(r"(?im)^##\s+Existing Guidance Normalization\s*$", markdown)
-    if not heading:
-        raise ReconciliationError("Existing Guidance Normalization section is missing")
-    section = markdown[heading.end() :]
-    next_heading = re.search(r"(?m)^#{1,2}\s+", section)
-    if next_heading:
-        section = section[: next_heading.start()]
-    lines = [line for line in section.splitlines() if line.strip()]
-    header_index = next(
-        (
-            index
-            for index, line in enumerate(lines)
-            if tuple(cell.casefold() for cell in _split_markdown_row(line))
-            == EXISTING_HEADERS
-        ),
-        None,
-    )
-    if header_index is None or header_index + 1 >= len(lines):
-        raise ReconciliationError(
-            "Existing Guidance Normalization table is missing or malformed"
-        )
-    separator = _split_markdown_row(lines[header_index + 1])
-    if len(separator) != len(EXISTING_HEADERS) or not all(
-        re.fullmatch(r":?-{3,}:?", cell) for cell in separator
-    ):
-        raise ReconciliationError(
-            "Existing Guidance Normalization separator is malformed"
-        )
+def parse_existing_guidance_rows(rows: Iterable[dict[str, Any]]) -> list[Candidate]:
+    """Parse normalized existing guidance from structured phase state."""
     existing: list[Candidate] = []
     seen_ids: set[str] = set()
-    for line in lines[header_index + 2 :]:
-        if not line.lstrip().startswith("|"):
-            break
-        cells = _split_markdown_row(line)
-        if len(cells) != len(EXISTING_HEADERS):
-            raise ReconciliationError(
-                f"Existing Guidance Normalization row has {len(cells)} cells; expected 8"
-            )
-        if all(cell.startswith("<") and cell.endswith(">") for cell in cells[:2]):
-            continue
-        existing_id, rule_number, tool, scope, expression, operator, values, action = (
-            _plain(cell) for cell in cells
-        )
+    for row in rows:
+        existing_id = _row_value(row, "Existing ID")
+        rule_number = _row_value(row, "Rule number")
+        tool = _row_value(row, "Tool")
+        scope = _row_value(row, "Subject scope")
+        expression = _row_value(row, "Field expression")
+        operator = _row_value(row, "Operator").casefold()
+        values = _row_value(row, "Values")
+        action = _row_value(row, "Action")
         if (
             not existing_id
             or not rule_number
@@ -297,12 +238,11 @@ def parse_existing_guidance_table(markdown: str) -> list[Candidate]:
             or not action
         ):
             raise ReconciliationError(
-                "Existing Guidance Normalization row has an empty required cell"
+                "Existing Guidance Normalization row has an empty required field"
             )
         if existing_id in seen_ids:
             raise ReconciliationError(f"Duplicate Existing ID: {existing_id}")
         seen_ids.add(existing_id)
-        operator = operator.casefold()
         if operator not in OPERATORS:
             raise ReconciliationError(
                 f"{existing_id} uses unsupported operator {operator!r}"
@@ -325,9 +265,71 @@ def parse_existing_guidance_table(markdown: str) -> list[Candidate]:
                 sources=(rule_number,),
                 related_rule="",
                 verdict="Existing",
+                guidance_group=existing_id,
             )
         )
     return existing
+
+
+def _markdown_table_rows(
+    markdown: str, section_name: str, headers: tuple[str, ...]
+) -> list[dict[str, str]]:
+    heading = re.search(rf"(?im)^##\s+{re.escape(section_name)}\s*$", markdown)
+    if not heading:
+        raise ReconciliationError(f"{section_name} section is missing")
+    section = markdown[heading.end() :]
+    next_heading = re.search(r"(?m)^#{1,2}\s+", section)
+    if next_heading:
+        section = section[: next_heading.start()]
+    lines = [line for line in section.splitlines() if line.strip()]
+    header_index = next(
+        (
+            index
+            for index, line in enumerate(lines)
+            if tuple(cell.casefold() for cell in _split_markdown_row(line)) == headers
+        ),
+        None,
+    )
+    if header_index is None or header_index + 1 >= len(lines):
+        raise ReconciliationError(f"{section_name} table is missing or malformed")
+    separator = _split_markdown_row(lines[header_index + 1])
+    if len(separator) != len(headers) or not all(
+        re.fullmatch(r":?-{3,}:?", cell) for cell in separator
+    ):
+        raise ReconciliationError(f"{section_name} separator is malformed")
+    rows: list[dict[str, str]] = []
+    for line in lines[header_index + 2 :]:
+        if not line.lstrip().startswith("|"):
+            break
+        cells = _split_markdown_row(line)
+        if len(cells) != len(headers):
+            raise ReconciliationError(
+                f"{section_name} row has {len(cells)} cells; expected {len(headers)}"
+            )
+        if all(cell.startswith("<") and cell.endswith(">") for cell in cells[:2]):
+            continue
+        rows.append(dict(zip(headers, cells)))
+    return rows
+
+
+def parse_candidate_table(markdown: str) -> list[Candidate]:
+    """Parse Step D's normalized Candidate Reconciliation Markdown table."""
+    try:
+        rows = _markdown_table_rows(
+            markdown, "Candidate Reconciliation", GROUPED_HEADERS
+        )
+    except ReconciliationError:
+        rows = _markdown_table_rows(markdown, "Candidate Reconciliation", HEADERS)
+    return parse_candidate_rows(rows)
+
+
+def parse_existing_guidance_table(markdown: str) -> list[Candidate]:
+    """Parse existing guidance normalized by Step D into candidate tuples."""
+    return parse_existing_guidance_rows(
+        _markdown_table_rows(
+            markdown, "Existing Guidance Normalization", EXISTING_HEADERS
+        )
+    )
 
 
 def _read_json(path: Path, label: str) -> dict[str, Any]:

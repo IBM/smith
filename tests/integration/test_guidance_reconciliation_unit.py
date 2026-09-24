@@ -111,6 +111,24 @@ def test_parses_normalized_markdown_table():
     assert candidates[0].subject_scope is None
 
 
+def test_parses_grouped_candidate_table_rendered_by_checkpoint():
+    markdown = HEADER.replace(
+        "Related rule | Verdict",
+        "Related rule | Guidance group | Verdict",
+    ).replace(
+        "|---|---|---|---|---|---|---|---|---|---|",
+        "|---|---|---|---|---|---|---|---|---|---|---|",
+    )
+    markdown += (
+        "| C01 | set_user_role | all | `input.args.user_role` | eq | manager | "
+        "deny | T01 | — | G01 | Novel |\n"
+    )
+
+    candidates = parse_candidate_table(markdown)
+
+    assert candidates[0].guidance_group == "G01"
+
+
 @pytest.mark.parametrize(
     ("content", "message"),
     [

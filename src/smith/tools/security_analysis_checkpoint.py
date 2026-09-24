@@ -14,110 +14,223 @@ from typing import Any
 
 from smith.tools.guidance_reconciliation import (
     ReconciliationError,
-    _split_markdown_row,
     analyze_existing_relationships,
     load_subject_schema,
     load_tool_schema,
-    parse_candidate_table,
-    parse_existing_guidance_table,
+    parse_candidate_rows,
+    parse_existing_guidance_rows,
     validate_candidates,
     validate_existing_rule_numbers,
 )
 
 PHASES = {
-    "A": ("architecture.md", "architecture-v2"),
-    "B": ("policy_guidance_questionnaire.md", "questionnaire-v2"),
-    "C": ("threat_model.md", "threat-model-v3"),
-    "D": ("owasp_policy_guidelines.md", "enforcement-mapping-v8"),
-}
-REQUIRED_TABLES = {
-    "A": {
-        "Layers",
-        "Tool Arguments",
-        "Enforcement Points",
-    },
-    "B": {"Answer Register"},
-    "C": {
-        "Attack Surfaces",
-        "Evidence Index",
-        "Category Assessment",
-        "Threat Instances",
-        "Scenario Coverage",
-    },
-    "D": {
-        "Threat Disposition",
-        "OWASP Top 10 for Agentic AI Security — Scope Assessment",
-        "Gap Register",
-        "Input Schema",
-        "Rules",
-        "Candidate Reconciliation",
-        "Existing Guidance Normalization",
-        "Prior Proposal Reconciliation",
-    },
-}
-REQUIRED_SECTIONS = {
-    "A": {
-        "Run Context",
-        "Layers",
-        "Trust Boundaries",
-        "Runtime Subject Context",
-        "Tool Arguments",
-        "Prompt Inputs",
-        "External Data",
-        "Data Flow",
-        "Enforcement Points",
-        "Undeclared Fields",
-        "Phase Handoff",
-    },
-    "B": REQUIRED_TABLES["B"] | {"Phase Handoff"},
-    "C": REQUIRED_TABLES["C"] | {"Phase Handoff"},
-    "D": REQUIRED_TABLES["D"]
-    | {"Architecture Summary", "Policy Rules (OPA scope only)", "Phase Handoff"},
+    "A": ("architecture", "architecture-v2", "Architecture Analysis"),
+    "B": (
+        "policy_guidance_questionnaire",
+        "questionnaire-v2",
+        "OPA Policy Guidance Questionnaire",
+    ),
+    "C": ("threat_model", "threat-model-v3", "Threat Model"),
+    "D": (
+        "owasp_policy_guidelines",
+        "enforcement-mapping-v8",
+        "OWASP Top 10 for Agentic AI Security — Scope Assessment and Policy Guidelines",
+    ),
 }
 BLOCKING_VERDICTS = {"overlap", "conflict", "contradictory correction"}
+EMITTED_VERDICTS = {"novel", "additive"}
+NON_EMITTED_VERDICTS = {"duplicate", "covered", "clarification"}
 
+TABLE_COLUMNS = {
+    "Layers": ["Layer", "File", "Role", "Inputs", "Outputs", "Current enforcement"],
+    "Runtime Subject Context": [
+        "Field",
+        "Provider",
+        "Provenance",
+        "Verification / integrity",
+        "OPA-visible?",
+    ],
+    "Tool Arguments": ["Field", "Tool", "Origin / influence", "Disposition"],
+    "Prompt Inputs": ["Field or data", "Source", "Consumer", "Trust / influence"],
+    "External Data": ["Data", "Source", "Verification / integrity", "Consumer"],
+    "Enforcement Points": [
+        "Layer",
+        "Current",
+        "Available (OPA-interceptable)",
+        "Blind spots",
+    ],
+    "Undeclared Fields": [
+        "Field",
+        "Referenced by guidance rule #",
+        "Declared by",
+        "Consequence",
+    ],
+    "Answer Register": ["Q", "Required answer", "Answer", "Confidence"],
+    "Parameter Details": ["Tool", "Policy path", "Type", "Required", "Valid values"],
+    "Runtime Subject Details": [
+        "Policy path",
+        "Provider",
+        "Provenance",
+        "Verification / integrity mechanism",
+    ],
+    "Role Permissions": ["Tool", "Role", "Permission / scope", "guidance.txt rule"],
+    "Approval Paths": ["Parameter condition", "Approval field", "guidance.txt rule"],
+    "Rate Limits": ["Role", "Max calls per session"],
+    "Severity Levels": ["Level", "Examples"],
+    "Violation Codes": ["Existing code", "Meaning"],
+    "Attack Surfaces": [
+        "#",
+        "Field or Data Point",
+        "Source Layer",
+        "Provenance / influence",
+        "Enters where",
+        "Threat IDs / N/A",
+    ],
+    "Evidence Index": ["ID", "Source", "Grounded fact"],
+    "Category Assessment": [
+        "ASI",
+        "Name",
+        "Applicability",
+        "OWASP summary",
+        "Boundary (optional)",
+    ],
+    "Threat Instances": [
+        "ID",
+        "ASI",
+        "Severity",
+        "Actor",
+        "Surface",
+        "Catalog basis",
+        "Evidence",
+        "Concrete threat",
+    ],
+    "Scenario Coverage": ["ASI", "Scenario", "Disposition"],
+    "Threat Disposition": ["Threat ID", "Field / surface", "Owner", "Reason"],
+    "OWASP Top 10 for Agentic AI Security — Scope Assessment": [
+        "OWASP",
+        "Scope",
+        "OPA threat IDs",
+        "Other-layer threat IDs",
+        "Reason / owner",
+    ],
+    "Gap Register": ["Finding ID", "Layer", "Recommended action"],
+    "Input Schema": ["Field", "Source"],
+    "Rules": [
+        "Code",
+        "OWASP",
+        "Threat IDs",
+        "Severity",
+        "Tool(s) / field",
+        "Condition",
+        "Matching",
+    ],
+    "Candidate Reconciliation": [
+        "Candidate ID",
+        "Tool",
+        "Subject scope",
+        "Field expression",
+        "Operator",
+        "Values",
+        "Action",
+        "Sources",
+        "Related rule",
+        "Guidance group",
+        "Verdict",
+    ],
+    "Existing Guidance Normalization": [
+        "Existing ID",
+        "Rule number",
+        "Tool",
+        "Subject scope",
+        "Field expression",
+        "Operator",
+        "Values",
+        "Action",
+    ],
+    "Prior Proposal Reconciliation": [
+        "Prior ID",
+        "Original number",
+        "Normalized rule",
+        "Disposition",
+        "Candidate / reason",
+    ],
+}
 
-def _sections(markdown: str) -> dict[str, str]:
-    matches = list(re.finditer(r"(?m)^#{2,3}\s+(.+?)\s*$", markdown))
-    result: dict[str, str] = {}
-    for index, match in enumerate(matches):
-        end = matches[index + 1].start() if index + 1 < len(matches) else len(markdown)
-        result[match.group(1).strip()] = markdown[match.end() : end]
-    return result
+PHASE_LAYOUT = {
+    "A": [
+        ("Run Context", 2, "section"),
+        ("Layers", 2, "table"),
+        ("Trust Boundaries", 2, "section"),
+        ("Runtime Subject Context", 3, "table"),
+        ("Tool Arguments", 3, "table"),
+        ("Prompt Inputs", 3, "table"),
+        ("External Data", 3, "table"),
+        ("Data Flow", 2, "section"),
+        ("Enforcement Points", 2, "table"),
+        ("Undeclared Fields", 2, "table"),
+        ("Phase Handoff", 2, "handoff"),
+    ],
+    "B": [
+        ("Answer Register", 2, "table"),
+        ("Parameter Details", 2, "table"),
+        ("Runtime Subject Details", 2, "table"),
+        ("Role Permissions", 2, "table"),
+        ("Approval Paths", 2, "table"),
+        ("Rate Limits", 2, "table"),
+        ("Severity Levels", 2, "table"),
+        ("Violation Logging", 2, "section"),
+        ("Violation Codes", 2, "table"),
+        ("Phase Handoff", 2, "handoff"),
+    ],
+    "C": [
+        ("Attack Surfaces", 2, "table"),
+        ("Evidence Index", 2, "table"),
+        ("Category Assessment", 2, "table"),
+        ("Threat Instances", 2, "table"),
+        ("Scenario Coverage", 2, "table"),
+        ("Phase Handoff", 2, "handoff"),
+    ],
+    "D": [
+        ("Architecture Summary", 2, "section"),
+        ("Threat Disposition", 2, "table"),
+        ("OWASP Top 10 for Agentic AI Security — Scope Assessment", 2, "table"),
+        ("Gap Register", 2, "table"),
+        ("Policy Rules (OPA scope only)", 2, "section"),
+        ("Input Schema", 3, "table"),
+        ("Known values", 3, "section"),
+        ("Rules", 3, "table"),
+        ("Candidate Reconciliation", 2, "table"),
+        ("Existing Guidance Normalization", 2, "table"),
+        ("Prior Proposal Reconciliation", 2, "table"),
+        ("Phase Handoff", 2, "handoff"),
+    ],
+}
 
-
-def _table(section: str) -> list[dict[str, str]] | None:
-    lines = [line for line in section.splitlines() if line.strip()]
-    for index in range(len(lines) - 1):
-        if not lines[index].lstrip().startswith("|"):
-            continue
-        headers = _split_markdown_row(lines[index])
-        separators = _split_markdown_row(lines[index + 1])
-        if len(headers) != len(separators) or not all(
-            re.fullmatch(r":?-{3,}:?", cell) for cell in separators
-        ):
-            continue
-        rows: list[dict[str, str]] = []
-        for line in lines[index + 2 :]:
-            if not line.lstrip().startswith("|"):
-                break
-            cells = _split_markdown_row(line)
-            if len(cells) != len(headers):
-                raise ReconciliationError("Markdown table has an inconsistent row")
-            if any("<" in cell and ">" in cell for cell in cells):
-                continue
-            rows.append(dict(zip(headers, cells)))
-        return rows
-    return None
-
-
-def _handoff(section: str) -> dict[str, str]:
-    result: dict[str, str] = {}
-    for line in section.splitlines():
-        match = re.match(r"\s*-\s*([^:]+):\s*(.+?)\s*$", line)
-        if match:
-            result[match.group(1).strip()] = match.group(2).strip()
-    return result
+QUESTIONNAIRE_PROMPTS = {
+    "Q1": "Tool names and one-sentence purposes",
+    "Q2": "External systems: protocol, authentication, and read/write behavior",
+    "Q3": "Whether each tool reads, writes, or both",
+    "Q4": "Parameters; use Parameter Details",
+    "Q5": "Every user role",
+    "Q6": "Runtime subject provenance and integrity; use Runtime Subject Details",
+    "Q7": "User ID canonical path, provider, and use",
+    "Q8": "Whether simultaneous roles are supported",
+    "Q9": "Tool permissions and scope per role; use Role Permissions",
+    "Q10": "Role-specific topics, values, or parameter combinations",
+    "Q11": "Roles with no restrictions",
+    "Q12": "Globally blocked enumerable values, formats, domains, or flags",
+    "Q13": "Numeric hard caps",
+    "Q13b": "Conditional approval paths; use Approval Paths",
+    "Q14": "Rejected patterns and their input source",
+    "Q15": "Per-session call limits; use Rate Limits",
+    "Q16": "Counter owner, mechanism, and canonical policy path",
+    "Q17": "Post-response filtering",
+    "Q18": "Response fields suppressed by role",
+    "Q19": "Conditions making a result actionable",
+    "Q20": "Silent rejection or user explanation",
+    "Q21": "Hard-block and soft-block meanings; use Severity Levels",
+    "Q22": "Denial logging and existing violation-code scheme",
+}
 
 
 def _column(row: dict[str, str], name: str) -> str:
@@ -135,42 +248,217 @@ def _ids(value: str, prefix: str) -> set[str]:
     return set(re.findall(rf"\b{re.escape(prefix)}\d+\b", value))
 
 
-def _validate_phase_shape(
-    phase: str, path: Path, expected_schema: str
+def _surface_ids(value: str) -> set[str]:
+    """Normalize attack-surface references written as either `1` or `#1`."""
+    return {
+        f"#{match}" for match in re.findall(r"(?<![A-Za-z0-9])#?(\d+)\b", str(value))
+    }
+
+
+def _verdict_tokens(value: str) -> frozenset[str]:
+    """Return every recognized verdict in a simple or compound cell."""
+    normalized = value.casefold()
+    labels = BLOCKING_VERDICTS | EMITTED_VERDICTS | NON_EMITTED_VERDICTS
+    return frozenset(
+        label
+        for label in labels
+        if re.search(rf"(?<![a-z]){re.escape(label)}(?![a-z])", normalized)
+    )
+
+
+def _is_emitted_verdict(value: str) -> bool:
+    verdicts = _verdict_tokens(value)
+    return bool(verdicts) and verdicts <= EMITTED_VERDICTS
+
+
+def _markdown_cell(value: Any) -> str:
+    return str(value).replace("|", r"\|").replace("\n", "<br>")
+
+
+def _render_table(columns: list[str], rows: list[dict[str, str]]) -> str:
+    header = "| " + " | ".join(columns) + " |"
+    separator = "|" + "|".join("---" for _ in columns) + "|"
+    body = [
+        "| "
+        + " | ".join(_markdown_cell(row.get(column, "")) for column in columns)
+        + " |"
+        for row in rows
+    ]
+    return "\n".join([header, separator, *body])
+
+
+def _render_phase(phase: str, state: dict[str, Any]) -> str:
+    lines = [f"# {state['title']}", ""]
+    for name, level, kind in PHASE_LAYOUT[phase]:
+        if phase == "A" and kind == "section":
+            continue
+        lines.extend([f"{'#' * level} {name}", ""])
+        if kind == "table":
+            lines.extend(
+                [_render_table(TABLE_COLUMNS[name], state["tables"].get(name, [])), ""]
+            )
+        elif kind == "handoff":
+            lines.extend(
+                [
+                    f"- {key}: {_markdown_cell(value)}"
+                    for key, value in state["handoff"].items()
+                ]
+            )
+            lines.append("")
+        else:
+            lines.extend([state["sections"].get(name, "") or "none", ""])
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def _structured_phase(
+    phase: str, source: Path, artifact: Path, expected_schema: str
 ) -> tuple[dict[str, Any], list[str]]:
-    if not path.is_file():
-        return {}, [f"Phase {phase} artifact is missing: {path}"]
-    text = path.read_text(encoding="utf-8")
-    sections = _sections(text)
+    if not source.is_file():
+        return {}, [f"Phase {phase} structured artifact is missing: {source}"]
+    try:
+        data = json.loads(source.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        return {}, [f"Phase {phase} structured artifact is malformed: {source}: {exc}"]
+    if not isinstance(data, dict):
+        return {}, [f"Phase {phase} structured artifact must be a JSON object"]
+
     errors: list[str] = []
-    handoff = _handoff(sections.get("Phase Handoff", ""))
-    missing_sections = sorted(REQUIRED_SECTIONS[phase] - set(sections))
+    sections = data.get("sections")
+    tables = data.get("tables")
+    handoff = data.get("handoff")
+    if not isinstance(sections, dict):
+        sections = {}
+        errors.append(f"Phase {phase} sections must be an object")
+    if not isinstance(tables, dict):
+        tables = {}
+        errors.append(f"Phase {phase} tables must be an object")
+    if not isinstance(handoff, dict):
+        handoff = {}
+        errors.append(f"Phase {phase} handoff must be an object")
+
+    allowed_sections = {
+        name for name, _, kind in PHASE_LAYOUT[phase] if kind == "section"
+    }
+    allowed_tables = {name for name, _, kind in PHASE_LAYOUT[phase] if kind == "table"}
+    unknown_sections = sorted(set(sections) - allowed_sections)
+    unknown_tables = sorted(set(tables) - allowed_tables)
+    if unknown_sections:
+        errors.append(
+            f"Phase {phase} has unknown sections: {', '.join(unknown_sections)}"
+        )
+    if unknown_tables:
+        errors.append(f"Phase {phase} has unknown tables: {', '.join(unknown_tables)}")
+
+    present = set(sections) | set(tables)
+    if handoff:
+        present.add("Phase Handoff")
+    expected_sections = allowed_sections | allowed_tables | {"Phase Handoff"}
+    missing_sections = sorted(expected_sections - present)
     if missing_sections:
         errors.append(
             f"Phase {phase} required sections are missing: {', '.join(missing_sections)}"
         )
-    if handoff.get("Status") != "PASS":
+    normalized_tables: dict[str, list[dict[str, str]]] = {}
+    for name, rows in tables.items():
+        if isinstance(rows, list):
+            normalized_tables[str(name)] = [
+                {str(key): str(value) for key, value in row.items()}
+                for row in rows
+                if isinstance(row, dict)
+            ]
+    for name in allowed_tables:
+        rows = tables.get(name)
+        if not isinstance(rows, list):
+            errors.append(f"Phase {phase} required table {name!r} is missing")
+            continue
+        expected_columns = TABLE_COLUMNS[name]
+        for index, row in enumerate(rows, 1):
+            if not isinstance(row, dict):
+                errors.append(
+                    f"Phase {phase} table {name!r} row {index} is not an object"
+                )
+                continue
+            missing = [column for column in expected_columns if column not in row]
+            extra = [column for column in row if column not in expected_columns]
+            if missing:
+                errors.append(
+                    f"Phase {phase} table {name!r} row {index} is missing columns: "
+                    + ", ".join(missing)
+                )
+            if extra:
+                errors.append(
+                    f"Phase {phase} table {name!r} row {index} has unknown columns: "
+                    + ", ".join(extra)
+                )
+
+    status = str(data.get("status", handoff.get("Status", "missing")))
+    schema = str(data.get("schema", handoff.get("Artifact schema", "missing")))
+    if status != "PASS" or str(handoff.get("Status", "")) != "PASS":
         errors.append(f"Phase {phase} handoff status is not PASS")
-    if handoff.get("Artifact schema") != expected_schema:
+    if (
+        schema != expected_schema
+        or str(handoff.get("Artifact schema", "")) != expected_schema
+    ):
         errors.append(
-            f"Phase {phase} schema is {handoff.get('Artifact schema', 'missing')!r}; "
-            f"expected {expected_schema!r}"
+            f"Phase {phase} schema is {schema!r}; expected {expected_schema!r}"
         )
-    tables: dict[str, list[dict[str, str]]] = {}
-    for name, content in sections.items():
-        rows = _table(content)
-        if rows is not None:
-            tables[name] = rows
-    for name in REQUIRED_TABLES[phase] - set(tables):
-        errors.append(f"Phase {phase} required table {name!r} is missing")
-    return {
-        "artifact": str(path),
-        "sha256": hashlib.sha256(text.encode("utf-8")).hexdigest(),
+    title = data.get("title")
+    if not isinstance(title, str) or not title.strip():
+        errors.append(f"Phase {phase} title is missing")
+        title = PHASES[phase][2]
+
+    normalized = {
+        "artifact": str(artifact),
+        "source": str(source),
+        "source_sha256": hashlib.sha256(source.read_bytes()).hexdigest(),
         "schema": expected_schema,
-        "status": handoff.get("Status", "missing"),
-        "handoff": handoff,
-        "tables": tables,
-    }, errors
+        "status": status,
+        "handoff": {str(key): str(value) for key, value in handoff.items()},
+        "sections": {str(key): str(value) for key, value in sections.items()},
+        "tables": normalized_tables,
+        "title": title,
+    }
+    markdown = _render_phase(phase, normalized)
+    normalized["sha256"] = hashlib.sha256(markdown.encode("utf-8")).hexdigest()
+    normalized["_markdown"] = markdown
+    return normalized, errors
+
+
+def prepare_phase(phase: str, analysis_dir: Path) -> str:
+    """Create a structured phase template without replacing an existing draft."""
+    phase = phase.upper()
+    if phase not in PHASES:
+        raise ReconciliationError("phase must be one of A, B, C, or D")
+    stem, schema, title = PHASES[phase]
+    path = analysis_dir / f"{stem}.json"
+    if path.exists():
+        return f"Security analysis phase {phase} draft already exists: {path}"
+    layout = PHASE_LAYOUT[phase]
+    payload = {
+        "schema": schema,
+        "status": "DRAFT",
+        "title": title,
+        "sections": {name: "" for name, _, kind in layout if kind == "section"},
+        "columns": {
+            name: TABLE_COLUMNS[name] for name, _, kind in layout if kind == "table"
+        },
+        "tables": {name: [] for name, _, kind in layout if kind == "table"},
+        "handoff": {"Status": "DRAFT", "Artifact schema": schema},
+    }
+    if phase == "B":
+        payload["tables"]["Answer Register"] = [
+            {"Q": question, "Required answer": prompt, "Answer": "", "Confidence": ""}
+            for question, prompt in QUESTIONNAIRE_PROMPTS.items()
+        ]
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    return f"Security analysis phase {phase} draft: {path}"
+
+
+def _validate_phase_shape(
+    phase: str, path: Path, expected_schema: str
+) -> tuple[dict[str, Any], list[str]]:
+    return _structured_phase(phase, path.with_suffix(".json"), path, expected_schema)
 
 
 def _validate_questionnaire(state: dict[str, Any]) -> list[str]:
@@ -253,8 +541,14 @@ def _validate_threat_model(
     categories = tables.get("Category Assessment", [])
     threats = tables.get("Threat Instances", [])
     coverage = tables.get("Scenario Coverage", [])
-    surface_ids = {_column(row, "#") for row in surfaces}
-    surfaces_by_id = {_column(row, "#"): row for row in surfaces}
+    surface_ids = {
+        surface_id for row in surfaces for surface_id in _surface_ids(_column(row, "#"))
+    }
+    surfaces_by_id = {
+        surface_id: row
+        for row in surfaces
+        for surface_id in _surface_ids(_column(row, "#"))
+    }
     evidence_ids = {_column(row, "ID") for row in evidence}
     threat_ids = {_column(row, "ID") for row in threats}
     category_ids = {_column(row, "ASI") for row in categories}
@@ -294,7 +588,8 @@ def _validate_threat_model(
                 )
     for row in threats:
         threat_id = _column(row, "ID") or "unknown threat"
-        unknown_surfaces = _ids(_column(row, "Surface"), "#") - surface_ids
+        cited_surface_ids = _surface_ids(_column(row, "Surface"))
+        unknown_surfaces = cited_surface_ids - surface_ids
         unknown_evidence = _ids(_column(row, "Evidence"), "E") - evidence_ids
         if unknown_surfaces:
             errors.append(
@@ -318,7 +613,7 @@ def _validate_threat_model(
             errors.append(f"{threat_id} cites an unknown {asi} catalog scenario")
         cited_surface_rows = [
             surfaces_by_id[surface_id]
-            for surface_id in _ids(_column(row, "Surface"), "#")
+            for surface_id in cited_surface_ids
             if surface_id in surfaces_by_id
         ]
         row_text = (
@@ -336,7 +631,7 @@ def _validate_threat_model(
                 errors.append(
                     f"{threat_id} cites input.args.{field} without a governing tool"
                 )
-            elif any(field not in tools[name] for name in tool_names):
+            elif not any(field in tools[name] for name in tool_names):
                 errors.append(
                     f"{threat_id} cites undeclared tool argument input.args.{field}"
                 )
@@ -348,10 +643,11 @@ def _validate_threat_model(
                     f"{threat_id} cites undeclared subject field input.extensions.subject.{field}"
                 )
     for row in surfaces:
-        surface_id = _column(row, "#")
+        normalized_ids = _surface_ids(_column(row, "#"))
+        surface_id = next(iter(normalized_ids), _column(row, "#"))
         disposition = _column(row, "Threat IDs / N/A")
         referenced = any(
-            surface_id in _ids(_column(item, "Surface"), "#") for item in threats
+            surface_id in _surface_ids(_column(item, "Surface")) for item in threats
         )
         if not referenced and not disposition.casefold().startswith("n/a"):
             errors.append(
@@ -414,11 +710,9 @@ def _validate_enforcement(
         set(disposition_ids)
     ):
         errors.append("Threat Disposition must map every threat ID exactly once")
-    candidates = parse_candidate_table(
-        Path(state["artifact"]).read_text(encoding="utf-8")
-    )
-    existing_rules = parse_existing_guidance_table(
-        Path(state["artifact"]).read_text(encoding="utf-8")
+    candidates = parse_candidate_rows(tables.get("Candidate Reconciliation", []))
+    existing_rules = parse_existing_guidance_rows(
+        tables.get("Existing Guidance Normalization", [])
     )
     validations = validate_candidates(
         candidates, load_tool_schema(tools_path), load_subject_schema(subjects_path)
@@ -460,20 +754,21 @@ def _validate_enforcement(
             errors.append(
                 f"{candidate.candidate_id} cites unknown questions: {sorted(unknown_questions)}"
             )
-        if candidate.verdict.casefold() in BLOCKING_VERDICTS:
+        verdicts = _verdict_tokens(candidate.verdict)
+        if verdicts & BLOCKING_VERDICTS:
             errors.append(
                 f"{candidate.candidate_id} retains blocking verdict {candidate.verdict!r}"
             )
         detected = set(by_candidate.get(candidate.candidate_id, []))
-        if detected & {"Duplicate", "Covered"}:
-            allowed_verdicts = {"duplicate", "covered", "clarification"}
-        elif detected & {"Conflict", "Overlap"}:
+        if detected & {"Conflict", "Overlap"}:
             allowed_verdicts = {"conflict", "overlap", "contradictory correction"}
+        elif detected & {"Duplicate", "Covered"}:
+            allowed_verdicts = {"duplicate", "covered", "clarification"}
         elif "Additive" in detected:
-            allowed_verdicts = {"additive", "clarification"}
+            allowed_verdicts = {"novel", "additive"}
         else:
-            allowed_verdicts = {"novel"}
-        if candidate.verdict.casefold() not in allowed_verdicts:
+            allowed_verdicts = {"novel", "additive"}
+        if not verdicts or not verdicts <= allowed_verdicts:
             errors.append(
                 f"{candidate.candidate_id} verdict {candidate.verdict!r} conflicts "
                 f"with existing-guidance relationship {sorted(detected) or ['Novel']}"
@@ -496,12 +791,11 @@ def _validate_enforcement(
 def _validate_addendum_contract(state: dict[str, Any], guidance: Path) -> list[str]:
     from smith.tools.guidance_merge import validate_addendum
 
-    analysis = Path(state["artifact"]).read_text(encoding="utf-8")
-    candidates = parse_candidate_table(analysis)
+    candidates = parse_candidate_rows(
+        state["tables"].get("Candidate Reconciliation", [])
+    )
     emitted = [
-        candidate
-        for candidate in candidates
-        if candidate.verdict.casefold() in {"novel", "additive"}
+        candidate for candidate in candidates if _is_emitted_verdict(candidate.verdict)
     ]
     addendum = guidance.with_name("guidance_updated.txt")
     if not emitted:
@@ -514,10 +808,11 @@ def _validate_addendum_contract(state: dict[str, Any], guidance: Path) -> list[s
         proposed = validate_addendum(guidance, addendum)
     except ReconciliationError as exc:
         return [str(exc)]
-    if len(proposed) != len(emitted):
+    emitted_groups = {candidate.guidance_group for candidate in emitted}
+    if len(proposed) != len(emitted_groups):
         return [
             "guidance_updated.txt rule count does not match Novel/Additive "
-            f"candidates ({len(proposed)} != {len(emitted)})"
+            f"guidance groups ({len(proposed)} != {len(emitted_groups)})"
         ]
     return []
 
@@ -538,9 +833,9 @@ def checkpoint(
     states: dict[str, Any] = {}
     errors: list[str] = []
     for current in selected:
-        filename, schema = PHASES[current]
+        stem, schema, _ = PHASES[current]
         states[current], shape_errors = _validate_phase_shape(
-            current, analysis_dir / filename, schema
+            current, analysis_dir / f"{stem}.md", schema
         )
         errors.extend(shape_errors)
         if shape_errors:
@@ -579,6 +874,12 @@ def checkpoint(
         raise ReconciliationError(
             "checkpoint validation failed:\n- " + "\n- ".join(errors)
         )
+    for current in selected:
+        artifact = Path(states[current]["artifact"])
+        temporary_artifact = artifact.with_suffix(".md.tmp")
+        temporary_artifact.write_text(states[current]["_markdown"], encoding="utf-8")
+        temporary_artifact.replace(artifact)
+        del states[current]["_markdown"]
     input_paths = {
         "tool_definitions": tool_definitions,
         "system_vars": system_vars,
@@ -644,3 +945,18 @@ def checkpoint_from_environment(
         analysis_dir / "analysis_state.json",
         guidance,
     )
+
+
+def prepare_from_environment(
+    phase: str, environment: dict[str, str] | None = None
+) -> str:
+    env = os.environ if environment is None else environment
+    base = Path(env.get("BASE_URL") or ".")
+    if not base.is_absolute():
+        base = Path.cwd() / base
+    target_value = env.get("TARGET_AGENT_PATH")
+    if not target_value:
+        raise ReconciliationError("TARGET_AGENT_PATH is not configured")
+    target = Path(target_value)
+    target = target if target.is_absolute() else base / target
+    return prepare_phase(phase, target / "smith" / "guidelines-security-analysis")

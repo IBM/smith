@@ -402,7 +402,12 @@ def main():
     parser.add_argument(
         "--phase",
         choices=("A", "B", "C", "D"),
-        help="security-analysis phase to checkpoint",
+        help="security-analysis phase to prepare or checkpoint",
+    )
+    parser.add_argument(
+        "--prepare",
+        action="store_true",
+        help="create the structured input template for a security-analysis phase",
     )
     args = parser.parse_args()
 
@@ -486,7 +491,10 @@ def main():
 
     if args.flag == "security_analysis_checkpoint":
         from smith.tools.guidance_reconciliation import ReconciliationError
-        from smith.tools.security_analysis_checkpoint import checkpoint_from_environment
+        from smith.tools.security_analysis_checkpoint import (
+            checkpoint_from_environment,
+            prepare_from_environment,
+        )
 
         if not args.phase:
             print(
@@ -495,7 +503,10 @@ def main():
             )
             sys.exit(1)
         try:
-            print(checkpoint_from_environment(args.phase))
+            if args.prepare:
+                print(prepare_from_environment(args.phase))
+            else:
+                print(checkpoint_from_environment(args.phase))
         except ReconciliationError as exc:
             print(f"ERROR: {exc}", file=sys.stderr)
             sys.exit(1)

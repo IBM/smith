@@ -1,347 +1,78 @@
-## Architecture Analysis 
+## Phase A — Architecture analysis
 
-Produces `architecture.md` for a target MCP server. This document is the
-required input for the threat_model and enforcement_mapping skills.
+Establish the runtime architecture and structured policy inputs. The shared
+contract in the parent workflow applies.
 
-### Phase inputs and output
+### Inputs
 
-The envelope's Shared Phase Contract applies.
+- Target source tree and optional existing guidance.
+- Authoritative `tool_definitions.json` for tool names and argument schemas.
+- Authoritative `system_vars.json` for runtime subject fields when present.
+- Structured output: `architecture.json`; the checkpoint renders
+  `architecture.md`.
 
-- `<TARGET_AGENT_PATH>` — root within which source discovery is allowed.
-- `<SYSTEM_VAR_FILE>` — authoritative schema for runtime-provided subject
-  fields, if present. Its presence establishes field provenance and OPA
-  visibility, not a cryptographic verification mechanism.
-- `<TARGET_AGENT_PATH>/smith/tool_definitions.json` — required,
-  authoritative per-tool source for visible `input.args.*` names and types.
-  Read it in place; do not generate, copy, or rewrite it.
-- `<GUIDANCE_FILE>` — existing policy intent, if present. Use it only in
-  STEP 4 to check field visibility; do not carry its content into the
-  descriptive layers, trust boundaries, or data flow.
-- Output: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/architecture.md`.
+`architecture.json` retains the structured analysis needed by later phases.
+The rendered `architecture.md` includes the title, Phase A tables, and a concise
+prose handoff. It omits all other narrative section text.
 
-### Workflow (follow strictly)
+### Inspect the implementation
 
----
+Inventory paths once with `rg --files`, then search paths for registered tool
+names, MCP registration/transport markers, prompt construction, runtime
+context, policy interception, and external-service calls. Read only files that
+implement one of those roles. Do not infer roles from filenames or assume a
+language or transport.
 
-#### STEP 1 — Identify source files
+Follow at most two import/call hops from each registered tool and inspect no
+more than 20 implementation files. Skip tests, dependencies, caches, generated
+analysis, and UI-only files unless evidence shows they participate in a tool
+call or policy boundary. Record unresolved relevant paths instead of silently
+expanding the search.
 
-Use this batched discovery sequence and maintain a `seen paths` set:
+Compare registered tools and signatures with `tool_definitions.json`. Stop with
+`FAIL` on a proven missing, extra, or incompatible declaration; an unresolved
+dynamic wrapper is `Unknown`, not proof of mismatch.
 
-1. Inventory names once with `rg --files <TARGET_AGENT_PATH>`; do not open files
-   during inventory.
-2. Extract every tool name from `tool_definitions.json` once. Search all tool
-   names, MCP registration/transport markers, policy interception, and runtime
-   context markers in one path-only batch (`rg -l` with repeated `-e` patterns).
-   Do not emit matching source lines during discovery.
-3. Deduplicate and rank the matching paths, then read independent selections
-   concurrently when supported. Read every selected source file at most once.
-4. Collect unresolved import/call targets from those reads and resolve them in
-   one path-only search batch per hop. Deduplicate against `seen paths` before
-   reading the new selections together.
+### Fill structured state
 
-Compare the manifest's tool names and parameter names with MCP registrations
-and signatures established by the selected source. If source evidence proves
-that an entry is missing, extra, or differently shaped, report the exact
-mismatch and stop with `FAIL`; do not repair the generated artifact in this
-phase. Do not declare it stale merely because a dynamic wrapper prevents a
-complete static comparison.
+Run the phase preparation command, then populate its fixed structured fields:
 
-The implementation may use Python, JavaScript, TypeScript, another language,
-or any filename or MCP transport. Follow imports or calls only far enough to
-identify code that performs one of these roles:
+- **Run Context:** resolved authoritative paths and selected source files.
+- **Layers:** only observed agent/client, MCP, tool implementation, runtime
+  context/enforcement, and material external-service layers.
+- **Runtime Subject Context:** every declared
+  `input.extensions.subject.<field>`, its provider, runtime provenance,
+  separately documented integrity mechanism, and OPA visibility.
+- **Tool Arguments:** every declared `input.args.<argument>` under each exact
+  tool. Record influence and implementation disposition:
+  `Acts on`, `Echoed`, `Ignored`, or `Unclear`. Determine disposition from the
+  function body, not its declaration or documentation.
+- **Prompt Inputs:** prompt, conversation, profile, retrieved, and interpolated
+  text with source, consumer, and influence.
+- **External Data:** externally sourced responses/content, integrity mechanism,
+  and consumer.
+- **Data Flow:** concise request and response paths.
+- **Enforcement Points:** current controls, future pre-execution points with
+  visible structured fields, and true blind spots. Apply the shared
+  OPA-policy-expressibility rule when classifying them.
+- **Undeclared Fields:** every guidance dependency absent from the exact
+  governed tool or runtime subject schema. Distinguish “declared by another
+  tool” from “declared nowhere.”
 
-- **MCP server entrypoint** — creates the MCP server, registers tools, and
-  selects stdio, HTTP, SSE, or another transport.
-- **Tool implementation** — validates or acts on `input.args.*`, performs
-  business operations, or calls an external service.
-- **Agent or MCP client integration** — optionally builds prompts, selects or
-  invokes tools, or supplies policy-visible context. A standalone MCP server
-  may have no agent layer.
-- **Runtime context or enforcement integration** — populates
-  `input.extensions.*`, intercepts calls, or applies authorization.
-- **External-service client** — constructs requests or consumes responses when
-  that behavior is material to the threat model.
+Use an empty table when there are no rows. Apply the shared source-boundary rule
+when a runtime value is also interpolated into a prompt. Run Context, Trust
+Boundaries, and Data Flow remain available in structured state for downstream
+analysis but are intentionally omitted from rendered `architecture.md`.
 
-Do not infer a role from a filename. In particular, files named `agent.py`,
-`server.py`, `app.py`, `mcp_server.py`, or `index.js` are candidates only when
-their contents establish one of the roles above. Conversely, do not omit a
-relevant file because it has an unfamiliar name or extension.
+### Complete the phase
 
-Skip tests, vendored dependencies, virtual environments, caches, generated
-analysis artifacts, and UI-only entrypoints unless targeted evidence shows
-that they construct prompts, invoke tools, populate policy-visible inputs, or
-implement enforcement. Use README and package/build metadata only to clarify
-an entrypoint, transport, dependency, or external integration; they are not
-evidence of runtime behavior on their own.
+Set `PASS` only when every tool has an implementation finding or explicit
+`Unknown`, all declared arguments and subject fields are accounted for, and
+the guidance visibility sweep is complete. The handoff should summarize
+sources, tools, layers, field counts, undeclared fields, and open gaps.
 
-After discovery, read `<SYSTEM_VAR_FILE>` and `<GUIDANCE_FILE>` once when
-present, and reuse the loaded `tool_definitions.json` data. Record selected
-source paths and evidence for each role. If a role remains ambiguous, record it
-as unknown rather than broadening the read to every source file.
+Run:
 
-Bound discovery to two batched call/import hops from each registered tool and
-at most 20 unique implementation files. If the bound would omit a file needed
-to establish a role or enforcement path, record the omitted candidate and
-reason instead of expanding silently.
-
----
-
-#### STEP 2 — Map the layers
-
-Identify every distinct processing layer between the user and the external
-service. For each layer record:
-
-- **Name** — human-readable label (e.g. Agent Layer, MCP Tool Layer)
-- **File** — the source file that implements it
-- **Role** — one sentence describing what it does
-- **Inputs received** — field names and types it accepts
-- **Outputs produced** — what it passes to the next layer
-- **Current enforcement** — any validation, auth, or access control present today (write "none" if absent)
-
-Model only layers that actually exist. Common roles include an optional
-HTTP/API or agent layer, an MCP client boundary, the MCP server and registered
-tools, implementation modules, runtime enforcement, and external services.
-Do not create empty layers to match this list, and do not count a UI-only
-entrypoint as an agent or implementation layer.
-
----
-
-#### STEP 3 — Document trust boundaries
-
-Separate fields by how they enter the policy boundary. Do not place runtime
-subject context, tool arguments, prompt inputs, and external data in one trust
-classification table: they have different provenance and require different
-analysis.
-
-**Runtime subject context.** Record every key declared by
-`<SYSTEM_VAR_FILE>` using its canonical policy path,
-`input.extensions.subject.<key>`. Mark its provenance as
-**Runtime-provided** and name the runtime/provider when the inputs document
-one. `system_vars.json` is authoritative for the available field names and
-types. A subject field's absence from the selected application, server, or tool
-implementation source does not make it caller-supplied, self-reported, or
-prompt-injectable: those layers need not read context attached by the runtime
-at the policy boundary.
-
-Record verification/integrity separately from provenance. State the documented
-authentication, signature, token-validation, or trusted-runtime mechanism; if
-none is documented, write `not documented`. Do not turn `not documented` into
-`self-reported`, and do not claim cryptographic verification merely because a
-field is runtime-provided. Also record whether the field is visible to OPA at
-tool-call time.
-
-**Tool arguments.** Record every declared argument under its canonical policy
-path, `input.args.<argument>`, and name the governing tool. Describe its
-origin/influence as LLM-generated, caller-influenced, application-generated,
-or unknown based on the observed data flow. A caller's natural-language input
-may influence an LLM-generated argument, but that does not turn runtime subject
-context into a tool argument.
-
-For every tool argument, record its **disposition** — what the
-implementation actually does with the value:
-
-- **Acts on** — the value changes what the tool does: it filters or
-  selects data, routes the call, gates a branch, or is passed to an
-  external service.
-- **Echoed** — the value is accepted and then only reflected back in the
-  response, a log line, or result metadata. It does not change what the
-  tool does or returns.
-- **Ignored** — the value is accepted and never referenced at all.
-
-This is not a stylistic note; it is the only place in the whole workflow
-where it can be established. Step A is the sole step that reads the
-server implementation — the later steps see `tool_definitions.json`,
-which reports a parameter's name, type and default but cannot say
-whether the code honours it. A protective-sounding flag that is merely
-echoed will otherwise pass every downstream check and yield a rule that
-guarantees nothing (e.g. an `input.args.encryption_required` boolean argument
-that the tool interpolates into its response text without encrypting
-anything). The enforcement_mapping step relies on this column to refuse
-such rules.
-
-Determine the disposition by reading the tool's body, not its docstring
-or type signature. A default value in the signature says what will be
-substituted, never what the code does with it. When the body is unclear,
-record `Unclear` with a one-line note rather than guessing — a wrong
-"acts on" is worse than an admitted unknown, because it licenses a rule
-downstream.
-
-**Prompt inputs.** Record user prompts, profile text, system-prompt
-interpolations, and other free text that enters model reasoning. Name their
-source, consumer, and whether callers or external content can influence them.
-Do not label a runtime subject field prompt-injectable unless the architecture
-shows that the field's value is separately interpolated into a prompt; if so,
-record that prompt flow here without changing the subject field's runtime
-provenance.
-
-**External data.** Record responses or content returned by external systems,
-including the integrity mechanism when one is documented and the layer that
-consumes the data.
-
----
-
-#### STEP 4 — Identify enforcement points
-
-For each layer, record:
-
-- **Current enforcement points** — where access control or validation exists today
-- **Available enforcement points** — where a policy engine (OPA) could intercept
-  the request given the data visible at that layer
-- **Blind spots** — where no enforcement exists and none can easily be added
-  (e.g. inside the LLM's reasoning, after the tool returns its response)
-
-OPA can only enforce at a point where:
-(a) the tool call is intercepted before execution, AND
-(b) the relevant fields (tool name, arguments, caller identity) are present
-    as structured data
-
-If `<GUIDANCE_FILE>` was read in STEP 1, do a coverage sweep before
-finalising the "Available (OPA-interceptable)" list: for each numbered
-rule in guidance.txt, name the specific field(s) it would need at
-invocation time (e.g. `input.args.amount`,
-`input.extensions.subject.role`) and confirm those fields appear in
-this section's list. Any guidance.txt rule whose fields are NOT visible
-at any interception point goes into "Blind Spots" with a one-line
-explanation. This surfaces underenumeration early — do NOT rewrite the
-rule or restate guidance.txt's intent; just record the field-visibility
-result.
-
-As part of the same sweep, produce a required **Undeclared fields**
-finding: for every field or value an existing guidance.txt rule depends
-on, confirm that some tool declares it as an argument (or some system
-variable declares it), and list the ones nothing declares. Include the
-rule number that references each.
-
-Distinguish two cases, because they lead to different downstream
-handling:
-
-- The field is declared by **some** tool but not by the tool that rule
-  governs. The rule is enforceable for a narrower set of tools than it
-  claims.
-- The field is declared by **no** tool at all — it does not exist
-  anywhere in the server's surface, and any rule depending on it can
-  never fire.
-
-Both are common and neither is visible later without this list: a rule
-naming a field that exists somewhere reads as verified to any check that
-looks up field names globally. Write the finding even when the list is
-empty (`Undeclared fields: none`), so the later steps can tell the check
-ran from the check finding nothing.
-
-Report the list; do not edit guidance.txt and do not propose
-replacement wording here. Deciding what to do about a phantom field
-belongs to the enforcement_mapping step and ultimately to the human.
-
----
-
-#### STEP 5 — Write architecture.md
-
-Write the output file to `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/architecture.md` using exactly
-this structure. Use canonical policy paths for every structured field:
-`input.name`, `input.args.<argument>`, and
-`input.extensions.subject.<field>`.
-
+```bash
+smith --flag security_analysis_checkpoint --phase A
 ```
-# Architecture: <tool-name>
-
-## Run Context
-
-- Target agent: `<TARGET_AGENT_PATH>`
-- Guidance: `<GUIDANCE_FILE>` or `ABSENT`
-- System variables: `<SYSTEM_VAR_FILE>` or `ABSENT`
-- Tool definitions: `<TARGET_AGENT_PATH>/smith/tool_definitions.json`
-
-## Layers
-
-| Layer | File | Role | Inputs | Outputs | Current enforcement |
-|---|---|---|---|---|---|
-| <name> | <path> | <one sentence> | <fields> | <fields> | <control or "none"> |
-
-## Trust Boundaries
-
-### Runtime Subject Context
-
-| Field | Provider | Provenance | Verification / integrity | OPA-visible? |
-|---|---|---|---|---|
-| `input.extensions.subject.<field>` | <runtime/provider or "not documented"> | Runtime-provided | <documented mechanism or "not documented"> | Yes / No / Unknown |
-
-### Tool Arguments
-
-| Field | Tool | Origin / influence | Disposition |
-|---|---|---|---|
-| `input.args.<argument>` | `<tool name>` | LLM-generated / Caller-influenced / Application-generated / Unknown | Acts on / Echoed / Ignored / Unclear |
-
-### Prompt Inputs
-
-| Field or data | Source | Consumer | Trust / influence |
-|---|---|---|---|
-| <prompt, profile text, or interpolated data> | <who supplies it> | <model/layer> | <who can influence it> |
-[or "none" when the architecture exposes no prompt input]
-
-### External Data
-
-| Data | Source | Verification / integrity | Consumer |
-|---|---|---|---|
-| <response/content> | <external system> | <documented mechanism or "not documented"> | <layer> |
-[or "none" when the tool consumes no external data]
-
-## Data Flow
-
-<user input> → <layer 1> → <layer 2> → ... → <external service>
-<response> ← <layer 2> ← <layer 1> ← <external service>
-
-## Enforcement Points
-
-| Layer | Current | Available (OPA-interceptable) | Blind spots |
-|---|---|---|---|
-| <layer> | <current controls or "none"> | <possible control and visible fields or "none"> | <unavailable control and reason or "none"> |
-
-## Undeclared Fields
-
-| Field | Referenced by guidance rule # | Declared by | Consequence |
-|---|---|---|---|
-| <canonical input path> | <rule #> | <tool name(s), runtime subject schema, or "none"> | Rule enforceable for fewer tools than claimed / can never fire |
-[or "none" if every referenced field is declared by the tool its rule governs]
-```
-
----
-
-#### STEP 6 — Human review
-
-Present a one-paragraph summary of the key findings:
-- How many layers exist
-- Which `input.extensions.subject.*` fields are runtime-provided and whether
-  their verification/integrity mechanism is documented
-- Which `input.args.*` fields are caller- or LLM-influenced
-- Where OPA can be placed
-- What the main blind spots are
-- Any argument whose disposition is **Echoed**, **Ignored** or
-  **Unclear** — name them. A protective-sounding flag the tool does not
-  act on is the finding most likely to become a rule that guarantees
-  nothing, and this is the reviewer's first and best chance to see it.
-- Any row in the **Undeclared Fields** table, with the guidance rule
-  that depends on it (or "none")
-
-Append this compact checkpoint to `architecture.md`:
-
-```markdown
-## Phase Handoff
-
-- Status: PASS / FAIL
-- Artifact schema: architecture-v2
-- Sources inspected: <count and paths>
-- Tools covered: <count and names>
-- Layers: <count and names>
-- Canonical tool fields: <count>
-- Runtime subject fields: <count>
-- Undeclared fields: <count and paths, or none>
-- Open gaps: <none, or concise list>
-```
-
-Mark `PASS` only when the required sections are present and each extracted tool
-has a governing implementation or an explicit unknown finding.
-
-Run `smith --flag security_analysis_checkpoint --phase A` after writing the
-handoff. Continue only when it passes. The command validates the artifact and
-refreshes the shared compact `analysis_state.json`; it does not alter the
-human-readable artifact.

@@ -166,6 +166,31 @@ def test_checkpoint_cli_requires_an_explicit_phase():
     assert "requires --phase A, B, C, or D" in result.stderr
 
 
+def test_checkpoint_cli_prepares_structured_phase_input(tmp_path):
+    env, paths = cli_environment(tmp_path)
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "smith.cli",
+            "--flag",
+            "security_analysis_checkpoint",
+            "--phase",
+            "A",
+            "--prepare",
+        ],
+        capture_output=True,
+        text=True,
+        env=env,
+        timeout=30,
+    )
+
+    source = paths[0].parent / "architecture.json"
+    assert result.returncode == 0, result.stderr
+    assert source.is_file()
+    assert json.loads(source.read_text())["status"] == "DRAFT"
+
+
 def test_guidance_merge_cli_uses_a_current_phase_d_checkpoint(tmp_path):
     env, paths = cli_environment(tmp_path)
     analysis, _, guidance, updated, _ = paths
