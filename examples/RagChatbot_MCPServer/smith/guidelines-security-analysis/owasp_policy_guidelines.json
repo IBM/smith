@@ -1,0 +1,393 @@
+{
+  "schema": "enforcement-mapping-v8",
+  "status": "PASS",
+  "title": "OWASP Top 10 for Agentic AI Security — Scope Assessment and Policy Guidelines",
+  "sections": {
+    "Architecture Summary": "Single MCP server (mcp_server.py, FastMCP over SSE) registering 11 tools, invoked by two alternate client orchestrators (run_llm_with_mcp.py Streamlit, fast_server.py FastAPI). No live @mcp.tool function performs a pre-execution authorization check: opa_client.py's OPAClient/UniversalOPAClient is fully built but unreachable (dead code), and LLMGuard is wired only into run_llm_with_mcp.py's chat() loop, not into fast_server.py or mcp_server.py's tool-dispatch boundary. Runtime subject fields (input.extensions.subject.id/roles/teams/approval) have no authenticated per-request provenance: roles is a self-selected UI dropdown value, id/teams are hard-coded process-wide globals, and approval is an unpopulated system_vars.json placeholder with no runtime producer. data_sources/hr_database.py unconditionally merges sensitive_data (ssn, personal_email, home_address, bank_account, tax_id, emergency_contact, healthcare fields) into view_team_compensation/export_compensation_data results before any select_fields projection. external_sharing and destination/recipient_email arguments on the compensation-sharing tools are declared but never enforced against guidance rules 6-8/17-18. purchase.amount is never compared against any role-based ceiling, and no declared field or populated subject field carries manager-approval status for rule 9's >=$200 branch. Phase C (threat_model.md) is authoritative for all 13 threat instances (T01-T13) and the ASI01/02/03/06/08/09-applicable, ASI04/05/07/10-inapplicable category assessment; this phase reuses that data rather than re-deriving it.",
+    "Policy Rules (OPA scope only)": "Five threats (T07, T08, T09) yield OPA-eligible deny candidates against declared, pre-execution tool arguments on view_team_compensation, export_compensation_data, email_compensation_report, and send_email. No candidate depends on input.extensions.subject.roles (or any other runtime subject field), because Phase A/C establish that field as unauthenticated and non-authoritative (T06) — the eligibility gate's requirement for authoritative, pre-execution subject fields is not met for any role-conditioned rule (this is why T11's purchase-ceiling/approval threat, and any role-scoped variant of T07/T08/T09, is excluded from OPA scope and recorded in the Gap Register instead). All emitted rules are unconditional (apply to every caller/role) argument-value denials, which the eligibility gate's outcome-claim carve-out permits without requiring the tool to act further on the rejected value.",
+    "Known values": "Tools (tool_definitions.json): create_ticket, submit_ticket, send_email, export_content_as_file, ask_for_workpolicy, get_w2_form, return_product, view_team_compensation, export_compensation_data, email_compensation_report, purchase. Sensitive select_fields values referenced by rules 3/16: ssn, personal_email, home_address, bank_account, emergency_contact (all declared in view_team_compensation's documented Available fields; tax_id is named in guidance rule 3 but is not a declared select_fields value on any tool, so it cannot be bound to an argument-level predicate). Blocked domains referenced by rule 8: gmail.com, yahoo.com, hotmail.com, outlook.com, personal.com. No existing violation-code scheme exists (Phase B Violation Codes table is empty); this phase originates the first codes (OPA-D01 through OPA-D04)."
+  },
+  "columns": {
+    "Threat Disposition": ["Threat ID", "Field / surface", "Owner", "Reason"],
+    "OWASP Top 10 for Agentic AI Security — Scope Assessment": ["OWASP", "Scope", "OPA threat IDs", "Other-layer threat IDs", "Reason / owner"],
+    "Gap Register": ["Finding ID", "Layer", "Recommended action"],
+    "Input Schema": ["Field", "Source"],
+    "Rules": ["Code", "OWASP", "Threat IDs", "Severity", "Tool(s) / field", "Condition", "Matching"],
+    "Candidate Reconciliation": ["Candidate ID", "Tool", "Subject scope", "Field expression", "Operator", "Values", "Action", "Sources", "Related rule", "Guidance group", "Verdict"],
+    "Existing Guidance Normalization": ["Existing ID", "Rule number", "Tool", "Subject scope", "Field expression", "Operator", "Values", "Action"],
+    "Prior Proposal Reconciliation": ["Prior ID", "Original number", "Normalized rule", "Disposition", "Candidate / reason"]
+  },
+  "tables": {
+    "Threat Disposition": [
+      {
+        "Threat ID": "T01",
+        "Field / surface": "Free-text prompt content (surface #1); guidance rules 11-14 blocked phrases",
+        "Owner": "Agent",
+        "Reason": "Blocked phrases exist only in the free-text end-user prompt, a source distinct from input.args.* and input.extensions.subject.*; per the shared source-boundary rule a prompt-only control cannot be re-expressed as a tool-argument or subject-field predicate without a declared field carrying that text, and none exists. Fails eligibility gate #4/#6."
+      },
+      {
+        "Threat ID": "T02",
+        "Field / surface": "Retrieved PDF context (surface #4), work_rules_and_regulations_2016.pdf",
+        "Owner": "Infrastructure",
+        "Reason": "No declared tool argument or subject field carries PDF provenance/integrity; a future control (checksum/signature validation on ingestion) sits outside OPA's declared-input boundary entirely. Fails eligibility gate #2/#3."
+      },
+      {
+        "Threat ID": "T03",
+        "Field / surface": "user_profile (surface #2), self-declared role/department/name",
+        "Owner": "Agent",
+        "Reason": "user_profile is interpolated as free prompt text only; no registered tool declares it as an argument and no tool re-reads it for an authorization decision. Fails eligibility gate #2/#4."
+      },
+      {
+        "Threat ID": "T04",
+        "Field / surface": "Conversation history / memory_text (surface #3)",
+        "Owner": "Agent",
+        "Reason": "Replayed conversation memory is prompt-layer content with no declared tool argument or subject field to bind a Rego predicate to. Fails eligibility gate #2/#6."
+      },
+      {
+        "Threat ID": "T05",
+        "Field / surface": "MCP tool dispatch (surface #6); OPA/LLMGuard wiring (surface #7)",
+        "Owner": "Infrastructure",
+        "Reason": "T05 is the absence of the pre-execution enforcement point itself (OPA/LLMGuard never invoked from a live @mcp.tool function). Per the shared analysis rules, missing future OPA wiring is not itself a gap or an OPA rule to add — it is the infrastructure precondition every other OPA candidate in this phase depends on."
+      },
+      {
+        "Threat ID": "T06",
+        "Field / surface": "input.extensions.subject.id/roles/teams (surface #8)",
+        "Owner": "Infrastructure",
+        "Reason": "Subject fields have no authenticated per-request provenance (self-selected UI dropdown for roles; hard-coded process-wide globals for id/teams). Fails eligibility gate #4 (runtime conditions must use authoritative, pre-execution subject fields); this is why no candidate in this phase conditions on subject.roles."
+      },
+      {
+        "Threat ID": "T07",
+        "Field / surface": "view_team_compensation.select_fields, export_compensation_data.select_fields (surfaces #11, #12)",
+        "Owner": "OPA",
+        "Reason": "select_fields is declared by both governing tools, optional/defaults null, marked Acts on by Phase A, and rule 15 requires blocking a null/empty request. Complete missing/null/empty predicate, no prompt or output reasoning required. Passes all 7 eligibility checks."
+      },
+      {
+        "Threat ID": "T08",
+        "Field / surface": "view_team_compensation.select_fields (surface #11)",
+        "Owner": "OPA",
+        "Reason": "select_fields is declared, Acts on, and its documented enum includes ssn/personal_email/home_address/bank_account/emergency_contact; rules 3 and 16 require these never appear in the response. A contains_any deny on the submitted values is a complete, structured predicate that rejects the submitted argument directly (eligibility gate #7 carve-out) without requiring the tool to act further on it."
+      },
+      {
+        "Threat ID": "T09",
+        "Field / surface": "export_compensation_data.external_sharing, email_compensation_report.external_sharing (surface #13); email_compensation_report.destination, send_email.recipient_email (surfaces #14, #15)",
+        "Owner": "OPA",
+        "Reason": "external_sharing (boolean) and destination/recipient_email (string) are declared by their exact governing tools and available pre-execution. Although Phase A marks external_sharing/destination as Echoed and recipient_email as Ignored (never read by the implementation), gate #7's carve-out applies: a rule that directly rejects a submitted value does not require the tool to act on it. Deny-on-submitted-value predicates for external_sharing=true (rules 17-18) and blocked-domain substrings (rule 8) are complete and structured."
+      },
+      {
+        "Threat ID": "T10",
+        "Field / surface": "send_email.email_content (surface #16)",
+        "Owner": "Tool implementation",
+        "Reason": "Distinguishing compensation/salary/payroll content from general content (rule 6) requires semantic interpretation of free text, not an operator-based predicate over a declared field value. Fails eligibility gate #5/#6 (no complete Rego-translatable predicate without content/prompt reasoning)."
+      },
+      {
+        "Threat ID": "T11",
+        "Field / surface": "purchase.amount (surface #18); no declared/populated approval field",
+        "Owner": "Infrastructure",
+        "Reason": "Both branches of rules 9-10 are role-conditioned, and subject.roles is non-authoritative (T06), so no role-scoped ceiling passes gate #4 today. Separately, rule 9's >=$200-with-approval branch has no declared purchase argument or populated subject field carrying approval status (Phase A/B carried-forward gap); inventing one is prohibited. Fails eligibility gate #2/#3/#4; no candidate emitted."
+      },
+      {
+        "Threat ID": "T12",
+        "Field / surface": "return_product.amount (surface #20)",
+        "Owner": "Tool implementation",
+        "Reason": "Validating a refund amount against an actual prior purchase requires a purchase-record lookup that is not a declared tool argument or subject field on return_product. Fails eligibility gate #2/#3."
+      },
+      {
+        "Threat ID": "T13",
+        "Field / surface": "Denial-message 🚫 prefix convention (surface #21)",
+        "Owner": "Agent",
+        "Reason": "The bypass is triggered by inspecting LLM-generated output text (actor = LLM, not Caller) for a leading character; output inspection is explicitly excluded by eligibility gate #6, and no declared tool argument carries this text pre-execution."
+      }
+    ],
+    "OWASP Top 10 for Agentic AI Security — Scope Assessment": [
+      {
+        "OWASP": "ASI01",
+        "Scope": "Other-layer",
+        "OPA threat IDs": "",
+        "Other-layer threat IDs": "T01, T02, T03, T04",
+        "Reason / owner": "All four ASI01 threats are prompt-layer manipulations (blocked phrases, indirect PDF injection, self-declared user_profile, conversation-memory replay) with no declared tool-argument or subject-field source; owned by Agent/Infrastructure per Threat Disposition, not OPA."
+      },
+      {
+        "OWASP": "ASI02",
+        "Scope": "Partial",
+        "OPA threat IDs": "T07, T08, T09",
+        "Other-layer threat IDs": "T05, T10, T11, T12",
+        "Reason / owner": "Sensitive-field/select_fields and external-sharing/domain threats (T07-T09) bind to declared, pre-execution, Acts-on tool arguments and are OPA-eligible. The missing dispatch-level enforcement point (T05), content-type judgment (T10), role-conditioned purchase ceiling/approval (T11), and refund-record validation (T12) each fail one or more eligibility checks and remain with Infrastructure/Tool implementation."
+      },
+      {
+        "OWASP": "ASI03",
+        "Scope": "Other-layer",
+        "OPA threat IDs": "",
+        "Other-layer threat IDs": "T06",
+        "Reason / owner": "Identity/privilege abuse is bounded to unauthenticated, non-session-bound subject fields (T06); no authoritative pre-execution subject field exists for a Rego predicate to use, so this category has no OPA-eligible candidate today — it is the infrastructure precondition (authenticated identity) every role-conditioned rule in ASI02/ASI08 would need."
+      },
+      {
+        "OWASP": "ASI06",
+        "Scope": "Other-layer",
+        "OPA threat IDs": "",
+        "Other-layer threat IDs": "T04",
+        "Reason / owner": "Session-scoped conversation-history replay (T04) is prompt-layer content with no declared field; owned by Agent, not OPA."
+      },
+      {
+        "OWASP": "ASI08",
+        "Scope": "Other-layer",
+        "OPA threat IDs": "",
+        "Other-layer threat IDs": "T04",
+        "Reason / owner": "The single-agent hallucination-propagation boundary reuses T04's evidence and disposition; no distinct OPA-eligible surface exists beyond what ASI06 already covers."
+      },
+      {
+        "OWASP": "ASI09",
+        "Scope": "Other-layer",
+        "OPA threat IDs": "",
+        "Other-layer threat IDs": "T13",
+        "Reason / owner": "The denial-message-prefix output-scanning bypass (T13) requires inspecting LLM-generated output text; owned by Agent, excluded from OPA by the no-output-inspection eligibility check."
+      }
+    ],
+    "Gap Register": [
+      {
+        "Finding ID": "G1",
+        "Layer": "Agent / prompt boundary",
+        "Recommended action": "Rules 11-14's blocked phrases (T01) have no declared tool-argument or subject-field carrier; enforcement must remain at the prompt/LLMGuard layer in both client entry points (fast_server.py currently has none) rather than as an OPA predicate, unless a future architecture copies the raw prompt text into a declared tool argument."
+      },
+      {
+        "Finding ID": "G2",
+        "Layer": "Infrastructure / external data",
+        "Recommended action": "T02's PDF-injection risk needs a content-integrity control (checksum/signature validation, CDR) at PDF ingestion in rag_pipeline.py; no declared field exists for OPA to gate on."
+      },
+      {
+        "Finding ID": "G3",
+        "Layer": "Infrastructure / identity",
+        "Recommended action": "T06 (and by extension every role-conditioned branch of T07/T08/T09/T11) needs an authenticated, session-bound mechanism to populate input.extensions.subject.roles/id/teams before any role-scoped Rego predicate can be trustworthy. Until then, only unconditional (all-role) argument-value denials are OPA-eligible."
+      },
+      {
+        "Finding ID": "G4",
+        "Layer": "Tool implementation",
+        "Recommended action": "T10 needs a content-classification step (or a required content_type argument) on send_email before a compensation-content restriction (rule 6) could become structured and OPA-expressible; today it requires semantic judgment over free text."
+      },
+      {
+        "Finding ID": "G5",
+        "Layer": "Tool implementation / data model",
+        "Recommended action": "T11's approval branch (rule 9, >=$200) has no declared purchase.approval argument and no populated subject.approval field (system_vars.json's placeholder is never set at runtime); a structured field must be added to the tool/data model before this branch is OPA-expressible. The manager/employee amount ceilings themselves also cannot be gated today because subject.roles is non-authoritative (see G3)."
+      },
+      {
+        "Finding ID": "G6",
+        "Layer": "Tool implementation",
+        "Recommended action": "T12 needs return_product to declare a reference to an actual purchase/order record (e.g. an order_id argument validated against purchase history) before a refund-amount check becomes structured and OPA-expressible."
+      },
+      {
+        "Finding ID": "G7",
+        "Layer": "Agent / output boundary",
+        "Recommended action": "T13's 🚫-prefix output-scan bypass is an output-inspection concern on LLM-generated text, categorically excluded from OPA candidacy; fix by removing the bypass condition in run_llm_with_mcp.py's enforce_output rather than adding a policy rule."
+      },
+      {
+        "Finding ID": "G8",
+        "Layer": "Tool implementation / policy",
+        "Recommended action": "Rule 7's positive requirement (\"compensation data may only be shared externally to @ibm.com addresses\") is not expressible with the available deny-only operator set (no not_contains/domain-suffix operator); only the overlapping blocked-domain-list portion (rule 8) is emitted as an OPA candidate (T09). A future policy engine extension supporting a domain-suffix allowlist operator would be needed to fully encode rule 7."
+      }
+    ],
+    "Input Schema": [
+      {"Field": "input.args.select_fields", "Source": "view_team_compensation, export_compensation_data (tool_definitions.json; optional, default null, array[string])"},
+      {"Field": "input.args.external_sharing", "Source": "export_compensation_data, email_compensation_report (tool_definitions.json; optional, default false, boolean)"},
+      {"Field": "input.args.destination", "Source": "email_compensation_report (tool_definitions.json; required, string)"},
+      {"Field": "input.args.recipient_email", "Source": "send_email (tool_definitions.json; required, string)"}
+    ],
+    "Rules": [
+      {
+        "Code": "OPA-D01",
+        "OWASP": "ASI02",
+        "Threat IDs": "T07",
+        "Severity": "Critical",
+        "Tool(s) / field": "view_team_compensation.select_fields, export_compensation_data.select_fields",
+        "Condition": "select_fields is missing, null, or an empty array",
+        "Matching": "missing/null/empty; applies to every caller/role (no subject scope)"
+      },
+      {
+        "Code": "OPA-D02",
+        "OWASP": "ASI02",
+        "Threat IDs": "T08",
+        "Severity": "Critical",
+        "Tool(s) / field": "view_team_compensation.select_fields",
+        "Condition": "select_fields contains any of: ssn, personal_email, home_address, bank_account, emergency_contact",
+        "Matching": "contains_any {ssn, personal_email, home_address, bank_account, emergency_contact}; applies to every caller/role (no subject scope)"
+      },
+      {
+        "Code": "OPA-D03",
+        "OWASP": "ASI02",
+        "Threat IDs": "T09",
+        "Severity": "High",
+        "Tool(s) / field": "export_compensation_data.external_sharing, email_compensation_report.external_sharing",
+        "Condition": "external_sharing equals true",
+        "Matching": "eq true; applies to every caller/role (no subject scope)"
+      },
+      {
+        "Code": "OPA-D04",
+        "OWASP": "ASI02",
+        "Threat IDs": "T09",
+        "Severity": "High",
+        "Tool(s) / field": "email_compensation_report.destination, send_email.recipient_email",
+        "Condition": "destination or recipient_email contains any of: gmail.com, yahoo.com, hotmail.com, outlook.com, personal.com",
+        "Matching": "contains_any {gmail.com, yahoo.com, hotmail.com, outlook.com, personal.com}; applies to every caller/role (no subject scope)"
+      }
+    ],
+    "Candidate Reconciliation": [
+      {
+        "Candidate ID": "C1",
+        "Tool": "view_team_compensation",
+        "Subject scope": "all",
+        "Field expression": "input.args.select_fields",
+        "Operator": "missing/null/empty",
+        "Values": "",
+        "Action": "deny",
+        "Sources": "T07, Q1",
+        "Related rule": "15",
+        "Guidance group": "G-select-fields-required",
+        "Verdict": "Covered"
+      },
+      {
+        "Candidate ID": "C2",
+        "Tool": "export_compensation_data",
+        "Subject scope": "all",
+        "Field expression": "input.args.select_fields",
+        "Operator": "missing/null/empty",
+        "Values": "",
+        "Action": "deny",
+        "Sources": "T07, Q1",
+        "Related rule": "15",
+        "Guidance group": "G-select-fields-required",
+        "Verdict": "Covered"
+      },
+      {
+        "Candidate ID": "C3",
+        "Tool": "view_team_compensation",
+        "Subject scope": "all",
+        "Field expression": "input.args.select_fields",
+        "Operator": "contains_any",
+        "Values": "ssn, personal_email, home_address, bank_account, emergency_contact",
+        "Action": "deny",
+        "Sources": "T08, Q1",
+        "Related rule": "3, 16",
+        "Guidance group": "G-sensitive-fields-blocked",
+        "Verdict": "Covered"
+      },
+      {
+        "Candidate ID": "C4",
+        "Tool": "export_compensation_data",
+        "Subject scope": "all",
+        "Field expression": "input.args.external_sharing",
+        "Operator": "eq",
+        "Values": "true",
+        "Action": "deny",
+        "Sources": "T09, Q1",
+        "Related rule": "17",
+        "Guidance group": "G-external-sharing-blocked",
+        "Verdict": "Covered"
+      },
+      {
+        "Candidate ID": "C5",
+        "Tool": "email_compensation_report",
+        "Subject scope": "all",
+        "Field expression": "input.args.external_sharing",
+        "Operator": "eq",
+        "Values": "true",
+        "Action": "deny",
+        "Sources": "T09, Q1",
+        "Related rule": "18",
+        "Guidance group": "G-external-sharing-blocked",
+        "Verdict": "Covered"
+      },
+      {
+        "Candidate ID": "C6",
+        "Tool": "email_compensation_report",
+        "Subject scope": "all",
+        "Field expression": "input.args.destination",
+        "Operator": "contains_any",
+        "Values": "gmail.com, yahoo.com, hotmail.com, outlook.com, personal.com",
+        "Action": "deny",
+        "Sources": "T09, Q1",
+        "Related rule": "8",
+        "Guidance group": "G-blocked-domains",
+        "Verdict": "Covered"
+      },
+      {
+        "Candidate ID": "C7",
+        "Tool": "send_email",
+        "Subject scope": "all",
+        "Field expression": "input.args.recipient_email",
+        "Operator": "contains_any",
+        "Values": "gmail.com, yahoo.com, hotmail.com, outlook.com, personal.com",
+        "Action": "deny",
+        "Sources": "T09, Q1",
+        "Related rule": "8",
+        "Guidance group": "G-blocked-domains",
+        "Verdict": "Additive"
+      }
+    ],
+    "Existing Guidance Normalization": [
+      {
+        "Existing ID": "E-15",
+        "Rule number": "15",
+        "Tool": "view_team_compensation",
+        "Subject scope": "all",
+        "Field expression": "input.args.select_fields",
+        "Operator": "missing/null/empty",
+        "Values": "",
+        "Action": "deny"
+      },
+      {
+        "Existing ID": "E-15b",
+        "Rule number": "15",
+        "Tool": "export_compensation_data",
+        "Subject scope": "all",
+        "Field expression": "input.args.select_fields",
+        "Operator": "missing/null/empty",
+        "Values": "",
+        "Action": "deny"
+      },
+      {
+        "Existing ID": "E-3-16",
+        "Rule number": "3",
+        "Tool": "view_team_compensation",
+        "Subject scope": "all",
+        "Field expression": "input.args.select_fields",
+        "Operator": "contains_any",
+        "Values": "ssn, home_address, bank_account, emergency_contact, personal_email",
+        "Action": "deny"
+      },
+      {
+        "Existing ID": "E-17",
+        "Rule number": "17",
+        "Tool": "export_compensation_data",
+        "Subject scope": "all",
+        "Field expression": "input.args.external_sharing",
+        "Operator": "eq",
+        "Values": "true",
+        "Action": "deny"
+      },
+      {
+        "Existing ID": "E-18",
+        "Rule number": "18",
+        "Tool": "email_compensation_report",
+        "Subject scope": "all",
+        "Field expression": "input.args.external_sharing",
+        "Operator": "eq",
+        "Values": "true",
+        "Action": "deny"
+      },
+      {
+        "Existing ID": "E-8a",
+        "Rule number": "8",
+        "Tool": "email_compensation_report",
+        "Subject scope": "all",
+        "Field expression": "input.args.destination",
+        "Operator": "contains_any",
+        "Values": "gmail.com, hotmail.com, outlook.com, personal.com, yahoo.com",
+        "Action": "deny"
+      }
+    ],
+    "Prior Proposal Reconciliation": []
+  },
+  "handoff": {
+    "Status": "PASS",
+    "Artifact schema": "enforcement-mapping-v8",
+    "Summary": "All 13 Phase C threats (T01-T13) mapped exactly once in Threat Disposition: 3 to OPA (T07, T08, T09), 4 to Agent (T01, T03, T04, T13), 3 to Infrastructure (T02, T05, T06), 1 split Infrastructure (T11, both role-authoritativeness and approval-field gaps), 2 to Tool implementation (T10, T12). ASI category scope: ASI02 Partial (OPA + other-layer), ASI01/ASI03/ASI06/ASI08/ASI09 Other-layer only (no OPA-eligible surface survived their eligibility checks). 7 candidates emitted (C1-C7) after normalizing existing guidance (rules 3, 8, 15, 16, 17, 18) into the Existing Guidance Normalization table: C1-C6 (select_fields-required, sensitive-fields-blocked, external-sharing-blocked, and blocked-domains-on-email_compensation_report groups) are Enforcement-mapping realizations of already-closed guidance rules -> Covered, emit nothing (in particular, rules 3+16 read together already cover C3's full sensitive-field set, and rule 8's normalized form (E-8a) already names email_compensation_report.destination exactly, so C6 is a duplicate, not an addition). Only C7 (blocked-domain list applied to send_email.recipient_email) is Additive: guidance.txt's rule 8 states the blocked-domain rule at the request level without naming send_email specifically, and Phase A confirms recipient_email is a distinct tool argument declared on a different tool (send_email) that is not read at all today; per the guide's rule that a new request-level hard block is not automatically covered by wording elsewhere, applying the same blocked-domain deny to send_email.recipient_email is an independently expressible uncovered set for that tool. C6 and C7 share Guidance group G-blocked-domains, but since C6 is Covered (not emitted) and only C7 is Additive (emitted), exactly one addendum rule is produced for that group, describing only the send_email.recipient_email extension. No Overlap/Conflict/Contradictory correction relationship exists. Gap Register: G1-G8 (blocked phrases T01, PDF integrity T02, subject-field authoritativeness T06/T11, send_email content classification T10, purchase approval field T11, return_product purchase-record reference T12, output-scan bypass T13, rule-7 positive-domain operator gap). guidance_updated.txt written with 1 Additive rule (numbered 20) applying the rule-8 blocked-domain list to send_email's recipient_email argument. No Rego was written and no merge occurred; only owasp_policy_guidelines.json/.md were produced."
+  }
+}

@@ -17,3 +17,4 @@
 17. No one can export team compensation data with external sharing enabled
 18. No one can email a compensation report with external sharing enabled
 19. Employees cannot send compensation reports by email
+20. No one can send emails through send_email to blocked domains: gmail.com, yahoo.com, hotmail.com, outlook.com, personal.com

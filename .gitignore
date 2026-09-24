@@ -57,6 +57,10 @@ examples/hr-agent/smith/test_cases
 examples/RagChatbot=MCPServer/smith/test_cases
 examples/sre/
 
+# ---- Generated: security-analysis runtime state ----
+**/smith/guidelines-security-analysis/analysis_state.json
+**/smith/guidelines-security-analysis/.superseded_*/
+
 # ---- Generated: OPA intermediate results (assets/opa/outputs/) ----
 assets/opa/outputs/
 
