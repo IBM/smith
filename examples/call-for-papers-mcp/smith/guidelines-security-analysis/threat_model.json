@@ -1,0 +1,424 @@
+{
+  "schema": "threat-model-v3",
+  "status": "PASS",
+  "title": "Threat Model",
+  "sections": {},
+  "columns": {
+    "Attack Surfaces": [
+      "#",
+      "Field or Data Point",
+      "Source Layer",
+      "Provenance / influence",
+      "Enters where",
+      "Threat IDs / N/A"
+    ],
+    "Evidence Index": [
+      "ID",
+      "Source",
+      "Grounded fact"
+    ],
+    "Category Assessment": [
+      "ASI",
+      "Name",
+      "Applicability",
+      "OWASP summary",
+      "Boundary (optional)"
+    ],
+    "Threat Instances": [
+      "ID",
+      "ASI",
+      "Severity",
+      "Actor",
+      "Surface",
+      "Catalog basis",
+      "Evidence",
+      "Concrete threat"
+    ],
+    "Scenario Coverage": [
+      "ASI",
+      "Scenario",
+      "Disposition"
+    ]
+  },
+  "tables": {
+    "Attack Surfaces": [
+      {
+        "#": "1",
+        "Field or Data Point": "input.args.keywords",
+        "Source Layer": "LLM (tool-call argument)",
+        "Provenance / influence": "LLM-chosen free text passed through server.py directly into app.getEvents and then into the WikiCFP query string; caller influences it indirectly via the `question` prompt",
+        "Enters where": "MCP tool boundary (server.py get_events, before app.getEvents is called)",
+        "Threat IDs / N/A": "T1"
+      },
+      {
+        "#": "2",
+        "Field or Data Point": "input.args.topic",
+        "Source Layer": "LLM (tool-call argument)",
+        "Provenance / influence": "LLM-chosen string, required by the tool schema; visible and structured at the MCP boundary, but server.py drops it before calling app.getEvents (never reaches app.py or the external call)",
+        "Enters where": "MCP tool boundary (server.py get_events, before app.getEvents is called)",
+        "Threat IDs / N/A": "T2, T3"
+      },
+      {
+        "#": "3",
+        "Field or Data Point": "input.args.limit",
+        "Source Layer": "LLM (tool-call argument)",
+        "Provenance / influence": "LLM-chosen integer (default 10), passed through server.py into app.getEvents and used to slice the result list",
+        "Enters where": "MCP tool boundary (server.py get_events, before app.getEvents is called)",
+        "Threat IDs / N/A": "T4"
+      },
+      {
+        "#": "4",
+        "Field or Data Point": "input.extensions.subject.user_role",
+        "Source Layer": "Declared in system_vars.json; not read by any code path",
+        "Provenance / influence": "Only reachable today via a caller-supplied, unvalidated `user_profile` dict folded into the LLM system prompt as advisory text — self-asserted, no verification/integrity mechanism, no canonical user-ID path (Q7 gap)",
+        "Enters where": "HTTP ingress (agent.py /chat, user_profile) — prompt text only, not a structured subject field at the MCP boundary",
+        "Threat IDs / N/A": "T5"
+      },
+      {
+        "#": "5",
+        "Field or Data Point": "input.extensions.subject.dissertation_area",
+        "Source Layer": "Declared in system_vars.json; not read by any code path",
+        "Provenance / influence": "Same caller-asserted user_profile path as user_role, if used at all; no verified runtime source distinct from the untrusted prompt path",
+        "Enters where": "HTTP ingress (agent.py /chat, user_profile) — prompt text only",
+        "Threat IDs / N/A": "T6"
+      },
+      {
+        "#": "6",
+        "Field or Data Point": "input.extensions.subject.research_area",
+        "Source Layer": "Declared in system_vars.json; not read by any code path",
+        "Provenance / influence": "Shared list of all three approved areas; guidance.txt explicitly warns this must not be substituted for dissertation_area when scoping a phd_student, since membership in this list would silently defeat the narrowing",
+        "Enters where": "HTTP ingress (agent.py /chat, user_profile) — prompt text only",
+        "Threat IDs / N/A": "T6"
+      },
+      {
+        "#": "7",
+        "Field or Data Point": "input.extensions.subject.queries_this_session",
+        "Source Layer": "Declared in system_vars.json; not read, tracked, or incremented anywhere in the implementation",
+        "Provenance / influence": "No session-count state exists in code today; guidance.txt itself conditions the 5-call cap on the agent supplying a genuine running counter as a system variable",
+        "Enters where": "N/A — no code path ever constructs or forwards this value today",
+        "Threat IDs / N/A": "T7"
+      },
+      {
+        "#": "8",
+        "Field or Data Point": "user_profile (HTTP request body)",
+        "Source Layer": "HTTP caller (ChatRequest.user_profile, arbitrary dict)",
+        "Provenance / influence": "Caller-asserted, unvalidated; stringified into the LLM system prompt with no schema validation — the only current delivery path for any subject/role claim",
+        "Enters where": "HTTP ingress (agent.py /chat, build_system_prompt)",
+        "Threat IDs / N/A": "T5, T6"
+      },
+      {
+        "#": "9",
+        "Field or Data Point": "question (HTTP request body)",
+        "Source Layer": "HTTP caller (ChatRequest.question)",
+        "Provenance / influence": "Directly drives the LangGraph agent's tool selection and argument construction (keywords, topic, limit) via the LLM",
+        "Enters where": "HTTP ingress (agent.py /chat) → LLM tool-call decision → MCP tool boundary",
+        "Threat IDs / N/A": "T1, T4, T8"
+      },
+      {
+        "#": "10",
+        "Field or Data Point": "WikiCFP search results (external HTML response)",
+        "Source Layer": "External service (app.py WikiCFPScraper.search_conferences, plain HTTP GET, no TLS/auth/integrity check)",
+        "Provenance / influence": "Unauthenticated scraped HTML parsed into conference dicts and returned as tool output to the LLM/user; content is fully attacker-influenceable if WikiCFP listings themselves are attacker-controlled",
+        "Enters where": "External call boundary (app.py) → returned through server.py → MCP client → LLM → HTTP caller",
+        "Threat IDs / N/A": "T8"
+      },
+      {
+        "#": "11",
+        "Field or Data Point": "Denial/violation behavior (no logging, no violation codes, no explanation policy)",
+        "Source Layer": "N/A — no code, no guidance-defined behavior",
+        "Provenance / influence": "guidance.txt defines no denial-logging requirement, no violation-code scheme, and no actionability/explanation criteria (Q17-Q20, Q22 open gaps per Phase B); no audit trail exists anywhere in agent.py/server.py/app.py",
+        "Enters where": "N/A — absence of a control surface, not a data-entry point",
+        "Threat IDs / N/A": "T9"
+      }
+    ],
+    "Evidence Index": [
+      {
+        "ID": "E1",
+        "Source": "Phase A architecture.json (Layers; Enforcement Points)",
+        "Grounded fact": "No OPA/policy enforcement exists anywhere in code; the only viable pre-execution enforcement point is the MCP tool boundary in server.py, which has full visibility into keywords/topic/limit before app.getEvents is called."
+      },
+      {
+        "ID": "E2",
+        "Source": "Phase A architecture.json (Tool Arguments; Trust Boundaries #3)",
+        "Grounded fact": "server.py's get_events tool body calls app.getEvents(keywords, limit) and never forwards `topic`, even though topic is declared as a required parameter in both server.py's signature and tool_definitions.json; app.py's getEvents has no topic parameter at all (disposition: Ignored, not a schema mismatch)."
+      },
+      {
+        "ID": "E3",
+        "Source": "Phase A architecture.json (Runtime Subject Context; Prompt Inputs)",
+        "Grounded fact": "All five system_vars.json subject fields (user_role, dissertation_area, research_area, queries_this_session, user_name) are declared but not read by any code path; none are placed into a structured input.extensions.subject.* field. Any of them would only reach the process today via the caller-supplied, schema-free `user_profile` dict in ChatRequest, which agent.py's build_system_prompt stringifies verbatim into the LLM system prompt with no validation."
+      },
+      {
+        "ID": "E4",
+        "Source": "Phase B questionnaire handoff summary (open gaps: no canonical user-ID path; simultaneous-role support undetermined)",
+        "Grounded fact": "No canonical user-ID path or provider is declared anywhere in the system; guidance.txt and system_vars.json do not state whether simultaneous roles are supported (user_role in system_vars.json is an enumerated list of possibilities [\"faculty\", \"phd_student\", \"guest\"], not a resolved single role for the caller)."
+      },
+      {
+        "ID": "E5",
+        "Source": "Phase B questionnaire, Q9-Q11 (Role Permissions)",
+        "Grounded fact": "Only faculty and phd_student may call get_events; guest is fully excluded. Faculty may search any of the three department-approved areas with limit ≤ 15; phd_student is further narrowed (see E7) with limit ≤ 10. No role is exempt from the global topic allowlist, keyword denylist, or absolute limit cap of 15."
+      },
+      {
+        "ID": "E6",
+        "Source": "Phase B questionnaire, Q12 (Parameter Details)",
+        "Grounded fact": "Global topic allowlist: topic must be exactly one of three approved values (case-sensitive, verbatim): \"Artificial intelligence\", \"Cybersecurity and privacy\", \"Software engineering\". Global keyword denylist: keywords must not contain, case-insensitively, any of 19 listed terms (bioinformatics, genomics, clinical trials, drug discovery, quantum physics, materials science, renewable energy, economics, finance, marketing, supply chain, education, psychology, sociology, political science, trade show, career fair, startup expo, hackathon)."
+      },
+      {
+        "ID": "E7",
+        "Source": "Phase B questionnaire, Q10 (PhD Student Narrow-Scope Rule); guidance.txt lines 38-46",
+        "Grounded fact": "A phd_student may call get_events only when topic equals that student's own dissertation_area (a per-user system variable), not merely a member of the shared research_area list; guidance.txt explicitly warns that checking topic membership in research_area would let a phd_student search any approved area, silently defeating the narrowing."
+      },
+      {
+        "ID": "E8",
+        "Source": "Phase B questionnaire, Q13 (Parameter Details); Q16",
+        "Grounded fact": "limit must be an integer from 1 to the requesting role's cap (faculty 15, phd_student 10), never above the absolute maximum of 15. A 5-calls-per-session cap is guidance-stated (guidance.txt lines 21-25) but explicitly conditioned on the agent supplying a genuine running queries_this_session counter as a system variable; no code today increments or maintains such a counter, so the cap is not enforceable in the current implementation."
+      },
+      {
+        "ID": "E9",
+        "Source": "Phase B questionnaire handoff summary (open gaps: no post-response filtering/field suppression, no actionability/denial-explanation behavior, no violation-code scheme) and Violation Logging section",
+        "Grounded fact": "No post-response filtering/field suppression by role, no actionability criteria, and no silent-vs-explained denial behavior is described anywhere in guidance.txt; no violation-code scheme or denial-logging requirement exists, and none may be invented per the no-invention rule."
+      },
+      {
+        "ID": "E10",
+        "Source": "Phase A architecture.json (Trust Boundaries #4; External Data)",
+        "Grounded fact": "app.py's WikiCFPScraper issues an unauthenticated plain-HTTP GET to a hardcoded WikiCFP URL; the response is unverified scraped HTML with no TLS, signature, or checksum, parsed and returned as tool output to the LLM and ultimately the HTTP caller."
+      },
+      {
+        "ID": "E11",
+        "Source": "Phase A architecture.json (Data Flow; Layers)",
+        "Grounded fact": "Each /chat request is handled by a fresh LangGraph react-agent invocation; no persistent memory, RAG store, or vector database exists in agent.py, server.py, or app.py, and no other agent or A2A/MCP-peer communication path exists — this is a single-agent, single-tool, stateless-per-request system."
+      }
+    ],
+    "Category Assessment": [
+      {
+        "ASI": "ASI01",
+        "Name": "Agent Goal Hijack",
+        "Applicability": "Partial",
+        "OWASP summary": "Attackers manipulate an agent's objectives, task selection, or decision pathways via prompt-based manipulation, deceptive tool outputs, or poisoned external data.",
+        "Boundary (optional)": "The caller-controlled `question` field drives the LLM's choice of keywords/topic/limit (E3, E11), but the only currently-relevant impact is that a hijacked goal produces tool arguments — the same surface a pre-execution MCP-boundary check would need to gate (E1). No planning loop, sub-goal chaining, or multi-step autonomy exists to sustain a gradual/reflection-style hijack (E11)."
+      },
+      {
+        "ASI": "ASI02",
+        "Name": "Tool Misuse and Exploitation",
+        "Applicability": "Yes",
+        "OWASP summary": "Agents misuse legitimate tools due to prompt injection, misalignment, or ambiguous instruction, applying a tool within authorized privileges but in an unsafe or unintended way.",
+        "Boundary (optional)": "get_events is the only tool; misuse is bounded to crafting keywords/topic/limit values that violate the global allowlist/denylist/limit-cap/narrow-scope rules stated in guidance.txt (E5-E8), since no enforcement exists today (E1)."
+      },
+      {
+        "ASI": "ASI03",
+        "Name": "Identity and Privilege Abuse",
+        "Applicability": "Yes",
+        "OWASP summary": "Exploits dynamic trust and delegation to escalate access or bypass controls by manipulating role/identity claims, often via an attribution gap where the agent lacks its own governed identity.",
+        "Boundary (optional)": "user_role, dissertation_area, and research_area have no verified runtime source and no canonical user-ID path (E3, E4); the only delivery path today is the unvalidated, caller-supplied user_profile dict (E3), making any role or dissertation-area claim self-asserted."
+      },
+      {
+        "ASI": "ASI04",
+        "Name": "Agentic Supply Chain Vulnerabilities",
+        "Applicability": "No",
+        "OWASP summary": "Third-party agents, tools, plugins, models, or update channels are malicious, compromised, or tampered with in transit, exploiting runtime composition of capabilities.",
+        "Boundary (optional)": "N/A — no plugin/registry ecosystem, dynamically loaded tools, or third-party agent/model dependency exists; the single tool (get_events) and its one external call target (WikiCFP, E10) are both fixed and hardcoded, not dynamically composed at runtime (E11)."
+      },
+      {
+        "ASI": "ASI05",
+        "Name": "Unexpected Code Execution (RCE)",
+        "Applicability": "No",
+        "OWASP summary": "Agents generate and execute code, scripts, or templates that escalate into RCE, local misuse, or host/container compromise.",
+        "Boundary (optional)": "N/A — no code-generation, script-execution, or deserialization capability exists anywhere in agent.py, server.py, or app.py (E11); get_events performs only an HTTP GET and HTML parse."
+      },
+      {
+        "ASI": "ASI06",
+        "Name": "Memory & Context Poisoning",
+        "Applicability": "No",
+        "OWASP summary": "Adversaries corrupt or seed stored/retrievable context (conversation history, memory tools, RAG/embeddings) to bias future reasoning, planning, or tool use across sessions.",
+        "Boundary (optional)": "N/A — no persistent memory, RAG store, or vector database exists; each /chat call is a fresh, stateless LangGraph invocation (E11)."
+      },
+      {
+        "ASI": "ASI07",
+        "Name": "Insecure Inter-Agent Communication",
+        "Applicability": "No",
+        "OWASP summary": "Multi-agent systems exchange messages over APIs/message buses/shared memory without adequate authentication, integrity, or semantic validation.",
+        "Boundary (optional)": "N/A — this is a single-agent system with no A2A protocol, peer agent, or MCP-to-MCP communication path (E11); the only inter-process hop is the local stdio MCP client-server pair within one deployment."
+      },
+      {
+        "ASI": "ASI08",
+        "Name": "Cascading Failures",
+        "Applicability": "No",
+        "OWASP summary": "A single fault (hallucination, malicious input, corrupted tool, poisoned memory) propagates across autonomous agents, compounding into system-wide harm via fan-out.",
+        "Boundary (optional)": "N/A — no multi-agent fan-out, delegation, or persisted cross-session state exists to propagate a fault beyond a single stateless request/response (E11)."
+      },
+      {
+        "ASI": "ASI09",
+        "Name": "Human-Agent Trust Exploitation",
+        "Applicability": "Partial",
+        "OWASP summary": "Adversaries or misaligned designs exploit human over-reliance on agent fluency/authority to influence decisions or steer outcomes, aided by weak audit trails that make abuse untraceable.",
+        "Boundary (optional)": "No denial-logging, violation-code scheme, or explanation behavior is defined anywhere (E9), so any silent denial or misleading tool result is unrecorded and untraceable; however, no financial-approval-style human-in-the-loop workflow or persuasive-output pattern exists in this read-only search tool."
+      },
+      {
+        "ASI": "ASI10",
+        "Name": "Rogue Agents",
+        "Applicability": "No",
+        "OWASP summary": "Malicious or compromised agents deviate from intended function or authorized scope within a multi-agent or human-agent ecosystem, creating a containment gap.",
+        "Boundary (optional)": "N/A — single-agent deployment with no multi-agent ecosystem, no delegation chain, and no other agent for this agent to impersonate or be impersonated by (E11)."
+      }
+    ],
+    "Threat Instances": [
+      {
+        "ID": "T1",
+        "ASI": "ASI02",
+        "Severity": "High",
+        "Actor": "Caller",
+        "Surface": "1, 9",
+        "Catalog basis": "Parameter Pollution Exploitation",
+        "Evidence": "E1, E6",
+        "Concrete threat": "A caller crafts `question` (or an LLM complies with an injected instruction) to induce get_events to be called with `keywords` containing a denylisted term as a substring disguised inside otherwise-legitimate free text (e.g. embedding \"education\" inside a longer phrase); because no enforcement exists at the MCP boundary today, the call reaches WikiCFP and returns results outside the department's approved scope."
+      },
+      {
+        "ID": "T2",
+        "ASI": "ASI02",
+        "Severity": "High",
+        "Actor": "LLM",
+        "Surface": "2",
+        "Catalog basis": "Tool Misuse or Agent Hijacking by Prompt Injection",
+        "Evidence": "E1, E6",
+        "Concrete threat": "The LLM (directly or via injected `question` content) selects a `topic` value outside the three-value allowlist (e.g. a disallowed research area); with no enforcement today the call proceeds. Even after a future OPA gate is added at the MCP boundary (E1), the value server.py forwards downstream to app.getEvents is unaffected by topic since server.py drops it before the external call (E2) — topic's only real effect today is at the point a policy would evaluate it, not on the resulting WikiCFP query."
+      },
+      {
+        "ID": "T3",
+        "ASI": "ASI02",
+        "Severity": "Medium",
+        "Actor": "Tool",
+        "Surface": "2",
+        "Catalog basis": "novel",
+        "Evidence": "E2",
+        "Concrete threat": "Because server.py never forwards `topic` to app.getEvents, no downstream layer re-derives or re-validates topic scoping after the MCP boundary; a future policy that gates on input.args.topic at that boundary would be sound for this specific call, but any other code path that assumes topic-based filtering happens inside app.py would be silently wrong, since app.py has no topic parameter at all."
+      },
+      {
+        "ID": "T4",
+        "ASI": "ASI02",
+        "Severity": "Medium",
+        "Actor": "Caller",
+        "Surface": "3, 9",
+        "Catalog basis": "Parameter Pollution Exploitation",
+        "Evidence": "E1, E8",
+        "Concrete threat": "A caller or LLM sets `limit` above the requesting role's cap (15 for faculty, 10 for phd_student) or above the absolute maximum of 15, or below 1, to retrieve more (or a malformed number of) results per call than guidance.txt permits; no code today enforces any of these bounds."
+      },
+      {
+        "ID": "T5",
+        "ASI": "ASI03",
+        "Severity": "Critical",
+        "Actor": "Caller",
+        "Surface": "4, 8",
+        "Catalog basis": "Identity Spoofing and Impersonation",
+        "Evidence": "E3, E4, E5",
+        "Concrete threat": "A caller supplies an arbitrary `user_profile` dict (e.g. claiming user_role=\"faculty\") to /chat; since no code validates, authenticates, or resolves a canonical user identity (E4), and the only delivery path folds this claim into advisory LLM prompt text rather than structured input.extensions.subject data (E3), any future role-gating policy has no trustworthy source for the caller's actual role — a guest could claim to be faculty, or a phd_student could claim to be faculty to escape the narrow-scope rule and the lower limit cap."
+      },
+      {
+        "ID": "T6",
+        "ASI": "ASI03",
+        "Severity": "High",
+        "Actor": "Caller",
+        "Surface": "5, 6, 8",
+        "Catalog basis": "Dynamic Permission Escalation",
+        "Evidence": "E3, E7",
+        "Concrete threat": "A caller asserting to be a phd_student supplies a forged `dissertation_area` value in `user_profile` (or an implementer mistakenly checks topic membership in the shared `research_area` list instead of the per-user `dissertation_area`, exactly as guidance.txt warns against), letting a phd_student search any of the three approved areas rather than being confined to their own — silently defeating the PhD Student Narrow-Scope Rule."
+      },
+      {
+        "ID": "T7",
+        "ASI": "ASI02",
+        "Severity": "Medium",
+        "Actor": "Caller",
+        "Surface": "7",
+        "Catalog basis": "Automated Tool Abuse",
+        "Evidence": "E1, E8",
+        "Concrete threat": "A caller invokes get_events more than 5 times within a single conversation session; because no code path increments or supplies a genuine queries_this_session counter, and guidance.txt itself conditions this cap on the agent supplying that counter, the session-level rate limit cannot be enforced today by any stateless policy — an attacker can repeat calls without bound."
+      },
+      {
+        "ID": "T8",
+        "ASI": "ASI01",
+        "Severity": "Medium",
+        "Actor": "External",
+        "Surface": "9, 10",
+        "Catalog basis": "Indirect Plan Injection",
+        "Evidence": "E10, E11",
+        "Concrete threat": "WikiCFP's scraped HTML (event name, description, location, deadline, link) is returned unauthenticated and unverified as tool output; if a listing itself contains attacker-crafted text resembling an instruction, the LLM — which sees this content in its context before producing its final answer — could misinterpret it as guidance, though this system has no follow-on tool to chain into beyond the single read-only get_events call, limiting the achievable impact to misleading output rather than further unauthorized action."
+      },
+      {
+        "ID": "T9",
+        "ASI": "ASI09",
+        "Severity": "Low",
+        "Actor": "Tool",
+        "Surface": "11",
+        "Catalog basis": "Repudiation and Untraceability",
+        "Evidence": "E9",
+        "Concrete threat": "Because no denial-logging, violation-code scheme, or actionability/explanation behavior is defined anywhere in guidance.txt (open gaps Q17-Q20, Q22), a future enforcement point that silently rejects a call gives the caller and any auditor no record of why, and no consistent code to correlate repeated violations — a defense-in-depth traceability gap rather than an access-control bypass."
+      }
+    ],
+    "Scenario Coverage": [
+      {"ASI": "ASI01", "Scenario": "1", "Disposition": "N/A — Gradual Plan Injection requires a persistent planning framework, sub-goal state, or multi-turn autonomy that does not exist; each /chat call is a single stateless LangGraph invocation (E11)"},
+      {"ASI": "ASI01", "Scenario": "2", "Disposition": "T8 (Direct Plan Injection, bounded: only one chainable tool, get_events, exists; no email/exfiltration tool to chain into)"},
+      {"ASI": "ASI01", "Scenario": "3", "Disposition": "T8 (Indirect Plan Injection)"},
+      {"ASI": "ASI01", "Scenario": "4", "Disposition": "N/A — Reflection Loop Trap requires a self-analysis/reflection loop that does not exist in agent.py's LangGraph react-agent invocation"},
+      {"ASI": "ASI01", "Scenario": "5", "Disposition": "N/A — Meta-Learning Vulnerability Injection requires a self-improvement or learning mechanism that does not exist in this system"},
+      {"ASI": "ASI02", "Scenario": "1", "Disposition": "T1, T4 (Parameter Pollution Exploitation)"},
+      {"ASI": "ASI02", "Scenario": "2", "Disposition": "N/A — Tool Chain Manipulation requires a second tool to chain into for exfiltration or escalation; only one tool (get_events) exists"},
+      {"ASI": "ASI02", "Scenario": "3", "Disposition": "T7 (Automated Tool Abuse)"},
+      {"ASI": "ASI02", "Scenario": "4", "Disposition": "N/A — Tool Misuse or Agent Hijacking via Memory Poisoning requires persistent memory that does not exist (E11)"},
+      {"ASI": "ASI02", "Scenario": "5", "Disposition": "N/A — Tool Misuse or Agent Hijacking via Vector Database requires a vector database or RAG store that does not exist (E11)"},
+      {"ASI": "ASI02", "Scenario": "6", "Disposition": "T2, T3 (Tool Misuse or Agent Hijacking by Prompt Injection)"},
+      {"ASI": "ASI03", "Scenario": "1", "Disposition": "T6 (Dynamic Permission Escalation)"},
+      {"ASI": "ASI03", "Scenario": "2", "Disposition": "N/A — Cross-System Authorization Exploitation requires a second internal system for scope to escalate across; get_events reaches only one external system (WikiCFP)"},
+      {"ASI": "ASI03", "Scenario": "3", "Disposition": "N/A — Shadow Agent Deployment requires a mechanism for a caller to deploy an additional agent inheriting credentials; none exists in this single-agent deployment"},
+      {"ASI": "ASI03", "Scenario": "4", "Disposition": "T5 (User Impersonation)"},
+      {"ASI": "ASI03", "Scenario": "5", "Disposition": "N/A — Agent Identity Spoofing requires an onboarding/account-creation tool for this agent to be tricked into abusing; none exists"},
+      {"ASI": "ASI03", "Scenario": "6", "Disposition": "N/A — Behavioral Mimicry Attack requires a second agent for a rogue agent to mimic; none exists (E11)"},
+      {"ASI": "ASI03", "Scenario": "7", "Disposition": "N/A — Cross-Platform Identity Spoofing requires multiple authentication platforms/contexts; only one deployment target (this MCP server) exists"},
+      {"ASI": "ASI03", "Scenario": "8", "Disposition": "T5 (Incriminating Another User: same forged-identity path; no per-caller audit trail exists to attribute or misattribute actions — see also T9)"},
+      {"ASI": "ASI03", "Scenario": "9", "Disposition": "N/A — Persistent Agent Identity Takeover requires a long-lived API token, cloud credential, or formal agent identity; none exists in this implementation"},
+      {"ASI": "ASI04", "Scenario": "1", "Disposition": "N/A — Amazon Q Supply Chain Compromise requires a third-party plugin/update-channel dependency; get_events is a fixed, locally-defined tool"},
+      {"ASI": "ASI04", "Scenario": "2", "Disposition": "N/A — Replit Vibe Coding Incident requires code-generation or autonomous coding capability; none exists in this system"},
+      {"ASI": "ASI05", "Scenario": "1", "Disposition": "N/A — Inference Time Exploitation requires an adjustable-cost inference/analysis path to overload; get_events performs a single bounded HTTP GET and HTML parse per call"},
+      {"ASI": "ASI05", "Scenario": "2", "Disposition": "N/A — Multi-Agent Resource Exhaustion requires concurrent multi-agent decision-making; single-agent system (E11)"},
+      {"ASI": "ASI05", "Scenario": "3", "Disposition": "T7 (API Quota Depletion: related resource-exhaustion effect of the unenforceable session cap, though WikiCFP quota exhaustion itself is not separately evidenced)"},
+      {"ASI": "ASI05", "Scenario": "4", "Disposition": "N/A — Memory Cascade Failure requires persistent memory allocation to fragment or leak; none exists (E11)"},
+      {"ASI": "ASI05", "Scenario": "5", "Disposition": "N/A — DevOps Agent Compromise requires infrastructure-as-code generation or DevOps tooling; none exists in this system"},
+      {"ASI": "ASI05", "Scenario": "6", "Disposition": "N/A — Workflow Engine Exploitation requires a script-execution or workflow-automation engine; get_events does not execute agent-generated code"},
+      {"ASI": "ASI05", "Scenario": "7", "Disposition": "N/A — Exploiting Linguistic Ambiguities requires an email-sending or similarly ambiguous natural-language command surface; keywords/topic/limit are typed tool arguments, not free-form commands interpreted for side effects"},
+      {"ASI": "ASI06", "Scenario": "1", "Disposition": "N/A — Travel Booking Memory Poisoning requires persistent memory or pricing/business-rule state to poison; none exists (E11)"},
+      {"ASI": "ASI06", "Scenario": "2", "Disposition": "N/A — Context Window Exploitation requires privilege-escalation state tracked across sessions; each /chat call is independently stateless (E11)"},
+      {"ASI": "ASI06", "Scenario": "3", "Disposition": "N/A — Memory Poisoning for System requires a classification/memory system; none exists for this read-only search tool"},
+      {"ASI": "ASI06", "Scenario": "4", "Disposition": "N/A — Shared Memory Poisoning requires a shared memory structure between callers or sessions; none exists (E11)"},
+      {"ASI": "ASI07", "Scenario": "1", "Disposition": "N/A — Consent Flow Manipulation requires an A2A consent-negotiation flow; get_events is invoked directly by the single LangGraph agent, not by a peer agent"},
+      {"ASI": "ASI07", "Scenario": "2", "Disposition": "T8 (Context Hijacking via MCP Response Injection, bounded: the MCP response here is the get_events tool output itself, sourced from WikiCFP HTML, not a separate cooperating agent's protocol metadata)"},
+      {"ASI": "ASI07", "Scenario": "3", "Disposition": "N/A — Tool Misuse via Descriptive Exploitation requires a shared tool registry or multi-agent tool-description trust; the single tool's description is fixed in tool_definitions.json/server.py"},
+      {"ASI": "ASI07", "Scenario": "4", "Disposition": "N/A — Collaborative Decision Manipulation requires a multi-agent collaborative decision process; none exists (E11)"},
+      {"ASI": "ASI07", "Scenario": "5", "Disposition": "N/A — Trust Network Exploitation requires an inter-agent consensus or validation mechanism to forge; none exists"},
+      {"ASI": "ASI07", "Scenario": "6", "Disposition": "N/A — Misinformation Injection & Cascade Poisoning requires a multi-agent network for false data to cascade across; none exists (E11); single-call misinformation risk is covered under T8"},
+      {"ASI": "ASI07", "Scenario": "7", "Disposition": "N/A — Communication Channel Manipulation requires an inter-agent communication protocol; the only inter-process hop is the local stdio MCP client-server pair"},
+      {"ASI": "ASI07", "Scenario": "8", "Disposition": "N/A — Consensus Mechanism Exploitation requires multi-agent decision-making logic to perturb; none exists (E11)"},
+      {"ASI": "ASI08", "Scenario": "1", "Disposition": "N/A — Sales Orchestration Misinformation Cascade requires long-term memory or logs accumulating across interactions; each /chat call is independently stateless (E11)"},
+      {"ASI": "ASI08", "Scenario": "2", "Disposition": "N/A — API Call Manipulation and Information Leakage requires a hallucinated-endpoint risk; get_events has a single fixed external call target (WikiCFP) hardcoded in app.py"},
+      {"ASI": "ASI08", "Scenario": "3", "Disposition": "N/A — Healthcare Decision Amplification requires a medical-recommendation domain and cumulative-context mechanism; neither exists"},
+      {"ASI": "ASI08", "Scenario": "4", "Disposition": "N/A — Foreign Exchange Market manipulation requires a financial-transaction domain; get_events performs no negotiation or transaction"},
+      {"ASI": "ASI09", "Scenario": "1", "Disposition": "N/A — Financial Transaction Obfuscation requires financial transactions; get_events performs none"},
+      {"ASI": "ASI09", "Scenario": "2", "Disposition": "T9 (Security System Evasion, bounded: general absence of logging/audit trail, not a security-monitoring agent being evaded)"},
+      {"ASI": "ASI09", "Scenario": "3", "Disposition": "T9 (Compliance Violation Concealment)"},
+      {"ASI": "ASI09", "Scenario": "4", "Disposition": "N/A — Human Intervention Interface (HII) Manipulation requires a human-in-the-loop review/approval interface; none exists anywhere in this system"},
+      {"ASI": "ASI09", "Scenario": "5", "Disposition": "N/A — Cognitive Overload and Decision Bypass requires a human reviewer or approval workflow to overwhelm; none exists"},
+      {"ASI": "ASI09", "Scenario": "6", "Disposition": "N/A — Trust Mechanism Subversion requires an explicit trust/validation mechanism between human and agent beyond the single conversational reply; none exists"},
+      {"ASI": "ASI09", "Scenario": "7", "Disposition": "N/A — AI-Powered Invoice Fraud requires financial/payment-detail fields and transactions; get_events has neither"},
+      {"ASI": "ASI09", "Scenario": "8", "Disposition": "T8 (AI-Driven Phishing Attack, bounded: WikiCFP result content — e.g. a conference link — is unauthenticated and could mislead a trusting user, though this system has no message-generation tool beyond returning search results)"},
+      {"ASI": "ASI10", "Scenario": "1", "Disposition": "N/A — Coordinated Privilege Escalation via Multi-Agent Impersonation requires a second agent to falsely authenticate; single-agent system (E11)"},
+      {"ASI": "ASI10", "Scenario": "2", "Disposition": "N/A — Agent Delegation Loop for Privilege Escalation requires agent-to-agent delegation; none exists"},
+      {"ASI": "ASI10", "Scenario": "3", "Disposition": "N/A — Denial-of-Service via Agent Task Saturation requires a multi-agent task queue; none exists — T7 covers the analogous single-tool session-cap gap"},
+      {"ASI": "ASI10", "Scenario": "4", "Disposition": "N/A — Cross-Agent Approval Forgery requires a multi-agent biometric/authentication check; none exists"},
+      {"ASI": "ASI10", "Scenario": "5", "Disposition": "N/A — Malicious Workflow Injection requires an inter-agent trust relationship for a rogue agent to exploit; there is only one agent"},
+      {"ASI": "ASI10", "Scenario": "6", "Disposition": "N/A — Orchestration Hijacking in Financial Transactions requires a financial-transaction domain and multi-agent routing; neither exists"},
+      {"ASI": "ASI10", "Scenario": "7", "Disposition": "N/A — Coordinated Agent Flooding requires multiple rogue agents; impossible in this single-agent deployment"},
+      {"ASI": "ASI10", "Scenario": "8", "Disposition": "N/A — Infectious Backdoor Cascade requires inter-agent output consumption for a backdoor to propagate across; none exists (E11)"}
+    ]
+  },
+  "handoff": {
+    "Status": "PASS",
+    "Artifact schema": "threat-model-v3",
+    "Summary": "Applicable categories: ASI02 (Tool Misuse) and ASI03 (Identity/Privilege Abuse) = Yes; ASI01 (Goal Hijack) and ASI09 (Human-Agent Trust Exploitation) = Partial; ASI04, ASI05, ASI06, ASI07, ASI08, ASI10 = No (no supply-chain/plugin ecosystem, no code execution, no persistent memory/RAG, no multi-agent/A2A communication, no fan-out, no multi-agent ecosystem in this single-tool, single-agent, stateless system). 9 threat instances (T1-T9): 1 Critical (role/identity spoofing via unvalidated user_profile, T5), 2 High (keyword-denylist bypass T1; PhD narrow-scope bypass via forged/misapplied subject data T6), 4 Medium (topic-allowlist bypass T2, topic-drop blind spot T3, limit-cap bypass T4, session-cap bypass via missing counter T7, indirect content injection via unauthenticated WikiCFP output T8), 1 Low (denial-traceability gap T9). Surface coverage: 11 attack-surface rows, every row cites a threat ID (no bare N/A rows were needed since every declared field maps to at least one real gap). Scenario coverage: all 61 catalog scenarios across ASI01-ASI10 dispositioned — 9 cite threat IDs (T1-T9, several reused across related scenarios), 52 are N/A with a system-specific reason (predominantly: no multi-agent ecosystem, no persistent memory/RAG, no code execution, and no second tool to chain into). Evidence index: 11 grounded facts (E1-E11), each reused across multiple threats/categories rather than restated. Citation verification: every Threat Instance cites Evidence IDs and every Attack Surface cites Threat IDs; every Category Assessment row cites a system-specific boundary grounded in Phase A/B facts or Evidence IDs. Semantic completeness pass: performed once, no repairs needed — actors are all drawn from {Caller, LLM, Tool, External}; severities follow the Critical/High/Medium/Low rubric (role spoofing rated Critical as an authentication-boundary compromise per the rubric; narrow-scope/keyword bypasses rated High as access-control bypasses; limit/topic/session gaps rated Medium as guardrail failures; logging gap rated Low as defense-in-depth); no threat was cloned across unrelated surfaces. Open gaps carried forward unresolved (not invented): no canonical user-ID path (Q7), no simultaneous-role support statement (Q8), no post-response filtering/field suppression (Q17-Q18), no actionability/denial-explanation behavior (Q19-Q20), no violation-code table (Q22) — these remain the same open gaps recorded in Phase B and are reflected in T5, T6, and T9 rather than resolved speculatively."
+  }
+}

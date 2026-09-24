@@ -478,6 +478,38 @@ def test_validate_addendum_checks_numbering_and_duplicates(tmp_path: Path):
         validate_addendum(guidance, addendum)
 
 
+def test_validate_addendum_preserves_sectioned_markdown_style(tmp_path: Path):
+    guidance = tmp_path / "guidance.txt"
+    addendum = tmp_path / "guidance_updated.txt"
+    guidance.write_text("# Scenario\n\n## Rules\n\n- Existing rule\n")
+    addendum.write_text("## Additional Rules\n\n- First new rule\n- Second new rule\n")
+
+    assert validate_addendum(guidance, addendum) == [
+        (3, "First new rule"),
+        (4, "Second new rule"),
+    ]
+
+    addendum.write_text("2. Numbered rule\n")
+    with pytest.raises(ReconciliationError, match="sectioned Markdown style"):
+        validate_addendum(guidance, addendum)
+
+
+def test_validate_addendum_preserves_plain_line_style(tmp_path: Path):
+    guidance = tmp_path / "guidance.txt"
+    addendum = tmp_path / "guidance_updated.txt"
+    guidance.write_text("Existing rule one.\nExisting rule two.\n")
+    addendum.write_text("New rule one.\nNew rule two.\n")
+
+    assert validate_addendum(guidance, addendum) == [
+        (1, "New rule one."),
+        (2, "New rule two."),
+    ]
+
+    addendum.write_text("- Bulleted rule\n")
+    with pytest.raises(ReconciliationError, match="plain one-rule-per-line style"):
+        validate_addendum(guidance, addendum)
+
+
 def test_explicit_merge_preserves_original_bytes_and_removes_addendum(tmp_path: Path):
     guidance = tmp_path / "guidance.txt"
     addendum = tmp_path / "guidance_updated.txt"
@@ -516,6 +548,50 @@ def test_explicit_merge_preserves_original_bytes_and_removes_addendum(tmp_path: 
 
     assert result.startswith("Merged 1 guidance rule")
     assert guidance.read_bytes() == b"1. Existing rule\n2. New rule\n"
+    assert not addendum.exists()
+
+
+def test_explicit_merge_separates_markdown_addendum(tmp_path: Path):
+    guidance = tmp_path / "guidance.txt"
+    addendum = tmp_path / "guidance_updated.txt"
+    enforcement = tmp_path / "owasp_policy_guidelines.md"
+    state = tmp_path / "analysis_state.json"
+    guidance.write_text("# Scenario\n\n## Rules\n\n- Existing rule\n")
+    addendum.write_text("## Additional Rules\n\n- New rule\n")
+    enforcement.write_text("validated")
+    state.write_text(
+        json.dumps(
+            {
+                "schema": "security-analysis-state-v1",
+                "latest_phase": "D",
+                "inputs": {
+                    "guidance": {
+                        "path": str(guidance),
+                        "sha256": hashlib.sha256(guidance.read_bytes()).hexdigest(),
+                    },
+                    "guidance_updated": {
+                        "path": str(addendum),
+                        "sha256": hashlib.sha256(addendum.read_bytes()).hexdigest(),
+                    },
+                },
+                "phases": {
+                    "D": {
+                        "artifact": str(enforcement),
+                        "status": "PASS",
+                        "sha256": hashlib.sha256(enforcement.read_bytes()).hexdigest(),
+                    }
+                },
+            }
+        )
+    )
+
+    result = merge_guidance(guidance, addendum, state, enforcement)
+
+    assert result.startswith("Merged 1 guidance rule")
+    assert guidance.read_text() == (
+        "# Scenario\n\n## Rules\n\n- Existing rule\n\n"
+        "## Additional Rules\n\n- New rule\n"
+    )
     assert not addendum.exists()
 
 

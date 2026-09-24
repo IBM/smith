@@ -86,6 +86,15 @@ Candidate Reconciliation rows. Give those rows the same `Guidance group` value;
 one addendum rule is emitted per group. A universal content rule covers a tool
 argument only when both use the same enforceable boundary and matching semantics.
 
+Before comparing candidates, expand every role-independent or globally worded
+existing rule into one normalization row for each applicable MCP tool and
+canonical field. Do not narrow a rule merely because it does not name a tool.
+When a candidate only makes such a rule tool- or field-specific without changing
+its subjects, denied behavior, condition, values, or matching semantics, classify
+it as `Covered` and never emit it. If the applicable tools or fields cannot be
+determined from the rule and inspected schemas, classify it as `Clarification`
+rather than `Novel` or `Additive`.
+
 An implementation detail that necessarily realizes an existing closed rule is
 an enforcement mapping. A new request-level hard block is not automatically
 covered by an output requirement: for example, mandatory `select_fields`
@@ -100,9 +109,16 @@ candidate.
 Record every previous addendum rule in Prior Proposal Reconciliation as
 `Proposed`, `Merged`, or `Dropped` with a candidate link or reason. Then write
 `guidance_updated.txt` with only the consolidated `Novel` and uncovered
-`Additive` decisions, numbered after existing guidance, one rule per line, and
-no metadata. Remove the addendum when no such decision remains. Never modify
-`guidance.txt` in this phase.
+`Additive` decisions. Preserve the presentation style, terminology, voice, and
+structural conventions of that target's `guidance.txt`; never impose another
+example's format or rewrite the additions as generic policy-engine commands.
+Use sequential numbered rules only when the existing guidance uses numbered
+rules. For sectioned Markdown, emit a concise Markdown addendum under matching
+or clearly corresponding headings, with one top-level bullet per guidance
+group. For plain one-rule-per-line guidance, emit one plain line per guidance
+group. Do not copy scenario background or existing rules into the addendum.
+Remove the addendum when no such decision remains. Never modify `guidance.txt`
+in this phase.
 
 Set `PASS` only when no blocking relationship or addendum error remains. The
 handoff should summarize mapped threats, post-deduplication candidates, new
