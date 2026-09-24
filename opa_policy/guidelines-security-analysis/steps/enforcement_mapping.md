@@ -15,10 +15,10 @@ applies.
 
 ### Map threats and gaps
 
-Run the phase preparation command. For each threat, add exactly one Threat
-Disposition row assigning it to `OPA`, `Agent`, `Tool implementation`, or
-`Infrastructure`. Assign OPA only when the shared OPA-policy-expressibility rule
-and the eligibility gate below both pass.
+In the prepared JSON, add exactly one Threat Disposition row per threat,
+assigning it to `OPA`, `Agent`, `Tool implementation`, or `Infrastructure`.
+Assign OPA only when the shared OPA-policy-expressibility rule and the
+eligibility gate below both pass.
 
 Create one scope row per ASI category and reference threat IDs rather than
 restating threats. Use `Partial` only when a category has both OPA and
@@ -113,10 +113,10 @@ Record every previous addendum rule in Prior Proposal Reconciliation as
 structural conventions of that target's `guidance.txt`; never impose another
 example's format or rewrite the additions as generic policy-engine commands.
 Use sequential numbered rules only when the existing guidance uses numbered
-rules. For sectioned Markdown, emit a concise Markdown addendum under matching
-or clearly corresponding headings, with one top-level bullet per guidance
-group. For plain one-rule-per-line guidance, emit one plain line per guidance
-group. Do not copy scenario background or existing rules into the addendum.
+rules. For sectioned Markdown, emit one top-level bullet per guidance group,
+without adding an addendum heading, phase label, explanation, or other metadata.
+For plain one-rule-per-line guidance, emit one plain line per guidance group. Do
+not copy headings, scenario background, or existing rules into the addendum.
 Remove the addendum when no such decision remains. Never modify `guidance.txt`
 in this phase.
 
@@ -124,8 +124,5 @@ Set `PASS` only when no blocking relationship or addendum error remains. The
 handoff should summarize mapped threats, post-deduplication candidates, new
 rules, gaps, addendum status, blockers, and open gaps.
 
-Run:
-
-```bash
-smith --flag security_analysis_checkpoint --phase D
-```
+Save the structured JSON and return control to the coordinator, which owns the
+checkpoint and rendered Markdown.

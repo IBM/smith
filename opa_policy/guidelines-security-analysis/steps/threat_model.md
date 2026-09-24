@@ -16,7 +16,7 @@ categories.
 
 ### Build the model
 
-Run the phase preparation command and populate these tables:
+Populate these tables in the prepared JSON:
 
 1. **Attack Surfaces:** one row per unique field/data point, source layer,
    provenance, and entry boundary. Use numeric or `#`-prefixed IDs consistently.
@@ -59,8 +59,5 @@ Set `PASS` only after the semantic pass succeeds. The handoff should summarize
 applicable categories, threat/severity counts, surface and scenario coverage,
 citation verification, repair count, and open gaps.
 
-Run:
-
-```bash
-smith --flag security_analysis_checkpoint --phase C
-```
+Save the structured JSON and return control to the coordinator, which owns the
+checkpoint and rendered Markdown.

@@ -16,8 +16,8 @@ behavior.
 
 ### Fill the questionnaire
 
-Run the phase preparation command. It creates all Q1-Q22 rows, including Q13b.
-Fill every answer and its supporting detail table where applicable.
+The prepared JSON contains all Q1-Q22 rows, including Q13b. Fill every answer
+and its supporting detail table where applicable.
 
 Map existing guidance as follows:
 
@@ -57,8 +57,5 @@ Never invent a violation code. Set `PASS` when every question has an answer or
 is explicitly listed as an open gap. Summarize confidence counts and covered
 tools in the handoff.
 
-Run:
-
-```bash
-smith --flag security_analysis_checkpoint --phase B
-```
+Save the structured JSON and return control to the coordinator, which owns the
+checkpoint and rendered Markdown.

@@ -27,9 +27,36 @@ target.
 
 ## Shared phase contract
 
-Run each phase in a fresh context and load only its guide. Give it resolved
-paths for `TARGET_AGENT_PATH`, `GUIDANCE_FILE` or `ABSENT`, `SYSTEM_VAR_FILE` or
-`ABSENT`, `TOOL_DEFINITIONS_FILE`, and `GUIDANCE_UPDATE_FILE` or `ABSENT`.
+When this workflow is reached through the Smith skill, its coordinator launches
+one native fresh worker per phase and runs the phase checkpoints on the user's
+behalf. Do not ask the user to enter phase commands, and do not run phases A-D
+inline in one worker context. Pass only the resolved paths and persisted
+structured artifacts to the next worker, never the previous worker's
+conversation.
+
+If native worker isolation is unavailable, the coordinator—not the user—uses
+the automated isolated runner:
+
+```bash
+smith --flag security_analysis_run
+```
+
+It launches a separate, non-persistent agent process for each phase, runs the
+checkpoint after that process exits, and stops at the first failure. Resume a
+failed or interrupted run at phase `<P>` with
+`smith --flag security_analysis_run --phase <P>`. By default it uses the local
+Claude Code CLI with its existing authentication and default model. It uses the
+same configured Smith paths already resolved from `.env`; no additional
+security-analysis environment variables are required.
+
+For manual execution, run each phase in a fresh context and load only its guide.
+Give it resolved paths for `TARGET_AGENT_PATH`, `GUIDANCE_FILE` or `ABSENT`,
+`SYSTEM_VAR_FILE` or `ABSENT`, `TOOL_DEFINITIONS_FILE`, and
+`GUIDANCE_UPDATE_FILE` or `ABSENT`.
+
+The following sequence belongs to the coordinator, or to the operator during
+manual execution. An isolated phase worker performs only steps 2-3 and then
+returns control without running Smith commands.
 
 For phase `<P>`:
 
@@ -90,7 +117,7 @@ exists. Explain that no merge or policy creation has occurred.
 Only after explicit merge approval:
 
 1. Run `smith --flag guidance_merge`. It validates the Phase D checkpoint,
-   numbering, duplicates, and current hashes before atomically merging and
-   removing the addendum.
+   target-specific addendum format, duplicates, and current hashes before
+   atomically merging and removing the addendum.
 2. Ask whether to begin policy creation.
 3. Only after a separate yes, follow `../policy_creation/opa_policy_creation.md`.

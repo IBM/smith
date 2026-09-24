@@ -402,7 +402,10 @@ def main():
     parser.add_argument(
         "--phase",
         choices=("A", "B", "C", "D"),
-        help="security-analysis phase to prepare or checkpoint",
+        help=(
+            "security-analysis phase to prepare/checkpoint, or starting phase "
+            "for security_analysis_run"
+        ),
     )
     parser.add_argument(
         "--prepare",
@@ -507,6 +510,17 @@ def main():
                 print(prepare_from_environment(args.phase))
             else:
                 print(checkpoint_from_environment(args.phase))
+        except ReconciliationError as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            sys.exit(1)
+        sys.exit(0)
+
+    if args.flag == "security_analysis_run":
+        from smith.tools.guidance_reconciliation import ReconciliationError
+        from smith.tools.security_analysis_runner import run_from_environment
+
+        try:
+            print(run_from_environment(args.phase))
         except ReconciliationError as exc:
             print(f"ERROR: {exc}", file=sys.stderr)
             sys.exit(1)
@@ -837,6 +851,7 @@ def main():
         "get_current_agent",
         "guidance_reconciliation",
         "security_analysis_checkpoint",
+        "security_analysis_run",
         "guidance_merge",
     ]
     if args.flag and args.flag not in allowed_flags:

@@ -1,196 +1,94 @@
 # OPA Policy Guidance Questionnaire
-# Tool: car-price-mcp
 
-Fill in each answer based on your tool and agent. You do not need to
-know OPA or security to complete this — just describe how your tool
-works and who should be able to use it.
-
----
-
-## Section 1: Tool Identity
-
-**Q1. What is the tool name and what does it do in one sentence?**
-
-> Tool names: `get_car_brands`, `search_car_price`, `get_vehicles_by_type`
-> A FIPE-backed vehicle pricing MCP server that lets callers list car brands, look up models and prices by brand, and browse brands by vehicle type (cars/motorcycles/trucks). [derived from architecture]
-
----
-
-**Q2. What external systems does it call?**
-
-> `https://parallelum.com.br/fipe/api/v1/...` — public, unauthenticated, read-only FIPE Brazilian vehicle price API (HTTPS GET requests). [derived from architecture]
-
----
-
-**Q3. Does it read data, write data, or both?**
-
-> Read only — all three tools issue GET requests to the FIPE API and return formatted text; no writes or mutations anywhere in the tool implementation. [derived from architecture]
-
----
-
-**Q4. What are its parameters? For each: name, type, required or optional, what counts as a valid value?**
-
-| Parameter | Tool | Type | Required | Valid values |
-|-----------|------|------|----------|--------------|
-| `brand_name` | `search_car_price` | string | Yes | Non-empty, non-whitespace string. Must be the canonical FIPE brand name in Title Case (e.g. `"Toyota"`, `"Mercedes-Benz"`); partial or differently-cased names are not evaluated against allow/block lists and are denied. Empty or whitespace-only values are denied for all roles. [derived from guidance.txt] |
-| `vehicle_type` | `get_vehicles_by_type` | string (optional, default `"carros"`) | No | Exactly one of: `"carros"`, `"cars"`, `"motos"`, `"motorcycles"`, `"caminhoes"`, `"trucks"` — case-sensitive exact match. Any other value (including different casing) is denied. The backend coerces unrecognized types to `"carros"` but the policy must reject them before that fallback runs. [derived from guidance.txt] |
-| (none) | `get_car_brands` | — | — | No parameters; access is controlled by role only. [derived from architecture] |
-
----
-
-## Section 2: Who Uses It
-
-**Q5. What are the types of users? List every role.**
-
-> - `fleet_manager` — manages a vehicle fleet; may call all three tools; restricted to truck-relevant brands and truck vehicle types [derived from guidance.txt]
-> - `consumer` — individual buyer; may call all three tools; restricted to car vehicle types; may search any brand [derived from guidance.txt]
-> - `journalist` — automotive media; may call all three tools; restricted to car vehicle types; may only search domestic-market brands [derived from guidance.txt]
-> - `analyst` — market researcher; may call all three tools; may use any vehicle type or any brand without restriction [derived from guidance.txt]
-> - `guest` — unauthenticated or low-trust caller; may only call `get_car_brands`; `search_car_price` and `get_vehicles_by_type` are denied [derived from guidance.txt]
-
----
-
-**Q6. Are those roles verified by your system, or supplied by the user themselves?**
-
-> Self-reported — `user_role` is passed as part of the `user_profile` dict in the HTTP POST request body; no authentication mechanism verifies it anywhere in `agent.py`. [derived from architecture]
-
----
-
-**Q7. Is there a user ID? Where does it come from?**
-
-> `user_name` is present in `system_vars.json` and is set as part of `user_profile` in the HTTP request. It is self-reported; there is no verified user ID. [derived from architecture]
-
----
-
-**Q8. Can a user belong to multiple roles at once?**
-
-> Yes — `user_role` in `system_vars.json` is declared as an array of possible role strings (`["fleet_manager", "consumer", "journalist", "analyst", "guest"]`), implying a single user may carry multiple role labels. `guidance.txt` evaluates each role's restrictions independently: e.g. a `fleet_manager` is allowed `"Mercedes-Benz"` while a `journalist` is denied it, so each role is checked independently, not as a union. [derived from guidance.txt + system_vars.json]
-
----
-
-## Section 3: What Each Role Is Allowed To Do
-
-**Q9. For each role, which tools are they allowed to use and with what conditions or scope restrictions?**
-
-| Tool | fleet_manager | consumer | journalist | analyst | guest | guidance.txt rule |
-|------|---------------|----------|------------|---------|-------|-------------------|
-| `get_car_brands` | Allowed | Allowed | Allowed | Allowed | Allowed | Tool Access by Role |
-| `search_car_price` | Allowed — truck-relevant brands only: Scania, Volvo, Mercedes-Benz, MAN, DAF, Iveco, Ford, Volkswagen | Allowed — any brand | Allowed — domestic-market brands only (Fiat, Chevrolet, Volkswagen, Hyundai, Toyota, Renault, Honda, Nissan, Jeep, Peugeot, Citroën, Caoa Chery); luxury/imported denied | Allowed — any brand | Denied | Tool Access + Brand Restrictions |
-| `get_vehicles_by_type` | Allowed — `"caminhoes"` or `"trucks"` only | Allowed — `"carros"` or `"cars"` only | Allowed — `"carros"` or `"cars"` only | Allowed — any recognised value | Denied | Tool Access + Vehicle Type Restrictions |
-
----
-
-**Q10. Are there topics, values, or parameter combinations some roles can use that others cannot?**
-
-> Yes, two axes:
->
-> **`brand_name` (on `search_car_price`):**
-> - `fleet_manager`: only truck-relevant brands (Scania, Volvo, Mercedes-Benz, MAN, DAF, Iveco, Ford, Volkswagen)
-> - `journalist`: only domestic-market brands (Fiat, Chevrolet, Volkswagen, Hyundai, Toyota, Renault, Honda, Nissan, Jeep, Peugeot, Citroën, Caoa Chery); luxury/imported brands denied
-> - `consumer`, `analyst`: any brand allowed (no restriction)
->
-> **`vehicle_type` (on `get_vehicles_by_type`):**
-> - `fleet_manager`: only `"caminhoes"` / `"trucks"`; cars and motorcycles denied
-> - `consumer`, `journalist`: only `"carros"` / `"cars"`; motorcycles and trucks denied
-> - `analyst`: any of the six recognised values
->
-> [derived from guidance.txt]
-
----
-
-**Q11. Are there roles that have no restrictions?**
-
-> `analyst` has no brand restrictions and no vehicle type restrictions for `search_car_price` and `get_vehicles_by_type`; they may call all three tools freely. `consumer` has no brand restriction (any brand). [derived from guidance.txt]
-
----
-
-## Section 4: Hard Limits
-
-**Q12. Are there parameter values that should always be blocked for everyone, regardless of role?**
-
-> Yes:
-> - Any `brand_name` that is empty or whitespace-only → denied for all roles.
-> - Any `vehicle_type` value not in the recognised set (`"carros"`, `"cars"`, `"motos"`, `"motorcycles"`, `"caminhoes"`, `"trucks"`) → denied for all roles (including `analyst`). Different casing (e.g. `"Caminhoes"`) is explicitly denied.
-> - Any call from an `unknown` role (not one of the five defined roles) → denied for every tool, including `get_car_brands`. [derived from guidance.txt]
-
----
-
-**Q13. Is there a maximum value for any numeric parameter that no role can exceed?**
-
-> None — no numeric parameters in any of the three tools. [derived from tool_definitions.json]
-
----
-
-**Q13b. Are there approval paths — actions allowed conditionally when an approval field is set?**
-
-> None — `guidance.txt` defines no conditional approval fields. [derived from guidance.txt]
-
----
-
-**Q14. Are there keywords or inputs that must always be rejected?**
-
-> Effectively yes via the exact-match allow/deny lists:
-> - `brand_name`: fleet_managers and journalists have explicit allow-lists; anything outside them is denied (block-by-default for those roles). Denied luxury/imported brands for journalists include BMW, Mercedes-Benz, Audi, Porsche, Jaguar, Land Rover, Lexus, Maserati, Ferrari, Lamborghini, Bentley, Rolls-Royce, Mini, Alfa Romeo.
-> - `vehicle_type`: any value not in the six-element recognised set is a hard reject for all roles.
-> - Empty/whitespace `brand_name`: always rejected.
-> [derived from guidance.txt]
-
----
-
-## Section 5: Volume and Rate Limits
-
-**Q15. Is there a maximum number of times this tool can be called in a single conversation session?**
-
-> None defined in `guidance.txt`. [derived from guidance.txt]
-
----
-
-**Q16. Who keeps track of how many times the tool has been called — your app, or should the policy enforce it?**
-
-> Not applicable — no session call limit defined. [derived from guidance.txt]
-
----
-
-## Section 6: Response Filtering
-
-**Q17. After the tool returns results, does anything need to be hidden, flagged, or categorised before the user sees it?**
-
-> None specified in `guidance.txt`. [derived from guidance.txt]
-
----
-
-**Q18. Are there fields in the response that should be suppressed for certain roles?**
-
-> None specified in `guidance.txt`. [derived from guidance.txt]
-
----
-
-**Q19. Are there conditions on a result that determine whether it is "actionable"?**
-
-> None specified in `guidance.txt`. [derived from guidance.txt]
-
----
-
-## Section 7: Violations
-
-**Q20. Should a blocked request be silently rejected, or should the user receive an explanation?**
-
-> `guidance.txt` does not specify violation messaging. Based on architecture.md's pattern (the existing server.py returns a string on soft-reject rather than an exception), violations should return an explanatory deny message identifying the violated rule. [inferred — low confidence]
-
----
-
-**Q21. Are there different severity levels — hard block vs. warning?**
-
-> All blocks in `guidance.txt` are framed as hard denials ("must be denied"). No warnings or soft blocks are defined. [derived from guidance.txt]
-
----
-
-**Q22. Do you need to log which rule was violated, or just that a request was denied? Does an existing violation-code scheme need to be reused?**
-
-> No pre-existing violation-code scheme is defined in `guidance.txt` or any other source file. Log the specific rule violated (e.g. ROLE_BLOCKED, BRAND_BLOCKED, VEHICLE_TYPE_BLOCKED) following the same pattern used in the `call-for-papers-mcp` example. [inferred — low confidence]
->
-> No pre-existing violation-code table to carry forward.
-
----
-
-*Confidence summary: 18 answers [derived from guidance.txt], 6 answers [derived from architecture], 2 answers [inferred — low confidence] (Q20, Q22 — violation messaging and logging scheme), 0 blank.*
+## Answer Register
+
+| Q | Required answer | Answer | Confidence |
+|---|---|---|---|
+| Q1 | Tool names and one-sentence purposes | 3 registered MCP tools (stdio transport, source 'python server.py'): (1) get_car_brands — returns all available car brands from the FIPE API with codes and names (system_vars.json caps the described output at 20 brands, grouped alphabetically). (2) search_car_price — finds a brand by substring match and returns up to 3 models with current-year prices from the FIPE database. (3) get_vehicles_by_type — returns vehicle brands (up to 15) for a specified vehicle category ('carros'/'motos'/'caminhoes' or English equivalents), defaulting to 'carros' if unspecified. | [derived from architecture] |
+| Q2 | External systems: protocol, authentication, and read/write behavior | One external system: the Brazilian FIPE vehicle-price API at https://parallelum.com.br/fipe/api/v1/... . Protocol: HTTPS GET (outbound only, chained calls for brand/model/year/price lookups). Authentication: none observed — no API key, token, or credential is sent. Behavior: read-only; all 3 tools only fetch data, none write/mutate. Integrity: HTTP 200 status check and JSON parse only, no signature/schema/TLS-pinning validation of response content. | [derived from architecture] |
+| Q3 | Whether each tool reads, writes, or both | All 3 tools (get_car_brands, search_car_price, get_vehicles_by_type) are read-only — each issues only outbound HTTP GET requests to the FIPE API and returns formatted data; none perform writes/mutations to any system. | [derived from architecture] |
+| Q4 | Parameters; use Parameter Details | 2 declared tool parameters across 3 tools: search_car_price.brand_name (required, string) and get_vehicles_by_type.vehicle_type (optional, string, schema default 'carros'). get_car_brands takes no parameters. See Parameter Details table. | [derived from architecture] |
+| Q5 | Every user role | 5 roles declared in system_vars.json and defined identically in guidance.txt: fleet_manager, consumer, journalist, analyst, guest. guidance.txt additionally defines an implicit 6th category — 'unknown role' (any user_role value matching none of the five) — which has no privileges and may call no tool, including get_car_brands. | [derived from guidance.txt] |
+| Q6 | Runtime subject provenance and integrity; use Runtime Subject Details | Both subject fields (user_role, user_name) are declared in system_vars.json as intended policy-input placeholders but have Unknown runtime provenance: Phase A confirms no file in app.py/agent.py/server.py reads, parses, sets, or validates either field. The only runtime analog is agent.py's user_profile — a free-form, unauthenticated, caller-supplied dict that reaches the LLM only as interpolated prompt text (never as structured input.extensions.subject.* data, never validated against the 5 declared role values). No verification/integrity mechanism (signature, token, session derivation) is documented or implemented for either field. See Runtime Subject Details table. | [derived from architecture] |
+| Q7 | User ID canonical path, provider, and use | system_vars.json declares user_name (canonical path input.extensions.subject.user_name, example value 'Bob') as the identity field. guidance.txt never references user_name or any user-identity concept in its access rules — all guidance rules key exclusively on user_role. Provenance is the same Unknown/unplumbed status as user_role (Q6). No documented use of user_name for policy decisions exists in guidance.txt. | [derived from architecture] |
+| Q8 | Whether simultaneous roles are supported | Not addressed. guidance.txt's Roles section and all role-scoped rules treat user_role as a single value per request ('the user's role', 'a request whose user_role matches none of the five defined roles') with no mention of multi-role or role-combination scenarios. system_vars.json declares user_role as a list of the 5 possible values (the enum), not evidence that multiple roles apply simultaneously to one subject. No support for simultaneous/multiple roles is described. | [derived from guidance.txt] |
+| Q9 | Tool permissions and scope per role; use Role Permissions | guidance.txt 'Tool Access by Role' (lines 11-19) and 'Unknown Roles' (lines 47-49) define exclusive per-role tool allowlists: fleet_manager/consumer/journalist/analyst may call get_car_brands, search_car_price, and get_vehicles_by_type; guest may only call get_car_brands (search_car_price and get_vehicles_by_type must be denied); an unknown/unrecognized user_role may call no tool at all, including get_car_brands. See Role Permissions table. | [derived from guidance.txt] |
+| Q10 | Role-specific topics, values, or parameter combinations | Two role-specific parameter-value restrictions are defined: (1) vehicle_type allowlists per role for get_vehicles_by_type (see Q12/Role Permissions) — fleet_manager restricted to caminhoes/trucks; consumer and journalist restricted to carros/cars; analyst unrestricted among recognized values; guest cannot call the tool. (2) brand_name allow/deny lists per role for search_car_price (see Q12/Role Permissions) — fleet_manager restricted to 8 named truck-relevant brands; journalist restricted to 12 named domestic-market brands (explicitly denied 14 named luxury/imported brands); consumer and analyst unrestricted; guest cannot call the tool. guidance.txt explicitly notes overlapping list membership is intentional and each role is evaluated independently (e.g. fleet_manager allowed 'Mercedes-Benz', journalist denied it). | [derived from guidance.txt] |
+| Q11 | Roles with no restrictions | consumer and analyst have no brand_name restriction for search_car_price ('may search for any brand without restriction'). analyst additionally has no vehicle_type restriction for get_vehicles_by_type beyond the global recognized-value set ('may use any of the recognized vehicle_type values'). No role is entirely unrestricted across both tool access and parameter scope — every role including consumer/analyst is still bound by the Tool Access by Role list and the global exact-match/canonicalization rules (Q12/Q14). | [derived from guidance.txt] |
+| Q12 | Globally blocked enumerable values, formats, domains, or flags | vehicle_type (input.args.vehicle_type, tool get_vehicles_by_type): recognized value set is exactly {"carros", "cars", "motos", "motorcycles", "caminhoes", "trucks"}, matched exactly and case-sensitively; any other value (including different casing such as "Caminhoes") is denied for every role globally, regardless of role-specific allowlist. brand_name (input.args.brand_name, tool search_car_price): compared to per-role allow/block lists (fleet_manager, journalist) by exact case-sensitive string equality against canonical Title Case FIPE spelling (e.g. "Volvo", "Mercedes-Benz"); differently-cased or partial names (e.g. "mercedes", "benz", "volvo") are not matched against either list and are denied; empty/whitespace-only brand_name must be denied for all roles (this is a global rule, not role-specific). | [derived from guidance.txt] |
+| Q13 | Numeric hard caps | No numeric hard caps are stated in guidance.txt. system_vars.json's action_description mentions output-shaping figures ('up to 20 car brands', 'up to 3 models', 'up to 15 brands') but these describe response formatting/pagination in the tool's own description text, not policy-enforced request limits, and guidance.txt does not adopt or reference them as caps. No per-call, per-session, or per-role numeric limit is specified anywhere. Open gap: no numeric cap exists to encode. | [derived from guidance.txt] |
+| Q13b | Conditional approval paths; use Approval Paths | None found. guidance.txt contains no mention of an approval workflow, approval field, escalation path, or conditional-approval language (e.g. 'requires approval', 'needs sign-off') anywhere in the Roles, Tool Access, Vehicle Type Restrictions, Brand Restrictions, or Unknown Roles sections. All restrictions in guidance.txt are stated as unconditional allow/deny outcomes based on role and parameter value, not as conditions that can be satisfied by an approval step. Approval Paths table is empty by design — this is an open gap only in the sense that no approval mechanism exists to record, not a blank requiring clarification. | [derived from guidance.txt] |
+| Q14 | Rejected patterns and their input source | Two governed-input pattern restrictions, both sourced from input.args.* on the exact declaring tool (per the source-boundary rule): (1) input.args.vehicle_type (declared only by get_vehicles_by_type) must match one of the 6 recognized lowercase strings exactly and case-sensitively; any other pattern, including case variants of a recognized word (e.g. "Caminhoes"), is rejected. guidance.txt explicitly flags that the backend (app.py) silently coerces unrecognized values to "carros" via type_mapping.get(...,'carros') — confirmed by Phase A — and states policy must reject rather than rely on that fallback, meaning any future enforcement must intercept before app.py's silent-fallback call (server.py layer, per Phase A's Enforcement Points table). (2) input.args.brand_name (declared only by search_car_price) must match Title Case canonical FIPE spelling exactly and case-sensitively against role-specific allow/block lists; guidance.txt requires normalization to Title Case 'before the policy check', but Phase A confirms (Undeclared Fields) no such canonicalization step exists in server.py or app.py — app.py's substring/lower-case matching is a different, business-logic-only operation. This is an open gap: a future policy keyed on raw input.args.brand_name without an added normalization step will not match differently-cased legitimate input, and per guidance's own default ("are not evaluated against the lists and are denied") such cases must be denied, not silently normalized by policy itself. | [derived from guidance.txt] |
+| Q15 | Per-session call limits; use Rate Limits | None found. guidance.txt contains no rate-limit, per-session-count, cooldown, or throttling language for any role or tool. Rate Limits table is empty by design — no requirement exists to encode. | [derived from guidance.txt] |
+| Q16 | Counter owner, mechanism, and canonical policy path | Not applicable / open gap. Since no rate limit is defined (Q15), there is no counter requirement, no counter-owning component, and no canonical policy path for a call counter anywhere in guidance.txt, system_vars.json, or Phase A's architecture findings. Nothing to record. | [derived from guidance.txt] |
+| Q17 | Post-response filtering | guidance.txt defines no post-response/output filtering of tool results — all restrictions are pre-execution allow/deny gates on whether a tool call is permitted (role + tool, role + vehicle_type, role + brand_name), not redaction or filtering of data already returned from the FIPE API. No rule instructs suppressing specific fields of a successful response. | [derived from guidance.txt] |
+| Q18 | Response fields suppressed by role | None. guidance.txt does not name any response field (e.g. price, model year, fuel type, FIPE code) as suppressed or visible-only-to-certain-roles. All role differentiation in guidance.txt is expressed as which tool calls / parameter values are permitted, not which fields of a permitted response are shown. | [derived from guidance.txt] |
+| Q19 | Conditions making a result actionable | Not addressed in guidance.txt. There is no language distinguishing an 'actionable' result from an informational one, no confidence/completeness threshold on FIPE data, and no rule conditioning downstream action on result content. guidance.txt's rules govern only whether a call is permitted, not how the returned data should be treated once permitted. | [derived from guidance.txt] |
+| Q20 | Silent rejection or user explanation | Not specified. guidance.txt consistently uses the word 'denied' for out-of-scope roles/values ('must be denied', 'is denied', 'cannot call this tool at all') but never states whether a denial should be silent, return a generic refusal, or include an explanation of which rule triggered it. No guidance on denial-message content or visibility exists. Open gap. | [derived from guidance.txt] |
+| Q21 | Hard-block and soft-block meanings; use Severity Levels | guidance.txt uses only hard-boundary modal language throughout ('may only', 'must be denied', 'cannot', 'has no privileges and may call no tool') with no soft-block, warning-only, or advisory category anywhere. Per the shared modal-intent rule, every restriction in guidance.txt (tool access by role, vehicle_type allowlist, brand_name allowlist, unknown-role denial, empty-brand_name denial) is a hard block — there is no graduated/soft severity tier described. Severity Levels table reflects a single hard-block level only; no second (soft) level exists to define. | [derived from guidance.txt] |
+| Q22 | Denial logging and existing violation-code scheme | Not addressed anywhere. guidance.txt contains no logging requirement and no violation-code identifiers. system_vars.json and tool_definitions.json contain no code/severity/log fields. Phase A confirms no enforcement layer exists yet, so there is also no existing runtime logging behavior to describe. Open gap — no violation code invented; see Violation Logging section and Violation Codes table (intentionally empty). | [derived from guidance.txt] |
+
+## Parameter Details
+
+| Tool | Policy path | Type | Required | Valid values |
+|---|---|---|---|---|
+| search_car_price | input.args.brand_name | string | true (schema-required; guidance.txt additionally requires denial if empty/whitespace-only for all roles) | Role-dependent allow/block list, matched by exact case-sensitive equality against canonical Title Case FIPE spelling (e.g. "Volvo", "Mercedes-Benz"); no canonicalization step exists in code today (open gap, see Q14). fleet_manager: {"Scania","Volvo","Mercedes-Benz","MAN","DAF","Iveco","Ford","Volkswagen"}. journalist allow list: {"Fiat","Chevrolet","Volkswagen","Hyundai","Toyota","Renault","Honda","Nissan","Jeep","Peugeot","Citroën","Caoa Chery"}; journalist explicit deny list: {"BMW","Mercedes-Benz","Audi","Porsche","Jaguar","Land Rover","Lexus","Maserati","Ferrari","Lamborghini","Bentley","Rolls-Royce","Mini","Alfa Romeo"}. consumer, analyst: unrestricted. guest: cannot call this tool (see Role Permissions). |
+| get_vehicles_by_type | input.args.vehicle_type | string | false (schema default "carros"; architecture confirms server.py substitutes "carros" for blank/whitespace input before app.py, and app.py silently coerces any unrecognized value to "carros" — guidance.txt requires policy to reject unrecognized values rather than rely on that fallback) | Globally recognized set (exact, case-sensitive match): {"carros","cars","motos","motorcycles","caminhoes","trucks"}; any other value including alternate casing is denied for every role. Role-dependent subset: fleet_manager: {"caminhoes","trucks"} only. consumer, journalist: {"carros","cars"} only. analyst: any of the 6 recognized values. guest: cannot call this tool (see Role Permissions). |
+
+## Runtime Subject Details
+
+| Policy path | Provider | Provenance | Verification / integrity mechanism |
+|---|---|---|---|
+| input.extensions.subject.user_role | system_vars.json (declared enum: fleet_manager, consumer, journalist, analyst, guest) | Unknown at runtime — not read, parsed, or plumbed by app.py, agent.py, or server.py (Phase A, Runtime Subject Context table). The only runtime analog, agent.py's user_profile, is an unauthenticated free-form dict reaching the LLM as prompt text, never validated against these 5 values and never treated as a structured role field. | None documented and none implemented — no signature, token, or session-derived source establishes user_role at runtime (Phase A, Runtime Subject Context table). |
+| input.extensions.subject.user_name | system_vars.json (example value: "Bob") | Unknown at runtime — same status as user_role; no source file reads or sets this field, and guidance.txt does not reference user_name in any access rule (Q7). | None documented and none implemented (Phase A, Runtime Subject Context table). |
+
+## Role Permissions
+
+| Tool | Role | Permission / scope | guidance.txt rule |
+|---|---|---|---|
+| get_car_brands | fleet_manager, consumer, journalist, analyst | May call, no parameter restrictions (tool takes no parameters) | lines 15-18 |
+| get_car_brands | guest | May call (guest's only permitted tool) | line 19 |
+| get_car_brands | unknown/unrecognized user_role | Must be denied — no privileges, may call no tool | lines 47-49 |
+| search_car_price | fleet_manager | May call; brand_name restricted to 8 named truck-relevant brands (see Parameter Details); empty/whitespace brand_name denied | lines 15, 37, 43 |
+| search_car_price | consumer | May call; any brand_name permitted (no allow/block list); empty/whitespace brand_name denied | lines 16, 38, 43 |
+| search_car_price | journalist | May call; brand_name restricted to 12 named domestic-market brands, explicit deny of 14 named luxury/imported brands; empty/whitespace brand_name denied | lines 17, 39, 43 |
+| search_car_price | analyst | May call; any brand_name permitted (no allow/block list); empty/whitespace brand_name denied | lines 18, 40, 43 |
+| search_car_price | guest | Must be denied — cannot call this tool at all | lines 19, 41 |
+| search_car_price | unknown/unrecognized user_role | Must be denied — no privileges, may call no tool | lines 47-49 |
+| get_vehicles_by_type | fleet_manager | May call; vehicle_type restricted to "caminhoes"/"trucks" only, all other recognized values denied | lines 15, 25 |
+| get_vehicles_by_type | consumer | May call; vehicle_type restricted to "carros"/"cars" only, all other recognized values denied | lines 16, 26 |
+| get_vehicles_by_type | journalist | May call; vehicle_type restricted to "carros"/"cars" only, all other recognized values denied | lines 17, 27 |
+| get_vehicles_by_type | analyst | May call; any of the 6 recognized vehicle_type values permitted | lines 18, 28 |
+| get_vehicles_by_type | guest | Must be denied — cannot call this tool at all | lines 19, 29 |
+| get_vehicles_by_type | unknown/unrecognized user_role | Must be denied — no privileges, may call no tool | lines 47-49 |
+
+## Approval Paths
+
+| Parameter condition | Approval field | guidance.txt rule |
+|---|---|---|
+
+## Rate Limits
+
+| Role | Max calls per session |
+|---|---|
+
+## Severity Levels
+
+| Level | Examples |
+|---|---|
+| Hard block | All restrictions in guidance.txt: guest calling search_car_price or get_vehicles_by_type; any role calling with an unrecognized/miscased vehicle_type; fleet_manager or journalist searching a brand_name outside their allow list (or on journalist's explicit deny list); empty/whitespace-only brand_name for any role; any unknown/unrecognized user_role calling any tool including get_car_brands. [derived from guidance.txt — modal language throughout is 'may only', 'must be denied', 'cannot'; no soft/advisory tier is described] |
+
+## Violation Logging
+
+guidance.txt specifies no logging mechanism, log destination, or violation-code scheme of any kind. system_vars.json and tool_definitions.json likewise contain no logging fields. Phase A confirms no runtime enforcement layer exists yet (Undeclared Fields / Enforcement Points), so there is no existing violation-code registry to preserve. This is recorded as an open gap rather than an invented scheme. [derived from guidance.txt]
+
+## Violation Codes
+
+| Existing code | Meaning |
+|---|---|
+
+## Phase Handoff
+
+- Status: PASS
+- Artifact schema: questionnaire-v2
+- Summary: All 22 questions (Q1-Q22 incl. Q13b) answered or explicitly recorded as an open gap with no invented content; every answer tagged with exactly one confidence marker. Confidence tag counts across the 22 Answer Register rows: [derived from guidance.txt] = 14 (Q5, Q8, Q9, Q10, Q11, Q12, Q13, Q13b, Q14, Q15, Q16, Q17, Q18, Q19, Q20, Q21, Q22 — note several of these are 'guidance is silent' findings, still sourced to guidance.txt's absence of language); [derived from architecture] = 6 (Q1, Q2, Q3, Q4, Q6, Q7); [inferred — low confidence] = 0. No low-confidence answers were used to support any policy-relevant conclusion. Tools covered: all 3 registered MCP tools (get_car_brands, search_car_price, get_vehicles_by_type), matching Phase A's 3/3 tool_definitions.json entries exactly. Role Permissions table covers all 5 declared roles (fleet_manager, consumer, journalist, analyst, guest) plus the guidance-defined unknown-role default-deny case, across all 3 tools (15 rows). Open gaps carried forward (none resolved, since this is an isolated worker with no human to ask — recorded per the single-consolidated-clarification allowance): (1) user_role has no verified structured runtime carrier anywhere in the codebase (Phase A: Unknown provenance) — every role-keyed rule in this questionnaire (Q5, Q9, Q10, Role Permissions, Parameter Details) is fully guidance-derived policy intent but currently has no trustworthy input.extensions.subject.user_role to key on; this is the single highest-impact open gap since it blocks all role-based enforcement until resolved. (2) brand_name canonicalization to Title Case (guidance.txt line 43) is required 'before the policy check' but no such normalization step exists in server.py/app.py (Phase A: Undeclared Fields) — a future policy must either treat this as a prerequisite normalization step to be added, or deny non-Title-Case input by the guidance's own stated default, rather than assume normalization already happens. (3) No numeric caps, rate limits, approval paths, denial-explanation behavior, or violation-code scheme are specified anywhere in guidance.txt, system_vars.json, or tool_definitions.json (Q13, Q13b, Q15, Q16, Q20, Q22) — left blank/empty by design rather than invented. Policy-intent highlights: all restrictions in guidance.txt are hard boundaries (no soft/advisory tier); vehicle_type and brand_name matching are both specified as exact and case-sensitive with explicit denial of case/partial variants; overlapping brand membership across role lists (Mercedes-Benz, Volkswagen) is intentional and must be evaluated per-role independently, not merged into a single global list.

@@ -48,13 +48,14 @@ def _guidance_style(text: str) -> str:
 
 def _markdown_rules(text: str, label: str) -> list[tuple[int, str]]:
     rules: list[tuple[int, str]] = []
-    saw_heading = False
     for line_number, line in enumerate(text.splitlines(), 1):
         if not line.strip():
             continue
         if HEADING.match(line):
-            saw_heading = True
-            continue
+            raise ReconciliationError(
+                f"{label} must contain only rule bullets, without headings or "
+                "phase metadata"
+            )
         if RULE.fullmatch(line):
             raise ReconciliationError(
                 f"{label} must preserve the sectioned Markdown style of guidance.txt"
@@ -66,12 +67,8 @@ def _markdown_rules(text: str, label: str) -> list[tuple[int, str]]:
         if line[:1].isspace() and rules:
             continue
         raise ReconciliationError(
-            f"{label} line {line_number} is not a heading, top-level bullet, "
-            "or indented continuation"
-        )
-    if not saw_heading:
-        raise ReconciliationError(
-            f"{label} must preserve the sectioned Markdown style of guidance.txt"
+            f"{label} line {line_number} is not a top-level rule bullet or "
+            "indented continuation"
         )
     return rules
 

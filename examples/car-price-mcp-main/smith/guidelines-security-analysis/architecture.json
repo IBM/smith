@@ -1,0 +1,222 @@
+{
+  "schema": "architecture-v2",
+  "status": "PASS",
+  "title": "Architecture Analysis",
+  "sections": {
+    "Run Context": "TARGET_AGENT_PATH=/Users/saisree/smith-trial/.claude/skills/smith/examples/car-price-mcp-main/. Authoritative inputs read: smith/tool_definitions.json (3 tools, transport=stdio, source='python server.py'), smith/system_vars.json (user_name, user_role, action_list/action_description), smith/guidance.txt. Source inventory via `rg --files` (excluding smith/): app.py, agent.py, server.py, smithery.yaml, README.md, requirements.txt. All 4 code files were read in full (0 import/call hops beyond direct reads needed; agent.py -> server.py is 1 hop via MultiServerMCPClient subprocess spawn, server.py -> app.py is 1 hop via direct import). No files were skipped that showed evidence of tool-call or policy-boundary participation. Files not inspected in depth: README.md (docs only), smithery.yaml (packaging/start-command metadata only, confirms stdio transport and `python -m server` entry point), requirements.txt (dependency list only).",
+    "Trust Boundaries": "Boundary 1 (external client -> agent.py FastAPI app): HTTP POST /chat and /extract_tool_call accept a fully free-form `user_profile: Optional[Dict[str, Any]]` from the caller with no schema validation, no authentication, and no signature/token check. Boundary 2 (agent.py -> LLM): `user_profile` is serialized as key/value bullet text into the system prompt via build_system_prompt() and sent to the LLM (ChatOpenAI, model/endpoint from env vars INFERENCE_MODEL/INFERENCE_BASE_URL/INFERENCE_API_KEY) — this is a prompt-text boundary, not a structured-data boundary; the LLM only 'respects' it as natural-language instruction. Boundary 3 (LLM -> MCP tool call): the LLM (or, in /extract_tool_call, llm_with_tools.ainvoke) decides which of the 3 registered tools to call and with what arguments; these become input.args.* structured values received by server.py's @mcp.tool() functions over stdio from agent.py's MultiServerMCPClient subprocess. Boundary 4 (server.py -> app.py business logic): server.py wrapper functions call getCarBrands/searchCarPrice/getCarsByType in app.py directly (in-process Python call, not a boundary requiring serialization). Boundary 5 (app.py -> external FIPE API): outbound HTTPS GET requests to https://parallelum.com.br/fipe/api/v1/... with no TLS pinning, no response signing/integrity check beyond HTTP 200 status check and JSON parse; response content is trusted verbatim and returned to the caller. No OPA or other pre-execution policy interception exists anywhere in the current code; user_role/user_name (declared in system_vars.json) are never read or referenced by any of the 4 source files — they exist only as conceptual policy-input placeholders, not as plumbed runtime data. The closest analog, user_profile, is unauthenticated client-supplied input that only reaches the LLM as prompt text, never as input.extensions.subject.* structured data nor as any tool argument.",
+    "Data Flow": "Request: HTTP client -> POST /chat {question, user_profile} (agent.py) -> build_system_prompt() interpolates user_profile into system prompt text -> agent.ainvoke() (LangGraph ReAct agent) -> LLM selects tool + generates input.args (brand_name / vehicle_type) -> MultiServerMCPClient invokes MCP tool over stdio -> server.py @mcp.tool() wrapper (input validation: strip/empty checks and default substitution only) -> app.py business function (getCarBrands/searchCarPrice/getCarsByType) -> outbound HTTPS GET to parallelum.com.br FIPE API (0-3+ chained calls per searchCarPrice invocation: brands lookup, model lookup, years lookup, price lookup). Response: FIPE JSON -> app.py formats into a markdown/emoji string -> returned through server.py tool return value -> LangGraph agent's tool-result message -> LLM composes final natural-language answer -> agent.py extracts result[\"messages\"][-1].content -> ChatResponse JSON -> HTTP client. Alternate path (/extract_tool_call): same prompt construction, but llm_with_tools.ainvoke() returns the raw tool_calls[0] (name + args) directly as JSON without executing the tool or invoking app.py/FIPE at all — this endpoint is a policy/test-harness introspection path, not a production execution path."
+  },
+  "columns": {
+    "Layers": [
+      "Layer",
+      "File",
+      "Role",
+      "Inputs",
+      "Outputs",
+      "Current enforcement"
+    ],
+    "Runtime Subject Context": [
+      "Field",
+      "Provider",
+      "Provenance",
+      "Verification / integrity",
+      "OPA-visible?"
+    ],
+    "Tool Arguments": [
+      "Field",
+      "Tool",
+      "Origin / influence",
+      "Disposition"
+    ],
+    "Prompt Inputs": [
+      "Field or data",
+      "Source",
+      "Consumer",
+      "Trust / influence"
+    ],
+    "External Data": [
+      "Data",
+      "Source",
+      "Verification / integrity",
+      "Consumer"
+    ],
+    "Enforcement Points": [
+      "Layer",
+      "Current",
+      "Available (OPA-interceptable)",
+      "Blind spots"
+    ],
+    "Undeclared Fields": [
+      "Field",
+      "Referenced by guidance rule #",
+      "Declared by",
+      "Consequence"
+    ]
+  },
+  "tables": {
+    "Layers": [
+      {
+        "Layer": "Agent/client",
+        "File": "agent.py",
+        "Role": "FastAPI HTTP entrypoint; builds system prompt from client-supplied user_profile; runs LangGraph ReAct agent bound to MCP tools; exposes /chat (execute) and /extract_tool_call (introspect-only, no execution) endpoints",
+        "Inputs": "HTTP JSON body: question (string), user_profile (free-form dict, optional, unauthenticated)",
+        "Outputs": "ChatResponse.response (string) for /chat; ExtractToolCallResponse.tool_name + .arguments (dict) for /extract_tool_call",
+        "Current enforcement": "None. No auth, no schema validation on user_profile, no role check before agent.ainvoke() or tool binding."
+      },
+      {
+        "Layer": "MCP server (tool registration/transport)",
+        "File": "server.py",
+        "Role": "Registers 3 MCP tools via FastMCP, exposes them over stdio transport; performs only presence/whitespace validation and default substitution before delegating to app.py",
+        "Inputs": "input.args.brand_name (search_car_price), input.args.vehicle_type (get_vehicles_by_type, default 'carros'), no args (get_car_brands)",
+        "Outputs": "Formatted string results (brand list / model+price list / vehicle brand list) returned over stdio to the calling MCP client",
+        "Current enforcement": "Presence/emptiness checks only (e.g. blank brand_name -> canned message; blank vehicle_type -> defaults to 'carros'). No role/allowlist checks, no brand or vehicle_type canonicalization."
+      },
+      {
+        "Layer": "Tool implementation (business logic)",
+        "File": "app.py",
+        "Role": "Implements getCarBrands, searchCarPrice, getCarsByType; performs substring/case-insensitive brand matching, vehicle_type keyword-to-API-path mapping with silent fallback, and issues outbound HTTP calls to the FIPE API",
+        "Inputs": "query/brand_name (string, substring-matched against live FIPE brand list), vehicle_type (string, lower-cased and mapped via a fixed dict with a silent default to 'carros' for any unrecognized key)",
+        "Outputs": "Markdown/emoji-formatted strings summarizing FIPE data, or error strings on HTTP failure/exception",
+        "Current enforcement": "None. No brand allow/deny list, no vehicle_type allow list — unrecognized vehicle_type values are silently coerced to 'carros' rather than rejected (confirmed at type_mapping.get(vehicle_type.lower(), 'carros'))."
+      },
+      {
+        "Layer": "Runtime context / enforcement",
+        "File": "(none present)",
+        "Role": "No dedicated runtime-context or policy-enforcement layer exists in the source tree. system_vars.json's user_role/user_name are declared as intended OPA subject inputs but are not read, parsed, or referenced by any of app.py/agent.py/server.py.",
+        "Inputs": "N/A",
+        "Outputs": "N/A",
+        "Current enforcement": "None present; this is the intended future OPA pre-execution interception point (not yet wired), consistent with the shared rule that absent OPA wiring is not itself a gap."
+      },
+      {
+        "Layer": "External service",
+        "File": "app.py (outbound calls only; no separate file)",
+        "Role": "Brazilian FIPE vehicle-price API (parallelum.com.br) — source of brand, model, year, and price data for all 3 tools",
+        "Inputs": "Vehicle-type path segment (carros/motos/caminhoes) and brand/model/year codes chained from prior FIPE responses",
+        "Outputs": "JSON: brand lists, model lists, year lists, price records",
+        "Current enforcement": "HTTP status-code check (200) and JSON-parse success only; no content signing, no schema validation of the response payload, no TLS certificate pinning beyond default requests/urllib3 behavior."
+      }
+    ],
+    "Runtime Subject Context": [
+      {
+        "Field": "input.extensions.subject.user_role",
+        "Provider": "system_vars.json (declared: fleet_manager, consumer, journalist, analyst, guest)",
+        "Provenance": "Unknown at runtime — not read, parsed, or plumbed by app.py, agent.py, or server.py. The closest runtime analog is agent.py's `user_profile` dict (arbitrary client-supplied JSON on /chat and /extract_tool_call), which is never validated against these 5 values and is never treated as a role.",
+        "Verification / integrity": "None documented and none implemented. No signature, token, or session-derived source establishes user_role at runtime; if supplied via user_profile it is caller-asserted and unauthenticated.",
+        "OPA-visible?": "Intended yes (input.extensions.subject.user_role per parent-workflow convention), but currently not populated by any observed code path — Unknown/not-yet-wired rather than proven present."
+      },
+      {
+        "Field": "input.extensions.subject.user_name",
+        "Provider": "system_vars.json (example value: 'Bob')",
+        "Provenance": "Unknown at runtime — same as user_role; no source file reads or sets this field. Not referenced anywhere outside smith/ and README.md.",
+        "Verification / integrity": "None documented and none implemented.",
+        "OPA-visible?": "Intended yes (input.extensions.subject.user_name) but not currently populated by any observed code path."
+      }
+    ],
+    "Tool Arguments": [
+      {
+        "Field": "input.args.brand_name",
+        "Tool": "search_car_price",
+        "Origin / influence": "LLM-generated argument (via LangGraph tool-calling / llm_with_tools) based on the user's natural-language question; passed through server.py's search_car_price wrapper to app.py's searchCarPrice(query).",
+        "Disposition": "Acts on — server.py strips whitespace and rejects empty/blank values with a canned message; app.py performs a case-insensitive substring match (`query_lower in brand['nome'].lower()`) against the live FIPE brand list to select a brand, then drives 3+ chained downstream FIPE calls. No canonicalization to Title Case is performed anywhere in code, contrary to what guidance assumes happens 'before the policy check.'"
+      },
+      {
+        "Field": "input.args.vehicle_type",
+        "Tool": "get_vehicles_by_type",
+        "Origin / influence": "LLM-generated argument, optional with schema default 'carros'; passed through server.py to app.py's getCarsByType(vehicle_type).",
+        "Disposition": "Acts on, with a silent fallback: server.py defaults blank/whitespace-only input to 'carros' before calling app.py; app.py lower-cases the value and looks it up in a fixed type_mapping dict, silently defaulting ANY unrecognized value (including different casing such as 'Caminhoes') to 'carros' via `type_mapping.get(vehicle_type.lower(), 'carros')`. This confirms in code the guidance's explicit warning that the backend silently coerces unrecognized types and that policy must reject them rather than rely on that fallback."
+      }
+    ],
+    "Prompt Inputs": [
+      {
+        "Field or data": "question",
+        "Source": "HTTP request body (ChatRequest.question / ExtractToolCallRequest.question), caller-supplied, unauthenticated",
+        "Consumer": "LangGraph ReAct agent (agent.ainvoke) as the 'user' message; llm_with_tools.ainvoke for /extract_tool_call",
+        "Trust / influence": "Directly drives tool selection and generated tool arguments (brand_name, vehicle_type) via LLM interpretation; not itself a governed field but the effective source of input.args values."
+      },
+      {
+        "Field or data": "user_profile",
+        "Source": "HTTP request body (ChatRequest.user_profile / ExtractToolCallRequest.user_profile), free-form dict, caller-supplied, unauthenticated, no schema enforced beyond Dict[str, Any]",
+        "Consumer": "build_system_prompt() interpolates every key/value pair as bullet-point text into the LLM system prompt ('## Active System Variables ... Respect any policies or constraints implied by these variables.')",
+        "Trust / influence": "Prompt-only influence — the LLM is merely asked in natural language to 'respect' these values; there is no code-level enforcement tying user_profile contents to tool-call permission. This is the only runtime channel resembling subject/role context, and it is not equivalent to a verified input.extensions.subject.* field."
+      },
+      {
+        "Field or data": "SYSTEM_PROMPT_BASE",
+        "Source": "Hardcoded string literal in agent.py",
+        "Consumer": "build_system_prompt() base text sent to the LLM for every request",
+        "Trust / influence": "Static, not user-influenced; establishes assistant persona only."
+      }
+    ],
+    "External Data": [
+      {
+        "Data": "FIPE brand list (carros/motos/caminhoes marcas)",
+        "Source": "GET https://parallelum.com.br/fipe/api/v1/{type}/marcas",
+        "Verification / integrity": "HTTP 200 status check and JSON parse only; no signature, checksum, or schema validation of payload contents",
+        "Consumer": "getCarBrands, searchCarPrice (brand matching), getCarsByType — results are formatted and returned as tool output text"
+      },
+      {
+        "Data": "FIPE model list for a brand",
+        "Source": "GET https://parallelum.com.br/fipe/api/v1/carros/marcas/{codigo}/modelos",
+        "Verification / integrity": "HTTP 200 status check and JSON parse only",
+        "Consumer": "searchCarPrice"
+      },
+      {
+        "Data": "FIPE model-year list",
+        "Source": "GET https://parallelum.com.br/fipe/api/v1/carros/marcas/{codigo}/modelos/{codigo}/anos",
+        "Verification / integrity": "HTTP 200 status check and JSON parse only",
+        "Consumer": "searchCarPrice"
+      },
+      {
+        "Data": "FIPE price record for latest year",
+        "Source": "GET https://parallelum.com.br/fipe/api/v1/carros/marcas/{codigo}/modelos/{codigo}/anos/{codigo}",
+        "Verification / integrity": "HTTP 200 status check and JSON parse only",
+        "Consumer": "searchCarPrice (formats AnoModelo, Combustivel, Valor, MesReferencia, CodigoFipe into tool output text)"
+      }
+    ],
+    "Enforcement Points": [
+      {
+        "Layer": "agent.py HTTP entrypoint (/chat, /extract_tool_call)",
+        "Current": "None — no authentication, no user_profile schema/role validation before agent invocation",
+        "Available (OPA-interceptable)": "Not directly OPA-expressible today: user_role has no structured, verified runtime source at this layer (only free-form user_profile text). Becomes OPA-expressible once user_role is plumbed as a verified structured field rather than prompt text.",
+        "Blind spots": "user_profile is fully caller-controlled and unauthenticated; any 'role' asserted here is unverified and only reaches the LLM as advisory prompt text, never as enforced structured data."
+      },
+      {
+        "Layer": "server.py MCP tool wrappers (get_car_brands, search_car_price, get_vehicles_by_type)",
+        "Current": "Presence/whitespace validation only; default substitution for vehicle_type",
+        "Available (OPA-interceptable)": "Yes — this is the natural pre-execution interception point: input.args.brand_name and input.args.vehicle_type are fully declared, structured, and available before the tool body executes; a future OPA check keyed on user_role + brand_name, and user_role + vehicle_type, is fully expressible here once user_role is itself available as a verified structured field.",
+        "Blind spots": "None at the argument-shape level (both governed args are already structured strings visible to server.py). The blind spot is upstream: without a verified user_role, any per-role decision at this layer has no trustworthy subject input to key on."
+      },
+      {
+        "Layer": "app.py business logic (searchCarPrice brand matching, getCarsByType type_mapping)",
+        "Current": "Case-insensitive substring match for brand_name; silent default-to-'carros' fallback for unrecognized vehicle_type",
+        "Available (OPA-interceptable)": "Partially — if enforcement instead runs at server.py (before app.py is called), this layer's fallback behavior becomes moot for denied requests. Not itself a good interception point since it already contains business-logic side effects.",
+        "Blind spots": "The silent vehicle_type fallback to 'carros' is a true blind spot for any enforcement that runs after this point: a rejected/unrecognized value would silently succeed as a 'carros' request rather than erroring, masking a denial if enforcement is not placed strictly before this call."
+      },
+      {
+        "Layer": "External FIPE API responses",
+        "Current": "None beyond HTTP status/JSON-parse checks",
+        "Available (OPA-interceptable)": "Not applicable — this is returned/external data, not a pre-execution request-side decision; out of scope for a pre-execution OPA gate on tool calls.",
+        "Blind spots": "Response content is trusted verbatim (no integrity check); not a policy blind spot per se since guidance does not govern response content, only request-side role/brand/vehicle_type."
+      }
+    ],
+    "Undeclared Fields": [
+      {
+        "Field": "user_role runtime plumbing (verified structured source)",
+        "Referenced by guidance rule #": "Roles section (lines 7-9), Tool Access by Role (lines 11-19), Vehicle Type Restrictions (21-31), Brand Restrictions (33-45), Unknown Roles (47-49)",
+        "Declared by": "Declared in system_vars.json as an intended subject field, but declared nowhere in actual runtime code — no file in app.py/agent.py/server.py reads, sets, or validates user_role. agent.py's user_profile is the only candidate carrier and is unauthenticated free-form prompt text, not a verified subject field.",
+        "Consequence": "Every role-based rule in guidance.txt (tool access by role, vehicle_type allowlists by role, brand allowlists by role, unknown-role denial) currently has no verified runtime source to key on. A future OPA policy can still be written against input.extensions.subject.user_role once/if it is plumbed as a verified field, but today this is a gap between guidance intent and runtime implementation, not proof that OPA-expressibility is impossible."
+      },
+      {
+        "Field": "brand_name canonicalization step (Title Case normalization)",
+        "Referenced by guidance rule #": "Brand Restrictions (line 43): 'The agent must normalize user input to the canonical FIPE brand spelling ... before the policy check.'",
+        "Declared by": "Not declared/implemented anywhere in server.py or app.py. app.py's searchCarPrice performs case-insensitive substring matching for its own business purpose (finding a brand to query), which is a different operation than canonicalizing brand_name to Title Case for a policy check.",
+        "Consequence": "No code path produces a canonicalized brand_name prior to any (future) policy decision; if a future OPA check compares raw input.args.brand_name against the Title-Case allow/deny lists in guidance without such normalization being added, case variants (e.g. 'mercedes', 'volvo') would not match either list and — per guidance's own instruction that such variants 'are not evaluated against the lists and are denied' — would need to be denied by default rather than incorrectly allowed."
+      }
+    ]
+  },
+  "handoff": {
+    "Status": "PASS",
+    "Artifact schema": "architecture-v2",
+    "Summary": "Sources inspected: 4 implementation files (server.py, agent.py, app.py, smithery.yaml) plus tool_definitions.json, system_vars.json, guidance.txt; 0 files skipped that showed tool-call/policy-boundary evidence. Tools: 3/3 registered MCP tools (get_car_brands, search_car_price, get_vehicles_by_type) matched exactly against tool_definitions.json — no missing/extra/incompatible declarations found (no FAIL condition). Layers: 5 (agent/client, MCP server, tool implementation, runtime-context/enforcement [absent], external service). Fields: 2 runtime subject fields (user_role, user_name) both declared in system_vars.json but with unresolved/absent runtime provenance (Unknown, not proven mismatch) since neither is read anywhere in source; 2 declared tool arguments (brand_name, vehicle_type) both fully traced to implementation with confirmed dispositions (Acts on, with a code-confirmed silent fallback for vehicle_type). Undeclared fields: 2 — (1) no verified structured runtime carrier for user_role despite guidance making it the sole basis for all access rules; (2) no brand_name canonicalization step exists despite guidance requiring one before any policy check. Open gaps: user_role/user_name have no runtime plumbing at all today (conceptual only); the vehicle_type silent-fallback-to-'carros' in app.py is a confirmed blind spot for any enforcement placed after that call. Guidance visibility sweep is complete: every guidance rule was checked against an actual field/mechanism in code or system_vars.json, and every governed argument/subject field is accounted for in the tables above."
+  }
+}

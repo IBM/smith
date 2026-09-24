@@ -35,7 +35,7 @@ dynamic wrapper is `Unknown`, not proof of mismatch.
 
 ### Fill structured state
 
-Run the phase preparation command, then populate its fixed structured fields:
+Populate the prepared JSON's fixed structured fields:
 
 - **Run Context:** resolved authoritative paths and selected source files.
 - **Layers:** only observed agent/client, MCP, tool implementation, runtime
@@ -71,8 +71,5 @@ Set `PASS` only when every tool has an implementation finding or explicit
 the guidance visibility sweep is complete. The handoff should summarize
 sources, tools, layers, field counts, undeclared fields, and open gaps.
 
-Run:
-
-```bash
-smith --flag security_analysis_checkpoint --phase A
-```
+Save the structured JSON and return control to the coordinator, which owns the
+checkpoint and rendered Markdown.

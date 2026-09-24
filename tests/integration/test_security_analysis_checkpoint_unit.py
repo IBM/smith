@@ -482,15 +482,19 @@ def test_validate_addendum_preserves_sectioned_markdown_style(tmp_path: Path):
     guidance = tmp_path / "guidance.txt"
     addendum = tmp_path / "guidance_updated.txt"
     guidance.write_text("# Scenario\n\n## Rules\n\n- Existing rule\n")
-    addendum.write_text("## Additional Rules\n\n- First new rule\n- Second new rule\n")
+    addendum.write_text("- First new rule\n- Second new rule\n")
 
     assert validate_addendum(guidance, addendum) == [
-        (3, "First new rule"),
-        (4, "Second new rule"),
+        (1, "First new rule"),
+        (2, "Second new rule"),
     ]
 
     addendum.write_text("2. Numbered rule\n")
     with pytest.raises(ReconciliationError, match="sectioned Markdown style"):
+        validate_addendum(guidance, addendum)
+
+    addendum.write_text("## Addendum — Enforcement Mapping (Phase D)\n\n- New rule\n")
+    with pytest.raises(ReconciliationError, match="without headings or phase metadata"):
         validate_addendum(guidance, addendum)
 
 
@@ -557,7 +561,7 @@ def test_explicit_merge_separates_markdown_addendum(tmp_path: Path):
     enforcement = tmp_path / "owasp_policy_guidelines.md"
     state = tmp_path / "analysis_state.json"
     guidance.write_text("# Scenario\n\n## Rules\n\n- Existing rule\n")
-    addendum.write_text("## Additional Rules\n\n- New rule\n")
+    addendum.write_text("- New rule\n")
     enforcement.write_text("validated")
     state.write_text(
         json.dumps(
@@ -589,8 +593,7 @@ def test_explicit_merge_separates_markdown_addendum(tmp_path: Path):
 
     assert result.startswith("Merged 1 guidance rule")
     assert guidance.read_text() == (
-        "# Scenario\n\n## Rules\n\n- Existing rule\n\n"
-        "## Additional Rules\n\n- New rule\n"
+        "# Scenario\n\n## Rules\n\n- Existing rule\n\n- New rule\n"
     )
     assert not addendum.exists()
 
