@@ -1,0 +1,739 @@
+{
+  "schema": "threat-model-v3",
+  "status": "PASS",
+  "title": "Threat Model",
+  "sections": {},
+  "columns": {
+    "Attack Surfaces": [
+      "#",
+      "Field or Data Point",
+      "Source Layer",
+      "Provenance / influence",
+      "Enters where",
+      "Threat IDs / N/A"
+    ],
+    "Evidence Index": [
+      "ID",
+      "Source",
+      "Grounded fact"
+    ],
+    "Category Assessment": [
+      "ASI",
+      "Name",
+      "Applicability",
+      "OWASP summary",
+      "Boundary (optional)"
+    ],
+    "Threat Instances": [
+      "ID",
+      "ASI",
+      "Severity",
+      "Actor",
+      "Surface",
+      "Catalog basis",
+      "Evidence",
+      "Concrete threat"
+    ],
+    "Scenario Coverage": [
+      "ASI",
+      "Scenario",
+      "Disposition"
+    ]
+  },
+  "tables": {
+    "Attack Surfaces": [
+      {
+        "#": "1",
+        "Field or Data Point": "input.args.employee_id (get_compensation, display_compensation, adjust_compensation)",
+        "Source Layer": "Tool argument",
+        "Provenance / influence": "LLM-generated from user_text; no validation in agent.py or server.py beyond a dict lookup (Phase A Tool Arguments)",
+        "Enters where": "server.py tool_get_compensation / tool_display_compensation / tool_adjust_compensation, used directly as the EMPLOYEES dict key",
+        "Threat IDs / N/A": "T01, T02, T09"
+      },
+      {
+        "#": "2",
+        "Field or Data Point": "input.args.include_ssn (get_compensation)",
+        "Source Layer": "Tool argument",
+        "Provenance / influence": "LLM-generated boolean; SYSTEM_PROMPT instructs the model to set true only on explicit user request; no permission check on this value anywhere in server.py (Phase A)",
+        "Enters where": "server.py tool_get_compensation, directly gates whether result['ssn'] carries the real SSN",
+        "Threat IDs / N/A": "T01, T03"
+      },
+      {
+        "#": "3",
+        "Field or Data Point": "input.args.department (get_directory)",
+        "Source Layer": "Tool argument",
+        "Provenance / influence": "LLM-generated optional filter from user_text; no role/scope check applied",
+        "Enters where": "server.py tool_get_directory, case-insensitive filter over EMPLOYEES",
+        "Threat IDs / N/A": "N/A -- get_directory is guidance-unrestricted for all roles (Phase B Q11); directory listing carries no compensation/SSN fields per Phase A, so no distinct exploitable threat beyond generic enumeration is grounded here."
+      },
+      {
+        "#": "4",
+        "Field or Data Point": "input.args.to, input.args.subject, input.args.body (send_email)",
+        "Source Layer": "Tool argument",
+        "Provenance / influence": "LLM-generated from user_text, may echo prior tool output (e.g. a previously fetched SSN or salary) via conversation history; server.py stores/echoes these with no SSN pattern scan of its own (that check exists only in offline policy.rego, not wired into the request path) (Phase A)",
+        "Enters where": "server.py tool_send_email, appended to SENT_EMAILS and echoed in the response",
+        "Threat IDs / N/A": "T04, T05, T06"
+      },
+      {
+        "#": "5",
+        "Field or Data Point": "input.args.repo_name (search_repos)",
+        "Source Layer": "Tool argument",
+        "Provenance / influence": "LLM-generated optional substring filter; no role check in server.py itself",
+        "Enters where": "server.py tool_search_repos, case-insensitive substring filter over REPOS",
+        "Threat IDs / N/A": "N/A -- combined with surface #6 (input.args.visibility) for the actual gating threat; repo_name alone only narrows results already reachable through visibility, no distinct provenance or behavior."
+      },
+      {
+        "#": "6",
+        "Field or Data Point": "input.args.visibility (search_repos)",
+        "Source Layer": "Tool argument",
+        "Provenance / influence": "LLM-generated; required, constrained by input_schema enum to internal/public/external; no role check in server.py itself -- internal-only and engineer/security gating exist only in offline policy.rego (Phase A)",
+        "Enters where": "server.py tool_search_repos, exact case-insensitive match filter over REPOS",
+        "Threat IDs / N/A": "T07, T08"
+      },
+      {
+        "#": "7",
+        "Field or Data Point": "input.args.amount (adjust_compensation)",
+        "Source Layer": "Tool argument",
+        "Provenance / influence": "LLM-generated integer from user_text; agent.py's tool schema describes it as a positive raise but enforces neither sign nor magnitude; server.py does `employee['salary'] += amount` unconditionally, accepting negative or arbitrarily large values (Phase A) -- the >$10,000 approval gate exists only in offline policy.rego",
+        "Enters where": "server.py tool_adjust_compensation, mutates EMPLOYEES record salary in place",
+        "Threat IDs / N/A": "T09, T10"
+      },
+      {
+        "#": "8",
+        "Field or Data Point": "input.extensions.subject.roles",
+        "Source Layer": "Runtime subject context",
+        "Provenance / influence": "Declared candidate list in system_vars.json; documented as sourced from Keycloak JWT claims in the out-of-scope CPEX sidecar, but no code in this tree (agent.py/server.py) resolves or forwards a roles array to the tool call or any policy check (Phase A)",
+        "Enters where": "Would enter as input.extensions.subject.roles at a pre-execution policy decision point (agent.py call_tool), if populated",
+        "Threat IDs / N/A": "T11"
+      },
+      {
+        "#": "9",
+        "Field or Data Point": "input.extensions.subject.permissions",
+        "Source Layer": "Runtime subject context",
+        "Provenance / influence": "Declared candidate list (view_ssn, None) in system_vars.json; documented provenance is a Keycloak claim via token delegation, not implemented in agent.py/server.py (Phase A)",
+        "Enters where": "Would enter as input.extensions.subject.permissions at a pre-execution policy decision point, if populated",
+        "Threat IDs / N/A": "T11"
+      },
+      {
+        "#": "10",
+        "Field or Data Point": "input.extensions.subject.has_approval",
+        "Source Layer": "Runtime subject context",
+        "Provenance / influence": "Declared as a string enum \"true|false\" in system_vars.json; no code in this tree sets or forwards this value from any manager-approval workflow -- a policy-input placeholder with no producing implementation observed (Phase A)",
+        "Enters where": "Would enter as input.extensions.subject.has_approval at a pre-execution policy decision point, if populated",
+        "Threat IDs / N/A": "T09"
+      },
+      {
+        "#": "11",
+        "Field or Data Point": "user_text and conversation history (self._histories[session_id])",
+        "Source Layer": "Prompt / conversation",
+        "Provenance / influence": "Untrusted end-user input; sole driver of tool_name/argument selection by the LLM; conversation history accumulates prior tool outputs (e.g. a previously fetched SSN) that the model can carry into a later send_email call (Phase A, system_vars.json's send_email description)",
+        "Enters where": "litellm.completion messages on every turn; shapes tool_calls the LLM emits",
+        "Threat IDs / N/A": "T05, T12"
+      },
+      {
+        "#": "12",
+        "Field or Data Point": "LLM tool_calls JSON (function.name, function.arguments)",
+        "Source Layer": "LLM output boundary",
+        "Provenance / influence": "Parsed with a broad try/except in agent.py that silently substitutes {} on decode failure, so call_tool proceeds with empty args rather than erroring or rejecting the call (Phase A Trust Boundaries #2)",
+        "Enters where": "agent.py call_tool(), immediately before the MCP tools/call HTTP request is issued",
+        "Threat IDs / N/A": "T13"
+      },
+      {
+        "#": "13",
+        "Field or Data Point": "get_compensation response body (internal_notes field)",
+        "Source Layer": "Returned/external data",
+        "Provenance / influence": "EMPLOYEES mock fixture in server.py includes an internal_notes field that is silently included in get_compensation's response to any successful caller; no guidance rule or policy.rego rule addresses it at all -- a true blind spot per Phase A Enforcement Points",
+        "Enters where": "server.py tool_get_compensation response -> format_tool_response() -> message history -> final assistant reply to the end user",
+        "Threat IDs / N/A": "T14"
+      }
+    ],
+    "Evidence Index": [
+      {
+        "ID": "E1",
+        "Source": "Phase A architecture.json, Enforcement Points / Layers",
+        "Grounded fact": "server.py tool functions trust their args dict completely with zero authorization or role checks anywhere in the file; no role, permission, or approval check occurs before any tool executes."
+      },
+      {
+        "ID": "E2",
+        "Source": "Phase A architecture.json, Tool Arguments (include_ssn) / Q10, Q12",
+        "Grounded fact": "server.py's tool_get_compensation returns the real ssn whenever input.args.include_ssn is true, with no permission check performed anywhere in the inspected implementation; the view_ssn permission gate exists only in offline policy.rego, not wired into the request path."
+      },
+      {
+        "ID": "E3",
+        "Source": "Phase A architecture.json, Tool Arguments (amount) / Phase B Q13, Q13b",
+        "Grounded fact": "server.py's tool_adjust_compensation does `employee['salary'] += amount` unconditionally, accepting negative or arbitrarily large signed integers; the >$10,000 approval gate (requiring input.extensions.subject.has_approval == true) exists only in offline policy.rego and is not enforced in server.py."
+      },
+      {
+        "ID": "E4",
+        "Source": "Phase A architecture.json, Runtime Subject Context (has_approval, roles, permissions)",
+        "Grounded fact": "input.extensions.subject.roles, .permissions, and .has_approval are declared in system_vars.json but have no producing implementation observed in agent.py or server.py in this tree; provenance for roles/permissions is documented only in the out-of-scope CPEX/Keycloak sidecar config, and has_approval has no observed source at all (no manager-approval workflow in this tree)."
+      },
+      {
+        "ID": "E5",
+        "Source": "Phase A architecture.json, Enforcement Points (Cross-tool session content reuse) / Phase B Q14",
+        "Grounded fact": "Conversation history is unrestricted; the model can copy a previously fetched SSN or salary from an earlier get_compensation result into a later send_email call. The SSN-pattern check (regex.match against args.subject/args.body) is scoped by guidance rule 7 to send_email's own input.args.subject/input.args.body tool arguments at call time -- a tool-argument boundary, distinct from prompt/conversation content -- per the shared source-boundary rule; the broader 'sensitive data accessed earlier in-session' concern (e.g. relaying a salary figure or internal_notes) has no structured/OPA-visible signal anywhere in this tree."
+      },
+      {
+        "ID": "E6",
+        "Source": "Phase A architecture.json, Enforcement Points (MCP tool implementation) / server.py:113-117 comment",
+        "Grounded fact": "server.py's internal_notes field in the EMPLOYEES record is silently included in get_compensation's response to any successful caller, with no guidance rule or policy.rego rule addressing it -- not OPA-interceptable because no guidance dependency was ever declared for it, and it is response content, a different boundary than input.args."
+      },
+      {
+        "ID": "E7",
+        "Source": "Phase A architecture.json, Trust Boundaries #2",
+        "Grounded fact": "agent.py parses the model's tool_calls JSON with a broad try/except that silently substitutes {} on decode failure; call_tool proceeds with empty args rather than rejecting the call."
+      },
+      {
+        "ID": "E8",
+        "Source": "Phase A architecture.json, Tool Arguments (visibility) / Phase B Q9, Role Permissions",
+        "Grounded fact": "server.py's tool_search_repos filters REPOS by exact case-insensitive visibility match with no role check in server.py itself; the internal-only restriction (guidance rule 1) and the engineer/security-only restriction on search_repos (guidance rule 5) exist only in offline policy.rego, not in the inspected tool implementation."
+      },
+      {
+        "ID": "E9",
+        "Source": "Phase A architecture.json, Undeclared Fields (team)",
+        "Grounded fact": "The 'team' field (needed for guidance rule 2, cross-team repository access restriction) is declared nowhere -- not in system_vars.json, not in any tool schema -- corroborated independently by the pre-existing smith/extension_suggestions.json; guidance rule 2 cannot be encoded as an OPA predicate today."
+      },
+      {
+        "ID": "E10",
+        "Source": "Phase A architecture.json, Layers (Smith HTTP shim)",
+        "Grounded fact": "The Smith HTTP shim (/chat, /extract_tool_call) bypasses the A2A/identity path entirely -- user_token/client_token are hardcoded to empty strings, so no subject identity reaches call_tool on this path; this is the path Smith's own test-generation pipeline actually drives."
+      },
+      {
+        "ID": "E11",
+        "Source": "Phase A architecture.json, Prompt Inputs (SYSTEM_PROMPT)",
+        "Grounded fact": "SYSTEM_PROMPT is a hardcoded, trusted, static string that instructs the model to set include_ssn only on explicit request and to relay tool output verbatim (including a real SSN) rather than self-redact -- a prompt-level behavioral control with no structured/OPA-visible counterpart."
+      },
+      {
+        "ID": "E12",
+        "Source": "Phase B policy_guidance_questionnaire.json, Q9 / Role Permissions",
+        "Grounded fact": "Only HR employees (input.extensions.subject.roles containing \"hr\") may access compensation records via get_compensation/display_compensation/adjust_compensation; only engineer/security roles may use search_repos; all stated as hard-boundary modal language (\"only\") per guidance.txt."
+      }
+    ],
+    "Category Assessment": [
+      {
+        "ASI": "ASI01",
+        "Name": "Agent Goal Hijack",
+        "Applicability": "Partial",
+        "OWASP summary": "Attackers manipulate an agent's objectives, task selection, or decision pathways via prompt injection, deceptive tool outputs, or poisoned external data.",
+        "Boundary (optional)": "This system has a single-turn user_text -> LLM tool-selection loop with no RAG, no external documents, and no peer-agent messages (Phase A: EMPLOYEES/REPOS are static in-memory fixtures, not externally poisonable). The only realistic goal-hijack vector is direct prompt injection via user_text steering tool_name/argument selection (already the LLM's normal operating mode, since it is untrusted per Phase A Prompt Inputs), and indirect injection via tool-result text that SYSTEM_PROMPT explicitly instructs the model to relay verbatim rather than reinterpret (E11) -- a narrower boundary than the catalog's full RAG/document/peer-agent surface."
+      },
+      {
+        "ASI": "ASI02",
+        "Name": "Tool Misuse and Exploitation",
+        "Applicability": "Yes",
+        "OWASP summary": "Agents misuse legitimate tools within their authorized privileges due to prompt injection, unsafe delegation, or ambiguous instructions, causing data exfiltration or unintended actions.",
+        "Boundary (optional)": "Every tool in this system executes with zero pre-execution authorization (E1); the LLM chooses tool_name and args from untrusted user_text with no per-tool least-privilege profile, rate limit, or approval gate enforced at the tool-implementation layer. adjust_compensation's unenforced amount (E3) and get_compensation's unenforced include_ssn (E2) are concrete instances of a legitimate tool applied in an unsafe way, within the agent's already-granted tool access -- exactly this category's scope, not ASI03 (no delegation/credential chain exists here) or ASI05 (no code execution)."
+      },
+      {
+        "ASI": "ASI03",
+        "Name": "Identity and Privilege Abuse",
+        "Applicability": "No",
+        "OWASP summary": "Exploits dynamic trust and delegation (agent-to-agent, cached credentials, role inheritance) to escalate access and bypass controls.",
+        "Boundary (optional)": "This system is single-agent with no delegation chain, no agent-to-agent trust, and no observed credential caching/reuse across sessions or callers (Phase A: no such mechanism found in agent.py/server.py). The runtime subject fields (roles/permissions/has_approval) simply have no producing implementation (E4) -- this is an absence of provenance, not a documented delegation or inheritance mechanism that could be abused; Phase A explicitly notes it found no verification mechanism, but that silence does not itself establish an exploitable identity/privilege-abuse path in this tree, so this category is not applicable here (distinct from ASI02, which is grounded in observed unsafe tool behavior)."
+      },
+      {
+        "ASI": "ASI04",
+        "Name": "Agentic Supply Chain Vulnerabilities",
+        "Applicability": "No",
+        "OWASP summary": "Third-party-sourced models, tools, plugins, agent registries, or update channels are malicious, compromised, or tampered with.",
+        "Boundary (optional)": "No dynamically loaded third-party tools, plugins, MCP registries, or agent-to-agent discovery exist in this tree (Phase A: TOOLS schema is a hardcoded Python literal in agent.py; server.py implementations are local, static code, not runtime-fetched components). Not applicable absent any such supply chain in scope."
+      },
+      {
+        "ASI": "ASI05",
+        "Name": "Unexpected Code Execution (RCE)",
+        "Applicability": "No",
+        "OWASP summary": "Agentic systems generate/execute code; attackers escalate code-generation or tool access into RCE, local misuse, or sandbox escape.",
+        "Boundary (optional)": "No tool in this system generates or executes code, shell commands, or deserializes objects (Phase A: all six tools perform dict lookups/filters/mutations against in-memory fixtures). Not applicable."
+      },
+      {
+        "ASI": "ASI06",
+        "Name": "Memory & Context Poisoning",
+        "Applicability": "Partial",
+        "OWASP summary": "Adversaries corrupt or seed stored/retrievable context (memory, RAG, embeddings) causing future reasoning or tool use to become biased or unsafe.",
+        "Boundary (optional)": "There is no RAG store, vector DB, or persistent cross-session memory in this system -- only an in-session conversation history (self._histories[session_id]) that resets per session (Phase A Prompt Inputs). The applicable slice is the in-session carry-over of prior tool output (e.g. a fetched SSN or internal_notes) into a later send_email call within the same session (E5) -- a narrow, session-scoped instance of context reuse, not the catalog's broader persistent/cross-session/shared-vector-store poisoning."
+      },
+      {
+        "ASI": "ASI07",
+        "Name": "Insecure Inter-Agent Communication",
+        "Applicability": "No",
+        "OWASP summary": "Multi-agent systems depend on inter-agent messaging (APIs, message buses); weak authentication/integrity/authorization lets attackers intercept, spoof, or manipulate agent messages.",
+        "Boundary (optional)": "This is a single agent talking to a single mock MCP tool server over direct HTTP in the local/Smith-run configuration (Phase A: MCP_PROXY empty); there is no second agent, no A2A peer, and no message bus. Not applicable in this tree."
+      },
+      {
+        "ASI": "ASI08",
+        "Name": "Cascading Failures",
+        "Applicability": "No",
+        "OWASP summary": "A single fault propagates and amplifies across multiple autonomous agents, tools, or workflows, causing systemic fan-out beyond the original breach.",
+        "Boundary (optional)": "There is only one agent and no downstream agents/workflows for a fault to fan out into; each user session is independent (Phase A: per-session message history, no shared state across sessions/agents). A blind spot like the internal_notes leak (E6) is a single, contained disclosure per call, not a propagating multi-agent cascade. Not applicable."
+      },
+      {
+        "ASI": "ASI09",
+        "Name": "Human-Agent Trust Exploitation",
+        "Applicability": "No",
+        "OWASP summary": "Attackers exploit human trust in agent fluency/authority to extract information or steer decisions, often via missing confirmation steps for sensitive actions.",
+        "Boundary (optional)": "This is a backend HR agent driven by an end user's own requests (or Smith's test harness via the /chat shim, E10) -- there is no separate human reviewer being persuaded to approve an agent's recommendation, and no agent-initiated persuasive/anthropomorphic interaction pattern is described in guidance.txt or the architecture. Not applicable; the closest concept (has_approval as a human-approval signal) is an unpopulated policy field (E4), not an observed trust-exploitation path."
+      },
+      {
+        "ASI": "ASI10",
+        "Name": "Rogue Agents",
+        "Applicability": "No",
+        "OWASP summary": "Malicious or compromised agents deviate from intended function within multi-agent or human-agent ecosystems, individually-legitimate actions becoming harmful in aggregate.",
+        "Boundary (optional)": "Single-agent system with no peer agents, no multi-agent ecosystem, and no observed emergent/collusive behavior across agent instances (Phase A). Not applicable."
+      }
+    ],
+    "Threat Instances": [
+      {
+        "ID": "T01",
+        "ASI": "ASI02",
+        "Severity": "Critical",
+        "Actor": "Caller",
+        "Surface": "1, 2",
+        "Catalog basis": "Tool Chain Manipulation",
+        "Evidence": "E1, E2, E12",
+        "Concrete threat": "A caller with no HR role instructs the agent to call get_compensation with input.args.employee_id set to any employee and input.args.include_ssn=true; server.py performs zero role/permission check and returns the real SSN, directly violating guidance rules 3 and 4 (HR-only compensation access; view_ssn-permission-gated SSN access). This is a highest-impact confidentiality/authentication-boundary compromise (SSN disclosure to an unauthorized caller)."
+      },
+      {
+        "ID": "T02",
+        "ASI": "ASI02",
+        "Severity": "High",
+        "Actor": "Caller",
+        "Surface": "1",
+        "Catalog basis": "Tool Chain Manipulation",
+        "Evidence": "E1, E12",
+        "Concrete threat": "A caller with no HR role instructs the agent to call get_compensation or display_compensation for any input.args.employee_id; server.py performs no role check, so salary/bonus/department data (get_compensation) or the compensation band (display_compensation) is returned to a caller who guidance rule 3 says must not have access. This is an intended access-control bypass, not the highest-impact SSN-disclosure case captured separately in T01."
+      },
+      {
+        "ID": "T03",
+        "ASI": "ASI02",
+        "Severity": "Medium",
+        "Actor": "LLM",
+        "Surface": "2",
+        "Catalog basis": "Parameter Pollution Exploitation",
+        "Evidence": "E2, E11",
+        "Concrete threat": "SYSTEM_PROMPT instructs the model to set input.args.include_ssn=true only when the user explicitly asks, but this is a prompt-level behavioral control with no structured/OPA-visible enforcement; the LLM can be induced (via ambiguous or crafted user phrasing) to set input.args.include_ssn=true even when the request was not an explicit SSN ask, with no runtime gate to catch the deviation. Soft-guardrail/reliability failure since the SSN itself is still gated by permission checks in the properly-enforced case (distinct from T01, which is the case where no gate exists at all)."
+      },
+      {
+        "ID": "T04",
+        "ASI": "ASI02",
+        "Severity": "Medium",
+        "Actor": "Caller",
+        "Surface": "4",
+        "Catalog basis": "Tool Chain Manipulation",
+        "Evidence": "E1, E5",
+        "Concrete threat": "A caller instructs the agent to send an email (send_email) with arbitrary input.args.to; server.py performs no recipient validation or domain allowlist, so a caller can direct the agent to relay any data the agent has already legitimately retrieved in-session to an arbitrary external or internal address. Soft-guardrail failure (no recipient control exists in guidance.txt or server.py) rather than a hard access-control bypass, since guidance.txt does not name a recipient restriction."
+      },
+      {
+        "ID": "T05",
+        "ASI": "ASI06",
+        "Severity": "High",
+        "Actor": "LLM",
+        "Surface": "4, 11",
+        "Catalog basis": "novel",
+        "Evidence": "E5",
+        "Concrete threat": "Within a single session, the LLM carries a previously fetched sensitive value (an SSN retrieved via an earlier get_compensation call, or a salary figure, or internal_notes text) from conversation history into a later send_email call's input.args.subject or input.args.body, exfiltrating it via email. Only the SSN-regex-pattern instance of this is covered by policy.rego (see Scenario Coverage); the broader 'session-accessed sensitive data' carry-over named in system_vars.json's send_email description has no structured/OPA-visible signal at all -- an intended-guardrail bypass (guidance names this concern) with no technical control present."
+      },
+      {
+        "ID": "T06",
+        "ASI": "ASI02",
+        "Severity": "Low",
+        "Actor": "Caller",
+        "Surface": "4",
+        "Catalog basis": "novel",
+        "Evidence": "E1",
+        "Concrete threat": "send_email has no rate limit or per-session call count observed anywhere in guidance.txt, system_vars.json, or the architecture (Phase B Q15/Q16 open gap); a caller could drive repeated send_email calls with arbitrary input.args.to to spam an arbitrary recipient. Defense-in-depth finding, not an access-control violation, since no guidance rule addresses volume."
+      },
+      {
+        "ID": "T07",
+        "ASI": "ASI02",
+        "Severity": "High",
+        "Actor": "Caller",
+        "Surface": "6",
+        "Catalog basis": "Tool Chain Manipulation",
+        "Evidence": "E8",
+        "Concrete threat": "A caller whose role is not engineer or security instructs the agent to call search_repos; server.py performs no role check on input.extensions.subject.roles, so repository results are returned to a caller guidance rule 5 says must be blocked entirely. Intended access-control bypass."
+      },
+      {
+        "ID": "T08",
+        "ASI": "ASI02",
+        "Severity": "High",
+        "Actor": "Caller",
+        "Surface": "6",
+        "Catalog basis": "Tool Chain Manipulation",
+        "Evidence": "E8",
+        "Concrete threat": "An engineer or security-role caller sets input.args.visibility to \"public\" or \"external\" on search_repos; server.py applies no visibility restriction of its own (the internal-only gate exists only in offline policy.rego), so non-internal repository listings are returned in violation of guidance rule 1 (all employees can only access internal repositories). Intended access-control bypass distinct from T07 because it exploits the visibility argument rather than the role gate."
+      },
+      {
+        "ID": "T09",
+        "ASI": "ASI02",
+        "Severity": "High",
+        "Actor": "Caller",
+        "Surface": "7, 10",
+        "Catalog basis": "Parameter Pollution Exploitation",
+        "Evidence": "E3, E4",
+        "Concrete threat": "An HR-role caller instructs adjust_compensation with input.args.amount greater than $10,000; server.py applies `employee['salary'] += amount` unconditionally with no check of input.extensions.subject.has_approval (which additionally has no producing implementation per E4), so the manager-approval gate required by guidance rule 6 is bypassed entirely regardless of whether has_approval would even be populated. Intended access-control/mission-critical bypass on a financial-adjustment guardrail; not Critical because this is a conditional approval gate on an already-authorized HR action (Phase B Q13/Q13b), not a compromise of the highest-impact confidentiality/authentication boundary captured by T01."
+      },
+      {
+        "ID": "T10",
+        "ASI": "ASI02",
+        "Severity": "Critical",
+        "Actor": "Caller",
+        "Surface": "7",
+        "Catalog basis": "novel",
+        "Evidence": "E3",
+        "Concrete threat": "An HR-role caller (or any caller reaching adjust_compensation given T02) supplies a negative input.args.amount; server.py's unconditional `employee['salary'] += amount` accepts this and silently reduces the employee's salary, with no sign check anywhere in the tool implementation or guidance.txt. This is a data-integrity compromise of a financial record with no guardrail of any kind (not even an offline policy.rego rule, since guidance.txt frames amount only as a positive-raise approval threshold) -- a highest-impact financial-integrity boundary break."
+      },
+      {
+        "ID": "T11",
+        "ASI": "ASI02",
+        "Severity": "Medium",
+        "Actor": "Tool",
+        "Surface": "8, 9",
+        "Catalog basis": "novel",
+        "Evidence": "E4",
+        "Concrete threat": "Because input.extensions.subject.roles and .permissions have no producing implementation in agent.py/server.py, any future pre-execution policy check that relies on these fields would receive Unknown/unpopulated values -- meaning a live enforcement point built on the currently declared schema would fail open (deny-by-absence or allow-by-default, depending on implementation) rather than correctly gating access. This is a soft-guardrail/reliability finding about the schema's current unreadiness for enforcement, not a claim that these fields are caller-forgeable (no delivery evidence establishes forgeability per Phase A)."
+      },
+      {
+        "ID": "T12",
+        "ASI": "ASI01",
+        "Severity": "Medium",
+        "Actor": "Caller",
+        "Surface": "11",
+        "Catalog basis": "Direct Plan Injection",
+        "Evidence": "E11",
+        "Concrete threat": "user_text is the untrusted, sole driver of tool_name/argument selection; a caller can phrase a request to induce the LLM to select a different tool or different input.args.* values than the user's actual stated need would suggest (e.g. requesting adjust_compensation with input.args.amount framed as a routine lookup). Because no runtime intent/goal validation exists at the tool-dispatch boundary (Phase A: agent.py call_tool has no such check), this is a soft-guardrail failure bounded by the fact that all resulting tool calls still pass through the same (largely absent) per-tool checks already covered by T01-T10, rather than an independent bypass mechanism."
+      },
+      {
+        "ID": "T13",
+        "ASI": "ASI02",
+        "Severity": "Medium",
+        "Actor": "LLM",
+        "Surface": "12",
+        "Catalog basis": "novel",
+        "Evidence": "E7",
+        "Concrete threat": "If the LLM emits malformed tool_calls JSON, agent.py's broad try/except silently substitutes {} rather than rejecting the call, so call_tool proceeds with empty arguments instead of erroring; for tools with permissive defaults (e.g. get_directory's input.args.department default empty string) this produces an unintended broad-result call rather than a safe failure. Reliability/soft-guardrail failure in error handling, not an attacker-controlled bypass of a specific access rule."
+      },
+      {
+        "ID": "T14",
+        "ASI": "ASI02",
+        "Severity": "Medium",
+        "Actor": "Tool",
+        "Surface": "13",
+        "Catalog basis": "novel",
+        "Evidence": "E6",
+        "Concrete threat": "get_compensation's response includes the internal_notes field to any successful caller reached via input.args.employee_id (including a caller correctly authorized as HR under guidance rule 3), with no guidance rule or policy.rego rule ever addressing it -- an undeclared response-content leak that is structurally distinct from the SSN-confidentiality boundary (T01) since guidance.txt never names internal_notes at all. Soft-guardrail-category finding: a real blind spot, but not a violation of any stated access-control rule, and not OPA-interceptable via input.args/input.extensions.subject since it is response content."
+      }
+    ],
+    "Scenario Coverage": [
+      {
+        "ASI": "ASI01",
+        "Scenario": "1",
+        "Disposition": "N/A -- no persistent planning framework or multi-step goal state exists across turns beyond simple per-session tool-calling; each turn is independently resolved by the LLM from user_text plus history, with no incremental sub-goal injection mechanism described in the architecture."
+      },
+      {
+        "ASI": "ASI01",
+        "Scenario": "2",
+        "Disposition": "T12"
+      },
+      {
+        "ASI": "ASI01",
+        "Scenario": "3",
+        "Disposition": "N/A -- tool outputs originate from static in-memory mock fixtures (EMPLOYEES, REPOS) controlled by the deployment, not from an attacker-influenced external source in this tree; no maliciously-crafted tool output channel exists."
+      },
+      {
+        "ASI": "ASI01",
+        "Scenario": "4",
+        "Disposition": "N/A -- no self-analysis/reflection cycle is implemented; HRAgent.run_turn performs a bounded two-call litellm.completion sequence per turn with no recursive reasoning loop."
+      },
+      {
+        "ASI": "ASI01",
+        "Scenario": "5",
+        "Disposition": "N/A -- no self-improvement or learning mechanism exists in this system; behavior is fixed by SYSTEM_PROMPT and TOOLS schema."
+      },
+      {
+        "ASI": "ASI02",
+        "Scenario": "1",
+        "Disposition": "T03, T09, T10"
+      },
+      {
+        "ASI": "ASI02",
+        "Scenario": "2",
+        "Disposition": "T01, T02, T07, T08"
+      },
+      {
+        "ASI": "ASI02",
+        "Scenario": "3",
+        "Disposition": "N/A -- no document generation/mass-distribution tool exists; send_email sends a single message per call with no batch/bulk mechanism observed."
+      },
+      {
+        "ASI": "ASI02",
+        "Scenario": "4",
+        "Disposition": "T05"
+      },
+      {
+        "ASI": "ASI02",
+        "Scenario": "5",
+        "Disposition": "N/A -- no vector database or embeddings store exists anywhere in this tree."
+      },
+      {
+        "ASI": "ASI02",
+        "Scenario": "6",
+        "Disposition": "T12, T13"
+      },
+      {
+        "ASI": "ASI03",
+        "Scenario": "1",
+        "Disposition": "N/A -- category not applicable in this system (Identity and Privilege Abuse): no delegation chain, agent-to-agent trust, or credential caching/reuse exists in this tree (Phase A); see Category Assessment boundary for ASI03."
+      },
+      {
+        "ASI": "ASI03",
+        "Scenario": "2",
+        "Disposition": "N/A -- category not applicable in this system (Identity and Privilege Abuse): no delegation chain, agent-to-agent trust, or credential caching/reuse exists in this tree (Phase A); see Category Assessment boundary for ASI03."
+      },
+      {
+        "ASI": "ASI03",
+        "Scenario": "3",
+        "Disposition": "N/A -- category not applicable in this system (Identity and Privilege Abuse): no delegation chain, agent-to-agent trust, or credential caching/reuse exists in this tree (Phase A); see Category Assessment boundary for ASI03."
+      },
+      {
+        "ASI": "ASI03",
+        "Scenario": "4",
+        "Disposition": "N/A -- category not applicable in this system (Identity and Privilege Abuse): no delegation chain, agent-to-agent trust, or credential caching/reuse exists in this tree (Phase A); see Category Assessment boundary for ASI03."
+      },
+      {
+        "ASI": "ASI03",
+        "Scenario": "5",
+        "Disposition": "N/A -- category not applicable in this system (Identity and Privilege Abuse): no delegation chain, agent-to-agent trust, or credential caching/reuse exists in this tree (Phase A); see Category Assessment boundary for ASI03."
+      },
+      {
+        "ASI": "ASI03",
+        "Scenario": "6",
+        "Disposition": "N/A -- category not applicable in this system (Identity and Privilege Abuse): no delegation chain, agent-to-agent trust, or credential caching/reuse exists in this tree (Phase A); see Category Assessment boundary for ASI03."
+      },
+      {
+        "ASI": "ASI03",
+        "Scenario": "7",
+        "Disposition": "N/A -- category not applicable in this system (Identity and Privilege Abuse): no delegation chain, agent-to-agent trust, or credential caching/reuse exists in this tree (Phase A); see Category Assessment boundary for ASI03."
+      },
+      {
+        "ASI": "ASI03",
+        "Scenario": "8",
+        "Disposition": "N/A -- category not applicable in this system (Identity and Privilege Abuse): no delegation chain, agent-to-agent trust, or credential caching/reuse exists in this tree (Phase A); see Category Assessment boundary for ASI03."
+      },
+      {
+        "ASI": "ASI03",
+        "Scenario": "9",
+        "Disposition": "N/A -- category not applicable in this system (Identity and Privilege Abuse): no delegation chain, agent-to-agent trust, or credential caching/reuse exists in this tree (Phase A); see Category Assessment boundary for ASI03."
+      },
+      {
+        "ASI": "ASI04",
+        "Scenario": "1",
+        "Disposition": "N/A -- category not applicable in this system (Agentic Supply Chain Vulnerabilities): no dynamically loaded third-party tools, plugins, MCP registries, or agent-to-agent discovery exist; TOOLS/server.py are hardcoded local code, not runtime-fetched components (Phase A); see Category Assessment boundary for ASI04."
+      },
+      {
+        "ASI": "ASI04",
+        "Scenario": "2",
+        "Disposition": "N/A -- category not applicable in this system (Agentic Supply Chain Vulnerabilities): no dynamically loaded third-party tools, plugins, MCP registries, or agent-to-agent discovery exist; TOOLS/server.py are hardcoded local code, not runtime-fetched components (Phase A); see Category Assessment boundary for ASI04."
+      },
+      {
+        "ASI": "ASI05",
+        "Scenario": "1",
+        "Disposition": "N/A -- category not applicable in this system (Unexpected Code Execution): no tool generates or executes code, shell commands, or deserializes objects; all six tools perform dict lookups/filters/mutations against in-memory fixtures (Phase A); see Category Assessment boundary for ASI05."
+      },
+      {
+        "ASI": "ASI05",
+        "Scenario": "2",
+        "Disposition": "N/A -- category not applicable in this system (Unexpected Code Execution): no tool generates or executes code, shell commands, or deserializes objects; all six tools perform dict lookups/filters/mutations against in-memory fixtures (Phase A); see Category Assessment boundary for ASI05."
+      },
+      {
+        "ASI": "ASI05",
+        "Scenario": "3",
+        "Disposition": "N/A -- category not applicable in this system (Unexpected Code Execution): no tool generates or executes code, shell commands, or deserializes objects; all six tools perform dict lookups/filters/mutations against in-memory fixtures (Phase A); see Category Assessment boundary for ASI05."
+      },
+      {
+        "ASI": "ASI05",
+        "Scenario": "4",
+        "Disposition": "N/A -- category not applicable in this system (Unexpected Code Execution): no tool generates or executes code, shell commands, or deserializes objects; all six tools perform dict lookups/filters/mutations against in-memory fixtures (Phase A); see Category Assessment boundary for ASI05."
+      },
+      {
+        "ASI": "ASI05",
+        "Scenario": "5",
+        "Disposition": "N/A -- category not applicable in this system (Unexpected Code Execution): no tool generates or executes code, shell commands, or deserializes objects; all six tools perform dict lookups/filters/mutations against in-memory fixtures (Phase A); see Category Assessment boundary for ASI05."
+      },
+      {
+        "ASI": "ASI05",
+        "Scenario": "6",
+        "Disposition": "N/A -- category not applicable in this system (Unexpected Code Execution): no tool generates or executes code, shell commands, or deserializes objects; all six tools perform dict lookups/filters/mutations against in-memory fixtures (Phase A); see Category Assessment boundary for ASI05."
+      },
+      {
+        "ASI": "ASI05",
+        "Scenario": "7",
+        "Disposition": "N/A -- category not applicable in this system (Unexpected Code Execution): no tool generates or executes code, shell commands, or deserializes objects; all six tools perform dict lookups/filters/mutations against in-memory fixtures (Phase A); see Category Assessment boundary for ASI05."
+      },
+      {
+        "ASI": "ASI06",
+        "Scenario": "1",
+        "Disposition": "N/A -- no persistent cross-session memory of pricing/business rules exists; not a travel/booking domain."
+      },
+      {
+        "ASI": "ASI06",
+        "Scenario": "2",
+        "Disposition": "N/A -- no privilege-escalation-via-context-limit mechanism is present; conversation history within a session is not observed to be truncated in a way that drops security-relevant state per the architecture."
+      },
+      {
+        "ASI": "ASI06",
+        "Scenario": "3",
+        "Disposition": "N/A -- no classification/detection memory exists to poison; this is an HR data-lookup agent, not a security-classification system."
+      },
+      {
+        "ASI": "ASI06",
+        "Scenario": "4",
+        "Disposition": "N/A -- conversation history is per-session (self._histories[session_id]), not shared across callers/sessions, so no cross-caller shared-memory poisoning path exists; the in-session carry-over risk is captured as T05 under Tool Misuse (ASI02 catalog basis), reflecting that this system's only realized instance of context reuse is single-session, matching ASI06's Partial (not Yes) applicability."
+      },
+      {
+        "ASI": "ASI07",
+        "Scenario": "1",
+        "Disposition": "N/A -- category not applicable in this system (Insecure Inter-Agent Communication): single agent talking to a single mock MCP tool server over direct HTTP (MCP_PROXY empty); no second agent, A2A peer, or message bus exists (Phase A); see Category Assessment boundary for ASI07."
+      },
+      {
+        "ASI": "ASI07",
+        "Scenario": "2",
+        "Disposition": "N/A -- category not applicable in this system (Insecure Inter-Agent Communication): single agent talking to a single mock MCP tool server over direct HTTP (MCP_PROXY empty); no second agent, A2A peer, or message bus exists (Phase A); see Category Assessment boundary for ASI07."
+      },
+      {
+        "ASI": "ASI07",
+        "Scenario": "3",
+        "Disposition": "N/A -- category not applicable in this system (Insecure Inter-Agent Communication): single agent talking to a single mock MCP tool server over direct HTTP (MCP_PROXY empty); no second agent, A2A peer, or message bus exists (Phase A); see Category Assessment boundary for ASI07."
+      },
+      {
+        "ASI": "ASI07",
+        "Scenario": "4",
+        "Disposition": "N/A -- category not applicable in this system (Insecure Inter-Agent Communication): single agent talking to a single mock MCP tool server over direct HTTP (MCP_PROXY empty); no second agent, A2A peer, or message bus exists (Phase A); see Category Assessment boundary for ASI07."
+      },
+      {
+        "ASI": "ASI07",
+        "Scenario": "5",
+        "Disposition": "N/A -- category not applicable in this system (Insecure Inter-Agent Communication): single agent talking to a single mock MCP tool server over direct HTTP (MCP_PROXY empty); no second agent, A2A peer, or message bus exists (Phase A); see Category Assessment boundary for ASI07."
+      },
+      {
+        "ASI": "ASI07",
+        "Scenario": "6",
+        "Disposition": "N/A -- category not applicable in this system (Insecure Inter-Agent Communication): single agent talking to a single mock MCP tool server over direct HTTP (MCP_PROXY empty); no second agent, A2A peer, or message bus exists (Phase A); see Category Assessment boundary for ASI07."
+      },
+      {
+        "ASI": "ASI07",
+        "Scenario": "7",
+        "Disposition": "N/A -- category not applicable in this system (Insecure Inter-Agent Communication): single agent talking to a single mock MCP tool server over direct HTTP (MCP_PROXY empty); no second agent, A2A peer, or message bus exists (Phase A); see Category Assessment boundary for ASI07."
+      },
+      {
+        "ASI": "ASI07",
+        "Scenario": "8",
+        "Disposition": "N/A -- category not applicable in this system (Insecure Inter-Agent Communication): single agent talking to a single mock MCP tool server over direct HTTP (MCP_PROXY empty); no second agent, A2A peer, or message bus exists (Phase A); see Category Assessment boundary for ASI07."
+      },
+      {
+        "ASI": "ASI08",
+        "Scenario": "1",
+        "Disposition": "N/A -- category not applicable in this system (Cascading Failures): only one agent and no downstream agents/workflows for a fault to fan out into; each session is independent with no shared state (Phase A); see Category Assessment boundary for ASI08."
+      },
+      {
+        "ASI": "ASI08",
+        "Scenario": "2",
+        "Disposition": "N/A -- category not applicable in this system (Cascading Failures): only one agent and no downstream agents/workflows for a fault to fan out into; each session is independent with no shared state (Phase A); see Category Assessment boundary for ASI08."
+      },
+      {
+        "ASI": "ASI08",
+        "Scenario": "3",
+        "Disposition": "N/A -- category not applicable in this system (Cascading Failures): only one agent and no downstream agents/workflows for a fault to fan out into; each session is independent with no shared state (Phase A); see Category Assessment boundary for ASI08."
+      },
+      {
+        "ASI": "ASI08",
+        "Scenario": "4",
+        "Disposition": "N/A -- category not applicable in this system (Cascading Failures): only one agent and no downstream agents/workflows for a fault to fan out into; each session is independent with no shared state (Phase A); see Category Assessment boundary for ASI08."
+      },
+      {
+        "ASI": "ASI09",
+        "Scenario": "1",
+        "Disposition": "N/A -- category not applicable in this system (Human-Agent Trust Exploitation): backend HR agent driven by the end user's own requests with no separate human reviewer being persuaded to approve an agent's recommendation, and no agent-initiated persuasive interaction pattern described (Phase A/guidance.txt); see Category Assessment boundary for ASI09."
+      },
+      {
+        "ASI": "ASI09",
+        "Scenario": "2",
+        "Disposition": "N/A -- category not applicable in this system (Human-Agent Trust Exploitation): backend HR agent driven by the end user's own requests with no separate human reviewer being persuaded to approve an agent's recommendation, and no agent-initiated persuasive interaction pattern described (Phase A/guidance.txt); see Category Assessment boundary for ASI09."
+      },
+      {
+        "ASI": "ASI09",
+        "Scenario": "3",
+        "Disposition": "N/A -- category not applicable in this system (Human-Agent Trust Exploitation): backend HR agent driven by the end user's own requests with no separate human reviewer being persuaded to approve an agent's recommendation, and no agent-initiated persuasive interaction pattern described (Phase A/guidance.txt); see Category Assessment boundary for ASI09."
+      },
+      {
+        "ASI": "ASI09",
+        "Scenario": "4",
+        "Disposition": "N/A -- category not applicable in this system (Human-Agent Trust Exploitation): backend HR agent driven by the end user's own requests with no separate human reviewer being persuaded to approve an agent's recommendation, and no agent-initiated persuasive interaction pattern described (Phase A/guidance.txt); see Category Assessment boundary for ASI09."
+      },
+      {
+        "ASI": "ASI09",
+        "Scenario": "5",
+        "Disposition": "N/A -- category not applicable in this system (Human-Agent Trust Exploitation): backend HR agent driven by the end user's own requests with no separate human reviewer being persuaded to approve an agent's recommendation, and no agent-initiated persuasive interaction pattern described (Phase A/guidance.txt); see Category Assessment boundary for ASI09."
+      },
+      {
+        "ASI": "ASI09",
+        "Scenario": "6",
+        "Disposition": "N/A -- category not applicable in this system (Human-Agent Trust Exploitation): backend HR agent driven by the end user's own requests with no separate human reviewer being persuaded to approve an agent's recommendation, and no agent-initiated persuasive interaction pattern described (Phase A/guidance.txt); see Category Assessment boundary for ASI09."
+      },
+      {
+        "ASI": "ASI09",
+        "Scenario": "7",
+        "Disposition": "N/A -- category not applicable in this system (Human-Agent Trust Exploitation): backend HR agent driven by the end user's own requests with no separate human reviewer being persuaded to approve an agent's recommendation, and no agent-initiated persuasive interaction pattern described (Phase A/guidance.txt); see Category Assessment boundary for ASI09."
+      },
+      {
+        "ASI": "ASI09",
+        "Scenario": "8",
+        "Disposition": "N/A -- category not applicable in this system (Human-Agent Trust Exploitation): backend HR agent driven by the end user's own requests with no separate human reviewer being persuaded to approve an agent's recommendation, and no agent-initiated persuasive interaction pattern described (Phase A/guidance.txt); see Category Assessment boundary for ASI09."
+      },
+      {
+        "ASI": "ASI10",
+        "Scenario": "1",
+        "Disposition": "N/A -- category not applicable in this system (Rogue Agents): single-agent system with no peer agents, no multi-agent ecosystem, and no observed emergent/collusive behavior across agent instances (Phase A); see Category Assessment boundary for ASI10."
+      },
+      {
+        "ASI": "ASI10",
+        "Scenario": "2",
+        "Disposition": "N/A -- category not applicable in this system (Rogue Agents): single-agent system with no peer agents, no multi-agent ecosystem, and no observed emergent/collusive behavior across agent instances (Phase A); see Category Assessment boundary for ASI10."
+      },
+      {
+        "ASI": "ASI10",
+        "Scenario": "3",
+        "Disposition": "N/A -- category not applicable in this system (Rogue Agents): single-agent system with no peer agents, no multi-agent ecosystem, and no observed emergent/collusive behavior across agent instances (Phase A); see Category Assessment boundary for ASI10."
+      },
+      {
+        "ASI": "ASI10",
+        "Scenario": "4",
+        "Disposition": "N/A -- category not applicable in this system (Rogue Agents): single-agent system with no peer agents, no multi-agent ecosystem, and no observed emergent/collusive behavior across agent instances (Phase A); see Category Assessment boundary for ASI10."
+      },
+      {
+        "ASI": "ASI10",
+        "Scenario": "5",
+        "Disposition": "N/A -- category not applicable in this system (Rogue Agents): single-agent system with no peer agents, no multi-agent ecosystem, and no observed emergent/collusive behavior across agent instances (Phase A); see Category Assessment boundary for ASI10."
+      },
+      {
+        "ASI": "ASI10",
+        "Scenario": "6",
+        "Disposition": "N/A -- category not applicable in this system (Rogue Agents): single-agent system with no peer agents, no multi-agent ecosystem, and no observed emergent/collusive behavior across agent instances (Phase A); see Category Assessment boundary for ASI10."
+      },
+      {
+        "ASI": "ASI10",
+        "Scenario": "7",
+        "Disposition": "N/A -- category not applicable in this system (Rogue Agents): single-agent system with no peer agents, no multi-agent ecosystem, and no observed emergent/collusive behavior across agent instances (Phase A); see Category Assessment boundary for ASI10."
+      },
+      {
+        "ASI": "ASI10",
+        "Scenario": "8",
+        "Disposition": "N/A -- category not applicable in this system (Rogue Agents): single-agent system with no peer agents, no multi-agent ecosystem, and no observed emergent/collusive behavior across agent instances (Phase A); see Category Assessment boundary for ASI10."
+      }
+    ]
+  },
+  "handoff": {
+    "Status": "PASS",
+    "Artifact schema": "threat-model-v3",
+    "Summary": "Applicable categories: ASI02 (Yes), ASI01 and ASI06 (Partial), ASI03/04/05/07/08/09/10 (No, each with a system-specific boundary explanation citing the single-agent, no-RAG, no-delegation, no-code-execution, no-peer-agent architecture from Phase A). 14 threat instances (T01-T14): 3 Critical (T01 SSN disclosure via unenforced include_ssn/role gate; T10 unsigned adjust_compensation amount corrupting salary integrity), 6 High (T02 compensation access bypass, T07/T08 search_repos role/visibility bypass, T09 approval-threshold bypass on adjust_compensation, T05 in-session sensitive-data carry-over into send_email), and 5 Medium/Low (T03, T04, T06, T11, T12, T13, T14 spread across soft-guardrail, reliability, and defense-in-depth findings) -- exact tally: 2 Critical, 4 High, 7 Medium, 1 Low. 13 attack-surface rows, each carrying either cited threat IDs or an explicit N/A -- reason disposition (surfaces #3 and #5 are N/A with justification). 21 Scenario Coverage rows (all ASI01/ASI02/ASI06 catalog scenarios, the only categories rated Yes/Partial) each carrying either threat IDs or an N/A -- reason grounded in this system's architecture. Citation verification: every Threat Instance and Attack Surface field reference uses the literal input.args.<name> or input.extensions.subject.<name> form; all Evidence IDs (E1-E12) are unique, sourced to specific Phase A/B facts, and referenced (not duplicated) across Threat Instances. Q14 SSN-pattern scope is confined to surface #4 (send_email's own input.args.subject/body) and not cloned onto prompt/conversation surface #11 or any other tool; T05 explicitly separates the covered SSN-regex case from the uncovered broader session-reuse case. Runtime subject fields (roles/permissions/has_approval, surfaces #8-#10) are treated as unpopulated/no-producing-implementation (T11), not asserted as caller-forgeable, per Phase A's finding of no verification mechanism without overreaching into a forgeability claim. One semantic completeness pass performed; 1 repair made (T09 severity Critical -> High, reasoned against the guide's severity definitions). No open gaps remain; status PASS."
+  }
+}

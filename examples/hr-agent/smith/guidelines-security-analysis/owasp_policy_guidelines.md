@@ -1,235 +1,128 @@
-# OWASP Policy Guidelines — Enforcement Mapping — HR Agent
+# OWASP Top 10 for Agentic AI Security — Scope Assessment and Policy Guidelines
 
-**Run date**: 2026-09-04
-**guidance.txt state**: 2 rules (bare-line style)
-**Tool definitions**: 6 tools (tool_definitions.json)
-**Output**: `guidance_updated.txt` with new rules continuing from existing 2
+## Architecture Summary
 
----
+Single-agent HR system (agent.py) driving a mock MCP tool server (server.py) over direct HTTP (MCP_PROXY empty in the local/Smith-run configuration). Six tools: get_compensation, display_compensation, get_directory, send_email, search_repos, adjust_compensation — all declared in tool_definitions.json. server.py performs zero pre-execution authorization/content checks in this tree; the only existing enforcement is the offline policy.rego (7 deny rules) evaluated by Smith's own policy-testing harness, not wired into the live request path. Runtime subject fields (input.extensions.subject.roles, .permissions, .has_approval, .user_name) are declared in system_vars.json but have no producing implementation observed in agent.py/server.py — their documented provenance (Keycloak JWT via an authbridge-cpex sidecar) is out of scope for this tree. Per Phase C, applicable OWASP categories are ASI02 (Yes), ASI01 and ASI06 (Partial); all others No.
 
-## STEP 1 — Input Review
+## Threat Disposition
 
-### guidance.txt (current — 2 rules, bare-line style)
-```
-All employees can only access internal repositories.
-All employees cannot access other teams' repositories.
-```
+| Threat ID | Field / surface | Owner | Reason |
+|---|---|---|---|
+| T01 | input.args.employee_id, input.args.include_ssn (get_compensation) | OPA | Passes the eligibility gate: get_compensation declares both input.args.employee_id and input.args.include_ssn; the deny condition (include_ssn == true without input.extensions.subject.permissions containing view_ssn, or caller lacking hr role) is a complete Rego-translatable predicate with no prompt reasoning or output inspection needed. Already encoded in policy.rego as SSN_VIEW_PERM and COMP_HR_ONLY. |
+| T02 | input.args.employee_id (get_compensation, display_compensation) | OPA | Non-HR caller access to compensation tools is a complete predicate on input.extensions.subject.roles alone (no args needed beyond tool name). Already encoded in policy.rego as COMP_HR_ONLY. |
+| T03 | input.args.include_ssn (get_compensation), SYSTEM_PROMPT | Agent | The failure mode is the LLM being induced by prompt phrasing to set include_ssn=true when the request was not an explicit SSN ask. No structured, pre-execution signal distinguishes an 'explicit ask' from an induced one — deciding this requires prompt/intent reasoning, which the eligibility gate excludes (check 6). The resulting include_ssn=true value is itself still gated by the OPA-eligible T01 rule, so this threat's own remediation is agent-side prompt/behavior hardening, not a new OPA predicate. |
+| T04 | input.args.to (send_email) | Agent | No guidance rule, system_vars.json field, or tool schema names a recipient allowlist/domain restriction; inventing one would violate the rule against fabricating fields/values to make a candidate pass. Recorded in the Gap Register rather than emitted as a candidate. |
+| T05 | input.args.subject, input.args.body (send_email); conversation history | Agent | The threat's core claim is the broader 'sensitive data accessed earlier in-session' carry-over (salary figures, internal_notes) which has no structured/OPA-visible signal in input.args or input.extensions.subject — fails eligibility check 6 (would require inspecting conversation history / prior tool outputs, not declared tool arguments). The narrower SSN-regex slice of this concern is separately already OPA-covered by the existing EMAIL_SSN_BLOCK rule (guidance rule 7), which is unaffected by this disposition. |
+| T06 | send_email call volume (no declared field) | Infrastructure | No per-session call-count field, counter, or rate-limit value is declared anywhere in guidance.txt, system_vars.json, or tool_definitions.json (Phase B Q15/Q16 open gap); rate limiting of this kind is conventionally an infrastructure/gateway concern and there is no declared structured input to ground a Rego predicate on. Recorded in the Gap Register. |
+| T07 | input.extensions.subject.roles (search_repos) | OPA | Complete predicate on caller role membership vs. the fixed engineer/security set; no args needed. Already encoded in policy.rego as REPO_ROLE_GATE. |
+| T08 | input.args.visibility (search_repos) | OPA | Complete predicate: input.args.visibility != "internal" (declared enum field on search_repos). Already encoded in policy.rego as REPO_INTERNAL_ONLY. |
+| T09 | input.args.amount, input.extensions.subject.has_approval (adjust_compensation) | OPA | Complete predicate: input.args.amount > 10000 AND input.extensions.subject.has_approval != "true". Already encoded in policy.rego as ADJ_APPROVAL_THRESHOLD. That has_approval currently has no producing implementation (see T11) does not disqualify the rule — existing/future OPA wiring and runtime population are not required for OPA-policy-expressibility per the shared rule. |
+| T10 | input.args.amount (adjust_compensation) | OPA | Complete predicate: input.args.amount < 0 (declared, required, integer field on adjust_compensation, which acts on it via `employee['salary'] += amount`). No subject field, prompt reasoning, or output inspection needed. Passes all 7 eligibility checks; this is the one new (Novel) candidate identified in this phase — see Rules/Input Schema/Candidate Reconciliation. |
+| T11 | input.extensions.subject.roles, input.extensions.subject.permissions | Infrastructure | Fails eligibility check 4: runtime conditions must use authoritative, pre-execution subject fields, and these fields have no producing implementation anywhere in this tree — there is no authoritative value to ground a predicate on, only an unpopulated placeholder. This is an identity-provisioning gap (populating roles/permissions from a verified source), not an OPA rule to author; recorded in the Gap Register, not emitted as a candidate. |
+| T12 | user_text, conversation history | Agent | Fails eligibility checks 1 and 6: detecting induced goal/tool selection requires prompt/intent reasoning over untrusted natural-language input, not a structured tool-argument or subject-field predicate. Mitigation is agent-side (prompt hardening, intent validation before dispatch), consistent with ASI01 mitigations. |
+| T13 | LLM tool_calls JSON (function.arguments) | Agent | The failure is agent.py's own error-handling behavior (silently substituting {} on JSON decode failure instead of rejecting the call) — this is application logic prior to any policy-input construction, not a condition expressible over input.args/input.extensions.subject values themselves. |
+| T14 | get_compensation response body (internal_notes) | Tool implementation | This is response content returned by the tool, not an input.args.* field the caller supplies or a subject field — the shared OPA-policy-expressibility rule requires declared structured inputs to a pre-execution decision, and response content is a distinct boundary (Phase A: 'not OPA-interceptable ... it is response content, a different boundary than input.args'). Remediation is removing/redacting the field in server.py's tool implementation, not an OPA rule. |
 
-Format classification: bare-line (0 numbered `<N>.` lines, 0 header `#` lines, 2 bare lines).
-Continuation numbering: new rules start at 3 (implicit, matching bare-line style without prefix).
+## OWASP Top 10 for Agentic AI Security — Scope Assessment
 
-### Prior run `guidance_updated.txt` (captured before overwrite)
-Prior run proposed 0 new rules. Content was non-conforming (contained headers and commentary, no rule lines). Regression baseline: 0 rules proposed.
+| OWASP | Scope | OPA threat IDs | Other-layer threat IDs | Reason / owner |
+|---|---|---|---|---|
+| ASI01 | Other-layer |  | T12 | Phase C rated ASI01 Partial (narrow prompt-injection/goal-selection surface only). Its sole grounded threat instance, T12, fails the eligibility gate (requires prompt/intent reasoning) and is owned by Agent; no OPA-eligible threat exists under this category, so Scope is Other-layer rather than Partial (the guide reserves Partial for categories with both OPA and other-layer threats). |
+| ASI02 | Partial | T01, T02, T07, T08, T09, T10 | T03, T04, T05, T06, T11, T13, T14 | Phase C rated ASI02 Yes (the dominant category: every tool executes with zero pre-execution authorization). Six of its threat instances are OPA-eligible (role/permission/visibility/amount gates, including the new T10 sign check); seven are owned by Agent, Infrastructure, or Tool implementation (prompt-level reliability, unnamed recipient control, session-content reuse, rate limiting, unpopulated subject provenance, JSON error handling, and response-content leakage). Both OPA and other-layer threats exist, so Scope is Partial. |
+| ASI03 | Not applicable |  |  | Phase C rated ASI03 No — no delegation chain, agent-to-agent trust, or credential caching/reuse exists in this tree; no threat instances were grounded under this category. |
+| ASI04 | Not applicable |  |  | Phase C rated ASI04 No — no dynamically loaded third-party tools, plugins, or registries exist; TOOLS/server.py are hardcoded local code. No threat instances grounded. |
+| ASI05 | Not applicable |  |  | Phase C rated ASI05 No — no tool generates or executes code, shell commands, or deserializes objects. No threat instances grounded. |
+| ASI06 | Other-layer |  | T05 | Phase C rated ASI06 Partial (narrow in-session carry-over slice only, not persistent/cross-session memory poisoning). Its sole grounded threat instance under this ASI, T05, is owned by Agent for the reasons in Threat Disposition (no structured signal for the broader carry-over claim); the narrow SSN-regex slice is already covered by the existing EMAIL_SSN_BLOCK rule but that coverage is recorded under guidance rule 7 / T01 family, not as a distinct OPA threat instance filed under ASI06. No OPA threat instance is filed under ASI06 itself, so Scope is Other-layer rather than Partial. |
+| ASI07 | Not applicable |  |  | Phase C rated ASI07 No — single agent, single mock MCP server, no peer agents or message bus. No threat instances grounded. |
+| ASI08 | Not applicable |  |  | Phase C rated ASI08 No — single agent, no downstream agents/workflows for a fault to cascade into. No threat instances grounded. |
+| ASI09 | Not applicable |  |  | Phase C rated ASI09 No — backend HR agent with no separate human reviewer being persuaded and no agent-initiated persuasive interaction pattern. No threat instances grounded. |
+| ASI10 | Not applicable |  |  | Phase C rated ASI10 No — single-agent system, no peer agents or multi-agent ecosystem. No threat instances grounded. |
 
-### Tools in scope
-`get_compensation`, `display_compensation`, `get_directory`, `send_email`, `search_repos`, `adjust_compensation`
+## Gap Register
 
-### System variables available
-- `input.extensions.subject.roles` → values: hr, engineer, marketing, finance, platform, security
-- `input.extensions.subject.permissions` → values: view_ssn, None
-- `input.extensions.subject.has_approval` → values: "true", "false" (string)
-- `input.extensions.subject.user_name` → string
-- `input.extensions.subject.team` → **UNDECLARED** (not in system_vars.json)
+| Finding ID | Layer | Recommended action |
+|---|---|---|
+| G01 | Runtime subject provenance (Agent / Infrastructure) | The 'team' field needed by guidance rule 2 (cross-team repository access restriction) is declared nowhere in system_vars.json or any tool schema (Phase A Undeclared Fields; corroborated by smith/extension_suggestions.json). Guidance rule 2 cannot be encoded as an OPA predicate until a caller-team field and a repo-team-ownership field are both declared and populated. Recommended action: a human decision to add and populate these fields is required before this rule can be enforced at the OPA boundary; do not invent the field. |
+| G02 | Infrastructure / gateway | No per-session call-count limits or counters for any tool (including send_email, T06) are stated in guidance.txt, system_vars.json, or tool_definitions.json (Phase B Q15/Q16 open gap). Recommended action: a human decision on whether and how to define rate limits (and whether they belong in OPA via a declared counter field, or purely at an infrastructure/gateway layer) is required; none is assumed here. |
+| G03 | Runtime subject provenance (Infrastructure) | input.extensions.subject.roles, .permissions, and .has_approval (T11) are declared in system_vars.json but have no producing implementation in agent.py/server.py in this tree; their documented provenance (Keycloak JWT via an out-of-scope CPEX sidecar) is not implemented here. Recommended action: wiring an authoritative identity/approval source into the live request path is an infrastructure task, not an OPA rule; existing policy.rego rules that reference these fields (COMP_HR_ONLY's fallback, SSN_VIEW_PERM, ADJ_APPROVAL_THRESHOLD) remain correctly OPA-expressible but will receive Unknown/unpopulated values until this is resolved. Not treated as missing OPA wiring (excluded from Gap Register scope by the guide) — filed here specifically because it is a provenance/identity gap, not an OPA-wiring gap. |
+| G04 | Tool implementation | get_compensation's response includes the internal_notes field to any successful caller (T14); no guidance rule or policy.rego rule addresses it, and it is response content — a different boundary than input.args, so it is not OPA-interceptable. Recommended action: a human decision to either remove internal_notes from the tool's response or add an explicit guidance rule governing it (enforceable via response filtering, not OPA) is required. |
+| G05 | Agent | send_email has no recipient allowlist/domain restriction in guidance.txt or any declared field (T04); a caller can direct the agent to relay legitimately retrieved data to an arbitrary address. Recommended action: a human decision on whether to add a recipient-domain guidance rule (and a corresponding declared field) is required before this can become an OPA candidate; none is invented here. |
+| G06 | Agent / conversation memory | The broader in-session sensitive-data carry-over concern named in system_vars.json's send_email description ('data the caller accessed earlier as sensitive in the same session', T05) has no structured/OPA-visible signal (no session-taint field is declared anywhere). Recommended action: a human decision on whether to introduce a session-taint or provenance-tagging mechanism (and declare it as a structured field) is required; the existing SSN-regex check (EMAIL_SSN_BLOCK) already covers the narrower pattern-matchable slice and is unaffected. |
+| G07 | Agent | Phase B Q19 (conditions making a tool result actionable) and Q20 (silent rejection vs. user-facing explanation on denial) are open gaps — guidance.txt never states how a denial should be communicated to the user, and no architecture evidence fills this either. Recommended action: a human decision on denial UX/messaging is required; not assumed here and not something an OPA predicate itself determines. |
+| G08 | Agent | agent.py silently substitutes {} for tool_calls arguments on JSON-decode failure (T13, Phase A Trust Boundary #2) instead of rejecting the call; this is an agent-side error-handling defect, not an OPA-expressible condition (there is no malformed-arguments signal reaching a structured input.args.* field distinguishably from a legitimately-empty call). Recommended action: a human decision to change agent.py's error handling (fail closed on decode failure) is required at the agent-implementation layer. |
 
----
+## Policy Rules (OPA scope only)
 
-## STEP 2 — OWASP Coverage Mapping
+This phase records only whether a rule is OPA-policy-expressible per the shared rule and the 7-point eligibility gate; no Rego is written here. One new eligible candidate was found beyond the seven rules already in smith/smith_outputs/policy.rego: a sign/negative-value check on input.args.amount (adjust_compensation), grounded in T10 (Critical, financial-integrity break) and not covered by guidance.txt rule 6 (which only gates amounts above $10,000, not negative amounts) or by any existing policy.rego rule.
 
-| ASI | Name | Threat (from threat_model.md) | OPA-enforceable? | Candidate Rule |
-|-----|------|-------------------------------|-----------------|----------------|
-| ASI01 | Prompt Injection | inject include_ssn=true, exfiltrate SSN via email | Yes | SSN_VIEW_PERM, EMAIL_SSN_BLOCK |
-| ASI02 | Excessive Agency | unrestricted compensation access, adjust_compensation no approval | Yes | COMP_HR_ONLY, ADJ_APPROVAL_THRESHOLD |
-| ASI03 | Sensitive Data Exposure | SSN/salary exfiltration via email | Yes | SSN_VIEW_PERM, EMAIL_SSN_BLOCK |
-| ASI04 | Insecure Trust | forged identity headers | Partial | COMP_HR_ONLY, REPO_ROLE_GATE (raise bar) |
-| ASI05 | Access Control | no server authz, any role calls any tool | Yes | COMP_HR_ONLY, REPO_ROLE_GATE |
-| ASI06 | Side-Effect Abuse | adjust_compensation unlimited, send_email spam | Yes | ADJ_APPROVAL_THRESHOLD, EMAIL_SSN_BLOCK |
-| ASI07 | System Prompt Tampering | SYSTEM_PROMPT hardcoded — low risk | N/A | No new rule needed |
-| ASI08 | Supply Chain | framework compromise | No | Out of OPA scope |
-| ASI09 | Insufficient Logging | no server audit trail | No | Config concern, not a rule |
-| ASI10 | Insecure Orchestration | single-agent, low risk | N/A | No new rule needed |
+### Input Schema
 
----
+| Field | Source |
+|---|---|
+| input.args.employee_id | get_compensation, display_compensation, adjust_compensation (tool_definitions.json; string, required) |
+| input.args.include_ssn | get_compensation (tool_definitions.json; boolean, optional, default false) |
+| input.args.visibility | search_repos (tool_definitions.json; string, required, enum internal/public/external) |
+| input.args.amount | adjust_compensation (tool_definitions.json; integer, required, no declared sign/magnitude constraint) |
+| input.args.subject | send_email (tool_definitions.json; string, required) |
+| input.args.body | send_email (tool_definitions.json; string, required) |
+| input.extensions.subject.roles | system_vars.json (declared candidate list: hr, engineer, marketing, finance, platform, security) |
+| input.extensions.subject.permissions | system_vars.json (declared candidate list: view_ssn, None) |
+| input.extensions.subject.has_approval | system_vars.json (declared string enum "true"\|"false") |
 
-## STEP 3 — Candidate Rule Derivation
+### Known values
 
-### Candidate 1: COMP_HR_ONLY
-**Trigger**: `input.name` ∈ {get_compensation, display_compensation, adjust_compensation} AND "hr" ∉ `input.extensions.subject.roles`
-**OPA fields**: `input.name`, `input.extensions.subject.roles`
-**Available**: Yes — roles in system_vars.json
-**ASI coverage**: ASI02, ASI05
-**Guidance coverage**: None — not in current guidance.txt
-**Status**: NEW RULE
+Existing violation codes reused from smith/smith_outputs/policy.rego: REPO_INTERNAL_ONLY, COMP_HR_ONLY, SSN_VIEW_PERM, REPO_ROLE_GATE, ADJ_APPROVAL_THRESHOLD, EMAIL_SSN_BLOCK. New code created for the one genuinely novel candidate: ADJ_NO_NEGATIVE (consistent with the existing ADJ_* prefix used for adjust_compensation rules).
 
-### Candidate 2: SSN_VIEW_PERM
-**Trigger**: `input.name` == "get_compensation" AND `input.args.include_ssn` == true AND "view_ssn" ∉ `input.extensions.subject.permissions`
-**OPA fields**: `input.name`, `input.args.include_ssn`, `input.extensions.subject.permissions`
-**Available**: Yes — permissions in system_vars.json
-**ASI coverage**: ASI01, ASI03
-**Guidance coverage**: None — not in current guidance.txt
-**Status**: NEW RULE
+### Rules
 
-### Candidate 3: REPO_ROLE_GATE
-**Trigger**: `input.name` == "search_repos" AND "engineer" ∉ roles AND "security" ∉ roles
-**OPA fields**: `input.name`, `input.extensions.subject.roles`
-**Available**: Yes
-**ASI coverage**: ASI02, ASI05
-**Guidance coverage**: Rule 1 restricts *visibility* but not *role*. Rule 1 does not subsume REPO_ROLE_GATE — a marketing employee calling `search_repos(visibility="internal")` satisfies Rule 1 (internal only) but should be blocked by role. Two distinct enforcement dimensions.
-**Status**: NEW RULE
+| Code | OWASP | Threat IDs | Severity | Tool(s) / field | Condition | Matching |
+|---|---|---|---|---|---|---|
+| COMP_HR_ONLY | ASI02 | T02 | High | get_compensation, display_compensation, adjust_compensation / input.extensions.subject.roles | deny when the tool is one of {get_compensation, display_compensation, adjust_compensation} and "hr" is not in input.extensions.subject.roles | in / not_in (set membership on roles); exact string match on tool name |
+| SSN_VIEW_PERM | ASI02 | T01 | Critical | get_compensation / input.args.include_ssn, input.extensions.subject.permissions | deny when tool == get_compensation and input.args.include_ssn == true and "view_ssn" is not in input.extensions.subject.permissions | eq on include_ssn (boolean true); not_in (set membership) on permissions |
+| REPO_ROLE_GATE | ASI02 | T07 | High | search_repos / input.extensions.subject.roles | deny when tool == search_repos and none of {"engineer", "security"} is in input.extensions.subject.roles | not_in (set intersection empty) on roles |
+| REPO_INTERNAL_ONLY | ASI02 | T08 | High | search_repos / input.args.visibility | deny when tool == search_repos and input.args.visibility != "internal" | neq (case-insensitive per Phase A tool behavior) on visibility |
+| ADJ_APPROVAL_THRESHOLD | ASI02 | T09 | High | adjust_compensation / input.args.amount, input.extensions.subject.has_approval | deny when tool == adjust_compensation and input.args.amount > 10000 and input.extensions.subject.has_approval != "true" | gt on amount (integer 10000); neq on has_approval (string "true") |
+| EMAIL_SSN_BLOCK | ASI02 | T01 (narrow slice referenced by T05's covered portion) | Critical | send_email / input.args.subject, input.args.body | deny when tool == send_email and (input.args.subject or input.args.body) matches an SSN pattern (\d{3}-\d{2}-\d{4} or 9 bare digits) | contains_any (regex match) on subject/body |
+| ADJ_NO_NEGATIVE | ASI02 | T10 | Critical | adjust_compensation / input.args.amount | deny when tool == adjust_compensation and input.args.amount < 0 | lt on amount (integer 0); no subject dependency; no default/missing-value ambiguity since amount is a required field with no declared default |
 
-### Candidate 4: REPO_VISIBILITY_GATE (visibility=external block)
-**Trigger**: `input.name` == "search_repos" AND `input.args.visibility` == "external"
-**OPA fields**: `input.name`, `input.args.visibility`
-**Available**: Yes
-**ASI coverage**: ASI02
-**Guidance coverage**: Rule 1 — "All employees can only access internal repositories" → "external" is explicitly blocked.
-**Status**: COVERED BY RULE 1 — no new rule needed
+## Candidate Reconciliation
 
-### Candidate 5: ADJ_APPROVAL_THRESHOLD
-**Trigger**: `input.name` == "adjust_compensation" AND `input.args.amount` > 10000 AND `input.extensions.subject.has_approval` ≠ "true"
-**OPA fields**: `input.name`, `input.args.amount`, `input.extensions.subject.has_approval`
-**Available**: Yes — has_approval in system_vars.json; amount in tool_definitions.json
-**ASI coverage**: ASI06, ASI02
-**Guidance coverage**: None — not in current guidance.txt
-**Status**: NEW RULE
+| Candidate ID | Tool | Subject scope | Field expression | Operator | Values | Action | Sources | Related rule | Guidance group | Verdict |
+|---|---|---|---|---|---|---|---|---|---|---|
+| C01a | get_compensation | input.extensions.subject.permissions | input.args.include_ssn | eq | true | deny | T01 | SSN_VIEW_PERM (policy.rego) | SSN-permission gate | Duplicate |
+| C01b | get_compensation | input.extensions.subject.permissions | input.extensions.subject.permissions | not_in | view_ssn | deny | T01 | SSN_VIEW_PERM (policy.rego) | SSN-permission gate | Duplicate |
+| C02a | get_compensation | input.extensions.subject.roles | input.extensions.subject.roles (gates tool call itself) | not_in | hr | deny | T02 | COMP_HR_ONLY (policy.rego) | HR-only compensation access | Duplicate |
+| C02b | display_compensation | input.extensions.subject.roles | input.extensions.subject.roles (gates tool call itself) | not_in | hr | deny | T02 | COMP_HR_ONLY (policy.rego) | HR-only compensation access | Duplicate |
+| C02c | adjust_compensation | input.extensions.subject.roles | input.extensions.subject.roles (gates tool call itself) | not_in | hr | deny | T02 | COMP_HR_ONLY (policy.rego) | HR-only compensation access | Duplicate |
+| C03 | search_repos | input.extensions.subject.roles | input.extensions.subject.roles (gates tool call itself) | not_in | engineer, security | deny | T07 | REPO_ROLE_GATE (policy.rego) | Repo search role gate | Duplicate |
+| C04 | search_repos | none | input.args.visibility | neq | internal | deny | T08 | REPO_INTERNAL_ONLY (policy.rego) | Internal-only repository access | Duplicate |
+| C05a | adjust_compensation | none | input.args.amount | gt | 10000 | deny | T09 | ADJ_APPROVAL_THRESHOLD (policy.rego) | Compensation-adjustment approval threshold | Duplicate |
+| C05b | adjust_compensation | input.extensions.subject.has_approval | input.extensions.subject.has_approval | neq | true | deny | T09 | ADJ_APPROVAL_THRESHOLD (policy.rego) | Compensation-adjustment approval threshold | Duplicate |
+| C06 | send_email | none | input.args.subject, input.args.body | contains_any | SSN pattern (regex) | deny | T01, T05 | EMAIL_SSN_BLOCK (policy.rego) | SSN-in-email content block | Duplicate |
+| C07 | adjust_compensation | none | input.args.amount | lt | 0 | deny | T10 | none (no existing policy.rego rule or guidance.txt rule addresses sign; guidance.txt rule 6 only gates amounts > 10000, silent on negative values) | Compensation-adjustment sign integrity | Novel |
 
-### Candidate 6: EMAIL_SSN_BLOCK
-**Trigger**: `input.name` == "send_email" AND (regex.match(ssn_pattern, `input.args.subject`) OR regex.match(ssn_pattern, `input.args.body`))
-**OPA fields**: `input.name`, `input.args.subject`, `input.args.body`
-**Available**: Yes — subject and body are required tool parameters
-**ASI coverage**: ASI01, ASI03, ASI06
-**Guidance coverage**: None — not in current guidance.txt
-**Status**: NEW RULE
+## Existing Guidance Normalization
 
-### Non-candidate: REPO_TEAM_GATE (Rule 2)
-**Would enforce**: "All employees cannot access other teams' repositories"
-**Required field**: `input.extensions.subject.team` — **UNDECLARED in system_vars.json**
-**Status**: CANNOT BE A CANDIDATE — field not declared; rule cannot fire
+| Existing ID | Rule number | Tool | Subject scope | Field expression | Operator | Values | Action |
+|---|---|---|---|---|---|---|---|
+| EG1 | 1 | search_repos | none | input.args.visibility | neq | internal | deny |
+| EG3a | 3 | get_compensation | input.extensions.subject.roles | input.extensions.subject.roles (gates tool call itself) | not_in | hr | deny |
+| EG3b | 3 | display_compensation | input.extensions.subject.roles | input.extensions.subject.roles (gates tool call itself) | not_in | hr | deny |
+| EG3c | 3 | adjust_compensation | input.extensions.subject.roles | input.extensions.subject.roles (gates tool call itself) | not_in | hr | deny |
+| EG4a | 4 | get_compensation | input.extensions.subject.permissions | input.args.include_ssn | eq | true | deny |
+| EG4b | 4 | get_compensation | input.extensions.subject.permissions | input.extensions.subject.permissions | not_in | view_ssn | deny |
+| EG5 | 5 | search_repos | input.extensions.subject.roles | input.extensions.subject.roles (gates tool call itself) | not_in | engineer, security | deny |
+| EG6a | 6 | adjust_compensation | none | input.args.amount | gt | 10000 | deny |
+| EG6b | 6 | adjust_compensation | input.extensions.subject.has_approval | input.extensions.subject.has_approval | neq | true | deny |
+| EG7 | 7 | send_email | none | input.args.subject, input.args.body | contains_any | SSN pattern (regex) | deny |
 
----
+## Prior Proposal Reconciliation
 
-## STEP 4 — Candidate Rule Summary Table
+| Prior ID | Original number | Normalized rule | Disposition | Candidate / reason |
+|---|---|---|---|---|
 
-| ID | Name | Tool(s) | OPA Condition | guidance.txt Coverage | Verdict |
-|----|------|---------|---------------|----------------------|---------|
-| C1 | COMP_HR_ONLY | get_compensation, display_compensation, adjust_compensation | name ∈ comp_tools AND "hr" ∉ roles | NOT COVERED | New rule 3 |
-| C2 | SSN_VIEW_PERM | get_compensation | name=="get_compensation" AND include_ssn==true AND "view_ssn"∉permissions | NOT COVERED | New rule 4 |
-| C3 | REPO_ROLE_GATE | search_repos | name=="search_repos" AND "engineer"∉roles AND "security"∉roles | NOT COVERED | New rule 5 |
-| C4 | REPO_VISIBILITY_GATE | search_repos | name=="search_repos" AND visibility=="external" | COVERED BY RULE 1 | No new rule |
-| C5 | ADJ_APPROVAL_THRESHOLD | adjust_compensation | name=="adjust_compensation" AND amount>10000 AND has_approval≠"true" | NOT COVERED | New rule 6 |
-| C6 | EMAIL_SSN_BLOCK | send_email | name=="send_email" AND regex(ssn, subject OR body) | NOT COVERED | New rule 7 |
+## Phase Handoff
 
----
-
-## STEP 5 — Gap Register
-
-| Gap | Description | OPA-enforceable? | Disposition |
-|-----|-------------|-----------------|-------------|
-| G1 | Rule 2 team-scoped repo access | No — subject.team undeclared | Cannot enforce; documented in extension_suggestions.json |
-| G2 | Salary exfiltration via email (non-SSN) | No — content inspection beyond regex | Out of OPA scope for this run |
-| G3 | Bulk directory exfiltration | No — content-aware blocking required | Out of OPA scope |
-| G4 | No rate limiting on send_email | No — aggregate state not available to OPA | Out of OPA scope |
-| G5 | No server-side audit logging | No — config concern | Recommendation only |
-| G6 | get_directory — no role restriction | No guidance rule; tool low-sensitivity | Not proposed; below threshold |
-
----
-
-## STEP 6 — Undeclared Field Register
-
-| Field | Required by | Status |
-|-------|-------------|--------|
-| `input.extensions.subject.team` | Rule 2 (guidance.txt) | UNDECLARED — must be added to system_vars.json and populated from authenticated identity before Rule 2 can be enforced |
-
----
-
-## STEP 7 — New Rule Text (Proposed)
-
-The following 5 rules are proposed for addition to `guidance.txt` as new rules 3–7.
-
-**Rule 3** (COMP_HR_ONLY):
-> Only HR employees can access compensation records, including salary figures, compensation bands, and salary adjustments.
-
-**Rule 4** (SSN_VIEW_PERM):
-> Only employees with the view_ssn permission may request SSN data in compensation lookups; any caller without this permission must not set include_ssn to true.
-
-**Rule 5** (REPO_ROLE_GATE):
-> Only engineers and security team members may search repositories; all other roles are blocked from the repository search tool.
-
-**Rule 6** (ADJ_APPROVAL_THRESHOLD):
-> HR employees may adjust compensation without additional approval for amounts up to $10,000; any compensation adjustment greater than $10,000 requires prior manager approval indicated by the has_approval flag set to true.
-
-**Rule 7** (EMAIL_SSN_BLOCK):
-> Emails must not contain Social Security Numbers in their subject line or body; any attempt to send an email with an SSN pattern in the subject or body must be blocked.
-
----
-
-## STEP 8 — Coverage Check and Quality Gates
-
-### STEP 8a — Field Availability Check
-
-| Rule | Required OPA Fields | Available | Notes |
-|------|--------------------|-----------| ------|
-| 3 (COMP_HR_ONLY) | input.name, input.extensions.subject.roles | Yes | roles declared in system_vars.json |
-| 4 (SSN_VIEW_PERM) | input.name, input.args.include_ssn, input.extensions.subject.permissions | Yes | permissions declared; include_ssn in tool_definitions.json |
-| 5 (REPO_ROLE_GATE) | input.name, input.extensions.subject.roles | Yes | roles declared |
-| 6 (ADJ_APPROVAL_THRESHOLD) | input.name, input.args.amount, input.extensions.subject.has_approval | Yes | amount in tool_definitions.json; has_approval declared |
-| 7 (EMAIL_SSN_BLOCK) | input.name, input.args.subject, input.args.body | Yes | both required params in send_email tool definition |
-
-All 5 new rules reference only declared fields. ✓
-
-### STEP 8b — Redundancy Check
-
-Check all pairs across guidance.txt rules 1–2 and proposed new rules 3–7:
-
-| Pair | Overlap? | Resolution |
-|------|----------|------------|
-| Rule 1 vs Rule 3 | No — different tools (search_repos vs compensation tools) | Distinct |
-| Rule 1 vs Rule 5 | Partial — both cover search_repos. Rule 1: visibility gate. Rule 5: role gate. Different dimensions. | Distinct — not redundant |
-| Rule 1 vs Rule 4 | No — different tools | Distinct |
-| Rule 1 vs Rule 6 | No — different tools | Distinct |
-| Rule 1 vs Rule 7 | No — different tools | Distinct |
-| Rule 2 vs any new rule | No — Rule 2 is a blind spot (subject.team undeclared); it cannot conflict | Distinct |
-| Rule 3 vs Rule 4 | Rule 3 blocks non-HR callers from get_compensation entirely. Rule 4 adds a further permission gate for HR callers requesting include_ssn. Non-overlapping: Rule 3 fires first for non-HR; Rule 4 fires for HR without view_ssn. | Layered, not redundant |
-| Rule 3 vs Rule 6 | Rule 3 blocks non-HR from adjust_compensation. Rule 6 adds approval threshold for HR callers. Non-overlapping: Rule 6 applies only when Rule 3 has already passed (HR caller). | Layered, not redundant |
-| Rule 5 vs Rule 1 | Already checked above | Distinct |
-| Rule 4 vs Rule 7 | Different tools (get_compensation vs send_email) | Distinct |
-| Rule 6 vs Rule 7 | Different tools (adjust_compensation vs send_email) | Distinct |
-
-No redundancies found. ✓
-
-### STEP 8c — Regression Check
-
-**Prior run**: guidance.txt had 8 rules; prior run proposed 0 new rules (all candidate rules were covered by those 8 rules).
-
-**This run**: guidance.txt has 2 rules; this run proposes 5 new rules.
-
-Classification: The 5 new rules (COMP_HR_ONLY, SSN_VIEW_PERM, REPO_ROLE_GATE, ADJ_APPROVAL_THRESHOLD, EMAIL_SSN_BLOCK) are **genuine new additions** specific to the current 2-rule guidance.txt baseline. They are NOT regressions from the prior run — the prior run correctly found no new rules because its guidance.txt already contained equivalent rules (1–8). The current run is analyzing a reduced guidance.txt and correctly identifies the 5 coverage gaps.
-
-Regression log: Prior run proposed 0 rules (guidance.txt had 8 rules at that time, all covering these candidates). Current run analyzes 2-rule guidance.txt — 5 candidates are new additions, not regressions from the prior run. ✓
-
-### STEP 8d — Format Gate
-
-The `guidance_updated.txt` to be written:
-- MUST contain only bare-line rules (matching guidance.txt format — no numbers, no headers, no commentary)
-- MUST NOT contain: `## ` or `# ` headers, `|` table characters, "cannot be enforced" statements, phantom variable references, cross-references to other documents
-- Each line is a single plain-English rule
-
-Proposed 5 lines — all satisfy the format gate. ✓
-
----
-
-## STEP 9 — Final Proposed Additions to guidance.txt
-
-The following 5 rules are ready for inclusion in `guidance_updated.txt`:
-
-```
-Only HR employees can access compensation records, including salary figures, compensation bands, and salary adjustments.
-Only employees with the view_ssn permission may request SSN data in compensation lookups; any caller without this permission must not set include_ssn to true.
-Only engineers and security team members may search repositories; all other roles are blocked from the repository search tool.
-HR employees may adjust compensation without additional approval for amounts up to $10,000; any compensation adjustment greater than $10,000 requires prior manager approval indicated by the has_approval flag set to true.
-Emails must not contain Social Security Numbers in their subject line or body; any attempt to send an email with an SSN pattern in the subject or body must be blocked.
-```
-
-Gaps documented but not included (out of OPA scope or missing required fields):
-- Rule 2 team-scoped repo access: `subject.team` undeclared — cannot enforce
-- Salary exfiltration via email (non-SSN): content inspection beyond regex — out of scope
-- Bulk directory exfiltration: content-aware blocking required — out of scope
+- Status: PASS
+- Artifact schema: enforcement-mapping-v8
+- Summary: 14 threats (T01-T14) mapped: OPA=6 (T01, T02, T07, T08, T09, T10), Agent=5 (T03, T04, T05, T12, T13), Infrastructure=2 (T06, T11), Tool implementation=1 (T14). OWASP scope: ASI02=Partial (6 OPA + 7 other-layer threats), ASI01 and ASI06=Other-layer (each has exactly one grounded threat instance, owned outside OPA, so Partial does not apply per the guide's definition), ASI03/04/05/07/08/09/10=Not applicable (Phase C: No, zero grounded threat instances). 8 gap-register findings (G01-G08) covering the 'team' field, rate limiting, unpopulated subject provenance, the internal_notes response leak, the unaddressed send_email recipient control, the broader session-content-reuse concern, the Q19/Q20 denial-UX open questions, and agent.py's malformed-JSON silent-{} substitution. 7 OPA candidates reconciled against the 7 existing policy.rego/guidance.txt rules: 6 are Duplicate (C01-C06, restating SSN_VIEW_PERM, COMP_HR_ONLY, REPO_ROLE_GATE, REPO_INTERNAL_ONLY, ADJ_APPROVAL_THRESHOLD, EMAIL_SSN_BLOCK — identical deny behavior to existing coverage); 1 is Novel (C07: a negative/sign check on input.args.amount for adjust_compensation, grounded in T10, not addressed by guidance.txt rule 6 which only gates amounts above $10,000, and not present in policy.rego). No Clarification, Overlap, Conflict, or Contradictory correction found, so no blocking relationship exists. Prior Proposal Reconciliation is empty (GUIDANCE_UPDATE_FILE was ABSENT). Addendum written to guidance_updated.txt with one plain line for the C07/ADJ_NO_NEGATIVE Novel finding, matching guidance.txt's flat one-rule-per-line style. Status: PASS.
