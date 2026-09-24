@@ -3,9 +3,9 @@
   "status": "PASS",
   "title": "Architecture Analysis",
   "sections": {
-    "Run Context": "TARGET_AGENT_PATH=/Users/saisree/smith-trial/.claude/skills/smith/examples/RagChatbot_MCPServer/. GUIDANCE_FILE=smith/guidance.txt (19 numbered rules). SYSTEM_VAR_FILE=smith/system_vars.json (action_list, action_description, roles=[employee,manager], teams, id='Bob', approval flag). TOOL_DEFINITIONS_FILE=smith/tool_definitions.json (11 tools, source=http://localhost:8000/sse, transport=sse). GUIDANCE_UPDATE_FILE=ABSENT. Selected source files inspected: mcp_server.py (canonical FastMCP tool-registration server, mcp.run(transport='sse'), 646 lines), fast_server.py (FastAPI SSE-client orchestrator, no @mcp.tool decorators), run_llm_with_mcp.py (Streamlit SSE-client orchestrator with LLMGuard + role-sync UI), create_ticket.py (raw_create_ticket/raw_submit_ticket/raw_purchase/raw_return helpers), rag_pipeline.py (ask_for_workpolicy RAG), rag_salary.py (unused raw_ask_for_salary RAG helper; no registered tool calls it), opa_client.py (OPAClient/UniversalOPAClient + fail-secure logic, HTTP client for localhost:8181), opa_config.py (role init helpers), llm_guard_config.py (EnhancedLLMGuardWrapper input/output scanners), data_sources/hr_database.py (in-memory HRDatabase/CompensationDatabase/PurchaseDatabase). Two hops followed from each registered tool (tool function -> raw_* helper / hr_db lookup -> data_sources module, or tool function -> opa_client.get_current_user_context -> current_user_context global). 10 implementation files read, within the 20-file cap.",
-    "Trust Boundaries": "Boundary 1: Streamlit/FastAPI client process <-> MCP server process, crossed over SSE at http://localhost:8000/sse; arguments cross as LLM-generated JSON tool-call arguments, parsed with json.loads and passed to the MCP tool with no server-side re-validation beyond FastMCP's declared type coercion. Boundary 2: MCP tool function <-> in-process Python data layer (data_sources.hr_database, create_ticket.py); no serialization boundary, direct dict access. Boundary 3: MCP tool function (ask_for_workpolicy) <-> external RAG stack (PDFPlumberLoader-loaded PDF, HuggingFace embeddings, InMemoryVectorStore, OpenAI-compatible chat completion at INFERENCE_BASE_URL); retrieved PDF text and LLM completion cross into the tool return value unindexed and unverified. Boundary 4: client orchestrator <-> OPA server at localhost:8181, referenced only by opa_client.py's evaluate_policy/_fail_secure_decision; this boundary is never actually crossed by any code path reachable from a registered @mcp.tool function in mcp_server.py — evaluate_policy is dead code with respect to the live tool set. Boundary 5: client orchestrator <-> LLMGuard scanners (llm_guard_config.py); crossed for run_llm_with_mcp.py's chat() function only (input/output scan), not crossed for fast_server.py's chat() function, and not crossed inside mcp_server.py itself (no scanning at the tool-execution boundary).",
-    "Data Flow": "Request: end user types a question in the Streamlit UI (run_llm_with_mcp.py) or POSTs to fast_server.py's /chat; user_profile (role/department/name) is read from st.session_state or the request body and interpolated as free text into a system-prompt string, never sent as a structured field to the MCP server. The chat() loop calls the LLM (OpenAI-compatible chat.completions.create) with the tool schema from tool_definitions.json-equivalent introspection; the LLM emits a tool_call with JSON arguments; the client parses those arguments with json.loads and calls session.call_tool(tool_name, arguments) over SSE to mcp_server.py, which dispatches to the matching @mcp.tool function purely by declared parameter names/types (FastMCP), with no injected subject/role parameter. Inside the tool, hr_db/comp_db/purchase_db in-memory dicts are read (for compensation/purchase tools) or raw_*/RAG helpers are called; the manager whose data is returned is selected via get_current_user_context()['user_id'] defaulting to 'manager_123', not by any value the client actually sent. Response: the tool return string (JSON or CSV text, or a natural-language RAG answer) is returned over SSE to the client, optionally passed through LLMGuard's scan_tool_output (run_llm_with_mcp.py only), and then handed back to the LLM for the next turn or shown directly to the user; fast_server.py performs no output scanning at all."
+    "Run Context": "Target: examples/RagChatbot_MCPServer. Authoritative inputs: smith/tool_definitions.json (10 tools, source http://localhost:8000/sse, transport sse), smith/system_vars.json (roles: employee/manager per guidance.txt, but action_description/roles/teams object -- note: system_vars.json declares roles [\"employee\",\"manager\"] while runtime code (opa_config.py/opa_client.py) uses [\"user\",\"manager\"] as the actual role vocabulary), guidance.txt (19 rules). Source files inspected: mcp_server.py (tool registrations/implementations), opa_client.py (OPAClient/UniversalOPAClient, user-context store), opa_config.py (role table, session init), run_llm_with_mcp.py (Streamlit client/agent, LLMGuard calls, tool dispatch), create_ticket.py, rag_pipeline.py, rag_salary.py (raw_* implementations), llm_guard_config.py (EnhancedLLMGuardWrapper scanners), data_sources/hr_database.py (HRDatabase/CompensationDatabase/PurchaseDatabase fixtures). Followed at most 2 hops from each registered tool (mcp_server.py -> create_ticket.py/rag_pipeline.py/rag_salary.py/opa_client.py/data_sources.hr_database); did not expand into langchain/openai/mcp/llm_guard library internals.",
+    "Trust Boundaries": "Boundary 1: Streamlit UI (run_llm_with_mcp.py) selects user_role via a client-side selectbox with no authentication; this role is pushed to the MCP server only by calling a tool named set_user_role, which does not exist in mcp_server.py or tool_definitions.json (unresolved/dynamic -- Unknown, not proven absent). Boundary 2: MCP client (run_llm_with_mcp.py) to MCP server (mcp_server.py) over SSE at http://localhost:8000/sse; tool arguments arrive as LLM-generated JSON, parsed with json.loads and passed through uninspected. Boundary 3: MCP server tool implementations to in-process fixture data sources (data_sources/hr_database.py) -- no network hop, no additional authorization check observed inside tool bodies. Boundary 4: MCP server to external OPA server (opa_client.OPAClient posts to http://localhost:8181) -- present as library/HTTP-client code in opa_client.py, but no call site in mcp_server.py's tool bodies invokes evaluate_policy, so this boundary is defined but not wired into the request path for any tool visible in this tree.",
+    "Data Flow": "Request: Streamlit user input -> enforce_input() LLMGuard prompt-injection/PII scan (with a business-safe-word allowlist and malicious-substring blocklist) -> chat() appends system+user messages (system message embeds the client-asserted user_profile dict verbatim) -> OpenAI-compatible LLM selects a tool + JSON arguments -> ConnectionManager.call_tool over MCP SSE -> mcp_server.py tool function executes business logic directly against data_sources/hr_database.py in-memory fixtures (no pre-execution policy check observed) -> raw tool return string. Response: tool return string -> enforce_output() LLMGuard output scan (PII redaction, banned literal substrings, toxicity/relevance) -> appended as a 'tool' message -> further LLM turns until a final assistant message -> enforce_output() again -> rendered to Streamlit UI. Role sync path: role selection in the sidebar -> initialize_user_session()/set_user_context() (local in-process dict update in opa_client.py) and a best-effort call_tool('set_user_role', ...) against the MCP server, which is not a tool defined in mcp_server.py."
   },
   "columns": {
     "Layers": [
@@ -57,201 +57,404 @@
   "tables": {
     "Layers": [
       {
-        "Layer": "Agent/client",
+        "Layer": "Agent/client (Streamlit UI + LLM orchestration)",
         "File": "run_llm_with_mcp.py",
-        "Role": "Streamlit UI orchestrator; builds chat messages, injects user_profile as prompt text, runs LLMGuard input/output scans, calls MCP tools over SSE, syncs role via a 'set_user_role' tool call that does not exist on the registered server",
-        "Inputs": "st.chat_input() text, st.session_state.user_profile (role/department/name), st.selectbox role choice",
-        "Outputs": "chat completion tool_calls, sanitized/LLMGuard-scanned assistant response",
-        "Current enforcement": "LLMGuard scan_incoming_prompt (business-safe-pattern override can re-allow flagged input) and scan_tool_output; denial messages starting with the emoji prefix bypass output scanning by design"
+        "Role": "Renders chat UI, holds client-selected user_role in st.session_state, assembles system/user messages, drives the tool-calling loop against an OpenAI-compatible chat model, dispatches MCP tool calls, applies LLMGuard input/output scanning.",
+        "Inputs": "Chat text input; sidebar role selectbox (user|manager); st.session_state.user_profile; MCP tool list/schemas fetched at startup.",
+        "Outputs": "Sanitized assistant response rendered to chat UI; outbound MCP tool_call requests with LLM-generated JSON arguments; a best-effort set_user_role tool call.",
+        "Current enforcement": "LLMGuard prompt-injection/PII/toxicity scan on input (enforce_input) with a hardcoded business-safe-word allowlist that can override a flagged scan; LLMGuard output scan (enforce_output) except messages starting with the deny marker are passed through unfiltered."
       },
       {
-        "Layer": "Agent/client",
-        "File": "fast_server.py",
-        "Role": "FastAPI SSE-client orchestrator exposing /chat and /extract_tool_call; alternate entry point with no LLMGuard wiring at all",
-        "Inputs": "ChatRequest.question, ChatRequest.user_profile, ChatRequest.history",
-        "Outputs": "ChatResponse.answer",
-        "Current enforcement": "None: no LLMGuard, no OPA call, no role sync"
-      },
-      {
-        "Layer": "MCP",
+        "Layer": "MCP transport/registration",
         "File": "mcp_server.py",
-        "Role": "FastMCP server (mcp.run(transport='sse')) registering the 11 tools declared in tool_definitions.json plus get_w2_form (11 total matches exactly: create_ticket, submit_ticket, send_email, export_content_as_file, ask_for_workpolicy, get_w2_form, return_product, view_team_compensation, export_compensation_data, email_compensation_report, purchase)",
-        "Inputs": "Tool-call name + JSON arguments received over SSE from a connected client session",
-        "Outputs": "String tool result (JSON, CSV, or natural-language text) per FastMCP's declared return type",
-        "Current enforcement": "None inside tool bodies beyond declared type coercion by FastMCP and an optional select_fields projection (project_record); no authorization check, no OPA call, no LLMGuard call reachable from any live @mcp.tool function"
+        "Role": "FastMCP server exposing 10 @mcp.tool()-decorated functions over SSE (source http://localhost:8000/sse per tool_definitions.json).",
+        "Inputs": "MCP tool_call requests (tool name + JSON arguments) from the client over SSE.",
+        "Outputs": "String tool results (plain text, JSON-encoded text, or CSV-formatted text) returned over MCP.",
+        "Current enforcement": "None observed at registration/dispatch level; no decorator or pre-call check wraps any @mcp.tool() function in this file (a commented-out @policy_check(...) decorator exists for two now-disabled tools, and policy_check is not defined anywhere in the inspected tree)."
       },
       {
         "Layer": "Tool implementation",
-        "File": "create_ticket.py",
-        "Role": "raw_create_ticket/raw_submit_ticket/raw_purchase/raw_return: pure string-formatting stubs with no data lookup or validation",
-        "Inputs": "ticket_content, amount, product_name (as passed through from mcp_server.py)",
-        "Outputs": "Confirmation strings that always claim success",
-        "Current enforcement": "None"
+        "File": "mcp_server.py, create_ticket.py, rag_pipeline.py, rag_salary.py",
+        "Role": "Business logic for each tool: ticketing (create_ticket.py), RAG Q&A over PDFs (rag_pipeline.py for work policy, rag_salary.py for salary PDF), and inline logic in mcp_server.py for send_email, export_content_as_file, get_w2_form, return_product, view_team_compensation, export_compensation_data, email_compensation_report, purchase.",
+        "Inputs": "Tool arguments as declared in tool_definitions.json; in-process user context (opa_client.get_current_user_context()) for the two compensation tools and purchase.",
+        "Outputs": "Formatted strings/JSON/CSV containing business data, including sensitive HR fields for the compensation tools.",
+        "Current enforcement": "None: view_team_compensation and export_compensation_data include sensitive fields (ssn, personal_email, home_address, bank_account, emergency_contact, healthcare_plan/id) unconditionally whenever the underlying fixture record has them, with only a code comment stating 'policy enforcement will filter based on permissions'; no such filtering call exists in the function body. email_compensation_report and send_email perform no domain allowlist/blocklist check despite guidance rules 6-8, 18-19 requiring one."
       },
       {
-        "Layer": "Tool implementation",
-        "File": "rag_pipeline.py",
-        "Role": "raw_ask_for_workpolicy: lazily builds a HuggingFace-embedding InMemoryVectorStore over the work-policy PDF and answers via an OpenAI-compatible chat model",
-        "Inputs": "question (str)",
-        "Outputs": "LLM-generated answer string grounded in retrieved PDF chunks",
-        "Current enforcement": "None; no filtering of question content or of retrieved/returned text"
+        "Layer": "Runtime context / would-be enforcement",
+        "File": "opa_client.py, opa_config.py",
+        "Role": "Defines an in-process user-context store (current_user_context dict, set via set_user_context), a role->permission table (USER_ROLES: user, manager), an OPAClient that POSTs to an OPA server's allow/deny endpoints, a UniversalOPAClient that can transform tool calls into a universal Rego-shaped input (kind/action/name/arguments/extensions.subject/...), and a hardcoded _fail_secure_decision fallback used only when the OPA server is unreachable.",
+        "Inputs": "user_id/user_role/kwargs passed to set_user_context; tool name + arguments passed to build_universal_input/transform_to_universal_schema; OPA server responses over HTTP.",
+        "Outputs": "current_user_context dict read by mcp_server.py tool bodies; a universal-schema dict shaped for OPA input.extensions.subject.*; an allow/deny boolean plus reason (when actually invoked).",
+        "Current enforcement": "This layer is fully built (schema shaping, fail-secure heuristics for role/domain/external-sharing/time-range/sensitive-fields) but is never called from any @mcp.tool() function body in mcp_server.py in this tree -- it is present machinery, not a wired enforcement point. It is the intended future OPA interception layer."
       },
       {
-        "Layer": "Tool implementation",
+        "Layer": "External service (prompt/output guard)",
+        "File": "llm_guard_config.py (imported in run_llm_with_mcp.py as RagChatbot_MCPServer.llm_guard_copy, a module not found in this tree)",
+        "Role": "LLMGuard-based scanners: input side blocks/redacts prompt injection, invisible text, PII (via Anonymize), banned substrings (including literal words like 'ssn', 'bypass', 'ignore all'), secrets, toxicity, non-English text; output side redacts PII/sensitive entities, banned literal substrings (example SSNs/addresses/bank accounts from the fixture data), toxicity, and checks relevance/no-refusal.",
+        "Inputs": "Raw user/system chat text (input side); tool_call_id result strings and the user prompt (output side).",
+        "Outputs": "Sanitized/redacted text plus an is_valid boolean.",
+        "Current enforcement": "Prompt-layer guardrail only; operates on free text, not on structured tool arguments or subject identity, and is bypassed for provider-formatted deny messages (text.startswith('\ud83d\udeab')). The import path used by run_llm_with_mcp.py (llm_guard_copy) does not match the only guard module present (llm_guard_config.py); this is recorded as an unresolved path rather than assumed broken."
+      },
+      {
+        "Layer": "External/material data source",
         "File": "data_sources/hr_database.py",
-        "Role": "In-memory HRDatabase/CompensationDatabase/PurchaseDatabase providing employee, compensation (including SSN/home address/bank account), and vendor-catalog records consumed by view_team_compensation, export_compensation_data, and purchase",
-        "Inputs": "None (static in-process data seeded at import time)",
-        "Outputs": "Dicts of employee/compensation/purchase records",
-        "Current enforcement": "None; sensitive_data (ssn, personal_email, home_address, emergency_contact, bank_account, healthcare_plan, healthcare_id) is unconditionally merged into both view_team_compensation and export_compensation_data results with a code comment stating 'policy enforcement will filter based on permissions' that has no corresponding enforcement code"
-      },
-      {
-        "Layer": "Runtime context / enforcement",
-        "File": "opa_client.py",
-        "Role": "OPAClient/UniversalOPAClient: builds a 'universal schema' input (input.extensions.subject.*, input.arguments.*) and POSTs to an OPA server at localhost:8181/v1/data/mcp/policies/{allow,deny}; also implements a role-based fail-secure fallback (_fail_secure_decision) used only when OPA is unreachable",
-        "Inputs": "tool_name, function args/kwargs, current_user_context (a single process-wide dict)",
-        "Outputs": "(allow: bool, reason: str|None) decision; get_current_user_context() dict",
-        "Current enforcement": "Not invoked from any code path reachable from a registered @mcp.tool function in mcp_server.py; evaluate_policy/build_universal_input/UniversalOPAClient are defined but unused by the live server. set_user_context is called once at process start with hard-coded ('mcp_user','user') and never updated per-request"
-      },
-      {
-        "Layer": "Runtime context / enforcement",
-        "File": "llm_guard_config.py",
-        "Role": "EnhancedLLMGuardWrapper: PromptInjection/Anonymize/BanSubstrings/Secrets/Toxicity/Language input scanners and Sensitive/Toxicity/NoRefusal/Relevance/BanSubstrings output scanners",
-        "Inputs": "Free-text prompt (input scan) or (user_prompt, tool_result) (output scan)",
-        "Outputs": "(sanitized_text, is_valid) tuples",
-        "Current enforcement": "Wired into run_llm_with_mcp.py's chat() only (with a business-safe-pattern override that can re-admit flagged input, and a bypass for '🚫'-prefixed denial text); not wired into fast_server.py or into mcp_server.py's tool execution path"
-      },
-      {
-        "Layer": "External service",
-        "File": "rag_pipeline.py / rag_salary.py",
-        "Role": "PDF ingestion (PDFPlumberLoader) + HuggingFace embeddings + InMemoryVectorStore + OpenAI-compatible chat completion, used to answer ask_for_workpolicy; rag_salary.py defines an equivalent raw_ask_for_salary helper that is not called by any registered tool in mcp_server.py",
-        "Inputs": "question text, on-disk PDF files (pdfs/work_rules_and_regulations_2016.pdf, pdfs/salary_summary.pdf)",
-        "Outputs": "LLM-synthesized answer string",
-        "Current enforcement": "None"
-      },
-      {
-        "Layer": "External service",
-        "File": "opa_client.py (OPA server dependency)",
-        "Role": "OPA server at http://localhost:8181, queried by evaluate_policy/check_opa_server",
-        "Inputs": "universal-schema JSON payload built by UniversalOPAClient",
-        "Outputs": "allow/deny booleans",
-        "Current enforcement": "Reachable only from code that is never called by the live tool set; effectively unused external dependency"
+        "Role": "In-memory fixture classes HRDatabase (employees, managers), CompensationDatabase (compensation_data, sensitive_data), and a purchase catalog/rules database referenced as purchase_db in mcp_server.py.",
+        "Inputs": "None (static Python dict literals initialized at import time).",
+        "Outputs": "Employee, compensation, and sensitive-field records keyed by employee/manager id; vendor catalog and purchase-category rules.",
+        "Current enforcement": "None; all records are returned to whichever tool queries them, with field-level access left entirely to the (unimplemented) 'policy enforcement' referenced only in comments."
       }
     ],
     "Runtime Subject Context": [
       {
-        "Field": "input.extensions.subject.id",
-        "Provider": "opa_client.get_principal_context() (id: current_user_context['user_id'], default 'mcp_direct_user') and system_vars.json (\"id\": \"Bob\")",
-        "Provenance": "Server-side global set once at process start via set_user_context('mcp_user','user') in mcp_server.py's __main__ block, or from Streamlit session state via opa_config.initialize_user_session in the client (never actually transmitted to or read by any registered tool)",
-        "Verification / integrity": "None documented; no signature or session-binding ties this id to an authenticated request",
-        "OPA-visible?": "Unknown / effectively no: the field is only assembled inside UniversalOPAClient.build_universal_input, which is dead code with respect to the live @mcp.tool functions"
+        "Field": "input.extensions.subject.roles",
+        "Provider": "Declared by smith/system_vars.json (roles: [\"employee\", \"manager\"]). No loader for system_vars.json was found within two hops of any registered tool in mcp_server.py, opa_client.py, opa_config.py, or run_llm_with_mcp.py.",
+        "Provenance": "Not observed to be populated at runtime from this file. The only runtime analog is opa_client.current_user_context['user_role'], set via set_user_context()/opa_config.initialize_user_session() from a Streamlit sidebar selectbox with no authentication, using a different vocabulary (['user','manager']) than system_vars.json's declared ['employee','manager']. That in-process value is also only pushed toward the MCP server via a best-effort call_tool('set_user_role', ...) in run_llm_with_mcp.py, and set_user_role is not a tool defined in mcp_server.py or tool_definitions.json (unresolved -- Unknown, not proven absent).",
+        "Verification / integrity": "None observed. No credential, token, or server-side identity check backs either the declared system_vars.json value or the runtime current_user_context value; both are self-asserted.",
+        "OPA-visible?": "Would be OPA-visible only via UniversalOPAClient.get_principal_context()/build_universal_input() -> extensions.subject.roles, but that transformation is never invoked from any active @mcp.tool() body, so it is not currently visible to any OPA decision in this tree; the shape exists as unused capability, and its source vocabulary does not match system_vars.json's declared vocabulary."
       },
       {
-        "Field": "input.extensions.subject.roles",
-        "Provider": "system_vars.json roles=[employee, manager]; opa_client.current_user_context['user_role'] (default 'user'); Streamlit user_role selectbox",
-        "Provenance": "Selected by the end user in the Streamlit sidebar (self-declared, no authentication) and/or the hard-coded server-start default; the compensation and purchase tool bodies in mcp_server.py never read user_role for any access decision -- purchase only uses it to render a cosmetic 'Shipping Address' string, and view_team_compensation/export_compensation_data ignore it entirely",
-        "Verification / integrity": "None; self-selected via a UI dropdown with no server-side authentication or session binding",
-        "OPA-visible?": "No for the live tool path (never read by tool logic for authorization); would be visible to opa_client.evaluate_policy if that path were ever invoked, which it is not"
+        "Field": "input.extensions.subject.id",
+        "Provider": "Declared by smith/system_vars.json (id: \"Bob\"). No loader for system_vars.json was found in the inspected tree.",
+        "Provenance": "Not observed to be populated at runtime from this file. The only runtime analog is opa_client.current_user_context['user_id'], defaulting to 'default_user' or 'mcp_user', set via the same unauthenticated set_user_context() path as roles above.",
+        "Verification / integrity": "None observed for either the declared value or the runtime analog.",
+        "OPA-visible?": "Same unused-capability status as roles: shaped into extensions.subject.id by UniversalOPAClient.build_universal_input(), but that path is not invoked by any active tool."
       },
       {
         "Field": "input.extensions.subject.teams",
-        "Provider": "opa_client.get_user_teams() (hard-coded to return ['engineering_team'] for any user_id); system_vars.json teams=[IT,HR,Sales,Finance,Legal,Operations,Marketing]",
-        "Provenance": "Hard-coded placeholder in opa_client.py, unrelated to the department argument accepted by view_team_compensation",
-        "Verification / integrity": "None; get_user_teams ignores its user_id parameter entirely",
-        "OPA-visible?": "No: dead code path, and even if invoked would not reflect the department argument actually supplied"
+        "Provider": "Declared by smith/system_vars.json (teams: [\"IT\",\"HR\",\"Sales\",\"Finance\",\"Legal\",\"Operations\",\"Marketing\"]). No loader for system_vars.json was found in the inspected tree.",
+        "Provenance": "Not observed to be populated at runtime from this file. The only runtime analog is opa_client.UniversalOPAClient.get_user_teams(), which returns a hardcoded ['engineering_team'] regardless of its user_id argument and regardless of system_vars.json's declared team list, and is never invoked from any active tool body.",
+        "Verification / integrity": "None; get_user_teams() ignores its own input, and system_vars.json is not observed to be loaded.",
+        "OPA-visible?": "Not currently visible to any active OPA decision; the shaping code exists (build_universal_input) but has no call site, and even if wired it would not reflect system_vars.json's declared team list."
       },
       {
         "Field": "input.extensions.subject.approval",
-        "Provider": "system_vars.json (\"approval\": \"true|false\" placeholder)",
-        "Provenance": "Declared as a template placeholder string; no code in mcp_server.py, opa_client.py, or the client orchestrators reads or sets a field named approval on any real request",
-        "Verification / integrity": "Not documented; not implemented",
-        "OPA-visible?": "No: not produced anywhere at runtime, so a policy could reference input.extensions.subject.approval but it would never be populated"
+        "Provider": "Declared by smith/system_vars.json (approval: \"true|false\"). No loader for system_vars.json was found in the inspected tree.",
+        "Provenance": "Not observed to be populated or read by any runtime code path; no analog exists in opa_client.py/opa_config.py/mcp_server.py. Guidance rule 9 ('Employees cannot buy products $200+ without manager approval') has no observed mechanism in the purchase tool body that captures or checks an approval value -- purchase() never references any approval-shaped input.",
+        "Verification / integrity": "Not applicable; field is declared but not observed to be produced or consumed anywhere in the inspected tree.",
+        "OPA-visible?": "Unknown/Unresolved -- no producer or consumer of this field was found; recorded as an open gap for downstream phases rather than assumed unused by design."
       }
     ],
     "Tool Arguments": [
-      {"Field": "input.args.ticket_content", "Tool": "create_ticket", "Origin / influence": "LLM-drafted string based on user request", "Disposition": "Echoed (interpolated verbatim into the confirmation string by raw_create_ticket; no validation or storage)"},
-      {"Field": "input.args.ticket_content", "Tool": "submit_ticket", "Origin / influence": "LLM-drafted string", "Disposition": "Echoed (raw_submit_ticket only formats it into a confirmation string)"},
-      {"Field": "input.args.recipient_email", "Tool": "send_email", "Origin / influence": "LLM-supplied destination address", "Disposition": "Ignored (the mcp_server.py send_email body never reads recipient_email or subject or body; it only echoes email_content and attached_file)"},
-      {"Field": "input.args.subject", "Tool": "send_email", "Origin / influence": "LLM-supplied", "Disposition": "Ignored (declared parameter, unused in function body)"},
-      {"Field": "input.args.body", "Tool": "send_email", "Origin / influence": "LLM-supplied", "Disposition": "Ignored (declared parameter, unused in function body)"},
-      {"Field": "input.args.email_content", "Tool": "send_email", "Origin / influence": "LLM-supplied", "Disposition": "Echoed (concatenated directly into the returned confirmation string)"},
-      {"Field": "input.args.attached_file", "Tool": "send_email", "Origin / influence": "LLM-supplied file name", "Disposition": "Echoed (concatenated directly into the returned confirmation string, no existence or content check)"},
-      {"Field": "input.args.data", "Tool": "export_content_as_file", "Origin / influence": "LLM-supplied content to export", "Disposition": "Echoed (concatenated into the returned string; no file is actually written)"},
-      {"Field": "input.args.file_name", "Tool": "export_content_as_file", "Origin / influence": "LLM-supplied", "Disposition": "Echoed"},
-      {"Field": "input.args.question", "Tool": "ask_for_workpolicy", "Origin / influence": "End-user question text", "Disposition": "Acts on (drives similarity_search against the vector store and is interpolated into the RAG prompt template passed to the LLM)"},
-      {"Field": "input.args.amount", "Tool": "return_product", "Origin / influence": "LLM-supplied refund amount", "Disposition": "Echoed (raw_return only formats it into the confirmation string; no validation against any purchase record)"},
-      {"Field": "input.args.product_name", "Tool": "return_product", "Origin / influence": "LLM-supplied", "Disposition": "Echoed"},
-      {"Field": "input.args.department", "Tool": "view_team_compensation", "Origin / influence": "Declared required parameter documented as restricting which department's data is returned", "Disposition": "Ignored (the function body never reads department; it always selects the manager's team via get_current_user_context()['user_id'], defaulting to 'manager_123', regardless of the department argument)"},
-      {"Field": "input.args.select_fields", "Tool": "view_team_compensation", "Origin / influence": "LLM/user-supplied list of field names", "Disposition": "Acts on (passed to project_record, which filters the per-employee dict to only the named keys when non-empty)"},
-      {"Field": "input.args.id", "Tool": "view_team_compensation", "Origin / influence": "Optional employee id to filter to", "Disposition": "Ignored (declared parameter, never read in the function body -- the full team list is always returned)"},
-      {"Field": "input.args.time_range", "Tool": "view_team_compensation", "Origin / influence": "LLM/user-supplied", "Disposition": "Echoed (only placed into the output's time_period field; does not change which data is fetched)"},
-      {"Field": "input.args.format", "Tool": "view_team_compensation", "Origin / influence": "LLM/user-supplied output format", "Disposition": "Acts on (selects JSON vs CSV serialization of the result)"},
-      {"Field": "input.args.include_benefits", "Tool": "view_team_compensation", "Origin / influence": "LLM/user-supplied", "Disposition": "Acts on (gates whether stock_grant_value/benefits_value/total_compensation are merged into each record)"},
-      {"Field": "input.args.select_fields", "Tool": "export_compensation_data", "Origin / influence": "LLM/user-supplied", "Disposition": "Acts on (passed to project_record identically to view_team_compensation)"},
-      {"Field": "input.args.id", "Tool": "export_compensation_data", "Origin / influence": "Optional employee id filter", "Disposition": "Ignored (declared, never read in the function body)"},
-      {"Field": "input.args.format", "Tool": "export_compensation_data", "Origin / influence": "LLM/user-supplied", "Disposition": "Acts on (selects CSV/PDF/JSON generation function)"},
-      {"Field": "input.args.time_range", "Tool": "export_compensation_data", "Origin / influence": "LLM/user-supplied", "Disposition": "Echoed (only placed into export_metadata; does not change which records are fetched)"},
-      {"Field": "input.args.export_type", "Tool": "export_compensation_data", "Origin / influence": "LLM/user-supplied ('aggregated' or 'detailed')", "Disposition": "Acts on (gates whether salary_history/bonus_history are added to each record)"},
-      {"Field": "input.args.business_justification", "Tool": "export_compensation_data", "Origin / influence": "LLM/user-supplied free text", "Disposition": "Echoed (placed into export_metadata; never checked against any policy, e.g. no check for the guidance-relevant 'external consultant' phrase that opa_client.py's dead-code path looks for)"},
-      {"Field": "input.args.external_sharing", "Tool": "export_compensation_data", "Origin / influence": "LLM/user-supplied boolean", "Disposition": "Echoed (placed into export_metadata; never blocks or alters the export despite guidance rule 17 requiring a block)"},
-      {"Field": "input.args.destination", "Tool": "email_compensation_report", "Origin / influence": "LLM/user-supplied recipient address", "Disposition": "Acts on only for cosmetic domain-splitting (domain = destination.split('@')[1]) that is displayed but never checked against an allow/deny list"},
-      {"Field": "input.args.report_data", "Tool": "email_compensation_report", "Origin / influence": "LLM/user-supplied compensation report content", "Disposition": "Ignored (declared parameter, never interpolated into or otherwise used by the returned confirmation text)"},
-      {"Field": "input.args.external_sharing", "Tool": "email_compensation_report", "Origin / influence": "LLM/user-supplied boolean", "Disposition": "Echoed (only displayed in the confirmation text; never blocks sending despite guidance rule 18 requiring a block)"},
-      {"Field": "input.args.encryption_required", "Tool": "email_compensation_report", "Origin / influence": "LLM/user-supplied boolean", "Disposition": "Echoed (only displayed in the confirmation text)"},
-      {"Field": "input.args.amount", "Tool": "purchase", "Origin / influence": "LLM/user-supplied purchase amount", "Disposition": "Acts on (used to render Order ID and displayed amounts) but never compared against any role-based limit (guidance rules 9-10) inside the function body"},
-      {"Field": "input.args.product_name", "Tool": "purchase", "Origin / influence": "LLM/user-supplied", "Disposition": "Acts on (matched, case-insensitively/substring, against purchase_db.vendor_catalog to resolve category and catalog_price)"},
-      {"Field": "input.args.category", "Tool": "purchase", "Origin / influence": "Optional LLM-supplied category", "Disposition": "Ignored (the parameter is immediately overwritten by `category = None` at the top of the function body and then recomputed from the catalog match)"},
-      {"Field": "input.args.justification", "Tool": "purchase", "Origin / influence": "Optional LLM-supplied justification text", "Disposition": "Ignored (declared parameter, never read anywhere in the function body)"}
+      {
+        "Field": "input.args.ticket_content",
+        "Tool": "create_ticket",
+        "Origin / influence": "LLM-generated string, forwarded verbatim to raw_create_ticket.",
+        "Disposition": "Acts on"
+      },
+      {
+        "Field": "input.args.ticket_content",
+        "Tool": "submit_ticket",
+        "Origin / influence": "LLM-generated string, forwarded verbatim to raw_submit_ticket.",
+        "Disposition": "Acts on"
+      },
+      {
+        "Field": "input.args.recipient_email",
+        "Tool": "send_email",
+        "Origin / influence": "LLM-generated string; declared required, but the function body never reads it -- the return string is built only from email_content and attached_file.",
+        "Disposition": "Ignored"
+      },
+      {
+        "Field": "input.args.subject",
+        "Tool": "send_email",
+        "Origin / influence": "LLM-generated string; declared required but never referenced in the function body.",
+        "Disposition": "Ignored"
+      },
+      {
+        "Field": "input.args.body",
+        "Tool": "send_email",
+        "Origin / influence": "LLM-generated string; declared required but never referenced in the function body.",
+        "Disposition": "Ignored"
+      },
+      {
+        "Field": "input.args.email_content",
+        "Tool": "send_email",
+        "Origin / influence": "LLM-generated string; interpolated directly into the returned confirmation string.",
+        "Disposition": "Echoed"
+      },
+      {
+        "Field": "input.args.attached_file",
+        "Tool": "send_email",
+        "Origin / influence": "LLM-generated string; interpolated directly into the returned confirmation string.",
+        "Disposition": "Echoed"
+      },
+      {
+        "Field": "input.args.data",
+        "Tool": "export_content_as_file",
+        "Origin / influence": "LLM-generated string; interpolated into the returned confirmation string (no file is actually written).",
+        "Disposition": "Echoed"
+      },
+      {
+        "Field": "input.args.file_name",
+        "Tool": "export_content_as_file",
+        "Origin / influence": "LLM-generated string; interpolated into the returned confirmation string.",
+        "Disposition": "Echoed"
+      },
+      {
+        "Field": "input.args.question",
+        "Tool": "ask_for_workpolicy",
+        "Origin / influence": "LLM-generated string; used as the similarity-search query against the work-policy PDF vector store and passed into the LLM prompt template.",
+        "Disposition": "Acts on"
+      },
+      {
+        "Field": "input.args.amount",
+        "Tool": "return_product",
+        "Origin / influence": "LLM-generated integer; interpolated into the confirmation string; not validated against any limit.",
+        "Disposition": "Echoed"
+      },
+      {
+        "Field": "input.args.product_name",
+        "Tool": "return_product",
+        "Origin / influence": "LLM-generated string; interpolated into the confirmation string.",
+        "Disposition": "Echoed"
+      },
+      {
+        "Field": "input.args.department",
+        "Tool": "view_team_compensation",
+        "Origin / influence": "LLM-generated string; declared required, but the function body never reads it -- the team is instead derived from the fixed manager_id resolved from get_current_user_context() (hardcoded fallback 'manager_123'), so the requested department has no effect on which records are returned.",
+        "Disposition": "Ignored"
+      },
+      {
+        "Field": "input.args.select_fields",
+        "Tool": "view_team_compensation",
+        "Origin / influence": "LLM-generated optional list; passed to project_record() which, if provided, filters the already-assembled full record (including sensitive fields) down to the requested field names -- i.e. it can be used by the caller to request sensitive fields explicitly.",
+        "Disposition": "Acts on"
+      },
+      {
+        "Field": "input.args.id",
+        "Tool": "view_team_compensation",
+        "Origin / influence": "LLM-generated optional employee id; declared to 'filter results to a specific team member' but never referenced anywhere in the function body -- the full team list is always returned.",
+        "Disposition": "Ignored"
+      },
+      {
+        "Field": "input.args.time_range",
+        "Tool": "view_team_compensation",
+        "Origin / influence": "LLM-generated string (default last_quarter); only echoed into the response's time_period field, never used to filter or select data.",
+        "Disposition": "Echoed"
+      },
+      {
+        "Field": "input.args.format",
+        "Tool": "view_team_compensation",
+        "Origin / influence": "LLM-generated string; controls whether the response is JSON-encoded or converted to CSV via convert_to_csv.",
+        "Disposition": "Acts on"
+      },
+      {
+        "Field": "input.args.include_benefits",
+        "Tool": "view_team_compensation",
+        "Origin / influence": "LLM-generated boolean; controls whether stock_grant_value/benefits_value/total_compensation fields are added to each member record.",
+        "Disposition": "Acts on"
+      },
+      {
+        "Field": "input.args.select_fields",
+        "Tool": "export_compensation_data",
+        "Origin / influence": "LLM-generated optional list; passed to project_record() the same way as in view_team_compensation, filtering the assembled record (which can include ssn/personal_email/home_address/bank_account) down to requested fields.",
+        "Disposition": "Acts on"
+      },
+      {
+        "Field": "input.args.id",
+        "Tool": "export_compensation_data",
+        "Origin / influence": "LLM-generated optional employee id; declared but never referenced in the function body.",
+        "Disposition": "Ignored"
+      },
+      {
+        "Field": "input.args.format",
+        "Tool": "export_compensation_data",
+        "Origin / influence": "LLM-generated string; selects between CSV, PDF, or JSON output formatting functions.",
+        "Disposition": "Acts on"
+      },
+      {
+        "Field": "input.args.time_range",
+        "Tool": "export_compensation_data",
+        "Origin / influence": "LLM-generated string; stored into export_metadata.time_range in the output but never used to filter which records/history are included.",
+        "Disposition": "Echoed"
+      },
+      {
+        "Field": "input.args.export_type",
+        "Tool": "export_compensation_data",
+        "Origin / influence": "LLM-generated string; when equal to 'detailed', adds salary_history/bonus_history fields to each record.",
+        "Disposition": "Acts on"
+      },
+      {
+        "Field": "input.args.business_justification",
+        "Tool": "export_compensation_data",
+        "Origin / influence": "LLM-generated string; stored into export_metadata.business_justification; not validated or acted on by any control in mcp_server.py itself (the unused opa_client fail-secure path does check for the substring 'external consultant' in this field, but that path is not invoked).",
+        "Disposition": "Echoed"
+      },
+      {
+        "Field": "input.args.external_sharing",
+        "Tool": "export_compensation_data",
+        "Origin / influence": "LLM-generated boolean; stored into export_metadata.external_sharing but never used to block or alter the export despite guidance rules 17-18 requiring a block.",
+        "Disposition": "Echoed"
+      },
+      {
+        "Field": "input.args.destination",
+        "Tool": "email_compensation_report",
+        "Origin / influence": "LLM-generated string; domain is parsed via destination.split('@')[1] and included in the response text, but the domain is never compared against an allow/deny list -- no blocking logic exists despite guidance rules 6-8.",
+        "Disposition": "Echoed"
+      },
+      {
+        "Field": "input.args.report_data",
+        "Tool": "email_compensation_report",
+        "Origin / influence": "LLM-generated string; declared required (the actual report content) but never referenced anywhere in the function body -- the response text is a fixed template that does not include report_data.",
+        "Disposition": "Ignored"
+      },
+      {
+        "Field": "input.args.external_sharing",
+        "Tool": "email_compensation_report",
+        "Origin / influence": "LLM-generated boolean; interpolated into the response text's 'External Sharing' line but never checked/blocked despite guidance rules 17-18.",
+        "Disposition": "Echoed"
+      },
+      {
+        "Field": "input.args.encryption_required",
+        "Tool": "email_compensation_report",
+        "Origin / influence": "LLM-generated boolean; interpolated into the response text's 'Encryption' line; no actual encryption behavior implemented.",
+        "Disposition": "Echoed"
+      },
+      {
+        "Field": "input.args.amount",
+        "Tool": "purchase",
+        "Origin / influence": "LLM-generated integer; interpolated into the response and into the generated Order ID; compared against nothing (category_rules['budget_limit'] is displayed in the response text but never checked against amount), so no approval-threshold enforcement (guidance rules 9-10) occurs in this function body.",
+        "Disposition": "Echoed"
+      },
+      {
+        "Field": "input.args.product_name",
+        "Tool": "purchase",
+        "Origin / influence": "LLM-generated string; used via substring matching against purchase_db.vendor_catalog to look up a catalog entry and category.",
+        "Disposition": "Acts on"
+      },
+      {
+        "Field": "input.args.category",
+        "Tool": "purchase",
+        "Origin / influence": "LLM-generated optional string; declared as an argument but immediately overwritten (category = None) at the start of the function body and then re-derived from the catalog lookup -- the caller-supplied value has no effect.",
+        "Disposition": "Ignored"
+      },
+      {
+        "Field": "input.args.justification",
+        "Tool": "purchase",
+        "Origin / influence": "LLM-generated optional string; declared but never referenced anywhere in the function body.",
+        "Disposition": "Ignored"
+      }
     ],
     "Prompt Inputs": [
-      {"Field or data": "user_profile (user_role, user_department/user_name)", "Source": "Streamlit session state (run_llm_with_mcp.py) or ChatRequest.user_profile (fast_server.py), self-declared with no authentication", "Consumer": "Interpolated as str(user_profile) into the system prompt sent to the chat LLM", "Trust / influence": "Prompt-only influence: the LLM may use this text to decide which tool/arguments to emit, but no registered tool re-reads or enforces user_profile itself; it never becomes a structured tool argument or subject field validated server-side"},
-      {"Field or data": "conversation history / memory_text", "Source": "st.session_state.messages, truncated to last 10 turns, or ChatRequest.history", "Consumer": "Interpolated into the system prompt string", "Trust / influence": "Prompt-only; explicitly labeled 'Memory is only for reference' but nothing prevents earlier LLM or tool output (including RAG-retrieved PDF content) from being echoed back and re-interpolated in a later turn"},
-      {"Field or data": "question (ask_for_workpolicy)", "Source": "End-user chat input", "Consumer": "ChatPromptTemplate.from_template(template) | llm, alongside retrieved PDF context", "Trust / influence": "Directly interpolated into the RAG prompt sent to the answering LLM; also passed through LLMGuard's scan_incoming_prompt in run_llm_with_mcp.py only (not in fast_server.py or inside mcp_server.py itself)"},
-      {"Field or data": "retrieved PDF context (work_rules_and_regulations_2016.pdf / salary_summary.pdf chunks)", "Source": "InMemoryVectorStore.similarity_search results", "Consumer": "Interpolated into the same RAG prompt template as {context}", "Trust / influence": "Treated as trusted grounding text; no provenance/integrity check on the PDF files themselves before ingestion"},
-      {"Field or data": "tool denial message convention ('🚫' prefix)", "Source": "get_universal_denial_message() strings in opa_client.py (unused by live tools) and the system-prompt instruction 'If a tool returns a denial message... simply relay that exact message'", "Consumer": "System prompt instructs the LLM to relay such messages verbatim without elaboration; enforce_output in run_llm_with_mcp.py also special-cases text starting with '🚫' to skip LLMGuard output scanning entirely", "Trust / influence": "A prompt-level convention, not a structural boundary: since no live tool actually emits a '🚫'-prefixed string today, this is currently inert, but it also means any future or injected text beginning with that character would bypass output scanning by construction"}
+      {
+        "Field or data": "user chat message (question)",
+        "Source": "Streamlit st.chat_input(), i.e. direct end-user text.",
+        "Consumer": "enforce_input() LLMGuard scan, then embedded into the 'user' role message sent to the LLM as 'Current task/question: ' + question.",
+        "Trust / influence": "Untrusted; scanned for prompt injection/PII/toxicity, but a hardcoded business-safe-word allowlist can override a scanner block, and if no malicious-pattern match is found the text is still allowed through with only a warning even when LLMGuard itself flagged it."
+      },
+      {
+        "Field or data": "st.session_state.user_profile (user_role, user_department, user_name)",
+        "Source": "Client-side session state set from the sidebar role selectbox; not authenticated.",
+        "Consumer": "Interpolated verbatim into the system prompt ('The current user's profile: ' + str(...)) sent to the LLM.",
+        "Trust / influence": "Self-asserted client data placed directly in the system prompt; the LLM (not a structured pre-execution check) is the only consumer that 'sees' the role for reasoning about what the user is allowed to do, since no tool body reads this profile."
+      },
+      {
+        "Field or data": "memory_text (prior turns, up to last 10 messages)",
+        "Source": "st.session_state.messages, built from prior user/assistant turns in the same Streamlit session.",
+        "Consumer": "Appended into the system prompt as conversation history for the LLM.",
+        "Trust / influence": "Mixed trust: includes prior user input (untrusted) and prior assistant/tool output (which may include real HR data if a compensation tool was called earlier in the session), re-fed into later prompts without re-scanning through enforce_input."
+      },
+      {
+        "Field or data": "retrieved PDF context (work_rules_and_regulations_2016.pdf via rag_pipeline.py; salary_summary.pdf via rag_salary.py)",
+        "Source": "Local PDF files loaded and chunked at first use via PDFPlumberLoader + InMemoryVectorStore similarity search.",
+        "Consumer": "Interpolated into the RAG prompt template's {context} slot and sent to the underlying chat LLM (ChatOpenAI) for ask_for_workpolicy; rag_salary.py's raw_ask_for_salary exists but is not wired to any @mcp.tool() in mcp_server.py (ask_for_salary tool is commented out).",
+        "Trust / influence": "Treated as trusted reference content by the RAG prompt, but is not passed through enforce_output before being embedded in a further LLM call inside ask_for_workpolicy itself; the final answer is scanned by enforce_output only when the *tool's overall return string* reaches the outer chat() loop."
+      },
+      {
+        "Field or data": "tool output text (e.g. compensation JSON/CSV, email confirmations)",
+        "Source": "Each MCP tool's return string.",
+        "Consumer": "Appended as a 'role: tool' message back into the LLM conversation for the next turn, after enforce_output(); also directly surfaced to the user once the LLM stops calling tools.",
+        "Trust / influence": "Treated as at least partly trusted (fed back into the LLM as ground truth); enforce_output applies PII/substring redaction, but denial messages beginning with the specific emoji marker bypass all output scanning."
+      }
     ],
     "External Data": [
-      {"Data": "work_rules_and_regulations_2016.pdf content", "Source": "Local file pdfs/work_rules_and_regulations_2016.pdf loaded via PDFPlumberLoader at first ask_for_workpolicy call", "Verification / integrity": "None documented (no checksum/signature on the PDF; loaded from a fixed local path)", "Consumer": "rag_pipeline.py's vector store and the answering LLM prompt"},
-      {"Data": "salary_summary.pdf content", "Source": "Local file pdfs/salary_summary.pdf, loaded by rag_salary.py's raw_ask_for_salary", "Verification / integrity": "None documented", "Consumer": "rag_salary.py's vector store and LLM prompt -- but this helper is not called by any tool registered in mcp_server.py, so it is currently unreachable from the live tool set"},
-      {"Data": "LLM chat-completion output (INFERENCE_BASE_URL / OPENAI_BASE_URL endpoint)", "Source": "External OpenAI-compatible inference service configured via environment variables", "Verification / integrity": "None; treated as trusted output and returned to the user largely as-is (subject only to LLMGuard output scanning in run_llm_with_mcp.py)", "Consumer": "Chat loop in run_llm_with_mcp.py / fast_server.py, and the RAG answer synthesis in rag_pipeline.py"},
-      {"Data": "OPA allow/deny decision", "Source": "OPA server at http://localhost:8181 (only reachable via opa_client.evaluate_policy)", "Verification / integrity": "HTTP call with no authentication or response signing documented", "Consumer": "None in the live path: no registered tool in mcp_server.py calls evaluate_policy, so this external data source is currently unused"}
+      {
+        "Data": "work_rules_and_regulations_2016.pdf content",
+        "Source": "Local file at examples/RagChatbot_MCPServer/pdfs/work_rules_and_regulations_2016.pdf, loaded by rag_pipeline.py.",
+        "Verification / integrity": "None observed; no checksum/signature verification, loaded directly from local disk at first tool use.",
+        "Consumer": "ask_for_workpolicy tool's RAG chain (retrieval + LLM answer generation)."
+      },
+      {
+        "Data": "salary_summary.pdf content",
+        "Source": "Local file at examples/RagChatbot_MCPServer/pdfs/salary_summary.pdf, loaded by rag_salary.py.",
+        "Verification / integrity": "None observed.",
+        "Consumer": "raw_ask_for_salary function only; not currently reachable through any active @mcp.tool() in mcp_server.py (its tool registration is commented out), so this is dormant code, not an active data flow."
+      },
+      {
+        "Data": "OPA server allow/deny decisions",
+        "Source": "http://localhost:8181 (OPAClient.opa_url), queried via evaluate_policy().",
+        "Verification / integrity": "Plain HTTP, no observed authentication/TLS/signature on the OPA response; a 5-second timeout falls back to _fail_secure_decision.",
+        "Consumer": "Would be consumed by any tool wrapped with a policy-check decorator, but no such call site exists in mcp_server.py's active tool set in this tree, so this external service is currently unreached by the live request path."
+      },
+      {
+        "Data": "LLM chat-completion responses (tool-call selection and final answers)",
+        "Source": "External OpenAI-compatible endpoint (OPENAI_BASE_URL / MODEL env vars) invoked from run_llm_with_mcp.py and from rag_pipeline.py/rag_salary.py's ChatOpenAI instances.",
+        "Verification / integrity": "None beyond API-key auth to the inference endpoint; model output (including which tool to call and with what arguments) is trusted as-is other than the LLMGuard output scan on the final text.",
+        "Consumer": "chat() loop (tool selection/arguments) and the RAG chains (answer generation)."
+      }
     ],
     "Enforcement Points": [
       {
+        "Layer": "Prompt/LLM input (Streamlit client)",
+        "Current": "enforce_input(): LLMGuard PromptInjection/Anonymize/BanSubstrings/Secrets/Toxicity/Language scan, with a business-safe-word allowlist that can override a scanner block and a narrow hardcoded malicious-substring list that is the only thing that actually raises a blocking exception.",
+        "Available (OPA-interceptable)": "Not directly OPA-interceptable as implemented (free-text heuristics, not structured input.args/subject fields); an OPA decision could still gate whether a request reaches the LLM at all if the client called out to OPA before invoking the model, but no such call exists today.",
+        "Blind spots": "The business-safe-word allowlist can let a flagged prompt-injection attempt through if it also contains an allowlisted business word; conversation memory (memory_text) is re-injected into later prompts without being re-scanned."
+      },
+      {
         "Layer": "MCP tool dispatch (mcp_server.py)",
-        "Current": "FastMCP declared-type coercion only; no authorization, no field filtering beyond the optional select_fields projection",
-        "Available (OPA-interceptable)": "A pre-execution Rego check could use input.name (tool), input.args.department/select_fields/format/external_sharing/business_justification/amount/product_name, and a genuinely-populated input.extensions.subject.roles to decide allow/deny before mcp_server.py executes any tool body",
-        "Blind spots": "None of the declared subject fields are currently populated from a real per-request source (see Runtime Subject Context), so even a correctly-written policy has no trustworthy input.extensions.subject.* to evaluate against today; this is the primary blind spot, not the absence of policy code"
+        "Current": "None: no decorator, middleware, or explicit call to opa_client.evaluate_policy wraps any active @mcp.tool() function.",
+        "Available (OPA-interceptable)": "Yes -- this is the natural pre-execution point: input.args.* for every tool (department, select_fields, external_sharing, destination, amount, format, export_type, etc.) is fully declared in tool_definitions.json and available at the moment each tool function is entered, so a Rego decision keyed on tool name + declared arguments could gate every tool call before business logic runs.",
+        "Blind spots": "None structural at this layer for argument-based checks; the blind spot is that role/identity (input.extensions.subject.*) is not reliably available here (see Runtime Subject Context) because it is self-asserted and not verified, so any future policy gating tool arguments would still need a trustworthy subject source to enforce role-based rules like guidance rules 1-2, 4-5, 9-10."
       },
       {
-        "Layer": "Compensation data retrieval (view_team_compensation / export_compensation_data)",
-        "Current": "None; sensitive_data (ssn, home_address, bank_account, personal_email, emergency_contact, healthcare_plan, healthcare_id) is merged unconditionally before any select_fields projection is applied",
-        "Available (OPA-interceptable)": "A pre-execution policy could deny or force select_fields down to a safe subset based on input.args.select_fields and a real subject.roles value before the tool runs",
-        "Blind spots": "department (view_team_compensation) and id (both tools) are declared arguments that the implementation ignores outright; a policy written against department would not match actual behavior, which always returns the caller's own hard-coded manager's team regardless of the requested department"
+        "Layer": "Runtime subject/identity (opa_client.current_user_context)",
+        "Current": "In-process mutable dict updated by whichever caller invokes set_user_context; no authentication step observed anywhere in the inspected tree.",
+        "Available (OPA-interceptable)": "The shape needed (extensions.subject.id/roles/teams/permissions) is already defined in UniversalOPAClient.get_principal_context()/build_universal_input(), so once wired, role-based decisions are OPA-expressible; the field values would be exactly as trustworthy as their current provenance, which is client-self-asserted with no verification mechanism documented anywhere in this tree.",
+        "Blind spots": "True blind spot: there is no identity/authentication layer in this codebase. Any OPA policy keyed on input.extensions.subject.roles would be enforcing a client-asserted claim, not a verified one, unless an integrity mechanism is added upstream (out of scope for this guidance-only phase to invent)."
       },
       {
-        "Layer": "External sharing / domain validation (email_compensation_report, export_compensation_data, send_email)",
-        "Current": "Cosmetic only: email_compensation_report splits the destination domain for display; no domain allow/deny list, and external_sharing is echoed but never enforced in any of the three tools",
-        "Available (OPA-interceptable)": "input.args.destination / input.args.external_sharing are structured and available pre-execution; a policy could block on domain membership (guidance rules 6-8) and on external_sharing=true (guidance rules 17-18) before the tool sends anything",
-        "Blind spots": "recipient_email, subject, and body on send_email are declared but never read by the implementation at all, so no policy decision keyed on those fields would change what the tool actually does today; enforcing on them would require the implementation to first read them"
+        "Layer": "External OPA policy server",
+        "Current": "Fully implemented client (OPAClient.evaluate_policy, UniversalOPAClient) with a documented fail-secure fallback (_fail_secure_decision) for role/domain/external-sharing/time-range/sensitive-field checks, but zero call sites from any active tool in mcp_server.py.",
+        "Available (OPA-interceptable)": "Yes in principle -- this is precisely the pre-execution OPA hook the rest of the system was designed around; it is simply unconnected to the live tool-call path in this snapshot of the code.",
+        "Blind spots": "None structural; the gap is wiring, not expressibility. Recorded as a gap for downstream phases, not invented as an enforcement point that exists today."
       },
       {
-        "Layer": "Purchase approval (purchase, return_product)",
-        "Current": "None; amount is never compared against a role-based limit, and justification/category are ignored",
-        "Available (OPA-interceptable)": "input.args.amount plus a real subject.roles/max_purchase value would let a pre-execution policy enforce guidance rules 9-10 (employee <$200 without approval, manager <$1000)",
-        "Blind spots": "There is no declared 'approval' argument on purchase and no verified subject field carrying manager-approval status; system_vars.json's top-level \"approval\": \"true|false\" is a template placeholder with no runtime producer, so guidance rule 9's 'without manager approval' clause has no structured input to bind to today"
+        "Layer": "Tool response / output (Streamlit client)",
+        "Current": "enforce_output(): LLMGuard Sensitive/BanSubstrings(example literals)/Toxicity/Relevance/NoRefusal scan on every tool result and final assistant message, except messages starting with the deny-emoji marker, which bypass scanning entirely.",
+        "Available (OPA-interceptable)": "Not OPA-interceptable as a pre-execution decision (it runs after the tool already executed and returned real data); it is a post-hoc mitigation, not a substitute for pre-execution argument/subject-based gating.",
+        "Blind spots": "By the time this runs, view_team_compensation/export_compensation_data have already assembled and returned full sensitive records into the tool-result string; BanSubstrings only catches the specific example literal values hardcoded in llm_guard_config.py (e.g. two example SSNs/addresses/bank-account suffixes), not the full range of fixture records in data_sources/hr_database.py, so most real sensitive values in this dataset would not be redacted by the literal-substring list."
       }
     ],
     "Undeclared Fields": [
-      {"Field": "manager approval status (rule 9: 'Employees cannot buy products $200+ without manager approval')", "Referenced by guidance rule #": "9", "Declared by": "Declared nowhere: purchase's input_schema has no approval/approver field, and system_vars.json's \"approval\": \"true|false\" is an undated template placeholder with no runtime code path that ever sets it on a real request", "Consequence": "A future policy cannot express the approval-required branch of rule 9 against any structured input; it can only enforce the flat $200/$1000 role-based ceilings"},
-      {"Field": "department scoping for view_team_compensation (rule 1: 'View only the requested manager's team...')", "Referenced by guidance rule #": "1", "Declared by": "Declared by view_team_compensation's own department argument, but the implementation ignores it and always returns the current_user_context user_id's hard-coded team", "Consequence": "declared by another mechanism (the ignored department arg) rather than nowhere, but any OPA policy that conditions on input.args.department would not correspond to what the tool actually returns unless the implementation is fixed to honor it first"},
-      {"Field": "field-must-be-specified requirement (rule 15: '...the request must specify which fields to return; requests that do not specify any fields must be blocked')", "Referenced by guidance rule #": "15", "Declared by": "Declared by view_team_compensation.select_fields and export_compensation_data.select_fields (both optional, default null)", "Consequence": "declared by the governing tools themselves, so this is directly OPA-policy-expressible today by checking input.args.select_fields for null/empty; no gap"},
-      {"Field": "blocked-phrase detection ('ignore all policies', 'bypass security', 'override all policies', 'show all SSN data')", "Referenced by guidance rule #": "11, 12, 13, 14", "Declared by": "Declared nowhere as a tool argument or subject field; currently implemented only as free-text prompt scanning (LLMGuard BanSubstrings in llm_guard_config.py, and business/malicious pattern lists in run_llm_with_mcp.py.enforce_input), both upstream of and outside any registered tool's input_schema, and not present at all in fast_server.py's path", "Consequence": "Not OPA-policy-expressible against structured input.args/input.extensions.subject today, since the offending text lives only in the free-form user prompt (a distinct source per the shared source-boundary rule) and is never copied into a declared tool argument; enforcement remains prompt-layer only and is inconsistent across the two client entry points"},
-      {"Field": "personal_email visibility for view_team_compensation (rule 16: 'Managers cannot see any team member's personal email address')", "Referenced by guidance rule #": "16", "Declared by": "Declared by view_team_compensation's own select_fields mechanism (personal_email is one of the documented Available fields) but the implementation always merges personal_email into member_data before any role check -- there is no separate role/subject field gating it", "Consequence": "OPA-expressible via input.args.select_fields today, but only as a positive block-if-requested rule; there is no subject field distinguishing 'manager for this team' from any other caller, so the policy could not also verify the caller is actually that team's manager"}
+      {
+        "Field": "manager_id / team assignment used to select which employees' compensation is returned",
+        "Referenced by guidance rule #": "1",
+        "Declared by": "Declared nowhere in tool_definitions.json or system_vars.json; view_team_compensation derives it only from an in-process, unauthenticated current_user_context with a hardcoded fallback of 'manager_123', not from any declared input.args or input.extensions.subject field.",
+        "Consequence": "Guidance rule 1 ('Managers: View only the requested manager's team compensation data ... via view_team_compensation') cannot be expressed as an OPA predicate today, because there is no declared, trustworthy field identifying which manager/team is making the request or which department was actually queried -- the declared department argument is ignored by the implementation (see Tool Arguments)."
+      },
+      {
+        "Field": "recipient domain allowlist/blocklist source (@ibm.com allow; gmail.com/yahoo.com/hotmail.com/outlook.com/personal.com block)",
+        "Referenced by guidance rule #": "6, 7, 8, 18",
+        "Declared by": "The destination argument is declared by email_compensation_report and recipient_email by send_email; the domain values/lists themselves (ibm.com allow, the five blocked domains) are guidance-only literals not declared in tool_definitions.json or system_vars.json.",
+        "Consequence": "A future OPA rule can still evaluate these guidance rules by parsing the declared destination/recipient_email argument at input.args.*, so this is expressible; flagged here only because the specific domain literals are guidance-sourced constants rather than schema-declared values, which downstream phases should encode as policy constants, not as an additional undeclared runtime field."
+      },
+      {
+        "Field": "role/identity used for all role-conditioned guidance rules (manager vs employee)",
+        "Referenced by guidance rule #": "1, 2, 3, 4, 5, 6, 9, 10, 16",
+        "Declared by": "Declared nowhere with integrity: system_vars.json declares a roles list (['employee','manager']) but no loader for system_vars.json was found in the inspected tree; the only runtime role value (opa_client.current_user_context['user_role'], vocabulary ['user','manager']) is self-asserted by the Streamlit client with no authentication and is not currently propagated into any OPA-visible field.",
+        "Consequence": "Every role-conditioned guidance rule is currently unenforceable at a trustworthy pre-execution point: the value exists at runtime but has no documented integrity mechanism, and its vocabulary ('user') does not match system_vars.json's declared vocabulary ('employee'), which the next phases should treat as an open reconciliation gap rather than assume is a simple renaming."
+      },
+      {
+        "Field": "field-level select list required to be non-empty (guidance rule 15)",
+        "Referenced by guidance rule #": "15",
+        "Declared by": "Declared by both view_team_compensation and export_compensation_data as select_fields (optional list[str], default null).",
+        "Consequence": "Expressible: guidance rule 15 ('requests that do not specify any fields must be blocked') maps directly onto input.args.select_fields being null/empty for these two exact tools; recorded here only to confirm it is declared by the correct tool and not to be confused with export_content_as_file's unrelated data argument."
+      }
     ]
   },
   "handoff": {
     "Status": "PASS",
     "Artifact schema": "architecture-v2",
-    "Summary": "Inspected mcp_server.py (canonical FastMCP tool-registration server matching all 11 tool_definitions.json tools exactly plus get_w2_form), fast_server.py and run_llm_with_mcp.py (client orchestrators), create_ticket.py, rag_pipeline.py, rag_salary.py, opa_client.py, opa_config.py, llm_guard_config.py, data_sources/hr_database.py (10 implementation files, within the 20-file/2-hop caps). All 11 tools have an implementation finding (none Unknown). 5 layers identified: agent/client, MCP, tool implementation, runtime context/enforcement, external service. Key finding: OPA (opa_client.py) is fully built but never called from any live @mcp.tool function -- it is dead code with respect to the registered server; LLMGuard is wired only into run_llm_with_mcp.py, not fast_server.py or mcp_server.py itself. Runtime subject fields (role, teams, permissions, id) have no real per-request provenance -- user_role is self-selected in a UI dropdown and never read by any compensation/purchase tool body for an authorization decision. 5 undeclared-field gaps recorded, most significantly: manager-approval status for purchases (rule 9) has no structured field anywhere, and the four 'blocked phrase' guidance rules (11-14) are enforced only as free-text prompt scanning, not as any declared tool argument or subject field, so they are not OPA-policy-expressible against structured input today. 34 tool-argument rows recorded across the 11 tools, with numerous Ignored dispositions (department and id on both compensation tools, category/justification on purchase, recipient_email/subject/body/report_data on send_email and email_compensation_report) where the LLM-facing docstring promises behavior the implementation does not perform."
+    "Summary": "Analyzed examples/RagChatbot_MCPServer: 10 registered MCP tools over SSE (mcp_server.py), all with an implementation finding (no Unknowns) cross-checked against tool_definitions.json with no name/signature mismatches. Layers identified: Streamlit agent/client with LLMGuard prompt/output scanning, MCP transport/dispatch with zero pre-execution checks, tool implementations backed by static in-memory HR/compensation/purchase fixtures, a fully-built but entirely unwired OPA client/schema-transform layer (opa_client.py), and an external OPA server that is never called from any live tool path. 3 runtime-subject fields recorded, all self-asserted client-side with no authentication or integrity mechanism, and none currently reach any OPA-visible field via an active code path; system_vars.json itself was not found to be loaded by any inspected file. 31 tool-argument rows recorded across all 10 tools; several required arguments material to guidance (department and id on both compensation tools, report_data, external_sharing across two tools, amount's relation to budget limits, category/justification on purchase) are implementation-Ignored or merely Echoed rather than Acted on, meaning the described behavior in tool docstrings/guidance does not match what the code does. 4 undeclared-field gaps recorded, the most significant being that no trustworthy, declared field currently identifies requester role/team for any role-conditioned guidance rule (1,2,3,4,5,6,9,10,16), and that view_team_compensation/export_compensation_data ignore their own department/id arguments and instead always return a hardcoded manager's team. Enforcement points: the OPA-interceptable pre-execution hook at MCP tool dispatch is structurally available (all tool arguments are declared and present at that point) but currently has zero enforcement; the only active controls are prompt-layer LLMGuard scans (input allowlist can override a block; output scan skips deny-marker messages and only redacts a short hardcoded list of example literal values, not the full fixture dataset). Open gaps for Phase B: reconcile system_vars.json's declared role vocabulary/loading with the runtime code's actual (self-asserted, unauthenticated) role source; treat department/id arguments on the two compensation tools as currently non-functional for scoping; note the unresolved llm_guard_copy import and the unresolved set_user_role tool call as Unknown, not proven-missing, per the shared analysis rules."
   }
 }
