@@ -95,7 +95,7 @@ Almost every path in the codebase is **assembled from `.env` at runtime** via `o
 
 Target-agent selection is driven by a small set of vars: `TARGET_AGENT_PATH`, `GUIDANCE_FILE`, `SYSTEM_VAR_FILE`, `MCP_*`, and `AGENT_URL`. Pointing Smith at a different agent example (under `examples/`) means repointing these, not changing code.
 
-Key model vars: `MODEL_SONNET` (the LLM used across pipelines), `OPENAI_API_KEY`, `OPENAI_BASE_URL`, `TEMP`, `TOP_P`.
+Key model vars: `MODEL_SONNET` (the LLM used across pipelines), `OPENAI_API_KEY`, `OPENAI_BASE_URL`, `TEMP`, `TOP_P`. The target agent's own LLM (`INFERENCE_*`) can be local (Ollama) or an online model on the same gateway; when it is online, `TRANSLATION_CONCURRENCY` (default `-1` = serial) lets `test_case_translation` issue its `/extract_tool_call` requests in parallel.
 
 Session/IR config: `SESSION_CONFIG_FILE` (default `references/session_config.json`) — written by the Policy Explorer UI with `use_ir` and `selected_tools`; consumed by `translate_case` to filter test cases to only the tools selected in the explorer.
 
