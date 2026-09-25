@@ -190,6 +190,25 @@ CPEX-translated `policy_cpex.rego`).
 
 ### End-to-end Smith workflow
 
+#### Optional: Security-Grounded Guidance Analysis
+
+Before generating a policy, you can run the standalone security-grounded guidance analysis to produce an OWASP-mapped threat model and enforcement guidance for this MCP server. This four-step workflow produces guidance only; it never generates or modifies Rego or an OPA policy. It follows `SKILL.md`'s "Security-Grounded Guidance Analysis" entry.
+
+Ask your coding agent:
+
+> Run the security-grounded guidance analysis for this MCP server.
+
+The agent asks whether to run **Gated** (pause after each step) or **Autonomous** (Steps A–D back-to-back with one final review), then produces four analysis artifacts under `smith/guidelines-security-analysis/`:
+
+| Step | Output |
+|------|--------|
+| A — Architecture Analysis | `smith/guidelines-security-analysis/architecture.md` |
+| B — Policy Guidance Questionnaire | `smith/guidelines-security-analysis/policy_guidance_questionnaire.md` |
+| C — Threat Model against OWASP Top 10 for Agentic AI Security | `smith/guidelines-security-analysis/threat_model.md` |
+| D — Enforcement Mapping | `smith/guidelines-security-analysis/owasp_policy_guidelines.md` |
+
+When Step D finds missing OPA-enforceable rules, it also proposes `smith/guidance_updated.txt`; otherwise that file is not created. After the analysis, you may separately ask the agent to merge the proposal into `smith/guidance.txt`. The agent then asks separately whether to start Policy Creation—merging does not create a policy.
+
 1. Ask smith to generate an opa policy for your target agent. 
 2. Ask smith to generate test cases. 
 3. Follow the instruction from smith, run `smith --flag generate_promptfoo_config` to generate promptfoo config for test case generation.
