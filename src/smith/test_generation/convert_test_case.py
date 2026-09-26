@@ -44,8 +44,11 @@ def translate_case(
     test_cases_translated["bypass_malicious"] = []
     test_cases_translated["bypass_benign"] = []
 
-    with open(output_file_cases, "r") as f:
-        test_cases = json.load(f)
+    if output_file_cases and os.path.exists(output_file_cases):
+        with open(output_file_cases, "r") as f:
+            test_cases = json.load(f)
+    else:
+        test_cases = []
 
     if output_file_attack:
         test_cases = merge_with_ares(test_cases, output_file_attack)

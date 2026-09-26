@@ -72,7 +72,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - Promptfoo config auto-generation (`smith --flag generate_promptfoo_config`): generates or updates a Promptfoo redteam configuration file from guidance and system variables, with a customizable template (`PROMPTFOO_CONFIG_TEMPLATE`). Also appends tool parameter definitions to `testGenerationInstructions` so Promptfoo generates prompts that include concrete values for all required parameters.
   - LLM-based tool classification for promptfoo cases**: during test generation, promptfoo cases are now classified to a target tool name via a single LLM call against the MCP tool definitions, removing the hardcoded "Promptfoo" placeholder. This steps aims to make test translation apply the same tool-name mismatch check to all cases uniformly.
 - **Tools**
-  - Clean-up bash script (`scripts/clean_generated.sh`) to reset generated intermediates when switching examples.
+  - `smith --flag reset_policy`: empties `assets/policy.rego` (and removes its CPEX-translated sibling, if any) before generating a new policy for a different target agent. Replaces the old `scripts/clean_generated.sh`, which is removed.
   - Artifact snapshots (`smith --flag save_snapshot --dest <dir>`): copies a run's key artifacts — policy, its `_cpex` variant, guidance, tool definitions, promptfoo config, and translated test cases — flat into a destination directory. Missing sources are skipped with a warning rather than failing the snapshot.
 
 - **Added agent examples**

@@ -42,6 +42,7 @@ make integration     # live stage-level pytest suite (-m integration); opt-in, n
 
 # CLI pipeline stages (run from anywhere once installed; reads paths from .env)
 smith --flag get_current_agent      # print the active target_agent path + resolved guidance_file path (read-only)
+smith --flag reset_policy           # empty assets/policy.rego (and its CPEX sibling, if any) before generating a new one
 smith --flag get_mcp_parameter      # auto-extract MCP tool defs -> <TARGET_AGENT_PATH>/smith/tool_definitions.json
 smith --flag test_generation        # full test-case generation pipeline (includes promptfoo tool classification)
 smith --flag test_generation --mode update  # regenerate only the cases whose guidance changed (default: --mode fresh)

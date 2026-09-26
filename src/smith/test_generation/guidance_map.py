@@ -289,6 +289,24 @@ def clean_bypass_cases(case_root):
     )
 
 
+def clean_ares_assets(ares_home):
+    """Remove ARES's own generated goal/prompt files under ``<ares_home>/assets/*generate.json``."""
+    assets_dir = os.path.join(ares_home, "assets")
+    if not os.path.isdir(assets_dir):
+        return 0
+    removed = 0
+    for name in os.listdir(assets_dir):
+        if name == "attack_goals.json" or name.endswith("_generate.json"):
+            try:
+                os.remove(os.path.join(assets_dir, name))
+                removed += 1
+            except OSError as exc:
+                print(f"  WARNING: could not delete {name}: {exc}")
+    if removed:
+        print(f"Cleared {removed} ARES-generated asset(s) under {assets_dir}")
+    return removed
+
+
 def clean_generated_cases(case_root):
     """Clear the case tree so a fresh run starts from an empty directory."""
     if not os.path.isdir(case_root):

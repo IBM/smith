@@ -387,7 +387,6 @@ smith/
 │   ├── policy_regal/        # Regal formatting workflow
 │   └── policy_duplication/  # Deduplication workflow
 ├── references/              # All intermediate results (incl. scorecard/ outputs)
-├── scripts/                 # Utility bash scripts (e.g. clean_generated.sh)
 ├── pyproject.toml           # Packaging, dependencies, ruff/black config
 ├── src/smith/               # The `smith` Python package
 │   ├── cli.py               # Main CLI entry point (smith.cli:main)

@@ -136,6 +136,15 @@ class BlueAgent:
     def policy_checking_results(self):
         return run_policy_evaluation(self.base_url, self.test_results_path)
 
+    def reset_policy(self):
+        with open(self.policy_path, "w"):
+            pass
+        print(f"emptied policy: {self.policy_path}")
+        policy_cpex_path = re.sub(r"\.rego$", "_cpex.rego", self.policy_path)
+        if os.path.exists(policy_cpex_path):
+            os.remove(policy_cpex_path)
+            print(f"removed CPEX-translated policy: {policy_cpex_path}")
+
 
 VALID_ATTACK_TOOLS = {"ares", "promptfoo", "none"}
 
@@ -237,8 +246,13 @@ def generate_test(
         # Fresh Mode: Empty existing test cases and intermidiate results first
         guidance_map.clean_generated_cases(output_file_ready_cases)
         guidance_map.clear_intermediates(
-            output_file_decompose, output_file_variables, output_file_cases
+            output_file_decompose,
+            output_file_variables,
+            output_file_cases,
+            output_file_attack,
+            output_file_attack_csv,
         )
+        guidance_map.clean_ares_assets(ares_home)
         if guidance_map_file:
             guidance_map.save_mapping(guidance_map_file, {})
 
@@ -276,9 +290,13 @@ def generate_test(
         # clean intermidiate results
         guidance_map.clean_promptfoo_cases(output_file_ready_cases)
         deleted_only = decomposed == guidance_map.DELETED_ONLY
-        if deleted_only:
-            guidance_map.clear_intermediates(output_file_decompose)
-        guidance_map.clear_intermediates(output_file_variables, output_file_cases)
+        guidance_map.clear_intermediates(
+            output_file_variables,
+            output_file_cases,
+            output_file_attack,
+            output_file_attack_csv,
+        )
+        guidance_map.clean_ares_assets(ares_home)
 
     # fresh mode execute all of the following
     # deletion only: Delete related test cases but skip regeneration
@@ -622,6 +640,9 @@ def main():
 
     agent = BlueAgent()
 
+    if args.flag == "reset_policy":
+        agent.reset_policy()
+        sys.exit(0)
     if args.flag == "policy_testing":
         agent.policy_checking_results()
     if args.flag == "regal_suggestion":
@@ -869,6 +890,7 @@ def main():
         "save_snapshot",
         "generate_promptfoo_config",
         "get_current_agent",
+        "reset_policy",
     ]
     if args.flag and args.flag not in allowed_flags:
         print(f"ERROR: '{args.flag}' is not a valid flag.")

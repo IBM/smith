@@ -438,6 +438,20 @@ def test_a_missing_attack_file_is_skipped_rather_than_fatal(unit_env, capsys):
     assert "not found" in capsys.readouterr().out
 
 
+def test_a_missing_cases_file_produces_no_cases_rather_than_raising(unit_env):
+    out = str(unit_env.root / "references" / "test_cases") + "/"
+    written = translate_case(
+        str(unit_env.root / "references" / "absent_cases.json"),
+        str(unit_env.case_template),
+        out,
+        None,
+        None,
+        {},
+        None,
+    )
+    assert written == {label: [] for label in written}
+
+
 def test_cases_for_unselected_tools_are_filtered_out(unit_env, capsys):
     # When the explorer restricts a run to a subset of tools, cases for other
     # tools are noise — and would be scored against a policy that never sees them.
