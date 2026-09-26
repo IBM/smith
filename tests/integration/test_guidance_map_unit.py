@@ -516,9 +516,7 @@ def test_only_promptfoo_cases_are_cleared(tmp_path):
 
 def test_a_cross_validated_promptfoo_case_is_cleared_too(tmp_path):
     """A moved case keeps its identity under a ``cv_`` prefix and a ``_N`` suffix.
-
-    Matching only the pristine name would leave those behind for the scorecard to
-    keep counting after the set was supposedly rebuilt.
+    In both ./allow and ./disallow
     """
     root = case_tree(
         tmp_path,
@@ -526,11 +524,15 @@ def test_a_cross_validated_promptfoo_case_is_cleared_too(tmp_path):
         "disallow/cv_promptfoo_test_case1.json",
         "disallow/cv_promptfoo_test_case2_2.json",
         "disallow/test_case0.json",
+        "allow/cv_promptfoo_test_case3.json",
+        "allow/test_case0.json",
     )
     removed = gm.clean_promptfoo_cases(str(root) + "/")
 
-    assert removed == 3
+    assert removed == 4
     assert (root / "disallow/test_case0.json").exists()
+    assert (root / "allow/test_case0.json").exists()
+    assert not (root / "allow/cv_promptfoo_test_case3.json").exists()
 
 
 def test_bypass_cases_are_cleared_from_both_buckets(tmp_path):
@@ -705,3 +707,47 @@ def test_guidance_the_map_never_covered_is_reported_not_guessed(update_env, caps
     gm.apply_update("1. rule A\n", snapshot, mapping, root)
 
     assert "no recorded cases for" in capsys.readouterr().out
+
+
+@pytest.fixture
+def duplicate_rule_env(tmp_path):
+    root = case_tree(
+        tmp_path / "tc", "allow/test_case0.json", "allow/test_case1.json"
+    )
+    snapshot = tmp_path / "snap.txt"
+    snapshot.write_text("1. rule A\n2. rule A\n", encoding="utf-8")
+    mapping = tmp_path / "map.json"
+    mapping.write_text(
+        json.dumps({"rule A": ["allow/test_case0.json", "allow/test_case1.json"]}),
+        encoding="utf-8",
+    )
+    return str(root) + "/", str(snapshot), str(mapping)
+
+
+def test_removing_one_of_two_duplicate_lines_keeps_the_surviving_copys_cases(
+    duplicate_rule_env, tmp_path
+):
+    root, snapshot, mapping = duplicate_rule_env
+    outcome, subset = gm.apply_update("1. rule A\n", snapshot, mapping, root)
+
+    assert outcome == gm.DELETED_ONLY
+    assert subset is None
+    assert (tmp_path / "tc/allow/test_case0.json").exists()
+    assert (tmp_path / "tc/allow/test_case1.json").exists()
+    assert json.loads(open(mapping).read()) == {
+        "rule A": ["allow/test_case0.json", "allow/test_case1.json"]
+    }
+
+
+def test_removing_every_duplicate_copy_does_delete_its_cases(
+    duplicate_rule_env, tmp_path
+):
+    """Once the last occurrence of a duplicated rule is gone, its cases go too."""
+    root, snapshot, mapping = duplicate_rule_env
+    outcome, subset = gm.apply_update("", snapshot, mapping, root)
+
+    assert outcome == gm.DELETED_ONLY
+    assert subset is None
+    assert not (tmp_path / "tc/allow/test_case0.json").exists()
+    assert not (tmp_path / "tc/allow/test_case1.json").exists()
+    assert json.loads(open(mapping).read()) == {}

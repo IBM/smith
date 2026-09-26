@@ -46,7 +46,7 @@ def diff_lines(previous, current):
     Flatten has already folded positional context (headings, lead-ins) into
     each self-contained entry, so two flattened lines with identical text mean
     the same thing regardless of where they sit in the list, renumbering or
-    reordering untouched entries is not a content change. 
+    reordering untouched entries is not a content change.
     """
     prev_counts = Counter(previous)
     cur_counts = Counter(current)
@@ -279,7 +279,7 @@ def _remove_matching(case_root, buckets, prefix, description):
 
 def clean_promptfoo_cases(case_root):
     return _remove_matching(
-        case_root, ("disallow",), "promptfoo_test_case", "promptfoo"
+        case_root, ("allow", "disallow"), "promptfoo_test_case", "promptfoo"
     )
 
 
@@ -374,8 +374,12 @@ def apply_update(new_flattened, snapshot_file, map_file, case_root):
         return UNCHANGED, None
 
     mapping = load_mapping(map_file)
+    surviving = Counter(read_lines(new_flattened))
 
     for line in gone:
+        if surviving[line] > 0:
+            print(f"  [-] '{line[:80]}' still present elsewhere; keeping its cases")
+            continue
         recorded = mapping.pop(line, None)
         if not recorded:
             # Guidance the mapping never covered (e.g. generated before the map
