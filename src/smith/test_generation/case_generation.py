@@ -75,7 +75,7 @@ Each test case must include:
 Hard requirements:
 1) Keep conditions as natural language anchors; do NOT rewrite them into variable-only form.
 2) Every generated test case MUST satisfy all common_constraints.
-3) For each condition, generate at least 1 and at most 10 test cases.
+3) For each condition, generate at least 1 and at most 5 test cases.
 4) Ensure diversity across test cases via variation in prompt variables (wording, tone, phrasing).
 5) Fixed system variables MUST NOT change across test cases.
 6) System variables with candidate lists MUST only use values from those lists.
