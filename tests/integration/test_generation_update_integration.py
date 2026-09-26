@@ -355,3 +355,175 @@ def test_both_snapshots_were_advanced(update_ok):
     env = update_ok["env"]
     assert env.guidance_snapshot.exists()
     assert env.guidance_raw_snapshot.read_text() == GUIDANCE_AFTER
+
+
+# ===========================================================================
+# Deletion-only, addition-only, heading-swap and plain-reorder diffs
+# — needs an LLM
+# ===========================================================================
+
+#: Two rules, so removing/adding the second is a pure deletion/addition with
+#: nothing edited alongside it.
+GUIDANCE_TWO_RULES = (
+    "1. Faculty may use the get_events tool to search for academic conferences.\n"
+    "2. A guest must never be allowed to call the get_events tool.\n"
+)
+
+GUIDANCE_ONE_RULE = (
+    "1. Faculty may use the get_events tool to search for academic conferences.\n"
+)
+
+GUIDANCE_HEADING_SWAP_BEFORE = (
+    "## Allowed commands\n"
+    "- The agent may call `list_files`.\n"
+    "- The agent may call `read_file` when the requester is `faculty`.\n"
+    "\n"
+    "## Disallowed commands\n"
+    "- The agent must not call `delete_file` under any circumstances.\n"
+)
+
+GUIDANCE_HEADING_SWAP_AFTER = (
+    "## Disallowed commands\n"
+    "- The agent may call `list_files`.\n"
+    "- The agent may call `read_file` when the requester is `faculty`.\n"
+    "\n"
+    "## Allowed commands\n"
+    "- The agent must not call `delete_file` under any circumstances.\n"
+)
+
+GUIDANCE_REORDER_BEFORE = (
+    "- The agent may call `list_files`.\n" "- The agent may call `search_files`.\n"
+)
+
+GUIDANCE_REORDER_AFTER = (
+    "- The agent may call `search_files`.\n" "- The agent may call `list_files`.\n"
+)
+
+
+def _run_two_stage_cycle(before_text, after_text, tag):
+    env = SmithEnv()
+    missing = env.missing("OPENAI_API_KEY", "OPENAI_BASE_URL", "MODEL_SONNET")
+    if missing:
+        pytest.skip(f"Smith LLM not configured (missing {', '.join(missing)})")
+    if not which("python"):
+        pytest.skip("python not on PATH (the MCP server is spawned over stdio)")
+
+    artifacts = env.generation_artifacts
+    cases = env.test_cases
+    guidance = Path(env.base) / "references" / f"__update_guidance_{tag}__.txt"
+
+    protected = [*artifacts.values(), cases, guidance]
+    backup_dir = Path(tempfile.mkdtemp(prefix=f"smith_update_backup_{tag}_"))
+    saved = {}
+    for index, path in enumerate(protected):
+        if path.exists():
+            destination = backup_dir / f"{index}_{path.name}"
+            if path.is_dir():
+                shutil.copytree(path, destination)
+            else:
+                shutil.copy2(path, destination)
+            saved[path] = destination
+
+    try:
+        guidance.parent.mkdir(parents=True, exist_ok=True)
+        guidance.write_text(before_text)
+        for path in (*artifacts.values(), cases):
+            if path.is_dir():
+                shutil.rmtree(path, ignore_errors=True)
+            elif path.exists():
+                path.unlink()
+
+        fresh = run_flag(env, "--mode", "fresh", guidance_name=guidance.name)
+        assert fresh.returncode == 0, (
+            f"the fresh run failed (rc={fresh.returncode}).\n"
+            f"--- stdout ---\n{fresh.stdout[-3000:]}\n"
+            f"--- stderr ---\n{fresh.stderr[-1500:]}"
+        )
+
+        guidance.write_text(after_text)
+        update = run_flag(env, "--mode", "update", guidance_name=guidance.name)
+        return env, update
+    finally:
+        for path in protected:
+            if path.is_dir():
+                shutil.rmtree(path, ignore_errors=True)
+            elif path.exists():
+                path.unlink()
+            if path in saved:
+                source = saved[path]
+                if source.is_dir():
+                    shutil.copytree(source, path)
+                else:
+                    path.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(source, path)
+        shutil.rmtree(backup_dir, ignore_errors=True)
+
+
+def test_a_deletion_only_run_reports_the_removed_line_with_no_regeneration():
+    """Rule 2 removed, nothing added: the raw diff carries a line number for the
+    removal, and the run stops without calling the model for new cases."""
+    env, update = _run_two_stage_cycle(
+        GUIDANCE_TWO_RULES, GUIDANCE_ONE_RULE, "delete"
+    )
+    assert update.returncode == 0, (
+        f"the update run failed (rc={update.returncode}).\n"
+        f"--- stdout ---\n{update.stdout[-3000:]}\n"
+        f"--- stderr ---\n{update.stderr[-1500:]}"
+    )
+    assert "Only removals in this diff; no new guidance to generate." in update.stdout
+    assert "[Line 2]" in update.stdout
+
+
+def test_an_addition_only_run_reports_the_added_line_with_a_line_number():
+    """Rule 2 added, nothing removed: the raw diff carries a line number for the
+    addition, and the added rule ends up mapped to fresh cases."""
+    env, update = _run_two_stage_cycle(GUIDANCE_ONE_RULE, GUIDANCE_TWO_RULES, "add")
+    assert update.returncode == 0, (
+        f"the update run failed (rc={update.returncode}).\n"
+        f"--- stdout ---\n{update.stdout[-3000:]}\n"
+        f"--- stderr ---\n{update.stderr[-1500:]}"
+    )
+    assert "[Line 2]" in update.stdout
+
+    from smith.test_generation.guidance_map import load_mapping
+
+    after_map = load_mapping(str(env.guidance_map))
+    assert any("guest" in rule for rule in after_map), (
+        "the added rule should be mapped to cases after the update run"
+    )
+
+
+def test_a_heading_swap_is_detected_as_a_change_by_the_raw_diff():
+    env, update = _run_two_stage_cycle(
+        GUIDANCE_HEADING_SWAP_BEFORE, GUIDANCE_HEADING_SWAP_AFTER, "headswap"
+    )
+    assert update.returncode == 0, (
+        f"the update run failed (rc={update.returncode}).\n"
+        f"--- stdout ---\n{update.stdout[-3000:]}\n"
+        f"--- stderr ---\n{update.stderr[-1500:]}"
+    )
+    assert "Guidance file unchanged" not in update.stdout
+    assert "Allowed commands" in update.stdout
+    assert "Disallowed commands" in update.stdout
+
+    marker = "Guidance diff vs snapshot:"
+    line = next(row for row in update.stdout.splitlines() if marker in row)
+    assert "0 unchanged" in line, (
+        f"the heading swap should re-tag every bullet, leaving nothing "
+        f"unchanged on the flattened side: {line}"
+    )
+
+
+def test_a_plain_reorder_with_no_heading_is_tolerated_by_the_flattened_diff():
+    env, update = _run_two_stage_cycle(
+        GUIDANCE_REORDER_BEFORE, GUIDANCE_REORDER_AFTER, "reorder"
+    )
+    assert update.returncode == 0, (
+        f"the update run failed (rc={update.returncode}).\n"
+        f"--- stdout ---\n{update.stdout[-3000:]}\n"
+        f"--- stderr ---\n{update.stderr[-1500:]}"
+    )
+    assert "Guidance file unchanged" not in update.stdout, (
+        "the raw diff must still see the reorder even though flatten "
+        "may absorb it"
+    )

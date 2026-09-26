@@ -41,8 +41,11 @@ STEP 1 · ``smith.test_generation.guidance_map`` — canonical form
     ``read_lines``              — blank/heading exclusion, and that it normalizes
 
 STEP 2 · deciding what changed
-    ``diff_lines``              — gone/new/unchanged, multiset counting, and
-                                  order-insensitivity
+    ``diff_lines``              — gone/new/unchanged over FLATTENED guidance:
+                                  multiset counting, order-insensitivity
+    ``diff_lines_ordered``      — gone/new/unchanged over RAW guidance:
+                                  position-aware, so a moved line (e.g. two
+                                  headings swapping places) counts as changed
     ``describe_raw_diff``       — the instructions handed to flatten, and the
                                   unchanged short-circuit
 
@@ -65,7 +68,7 @@ STEP 5 · allocating filenames
 STEP 6 · clearing state
     ``clean_promptfoo_cases``   — prefix scope
     ``clean_generated_cases``   — whole-tree clear
-    ``clear_intermediates``     — emptied, not deleted
+    ``clear_intermediates``     — deleted, not emptied
 
 STEP 7 · the orchestration
     ``apply_update``            — all four outcomes, selective deletion, map
@@ -162,7 +165,9 @@ def test_an_edit_reads_as_one_removal_plus_one_addition():
     assert new == ["limit is 12"]
 
 
-def test_reordering_guidance_is_not_a_change():
+def test_reordering_flattened_guidance_is_not_a_change():
+    """Flatten has already folded positional context into each entry, so
+    reordering/renumbering the flattened list is not a content change."""
     gone, new, unchanged = gm.diff_lines(["A", "B", "C"], ["C", "A", "B"])
     assert (gone, new, unchanged) == ([], [], 3)
 
@@ -179,12 +184,52 @@ def test_identical_input_yields_an_empty_diff():
     assert gm.diff_lines(["A", "B"], ["A", "B"]) == ([], [], 2)
 
 
+def test_ordered_diff_flags_a_pure_move():
+    gone, new, unchanged = gm.diff_lines_ordered(["1", "b", "c"], ["b", "c", "1"])
+    assert gone == [(1, "1")]
+    assert new == [(3, "1")]
+    assert unchanged == 2
+
+
+def test_ordered_diff_detects_a_heading_swap():
+    prev = ["## Allowed commands", "bullet1", "bullet2", "## Disallowed commands", "bullet3"]
+    cur = ["## Disallowed commands", "bullet1", "bullet2", "## Allowed commands", "bullet3"]
+    gone, new, unchanged = gm.diff_lines_ordered(prev, cur)
+    assert {text for _, text in gone} == {"## Allowed commands", "## Disallowed commands"}
+    assert {text for _, text in new} == {"## Allowed commands", "## Disallowed commands"}
+    assert unchanged == 3
+
+
+def test_ordered_diff_identical_input_yields_an_empty_diff():
+    assert gm.diff_lines_ordered(["A", "B"], ["A", "B"]) == ([], [], 2)
+
+
 def test_the_raw_diff_names_both_directions():
     described = gm.describe_raw_diff("- kept\n- dropped\n", "- kept\n- introduced\n")
     assert "ADDED OR EDITED" in described
-    assert "+ introduced" in described
+    assert "+ [Line 2] introduced" in described
     assert "REMOVED OR REPLACED" in described
-    assert "- dropped" in described
+    assert "- [Line 2] dropped" in described
+
+
+def test_a_deletion_only_raw_diff_still_carries_a_line_number():
+    """No corresponding addition, but the removed line's position is still useful:
+    it tells the flatten model which entry to drop, not just what its text was."""
+    described = gm.describe_raw_diff(
+        "- rule one\n- rule two\n- rule three\n", "- rule one\n- rule three\n"
+    )
+    assert "ADDED OR EDITED" not in described
+    assert "REMOVED OR REPLACED" in described
+    assert "- [Line 2] rule two" in described
+
+
+def test_an_addition_only_raw_diff_still_carries_a_line_number():
+    described = gm.describe_raw_diff(
+        "- rule one\n- rule three\n", "- rule one\n- rule two\n- rule three\n"
+    )
+    assert "REMOVED OR REPLACED" not in described
+    assert "ADDED OR EDITED" in described
+    assert "+ [Line 2] rule two" in described
 
 
 def test_an_unchanged_guidance_file_produces_no_instructions():
@@ -192,11 +237,22 @@ def test_an_unchanged_guidance_file_produces_no_instructions():
     assert gm.describe_raw_diff("- same\n", "- same\n") is None
 
 
-def test_reformatting_the_raw_guidance_is_not_a_change():
+def test_bullet_marker_reformatting_alone_is_not_a_change():
+    """Changing ``-`` to ``1.``/``2.`` with no reordering is pure formatting."""
     assert (
-        gm.describe_raw_diff("- rule one\n- rule two\n", "1. rule two\n\n2. rule one\n")
+        gm.describe_raw_diff("- rule one\n- rule two\n", "1. rule one\n2. rule two\n")
         is None
     )
+
+
+def test_reordering_the_raw_guidance_is_a_change():
+    """Unlike the flattened diff, raw guidance still has positional context
+    (a line's meaning can depend on what section it sits under), so swapping
+    two raw lines is flagged even though neither line's own text changed."""
+    described = gm.describe_raw_diff(
+        "- rule one\n- rule two\n", "1. rule two\n\n2. rule one\n"
+    )
+    assert described is not None
 
 
 # ===========================================================================
@@ -510,15 +566,24 @@ def test_clearing_an_absent_tree_is_a_no_op(tmp_path):
     assert gm.clean_generated_cases(str(tmp_path / "absent") + "/") == 0
 
 
-def test_intermediates_are_emptied_rather_than_deleted(tmp_path):
-    """A later stage may open these expecting a JSON list."""
+def test_intermediates_are_deleted_rather_than_emptied(tmp_path):
+    """Downstream readers must tolerate a missing file, not just an empty list."""
     first = tmp_path / "decomp.json"
     first.write_text(json.dumps([{"guidance": "stale"}]), encoding="utf-8")
 
     gm.clear_intermediates(str(first), str(tmp_path / "absent.json"))
 
-    assert first.exists()
-    assert json.loads(first.read_text(encoding="utf-8")) == []
+    assert not first.exists()
+
+
+def test_clearing_a_non_json_intermediate_just_deletes_it(tmp_path):
+    """ARES's own outputs (e.g. the attack CSV) aren't JSON-list files."""
+    csv_path = tmp_path / "safety_behaviors_text_subset.csv"
+    csv_path.write_text("Behavior,Category\nstale,\n", encoding="utf-8")
+
+    gm.clear_intermediates(str(csv_path))
+
+    assert not csv_path.exists()
 
 
 # ===========================================================================

@@ -6,6 +6,7 @@ import os
 import re
 import shutil
 from collections import Counter
+from difflib import SequenceMatcher
 
 from smith.tools.classify_guidance_lines import _BULLET_RE, split_guidance_lines
 
@@ -32,11 +33,21 @@ def normalize(text):
     return " ".join(_BULLET_RE.sub("", str(text).strip()).split())
 
 
-def read_lines(text):
-    return [normalize(line["text"]) for line in split_guidance_lines(text or "")]
+def read_lines(text, skip_headings=True):
+    return [
+        normalize(line["text"])
+        for line in split_guidance_lines(text or "", skip_headings=skip_headings)
+    ]
 
 
 def diff_lines(previous, current):
+    """Order-blind diff over the FLATTENED guidance: multiset counting only.
+
+    Flatten has already folded positional context (headings, lead-ins) into
+    each self-contained entry, so two flattened lines with identical text mean
+    the same thing regardless of where they sit in the list, renumbering or
+    reordering untouched entries is not a content change. 
+    """
     prev_counts = Counter(previous)
     cur_counts = Counter(current)
 
@@ -52,6 +63,25 @@ def diff_lines(previous, current):
     gone = _ordered(previous, prev_counts - cur_counts)
     new = _ordered(current, cur_counts - prev_counts)
     unchanged = sum((prev_counts & cur_counts).values())
+    return gone, new, unchanged
+
+
+def diff_lines_ordered(previous, current):
+    """Position-aware diff over the RAW guidance
+    For diff of raw guidances, since the position matters other wise moving #allow to #disallow does not return anything.
+    """
+    matcher = SequenceMatcher(a=previous, b=current, autojunk=False)
+    gone, new, unchanged = [], [], 0
+    for tag, i1, i2, j1, j2 in matcher.get_opcodes():
+        if tag == "equal":
+            unchanged += i2 - i1
+        elif tag == "delete":
+            gone.extend((i + 1, previous[i]) for i in range(i1, i2))
+        elif tag == "insert":
+            new.extend((j + 1, current[j]) for j in range(j1, j2))
+        elif tag == "replace":
+            gone.extend((i + 1, previous[i]) for i in range(i1, i2))
+            new.extend((j + 1, current[j]) for j in range(j1, j2))
     return gone, new, unchanged
 
 
@@ -73,9 +103,9 @@ def read_snapshot(path):
 
 def describe_raw_diff(previous_raw, current_raw):
     """Spell out how the raw guidance changed, as instructions for flatten."""
-    previous_lines = read_lines(previous_raw)
-    current_lines = read_lines(current_raw)
-    gone, new, _ = diff_lines(previous_lines, current_lines)
+    previous_lines = read_lines(previous_raw, skip_headings=False)
+    current_lines = read_lines(current_raw, skip_headings=False)
+    gone, new, _ = diff_lines_ordered(previous_lines, current_lines)
     if not gone and not new:
         return None
 
@@ -85,13 +115,13 @@ def describe_raw_diff(previous_raw, current_raw):
             "GUIDANCE LINES ADDED OR EDITED (make sure the flattened output "
             "covers these):"
         )
-        parts.extend(f"  + {line}" for line in new)
+        parts.extend(f"  + [Line {number}] {text}" for number, text in new)
     if gone:
         parts.append(
             "GUIDANCE LINES REMOVED OR REPLACED (drop the flattened lines that "
             "existed only for these):"
         )
-        parts.extend(f"  - {line}" for line in gone)
+        parts.extend(f"  - [Line {number}] {text}" for number, text in gone)
     return "\n".join(parts)
 
 
@@ -114,8 +144,7 @@ def clear_intermediates(*paths):
     for path in paths:
         if not path or not os.path.exists(path):
             continue
-        with open(path, "w", encoding="utf-8") as f:
-            json.dump([], f)
+        os.remove(path)
         print(f"cleared stale intermediate: {path}")
 
 
