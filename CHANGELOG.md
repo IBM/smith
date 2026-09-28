@@ -20,7 +20,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
-- Fixed handling of `null` system variables in test-case translation (`src/smith/test_generation/convert_test_case.py`). A null previously reached `_convert_var`, where `int(None)`/`float(None)` raised `TypeError` and aborted the whole `test_generation` run after all the expensive generation work had completed; a null that survived was written to the case as a JSON `null`, which OPA treats differently from a missing field, so the case tested the wrong policy outcome. Null variables are now handled in `_fill_template` before any coercion: the field is omitted (clearing any placeholder the case template ships), or set to `[]` for a list-typed variable.
+- Isolated Security-Grounded Guidance Analysis phases now require an explicit
+  resolved-path envelope, preserve that context in `architecture.md`, and
+  reject addendum rules whose runtime data is not confirmed OPA-visible.
+- Test-case translation no longer crashes the whole `test_generation` run when a generated case supplies `null` for a numeric system variable. `_convert_var` (`src/smith/test_generation/convert_test_case.py`) previously called `int(None)`/`float(None)`, raising `TypeError` and aborting the pipeline after all the expensive generation work had completed (seen with adversarial Promptfoo cases that omit an integer field like `queries_this_session`). It now returns `None` for a null value, leaving the field absent for OPA.
 - Repeated `generate_promptfoo_config` runs no longer append duplicate tool-parameter blocks to `testGenerationInstructions`. De-duplication only recognised the `[smith:tool-parameters]` marker, so a block written before that marker existed was treated as user-authored prose and kept, with a second block appended after it — leaving stale tool names in the instructions. The block's opening line now serves as a fallback anchor, and is shared with the builder so the two cannot drift apart.
 - Tier-3 label validation no longer aborts the entire loop on a single LLM error. Transient failures now fall back for that case and continue; the loop only aborts after N consecutive failures (default 5, configurable via `run_validation`) indicating the LLM is genuinely unavailable. On abort, the remaining un-evaluated cases are still recorded as uncertain so validation metrics no longer silently shrink.
 - OPA scorecard no longer silently scores request failures as "deny". Added a curl timeout and exit-code checking; failed requests are logged to `errors.txt` and excluded from TP/FP/TN/FN counts.
@@ -63,6 +66,24 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- Enforcement Mapping now normalizes candidate and existing guidance rules,
+  validates multi-tool rules per tool, and emits only novel or additive
+  decisions after semantic duplicate, subsumption, and conflict checks.
+- Enforcement Mapping now records unresolved Q21 severity tiering in the Gap
+  Register as a human decision instead of inferring enforcement behavior.
+- Batched Architecture Analysis discovery and selected-file reads, and grouped
+  unresolved questionnaire items into one clarification round to reduce
+  workflow latency without narrowing coverage.
+- Consolidated shared security-analysis path, missing-input, write-scope, and
+  phase-stop constraints into one worker contract instead of repeating them in
+  every phase guide.
+- Reduced generated-artifact amplification with compact questionnaire,
+  architecture, global scenario-coverage, evidence, threat, and enforcement
+  tables; downstream phases reuse stable IDs, filtered JSON projections, and a
+  single validation matrix instead of repeating source or validation prose.
+- Security-Grounded Guidance Analysis now runs Steps A-D as resumable,
+  isolated-context phases with compact artifact handoffs, bounded discovery and
+  repair passes, and deduplication of equivalent threat instances.
 - Clarified Security-Grounded Guidance Analysis as a standalone four-step guidance-only workflow, with guidance merging and policy creation requiring separate approval.
 - Updated the minimum supported versions of `mcp`, `networkx`, `sentence-transformers`, `pip-audit`, and `build`, and upgraded the CI Python/uv setup actions to v7.
 - Made ARES and Promptfoo optional dependencies — either tool can be used independently or skipped entirely.
