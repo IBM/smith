@@ -7,6 +7,8 @@ import httpx
 from openai import OpenAI
 from dotenv import load_dotenv
 
+from smith.test_generation.concurrency import run_batches
+
 load_dotenv()
 
 
@@ -37,6 +39,7 @@ def grey_extraction(
     output_file_grey_guidances,
     batch_processing=False,
     batch_size=10,
+    generation_concurrency=None,
 ):
 
     system_instruction = """
@@ -85,16 +88,13 @@ Output format example:
     guidance_items = list(guidances.items())
 
     if batch_processing and len(guidance_items) > batch_size:
-        all_results = []
-        total_batches = (len(guidance_items) + batch_size - 1) // batch_size
-        for i in range(0, len(guidance_items), batch_size):
-            batch_items = guidance_items[i : i + batch_size]
-            batch_dict = dict(batch_items)
-            batch_num = i // batch_size + 1
-            print(
-                f"Sending batch {batch_num}/{total_batches} ({len(batch_items)} items) for grey space identification..."
-            )
+        batches = [
+            guidance_items[i : i + batch_size]
+            for i in range(0, len(guidance_items), batch_size)
+        ]
 
+        def _grey_batch(batch_items):
+            batch_dict = dict(batch_items)
             user_instruction = f"""
 System variable list: {system_variables}
 
@@ -113,15 +113,18 @@ Guidance items: {str(batch_dict)}
             match = re.search(r"```json\s*(.*?)```", llm_output, re.DOTALL)
             if match:
                 llm_output = match.group(1).strip()
-            try:
-                batch_results = json.loads(llm_output)
-                if isinstance(batch_results, list):
-                    all_results.extend(batch_results)
-                else:
-                    all_results.append(batch_results)
-            except json.JSONDecodeError as e:
-                print(f"Error parsing LLM output for batch {batch_num}:", e)
-                print("Raw output will be skipped for this batch")
+            batch_results = json.loads(llm_output)
+            if not isinstance(batch_results, list):
+                batch_results = [batch_results]
+            return batch_results
+
+        # Flatten in batch order so the output matches a serial run.
+        all_results = []
+        for batch_results in run_batches(
+            batches, _grey_batch, "grey space", generation_concurrency
+        ):
+            if batch_results:
+                all_results.extend(batch_results)
 
         with open(output_file_grey_guidances, "w") as f:
             json.dump(all_results, f, indent=4)

@@ -8,6 +8,8 @@ import httpx
 from openai import OpenAI
 from dotenv import load_dotenv
 
+from smith.test_generation.concurrency import run_batches
+
 load_dotenv()
 
 
@@ -90,6 +92,7 @@ def decompose_guidance(
     flatten_flag=True,
     batch_processing=False,
     batch_size=10,
+    generation_concurrency=None,
 ):
     guidances_str = ""
     if flatten_flag:
@@ -157,15 +160,12 @@ def decompose_guidance(
     guidance_lines = remove_empty_line(guidances_str.split("\n"))
 
     if batch_processing and len(guidance_lines) > batch_size:
-        all_results = []
-        total_batches = (len(guidance_lines) + batch_size - 1) // batch_size
-        for i in range(0, len(guidance_lines), batch_size):
-            batch_lines = guidance_lines[i : i + batch_size]
-            batch_num = i // batch_size + 1
-            print(
-                f"Sending batch {batch_num}/{total_batches} ({len(batch_lines)} items) for decomposition..."
-            )
+        batches = [
+            guidance_lines[i : i + batch_size]
+            for i in range(0, len(guidance_lines), batch_size)
+        ]
 
+        def _decompose_batch(batch_lines):
             batch_guidances = "\n".join(batch_lines)
             user_instruction = f"""
     Action list (choose from this list only): {system_variables['action_list']}
@@ -185,29 +185,32 @@ def decompose_guidance(
             match = re.search(r"```json\s*(.*?)```", llm_output, re.DOTALL)
             if match:
                 llm_output = match.group(1).strip()
-            try:
-                batch_results = json.loads(llm_output)
-                if not isinstance(batch_results, list):
-                    batch_results = [batch_results]
-                for j in range(len(batch_results)):
-                    result = {}
-                    result["guidance"] = (
-                        batch_lines[j]
-                        if j < len(batch_lines)
-                        else batch_results[j].get("guidance", "")
-                    )
-                    result["action"] = batch_results[j]["action"]
-                    result["common_constraints"] = batch_results[j][
-                        "common_constraints"
-                    ]
-                    result["allow_conditions"] = batch_results[j]["allow_conditions"]
-                    result["disallow_conditions"] = batch_results[j][
-                        "disallow_conditions"
-                    ]
-                    all_results.append(result)
-            except json.JSONDecodeError as e:
-                print(f"Error parsing LLM output for batch {batch_num}:", e)
-                print("Raw output will be skipped for this batch")
+            batch_results = json.loads(llm_output)
+            if not isinstance(batch_results, list):
+                batch_results = [batch_results]
+            records = []
+            for j in range(len(batch_results)):
+                result = {}
+                result["guidance"] = (
+                    batch_lines[j]
+                    if j < len(batch_lines)
+                    else batch_results[j].get("guidance", "")
+                )
+                result["action"] = batch_results[j]["action"]
+                result["common_constraints"] = batch_results[j]["common_constraints"]
+                result["allow_conditions"] = batch_results[j]["allow_conditions"]
+                result["disallow_conditions"] = batch_results[j]["disallow_conditions"]
+                records.append(result)
+            return records
+
+        # Flatten in batch order, so the records land exactly where a serial run
+        # would have put them. A batch that failed contributes nothing.
+        all_results = []
+        for records in run_batches(
+            batches, _decompose_batch, "decomposition", generation_concurrency
+        ):
+            if records:
+                all_results.extend(records)
 
         with open(output_file_decompose, "w") as f:
             json.dump(all_results, f, indent=4)

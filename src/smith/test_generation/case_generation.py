@@ -7,6 +7,8 @@ import httpx
 from openai import OpenAI
 from dotenv import load_dotenv
 
+from smith.test_generation.concurrency import run_batches
+
 load_dotenv()
 
 
@@ -22,6 +24,7 @@ def case_generation(
     tool_definitions=None,
     batch_processing=False,
     batch_size=10,
+    generation_concurrency=None,
 ):
 
     system_instruction = """
@@ -126,14 +129,11 @@ Output example:
     client = OpenAI(api_key=api_key, base_url=openai_base_url, http_client=http_client)
 
     if batch_processing and isinstance(guidances, list):
-        all_results = []
-        total_batches = (len(guidances) + batch_size - 1) // batch_size
-        for i in range(0, len(guidances), batch_size):
-            batch = guidances[i : i + batch_size]
-            batch_num = i // batch_size + 1
-            print(
-                f"Sending batch {batch_num}/{total_batches} ({len(batch)} items) for test case generation..."
-            )
+        batches = [
+            guidances[i : i + batch_size] for i in range(0, len(guidances), batch_size)
+        ]
+
+        def _generate_batch(batch):
             tool_params_text = _get_tool_params_text(batch)
             user_instruction = f"""
 System variable candidates: {str(system_variables)}
@@ -151,15 +151,19 @@ Guidance items: {str(batch)}
             match = re.search(r"```json\s*(.*?)```", llm_output, re.DOTALL)
             if match:
                 llm_output = match.group(1).strip()
-            try:
-                batch_results = json.loads(llm_output)
-                if isinstance(batch_results, list):
-                    all_results.extend(batch_results)
-                else:
-                    all_results.append(batch_results)
-            except json.JSONDecodeError as e:
-                print(f"Error parsing LLM output for batch {batch_num}:", e)
-                print("Raw output will be skipped for this batch")
+            batch_results = json.loads(llm_output)
+            if not isinstance(batch_results, list):
+                batch_results = [batch_results]
+            return batch_results
+
+        # Flatten in batch order. Case order decides the test_case<N>.json
+        # filenames downstream, so this must match what a serial run produced.
+        all_results = []
+        for batch_results in run_batches(
+            batches, _generate_batch, "test case generation", generation_concurrency
+        ):
+            if batch_results:
+                all_results.extend(batch_results)
 
         with open(output_file_cases, "w") as f:
             json.dump(all_results, f, indent=4)

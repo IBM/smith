@@ -96,7 +96,8 @@ The agent can run on a local model (Ollama) or an online one; `.env_template` in
 | `BATCH_PROCESSING` | Enable batch processing | `true` |
 | `BATCH_SIZE` | Batch size for processing | `10` |
 | `CASE_GENERATION_BATCH_SIZE` | Batch size for case generation | `5` |
-| `TRANSLATION_CONCURRENCY` | Concurrent `/extract_tool_call` requests during `test_case_translation`. Use `-1` (or `1`) for a local model, which is compute-bound and gains nothing from concurrency; raise it for an online model to cut translation wall-clock. | `-1` |
+| `GENERATION_CONCURRENCY` | Batches dispatched in parallel per stage during `test_generation` (decomposition, grey space, variable extraction, case generation). | `4` |
+| `TRANSLATION_CONCURRENCY` | Concurrent `/extract_tool_call` requests during `test_case_translation`. Use `-1` (or `1`) for a local model, which is compute-bound and gains nothing from concurrency. | `-1` |
 
 ## Test Case Evaluation
 

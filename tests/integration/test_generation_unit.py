@@ -47,6 +47,14 @@ STEP 3 · ``smith.test_generation.variable_extraction``
 STEP 4 · ``smith.test_generation.case_generation``
     ``case_generation``         — abstract cases written with their labels
 
+STEPS 1-4 · ``smith.test_generation.concurrency``
+    ``resolve_generation_concurrency`` — the env parse, including the serial
+                                  spellings and the invalid-value fallback
+    ``run_batches``             — input order preserved however batches finish,
+                                  and one failed batch not discarding the rest,
+                                  plus the same guarantee through the four
+                                  stages that batch their LLM calls
+
 STEP 5 · ``smith.cli.resolve_attack_tools``
     Covered in ``test_case_evaluation_unit.py``, where it is also step 0 of that
     flag. Not duplicated here.
@@ -72,6 +80,10 @@ from smith.test_generation import case_generation as case_gen_mod
 from smith.test_generation import decompose as decompose_mod
 from smith.test_generation import variable_extraction as var_mod
 from smith.test_generation.case_generation import case_generation
+from smith.test_generation.concurrency import (
+    resolve_generation_concurrency,
+    run_batches,
+)
 from smith.test_generation.convert_test_case import translate_case
 from smith.test_generation.decompose import decompose_guidance, remove_empty_line
 from smith.test_generation.grey_condition import group_guidance_by_tool
@@ -362,6 +374,276 @@ def test_generated_cases_are_written_with_their_labels(unit_env, monkeypatch, sv
     assert written, "no cases were written"
     assert written[0]["label"] == "allow"
     assert written[0]["user_input"], "a case with no prompt cannot be evaluated"
+
+
+# ===========================================================================
+# STEPS 1-4 · concurrent batch dispatch
+# ===========================================================================
+
+
+def test_an_out_of_order_concurrency_setting_is_read_as_serial(monkeypatch):
+    # -1 is how TRANSLATION_CONCURRENCY spells "serial"; accept it here too so the
+    # two variables cannot mean opposite things.
+    monkeypatch.setenv("GENERATION_CONCURRENCY", "-1")
+    assert resolve_generation_concurrency() == 1
+
+    monkeypatch.setenv("GENERATION_CONCURRENCY", "1")
+    assert resolve_generation_concurrency() == 1
+
+    monkeypatch.setenv("GENERATION_CONCURRENCY", "8")
+    assert resolve_generation_concurrency() == 8
+
+    monkeypatch.delenv("GENERATION_CONCURRENCY", raising=False)
+    assert (
+        resolve_generation_concurrency() == 4
+    ), "online gateway should default parallel"
+
+
+def test_an_unparseable_concurrency_setting_falls_back_to_serial(monkeypatch, capsys):
+    # A typo must not take the whole stage down, and must not silently run wide.
+    monkeypatch.setenv("GENERATION_CONCURRENCY", "eight")
+    assert resolve_generation_concurrency() == 1
+    assert "eight" in capsys.readouterr().out
+
+
+def test_a_negative_concurrency_argument_runs_serially_rather_than_crashing():
+    # -1 reaching run_batches directly used to hit ThreadPoolExecutor and raise
+    # "max_workers must be greater than 0". The env parse clamps it, but a direct
+    # caller passing translation's -1 spelling must get serial, not a crash.
+    assert run_batches([1, 2, 3], lambda b: [b], "test", concurrency=-1) == [
+        [1],
+        [2],
+        [3],
+    ]
+
+
+def test_a_failed_batch_does_not_discard_the_other_batches():
+    # The reason each worker catches Exception: before this, one HTTP error threw
+    # away every other batch's completed work.
+    def work(batch):
+        if batch == "b1":
+            raise RuntimeError("gateway said 429")
+        return [batch]
+
+    results = run_batches(["b0", "b1", "b2"], work, "test", concurrency=4)
+
+    assert results[0] == ["b0"]
+    assert results[1] is None, "the failed batch's slot stays empty"
+    assert results[2] == ["b2"], "a later batch still ran and landed in its own slot"
+
+
+def test_batches_are_returned_in_input_order_however_they_finish():
+    # Completion order is deliberately the reverse of input order.
+    import time
+
+    def work(batch):
+        time.sleep((10 - batch) * 0.01)
+        return [f"rec{batch}"]
+
+    results = run_batches(list(range(10)), work, "test", concurrency=10)
+
+    assert results == [[f"rec{i}"] for i in range(10)]
+
+
+def _multi_batch_guidance(count):
+    return "\n".join(f"{i + 1}. Rule line{i} applies." for i in range(count))
+
+
+def test_concurrent_decomposition_keeps_each_rule_with_its_own_guidance(
+    unit_env, monkeypatch, sv
+):
+    # The corruption this guards against is silent: decompose pairs
+    # batch_lines[j] -> batch_results[j], so a cross-batch shuffle would attach a
+    # rule's action to another rule's guidance text.
+    guidance_file = write_text(unit_env.root / "guidance.txt", "ignored\n")
+    out = unit_env.root / "references" / "decomp.json"
+    flat = unit_env.root / "references" / "flatten.json"
+
+    flattened = _multi_batch_guidance(6)
+    # batch_size=2 over 6 lines => 3 batches, each keyed by the line it contains.
+    monkeypatch.setattr(
+        decompose_mod,
+        "OpenAI",
+        FakeOpenAI(
+            responses=[flattened],  # the flatten call, which runs first
+            by_prompt={
+                f"line{i}": fenced(_decompose_reply(f"action{i}", f"action{i + 1}"))
+                for i in (0, 2, 4)
+            },
+        ).as_factory(),
+    )
+
+    result = decompose_guidance(
+        "key",
+        sv,
+        str(guidance_file),
+        "http://localhost/v1",
+        "m",
+        0.0,
+        1.0,
+        str(out),
+        str(flat),
+        True,
+        True,
+        2,
+        generation_concurrency=3,
+    )
+
+    written = json.loads(out.read_text())
+    assert len(written) == 6, "every batch's records must survive"
+    # Record i came from guidance line i, so its action must be the one that batch
+    # was told to return. Any cross-batch shuffle breaks this pairing.
+    assert [r["action"] for r in written] == [f"action{i}" for i in range(6)]
+    for i, record in enumerate(written):
+        assert f"line{i}" in record["guidance"], f"record {i} carries another's text"
+    assert [r["action"] for r in result] == [f"action{i}" for i in range(6)]
+
+
+def test_concurrent_case_generation_writes_cases_in_batch_order(unit_env, monkeypatch):
+    # Case order decides the test_case<N>.json filenames downstream.
+    rules = [
+        decomposed(action=f"tool{i}", guidance_text=f"Rule line{i}.") for i in range(6)
+    ]
+    vars_file = write_json(unit_env.root / "references" / "vars.json", rules)
+    out = unit_env.root / "references" / "cases.json"
+
+    monkeypatch.setattr(
+        case_gen_mod,
+        "OpenAI",
+        FakeOpenAI(
+            by_prompt={
+                f"line{i}": fenced(
+                    [
+                        {
+                            "action": f"tool{i}",
+                            "condition": "c",
+                            "user_input": f"input{i}",
+                            "label": "allow",
+                            "system_variables": {},
+                        }
+                    ]
+                )
+                for i in range(6)
+            }
+        ).as_factory(),
+    )
+
+    case_generation(
+        "key",
+        system_vars(),
+        "http://localhost/v1",
+        "m",
+        0.0,
+        1.0,
+        str(vars_file),
+        str(out),
+        None,
+        True,
+        batch_size=1,
+        generation_concurrency=6,
+    )
+
+    written = json.loads(out.read_text())
+    assert [c["user_input"] for c in written] == [f"input{i}" for i in range(6)]
+
+
+def test_concurrent_variable_extraction_keeps_variables_on_their_own_rule(
+    unit_env, monkeypatch, sv
+):
+    rules = [
+        decomposed(action="get_events", guidance_text=f"Rule line{i}.")
+        for i in range(6)
+    ]
+    decomp = write_json(unit_env.root / "references" / "decomp.json", rules)
+    out = unit_env.root / "references" / "vars.json"
+
+    monkeypatch.setattr(
+        var_mod,
+        "OpenAI",
+        FakeOpenAI(
+            by_prompt={
+                f"line{i}": fenced(
+                    [
+                        {
+                            "system_variables": ["user_role"],
+                            "prompt_variables": [f"var{i}"],
+                        }
+                    ]
+                )
+                for i in range(6)
+            }
+        ).as_factory(),
+    )
+
+    variable_extraction(
+        "key",
+        sv,
+        "http://localhost/v1",
+        "m",
+        0.0,
+        1.0,
+        str(decomp),
+        str(out),
+        True,
+        1,
+        generation_concurrency=6,
+    )
+
+    written = json.loads(out.read_text())
+    assert len(written) == 6
+    for i, record in enumerate(written):
+        assert f"line{i}" in record["guidance"]
+        assert record["prompt_variables"] == [
+            f"var{i}"
+        ], f"rule {i} got another rule's variables"
+
+
+def test_a_serial_and_a_concurrent_run_write_the_same_cases(unit_env, monkeypatch):
+    # The strongest statement of the contract: concurrency changes timing only.
+    rules = [
+        decomposed(action=f"tool{i}", guidance_text=f"Rule line{i}.") for i in range(6)
+    ]
+    vars_file = write_json(unit_env.root / "references" / "vars.json", rules)
+
+    def _run(out_name, concurrency):
+        out = unit_env.root / "references" / out_name
+        monkeypatch.setattr(
+            case_gen_mod,
+            "OpenAI",
+            FakeOpenAI(
+                by_prompt={
+                    f"line{i}": fenced(
+                        [
+                            {
+                                "action": f"tool{i}",
+                                "condition": "c",
+                                "user_input": f"input{i}",
+                                "label": "allow",
+                                "system_variables": {},
+                            }
+                        ]
+                    )
+                    for i in range(6)
+                }
+            ).as_factory(),
+        )
+        case_generation(
+            "key",
+            system_vars(),
+            "http://localhost/v1",
+            "m",
+            0.0,
+            1.0,
+            str(vars_file),
+            str(out),
+            None,
+            True,
+            batch_size=1,
+            generation_concurrency=concurrency,
+        )
+        return json.loads(out.read_text())
+
+    assert _run("serial.json", 1) == _run("parallel.json", 6)
 
 
 # ===========================================================================
