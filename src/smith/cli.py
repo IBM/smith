@@ -22,6 +22,7 @@ from smith.policy_agent.reduce_improve.detect_redundancy import write_graph_sugg
 from smith.policy_agent.policy_analysis.regal.regal_finder import (
     create_regal_suggestion,
 )
+from smith.test_generation.concurrency import resolve_generation_concurrency
 from smith.test_generation import guidance_map
 from smith.test_generation.decompose import decompose_guidance
 from smith.test_generation.variable_extraction import variable_extraction
@@ -235,6 +236,7 @@ def generate_test(
     batch_processing=False,
     batch_size=10,
     flatten_flag=False,
+    generation_concurrency=None,
     mode="fresh",
     guidance_snapshot_file=None,
     guidance_map_file=None,
@@ -273,6 +275,7 @@ def generate_test(
         flatten_flag,
         batch_processing,
         batch_size,
+        generation_concurrency,
         mode,
         guidance_snapshot_file,
         guidance_map_file,
@@ -315,6 +318,7 @@ def generate_test(
             output_file_grey_guidances,
             batch_processing,
             batch_size,
+            generation_concurrency=generation_concurrency,
         )
         variable_extraction(
             api_key,
@@ -327,6 +331,7 @@ def generate_test(
             output_file_variables,
             batch_processing,
             batch_size,
+            generation_concurrency=generation_concurrency,
         )
         case_generation(
             api_key,
@@ -340,6 +345,7 @@ def generate_test(
             tool_definitions,
             batch_processing,
             batch_size=case_generation_batch_size,
+            generation_concurrency=generation_concurrency,
         )
         if "ares" in attack_tools:
             attack(
@@ -609,6 +615,7 @@ def main():
     batch_processing = os.getenv("BATCH_PROCESSING", "false").lower() == "true"
     batch_size = int(os.getenv("BATCH_SIZE", "10"))
     case_generation_batch_size = int(os.getenv("CASE_GENERATION_BATCH_SIZE", "5"))
+    generation_concurrency = resolve_generation_concurrency()
 
     # test case eveluation settings
     tier2_high = float(os.getenv("TIER2_HIGH_THRESHOLD", "0.70"))
@@ -684,6 +691,7 @@ def main():
             tool_definitions,
             batch_processing,
             batch_size,
+            generation_concurrency=generation_concurrency,
             mode=args.mode,
             guidance_snapshot_file=guidance_snapshot_file,
             guidance_map_file=guidance_map_file,

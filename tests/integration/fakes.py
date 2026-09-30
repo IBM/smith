@@ -29,7 +29,7 @@ from __future__ import annotations
 
 import json
 import subprocess
-
+import threading
 
 # ===========================================================================
 # OpenAI-style chat completions
@@ -66,11 +66,29 @@ class FakeOpenAI:
     ``dict``/``list`` (JSON-encoded first), or an ``Exception`` (raised). Pass
     ``error=`` to raise on every call. Running out of responses raises, so an
     unexpected extra call fails the test instead of passing silently.
+
+    ``responses`` pairs reply *N* with call *N*, which assumes the caller makes its
+    calls one at a time. A stage that dispatches its batches concurrently has no
+    such order, so pass ``by_prompt`` instead: a ``{substring: response}`` mapping
+    keyed on the text of the request, so each batch gets its own reply no matter
+    which thread arrives first (the same idea as ``FakeProcess(by_command=...)``)::
+
+        FakeOpenAI(by_prompt={"line0": reply_a, "line1": reply_b})
+
+    ``by_prompt`` may be combined with ``responses``, which is then the fallback
+    for a request matching no key. Concurrent callers are safe: ``calls`` and the
+    response queue are guarded by a lock.
     """
 
-    def __init__(self, responses=None, error=None, **_ignored_client_kwargs):
+    def __init__(
+        self, responses=None, error=None, by_prompt=None, **_ignored_client_kwargs
+    ):
         self._responses = list(responses) if responses else []
         self._error = error
+        self._by_prompt = dict(by_prompt) if by_prompt else {}
+        # Guards ``calls`` and ``_responses`` so a thread pool cannot interleave a
+        # record with a pop and mispair a reply.
+        self._lock = threading.Lock()
         #: Every request, for assertions about what the code actually asked for.
         self.calls: list[dict] = []
         outer = self
@@ -105,17 +123,47 @@ class FakeOpenAI:
         assert self.calls, "no LLM call was made"
         return self.calls[-1].get("model")
 
+    @staticmethod
+    def _prompt_text(kwargs) -> str:
+        return "\n".join(
+            m.get("content", "")
+            for m in kwargs.get("messages", [])
+            if isinstance(m, dict)
+        )
+
     def _respond(self, **kwargs):
-        self.calls.append(kwargs)
-        if self._error is not None:
-            raise self._error
-        if not self._responses:
-            raise AssertionError(
-                f"FakeOpenAI got an unexpected call #{len(self.calls)} — no "
-                "responses left. Add one, or assert the code should not have "
-                "called the LLM again."
-            )
-        response = self._responses.pop(0)
+        with self._lock:
+            self.calls.append(kwargs)
+            call_number = len(self.calls)
+
+            if self._error is not None:
+                raise self._error
+
+            response = None
+            matched = False
+            if self._by_prompt:
+                prompt = self._prompt_text(kwargs)
+                for key, candidate in self._by_prompt.items():
+                    if key in prompt:
+                        response, matched = candidate, True
+                        break
+
+            if not matched:
+                if not self._responses:
+                    raise AssertionError(
+                        f"FakeOpenAI got an unexpected call #{call_number} — no "
+                        "responses left"
+                        + (
+                            " and no by_prompt key matched the request. Add a key, "
+                            "add a fallback response, or assert the code should not "
+                            "have called the LLM again."
+                            if self._by_prompt
+                            else ". Add one, or assert the code should not have "
+                            "called the LLM again."
+                        )
+                    )
+                response = self._responses.pop(0)
+
         if isinstance(response, Exception):
             raise response
         if isinstance(response, (dict, list)):

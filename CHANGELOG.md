@@ -43,6 +43,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- **Parallel test-case generation**: the four batched stages of `smith --flag test_generation` (decomposition, grey space, variable extraction, case generation) now dispatch their batches concurrently instead of one at a time, controlled by the new `GENERATION_CONCURRENCY` variable. 
 - **Incremental test-case generation** (`smith --flag test_generation --mode update`): regenerates only the test cases whose guidance changed, instead of rebuilding the whole suite. `--mode fresh` (the default) keeps the previous generation behaviour.
   - New module `src/smith/test_generation/guidance_map.py`: the guidance diff, the guidance → test-case mapping, snapshot IO, filename-index allocation, and the update orchestration.
   - Three new artifacts under `references/`, configurable via `GUIDANCE_MAP_FILE`, `GUIDANCE_SNAPSHOT_FILE` and `GUIDANCE_RAW_SNAPSHOT_FILE`: a map of each guidance line to the case files it produced, plus snapshots of the flattened and raw guidance the run generated from.
