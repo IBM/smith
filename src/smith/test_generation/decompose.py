@@ -8,11 +8,49 @@ import httpx
 from openai import OpenAI
 from dotenv import load_dotenv
 
+from smith.test_generation import guidance_map
+
 load_dotenv()
 
 
 def remove_empty_line(str_list):
     return [line for line in str_list if line.strip()]
+
+
+#: Update mode's flatten prompt-> find necessary modification rather than flatten all.
+_FLATTEN_UPDATE_INSTRUCTION = """
+    You are a Guidance Flattening Agent performing an INCREMENTAL UPDATE.
+
+    You are given, in this order:
+    1. SOURCE GUIDANCE - the source document as it stood at the last run. This is
+       CONTEXT REFERENCE ONLY: use it to see which section or lead-in a changed line
+       sat under, and therefore whether that line granted or forbade something. Do
+       NOT re-flatten this document.
+    2. GUIDANCE CHANGES - the exact lines added, edited or removed since that run,
+       already computed for you. You do NOT need to search for differences.
+    3. FLATTENED GUIDANCE - your own output from that run. This is what you edit.
+
+    Your task: apply the changes to the flattened guidance. Add flattened entries for
+    added guidance; revise or delete existing entries according to the changed or
+    removed guidance. Change nothing else.
+
+    Requirements:
+    1. Reproduce every entry unaffected by the changes BYTE-FOR-BYTE IDENTICALLY. Do
+       not reword, re-order, "improve" or fix the grammar of an entry you are not
+       changing. 
+    2. Use your judgement on which entries a change affects. Look the changed line up
+       in SOURCE GUIDANCE to see what it meant in context, and decide whether each
+       related entry is still supported by the guidance that remains. Delete/update the
+       entries that are not; keep the ones that are. 
+    3. Renumber the final list sequentially from 1.
+    4. Every entry must still describe exactly one operation, tool action, or user
+       action, and be self-contained.
+
+    Do not generate test cases.
+    Do not output JSON.
+    Do not explain your reasoning.
+    Only output the flattened guidance lines.
+    """
 
 
 def flatten_guidance(
@@ -24,6 +62,9 @@ def flatten_guidance(
     temp,
     top_p,
     output_file_flatten,
+    prior_flattened=None,
+    raw_diff=None,
+    prior_raw=None,
 ):
     guidances = ""
     with open(guidance_file, "r") as f:
@@ -56,11 +97,29 @@ def flatten_guidance(
     user_instruction = f"""
     Guidances: {guidances}
     """
+    if prior_flattened is not None and raw_diff:
+        system_instruction = _FLATTEN_UPDATE_INSTRUCTION
+        user_instruction = f"""
+        ===== SOURCE GUIDANCE (context reference only -- do not re-flatten) =====
+        {prior_raw}
+
+        ===== CHANGES MADE TO THE SOURCE GUIDANCE =====
+        {raw_diff}
+
+        ===== FLATTENED GUIDANCE TO EDIT =====
+        {prior_flattened}
+
+        Output the updated flattened guidance: every entry unaffected by the changes
+        reproduced byte-for-byte, with the changes above applied.
+        """
     # Initialize OpenAI client
     http_client = httpx.Client(verify=False, timeout=300.0)
     client = OpenAI(api_key=api_key, base_url=openai_base_url, http_client=http_client)
 
-    print("Sending guidance for flatten...")
+    if prior_flattened is not None and raw_diff:
+        print("Sending guidance changes for incremental flatten...")
+    else:
+        print("Sending guidance for flatten...")
     response = client.chat.completions.create(
         model=model,
         messages=[
@@ -90,9 +149,39 @@ def decompose_guidance(
     flatten_flag=True,
     batch_processing=False,
     batch_size=10,
+    mode="fresh",
+    guidance_snapshot_file=None,
+    guidance_map_file=None,
+    case_root=None,
+    raw_snapshot_file=None,
 ):
     guidances_str = ""
     if flatten_flag:
+        prior_flattened = None
+        raw_diff = None
+        prior_raw = None
+        if mode == "update":
+            prior_flattened = guidance_map.read_snapshot(guidance_snapshot_file)
+            prior_raw = guidance_map.read_snapshot(raw_snapshot_file)
+            if prior_flattened is None or prior_raw is None:
+                print(
+                    "Update mode needs snapshots from a previous run.\n"
+                    f"  flattened: {guidance_snapshot_file}\n"
+                    f"  raw:       {raw_snapshot_file}\n"
+                    "Run: smith --flag test_generation --mode fresh"
+                )
+                return guidance_map.NO_SNAPSHOT
+            with open(guidance_file, "r") as f:
+                current_raw = f.read()
+            raw_diff = guidance_map.describe_raw_diff(prior_raw, current_raw)
+            if raw_diff is None:
+                print(
+                    "Guidance file unchanged since the last run; nothing to "
+                    "regenerate."
+                )
+                return guidance_map.UNCHANGED
+            print("Guidance changes since the last run:")
+            print(raw_diff)
         guidances_str = flatten_guidance(
             api_key,
             guidance_file,
@@ -102,10 +191,29 @@ def decompose_guidance(
             temp,
             top_p,
             output_file_flatten,
+            prior_flattened,
+            raw_diff,
+            prior_raw,
         )
     else:
         with open(guidance_file, "r") as f:
             guidances_str = str(f.read())
+
+    # Finished flatten, now decompose
+    # If mode is update and guidance changes, pass diff block for decomposion
+    if mode == "update":
+        outcome, subset = guidance_map.apply_update(
+            guidances_str,
+            guidance_snapshot_file,
+            guidance_map_file,
+            case_root,
+        )
+        if outcome != guidance_map.REGENERATE:
+            # Nothing to decompose. Hand the outcome back rather than a bare None:
+            # the caller treats "nothing changed" and "deletions were applied"
+            # differently.
+            return outcome
+        guidances_str = subset
 
     system_instruction = """
     You are a policy decision decomposition agent.
