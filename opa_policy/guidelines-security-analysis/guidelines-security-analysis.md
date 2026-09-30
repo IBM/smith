@@ -1,6 +1,6 @@
 ---
 name: guidelines_security_analysis
-description: Analyze an MCP system and produce non-duplicative, OPA-policy-expressible security guidance through four isolated phases.
+description: Analyze an MCP system and produce non-duplicative, OPA-policy-expressible security guidance through four reviewable phases.
 ---
 
 ## Purpose
@@ -27,36 +27,23 @@ target.
 
 ## Shared phase contract
 
-When this workflow is reached through the Smith skill, its coordinator launches
-one native fresh worker per phase and runs the phase checkpoints on the user's
-behalf. Do not ask the user to enter phase commands, and do not run phases A-D
-inline in one worker context. Pass only the resolved paths and persisted
-structured artifacts to the next worker, never the previous worker's
-conversation.
+When this workflow is reached through the Smith skill, the active assistant
+runs each non-deterministic phase visibly in the current user-controlled
+session. Do not delegate a whole phase to a hidden or auto-approved agent CLI.
+The user must be able to inspect evidence, interrupt work, and correct a phase
+before its checkpoint. This keeps the workflow independent of any particular
+assistant implementation and preserves the host's normal approval controls.
 
-If native worker isolation is unavailable, the coordinator—not the user—uses
-the automated isolated runner:
+Deterministic operations remain Smith CLI commands: input preparation, bounded
+implementation inspection, schema and coverage validation, checkpoint hashing,
+reconciliation, and atomic merging. These commands may produce compact
+structured artifacts, but they do not perform model inference. Run them through
+the active assistant's normal tool interface; never bypass its approval or
+sandbox controls.
 
-```bash
-smith --flag security_analysis_run
-```
-
-It launches a separate, non-persistent agent process for each phase, runs the
-checkpoint after that process exits, and stops at the first failure. Resume a
-failed or interrupted run at phase `<P>` with
-`smith --flag security_analysis_run --phase <P>`. By default it uses the local
-Claude Code CLI with its existing authentication and default model. It uses the
-same configured Smith paths already resolved from `.env`; no additional
-security-analysis environment variables are required.
-
-For manual execution, run each phase in a fresh context and load only its guide.
-Give it resolved paths for `TARGET_AGENT_PATH`, `GUIDANCE_FILE` or `ABSENT`,
-`SYSTEM_VAR_FILE` or `ABSENT`, `TOOL_DEFINITIONS_FILE`, and
-`GUIDANCE_UPDATE_FILE` or `ABSENT`.
-
-The following sequence belongs to the coordinator, or to the operator during
-manual execution. An isolated phase worker performs only steps 2-3 and then
-returns control without running Smith commands.
+For each phase, load only its guide and use the resolved paths for
+`TARGET_AGENT_PATH`, `GUIDANCE_FILE` or `ABSENT`, `SYSTEM_VAR_FILE` or `ABSENT`,
+`TOOL_DEFINITIONS_FILE`, and `GUIDANCE_UPDATE_FILE` or `ABSENT`.
 
 For phase `<P>`:
 
@@ -64,17 +51,20 @@ For phase `<P>`:
 2. Fill the generated phase JSON. It is the primary intermediate; preserve its
    keys and table columns, use strings for cell values, and use empty arrays for
    tables with no rows.
-3. Set top-level `status` and `handoff.Status` to `PASS` only after completing
+3. Surface the evidence, uncertainty, and proposed conclusions in the active
+   conversation so the user can inspect or correct them.
+4. Set top-level `status` and `handoff.Status` to `PASS` only after completing
    the phase. Preserve the generated schema value.
-4. Run `smith --flag security_analysis_checkpoint --phase <P>`. The command
+5. Run `smith --flag security_analysis_checkpoint --phase <P>`. The command
    validates structured state, updates `analysis_state.json`, and renders the
    corresponding Markdown artifact for human review.
-5. Stop on failure. Do not edit rendered Markdown because the next checkpoint
+6. Stop on failure. Do not edit rendered Markdown because the next checkpoint
    replaces it from JSON.
 
 Read predecessor data from `analysis_state.json`, not from rendered Markdown.
-Do not inherit scratch reasoning between phases. If an existing phase has only
-Markdown, rerun it to create the structured source.
+Treat persisted structured artifacts—not unstated prior reasoning—as the input
+contract between phases. If an existing phase has only Markdown, rerun it to
+create the structured source.
 
 ## Shared analysis rules
 

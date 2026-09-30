@@ -422,10 +422,7 @@ def main():
     parser.add_argument(
         "--phase",
         choices=("A", "B", "C", "D"),
-        help=(
-            "security-analysis phase to prepare/checkpoint, or starting phase "
-            "for security_analysis_run"
-        ),
+        help="security-analysis phase to prepare or checkpoint",
     )
     parser.add_argument(
         "--prepare",
@@ -565,30 +562,6 @@ def main():
                     target,
                     target / "smith" / "tool_definitions.json",
                     analysis_dir / "architecture_inspection.json",
-                )
-            )
-        except ReconciliationError as exc:
-            print(f"ERROR: {exc}", file=sys.stderr)
-            sys.exit(1)
-        sys.exit(0)
-
-    if args.flag == "security_analysis_run":
-        from smith.tools.guidance_reconciliation import ReconciliationError
-        from smith.tools.security_analysis_runner import run_isolated_analysis
-
-        try:
-            base_url = Path(os.getenv("BASE_URL") or ".").resolve()
-            target = _security_analysis_path(base_url, "TARGET_AGENT_PATH")
-            system_vars = _security_analysis_path(base_url, "SYSTEM_VAR_FILE")
-            guidance = _optional_security_analysis_path(base_url, "GUIDANCE_FILE")
-            print(
-                run_isolated_analysis(
-                    args.phase or "A",
-                    base_url=base_url,
-                    target=target,
-                    system_vars=system_vars,
-                    guidance=guidance,
-                    process_environment=dict(os.environ),
                 )
             )
         except ReconciliationError as exc:
@@ -933,7 +906,6 @@ def main():
         "guidance_reconciliation",
         "security_analysis_checkpoint",
         "security_analysis_inspection",
-        "security_analysis_run",
         "guidance_merge",
     ]
     if args.flag and args.flag not in allowed_flags:
