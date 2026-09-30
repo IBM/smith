@@ -32,7 +32,7 @@ def test_default_runner_is_non_persistent_and_tool_limited(
     assert "--continue" not in command
 
 
-def _environment(root: Path) -> dict[str, str]:
+def _inputs(root: Path) -> dict[str, object]:
     workflow = root / "opa_policy/guidelines-security-analysis"
     steps = workflow / "steps"
     steps.mkdir(parents=True)
@@ -40,30 +40,31 @@ def _environment(root: Path) -> dict[str, str]:
     for guide in runner.PHASE_GUIDES.values():
         (steps / guide).write_text("phase")
     return {
-        "BASE_URL": str(root),
-        "TARGET_AGENT_PATH": "target",
-        "GUIDANCE_FILE": "target/smith/guidance.txt",
-        "SYSTEM_VAR_FILE": "target/smith/system_vars.json",
+        "base_url": root,
+        "target": root / "target",
+        "guidance": root / "target/smith/guidance.txt",
+        "system_vars": root / "target/smith/system_vars.json",
+        "process_environment": {"PATH": "/usr/bin"},
     }
 
 
 def test_runner_launches_one_fresh_process_and_checkpoint_per_phase(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ):
-    environment = _environment(tmp_path)
+    inputs = _inputs(tmp_path)
     events: list[tuple[str, str]] = []
     prompts: list[str] = []
 
     monkeypatch.setattr(runner, "_runner_command", lambda: ["fake-agent"])
     monkeypatch.setattr(
         runner,
-        "prepare_from_environment",
-        lambda phase, _env: events.append(("prepare", phase)),
+        "prepare_for_target",
+        lambda phase, _target: events.append(("prepare", phase)),
     )
     monkeypatch.setattr(
         runner,
-        "checkpoint_from_environment",
-        lambda phase, _env: events.append(("checkpoint", phase)),
+        "checkpoint_for_target",
+        lambda phase, *_paths: events.append(("checkpoint", phase)),
     )
 
     def fake_run(command, **kwargs):
@@ -76,7 +77,7 @@ def test_runner_launches_one_fresh_process_and_checkpoint_per_phase(
 
     monkeypatch.setattr(runner.subprocess, "run", fake_run)
 
-    result = runner.run_isolated_analysis(environment=environment)
+    result = runner.run_isolated_analysis(**inputs)
 
     assert result == "Security analysis isolated run: PASS (A, B, C, D)"
     assert events == [
@@ -105,12 +106,12 @@ def test_runner_launches_one_fresh_process_and_checkpoint_per_phase(
 def test_runner_resumes_at_requested_phase_and_stops_on_failure(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ):
-    environment = _environment(tmp_path)
+    inputs = _inputs(tmp_path)
     phases: list[str] = []
 
     monkeypatch.setattr(runner, "_runner_command", lambda: ["fake-agent"])
-    monkeypatch.setattr(runner, "prepare_from_environment", lambda *_args: None)
-    monkeypatch.setattr(runner, "checkpoint_from_environment", lambda *_args: None)
+    monkeypatch.setattr(runner, "prepare_for_target", lambda *_args: None)
+    monkeypatch.setattr(runner, "checkpoint_for_target", lambda *_args: None)
 
     def fake_run(command, **kwargs):
         phase = kwargs["env"]["SMITH_SECURITY_ANALYSIS_PHASE"]
@@ -120,7 +121,7 @@ def test_runner_resumes_at_requested_phase_and_stops_on_failure(
     monkeypatch.setattr(runner.subprocess, "run", fake_run)
 
     with pytest.raises(ReconciliationError, match=r"resume .* --phase C"):
-        runner.run_isolated_analysis("C", environment)
+        runner.run_isolated_analysis("C", **inputs)
 
     assert phases == ["C"]
 
@@ -128,25 +129,25 @@ def test_runner_resumes_at_requested_phase_and_stops_on_failure(
 def test_runner_reports_checkpoint_phase_for_resume(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ):
-    environment = _environment(tmp_path)
+    inputs = _inputs(tmp_path)
 
     monkeypatch.setattr(runner, "_runner_command", lambda: ["fake-agent"])
-    monkeypatch.setattr(runner, "prepare_from_environment", lambda *_args: None)
+    monkeypatch.setattr(runner, "prepare_for_target", lambda *_args: None)
     monkeypatch.setattr(
         runner.subprocess,
         "run",
         lambda command, **_kwargs: subprocess.CompletedProcess(command, 0),
     )
 
-    def fail_checkpoint(phase, _environment):
+    def fail_checkpoint(phase, *_paths):
         raise ReconciliationError(f"invalid {phase}")
 
-    monkeypatch.setattr(runner, "checkpoint_from_environment", fail_checkpoint)
+    monkeypatch.setattr(runner, "checkpoint_for_target", fail_checkpoint)
 
     with pytest.raises(
         ReconciliationError, match=r"phase B checkpoint failed.*--phase B"
     ):
-        runner.run_isolated_analysis("B", environment)
+        runner.run_isolated_analysis("B", **inputs)
 
 
 def test_runner_removes_stale_addendum_when_phase_d_emits_nothing(tmp_path: Path):

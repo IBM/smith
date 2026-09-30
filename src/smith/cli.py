@@ -7,6 +7,7 @@ import json
 import os
 import re
 import sys
+from pathlib import Path
 
 from dotenv import load_dotenv
 
@@ -54,6 +55,25 @@ from smith.test_case_evaluation.apply_cross_validate import apply_cross_validate
 from smith.test_generation.extract_tool_args import run_extract_tool_args
 
 load_dotenv()
+
+
+def _security_analysis_path(base_url: Path, env_name: str) -> Path:
+    """Read and resolve one security-analysis path from the CLI environment."""
+    value = os.getenv(env_name)
+    if not value:
+        from smith.tools.guidance_reconciliation import ReconciliationError
+
+        raise ReconciliationError(f"{env_name} is not configured")
+    path = Path(value)
+    return path if path.is_absolute() else base_url / path
+
+
+def _optional_security_analysis_path(base_url: Path, env_name: str) -> Path | None:
+    value = os.getenv(env_name)
+    if not value:
+        return None
+    path = Path(value)
+    return path if path.is_absolute() else base_url / path
 
 
 class BlueAgent:
@@ -495,8 +515,8 @@ def main():
     if args.flag == "security_analysis_checkpoint":
         from smith.tools.guidance_reconciliation import ReconciliationError
         from smith.tools.security_analysis_checkpoint import (
-            checkpoint_from_environment,
-            prepare_from_environment,
+            checkpoint_for_target,
+            prepare_for_target,
         )
 
         if not args.phase:
@@ -506,10 +526,14 @@ def main():
             )
             sys.exit(1)
         try:
+            base_url = Path(os.getenv("BASE_URL") or ".").resolve()
+            target = _security_analysis_path(base_url, "TARGET_AGENT_PATH")
             if args.prepare:
-                print(prepare_from_environment(args.phase))
+                print(prepare_for_target(args.phase, target))
             else:
-                print(checkpoint_from_environment(args.phase))
+                system_vars = _security_analysis_path(base_url, "SYSTEM_VAR_FILE")
+                guidance = _optional_security_analysis_path(base_url, "GUIDANCE_FILE")
+                print(checkpoint_for_target(args.phase, target, system_vars, guidance))
         except ReconciliationError as exc:
             print(f"ERROR: {exc}", file=sys.stderr)
             sys.exit(1)
@@ -517,10 +541,23 @@ def main():
 
     if args.flag == "security_analysis_run":
         from smith.tools.guidance_reconciliation import ReconciliationError
-        from smith.tools.security_analysis_runner import run_from_environment
+        from smith.tools.security_analysis_runner import run_isolated_analysis
 
         try:
-            print(run_from_environment(args.phase))
+            base_url = Path(os.getenv("BASE_URL") or ".").resolve()
+            target = _security_analysis_path(base_url, "TARGET_AGENT_PATH")
+            system_vars = _security_analysis_path(base_url, "SYSTEM_VAR_FILE")
+            guidance = _optional_security_analysis_path(base_url, "GUIDANCE_FILE")
+            print(
+                run_isolated_analysis(
+                    args.phase or "A",
+                    base_url=base_url,
+                    target=target,
+                    system_vars=system_vars,
+                    guidance=guidance,
+                    process_environment=dict(os.environ),
+                )
+            )
         except ReconciliationError as exc:
             print(f"ERROR: {exc}", file=sys.stderr)
             sys.exit(1)

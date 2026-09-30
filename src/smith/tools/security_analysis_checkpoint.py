@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import os
 import re
 from pathlib import Path
 from typing import Any
@@ -911,29 +910,17 @@ def checkpoint(
     return f"Security analysis checkpoint {phase}: PASS\nState: {state_path}"
 
 
-def checkpoint_from_environment(
-    phase: str, environment: dict[str, str] | None = None
+def checkpoint_for_target(
+    phase: str,
+    target: Path,
+    system_vars: Path | None,
+    guidance: Path | None = None,
 ) -> str:
-    env = os.environ if environment is None else environment
-    base = Path(env.get("BASE_URL") or ".")
-    if not base.is_absolute():
-        base = Path.cwd() / base
-    target_value = env.get("TARGET_AGENT_PATH")
-    system_value = env.get("SYSTEM_VAR_FILE")
-    guidance_value = env.get("GUIDANCE_FILE")
-    if not target_value:
-        raise ReconciliationError("TARGET_AGENT_PATH is not configured")
-    if not system_value:
+    """Checkpoint a phase using paths already resolved by the CLI."""
+    if system_vars is None:
         raise ReconciliationError("SYSTEM_VAR_FILE is not configured")
-    if phase.upper() == "D" and not guidance_value:
+    if phase.upper() == "D" and guidance is None:
         raise ReconciliationError("GUIDANCE_FILE is not configured")
-    target = Path(target_value)
-    target = target if target.is_absolute() else base / target
-    system_vars = Path(system_value)
-    system_vars = system_vars if system_vars.is_absolute() else base / system_vars
-    guidance = Path(guidance_value) if guidance_value else None
-    if guidance is not None and not guidance.is_absolute():
-        guidance = base / guidance
     analysis_dir = target / "smith" / "guidelines-security-analysis"
     catalog = Path(__file__).resolve().parents[1] / "data" / "owasp_10_ai_catalog.json"
     return checkpoint(
@@ -947,16 +934,6 @@ def checkpoint_from_environment(
     )
 
 
-def prepare_from_environment(
-    phase: str, environment: dict[str, str] | None = None
-) -> str:
-    env = os.environ if environment is None else environment
-    base = Path(env.get("BASE_URL") or ".")
-    if not base.is_absolute():
-        base = Path.cwd() / base
-    target_value = env.get("TARGET_AGENT_PATH")
-    if not target_value:
-        raise ReconciliationError("TARGET_AGENT_PATH is not configured")
-    target = Path(target_value)
-    target = target if target.is_absolute() else base / target
+def prepare_for_target(phase: str, target: Path) -> str:
+    """Prepare a phase using a target path already resolved by the CLI."""
     return prepare_phase(phase, target / "smith" / "guidelines-security-analysis")
