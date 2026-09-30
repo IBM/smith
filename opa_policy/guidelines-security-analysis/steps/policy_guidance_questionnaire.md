@@ -9,20 +9,20 @@ Requires `architecture.md` to be present (produced by architecture_analysis
 skill). Use it to answer questions about parameters, external calls, and
 data flow rather than asking the user to look up source files.
 
-### Authoritative Paths
+### Phase inputs and output
 
-**Inputs:** Use ONLY these exact files. Do NOT read similarly-named files
-from other folders. If a required file is missing here, stop and ask; do
-not substitute one from elsewhere.
+The envelope's Shared Phase Contract applies.
 - Input: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/architecture.md`
-- Input (optional): `<TARGET_AGENT_PATH>/smith/guidance.txt` — **primary source
+- Input (optional): `<GUIDANCE_FILE>` — **primary source
   of policy intent**. If present, read every rule and map each one to the
-  questionnaire section it belongs to. Rules in guidance.txt take precedence
+  questionnaire item it belongs to. Rules in guidance.txt take precedence
   over inferences from architecture.md.
-- Input (optional): `<TARGET_AGENT_PATH>/smith/system_vars.json` — use for
-  exact field names and types in Sections 2 and 5
-- Input (optional): `<TARGET_AGENT_PATH>/smith/tool_definitions.json` — use
-  for exact parameter names and types in Section 1
+- Input (optional): `<SYSTEM_VAR_FILE>` — use for
+  exact `input.extensions.subject.*` field names and types in Q6, Q7, Q13b,
+  and Q16 as applicable. These fields are runtime-provided; do not reclassify
+  them as self-reported because application source does not read them.
+- Input: `<TARGET_AGENT_PATH>/smith/tool_definitions.json` — use
+  for exact tool and parameter names and types in Q1 and Q4
 - Output: `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/policy_guidance_questionnaire.md`
 
 ---
@@ -33,27 +33,34 @@ not substitute one from elsewhere.
 
 #### STEP 1 — Read inputs
 
-Read `architecture.md` in full. If any of the following exist under
-`<TARGET_AGENT_PATH>/smith/`, read them too — do NOT proceed until all
-available files are read:
-- `guidance.txt` — **read this first among the smith/ files**. Parse
-  every numbered rule. For each rule, note which questionnaire section
+Read `<GUIDANCE_FILE>` first when present. Parse
+  every numbered rule. For each rule, note which questionnaire item
   it maps to (see mapping below) and what OPA-enforceable condition it
   implies.
-- `system_vars.json`
-- `tool_definitions.json`
+
+Then load only the sections needed to answer the questionnaire:
+
+- `architecture.md`: Run Context, Layers, Runtime Subject Context, Tool
+  Arguments, Prompt Inputs, External Data, Data Flow, and Enforcement Points.
+  Defer Undeclared Fields to Step D.
+- `<SYSTEM_VAR_FILE>`: subject keys and types for Q6, Q7, Q13b, and Q16.
+- `tool_definitions.json`: tool names, descriptions, and parameter
+  names/types/schemas for Q1 and Q4.
+
+Do not search for similarly named substitutes or reread source code; Step A's
+artifact is the source for architectural behavior.
 
 **guidance.txt → questionnaire mapping:**
-| guidance.txt rule type | Questionnaire section |
+| guidance.txt rule type | Questionnaire item |
 |---|---|
-| Role-based tool access (who can/cannot use a tool) | Section 3, Q9 |
-| Field-level restrictions (which fields are forbidden per role) | Section 3, Q10 + Section 6, Q17–Q18 |
-| Scope restrictions (e.g. manager's own team only) | Section 3, Q9 — add as a sub-condition |
-| Hard parameter blocks (external_sharing, blocked domains) | Section 4, Q12 |
-| Numeric caps (purchase amounts) | Section 4, Q13 |
-| Approval paths (action allowed with approval flag) | Section 4, Q13b — note approval field name |
-| Prompt injection / keyword blocks | Section 4, Q14 |
-| Format or value enumerations (CSV/PDF/JSON) | Section 4, Q12 |
+| Role-based tool access (who can/cannot use a tool) | Q9 |
+| Field-level restrictions (which fields are forbidden per role) | Q10 and Q17–Q18 |
+| Scope restrictions (e.g. manager's own team only) | Q9, as a sub-condition |
+| Hard parameter blocks (`input.args.external_sharing`, blocked domains) | Q12 |
+| Numeric caps (purchase amounts) | Q13 |
+| Approval paths (action allowed with approval flag) | Q13b; include approval field |
+| Prompt injection / keyword blocks | Q14 |
+| Format or value enumerations (CSV/PDF/JSON) | Q12 |
 
 Pre-fill every answer you can derive from these files. Tag each answer
 with exactly one confidence marker so Step C knows what it can rely on:
@@ -66,218 +73,114 @@ with exactly one confidence marker so Step C knows what it can rely on:
   partial signals (naming conventions, similar tools, generic patterns)
   without a direct source. Downstream steps MUST NOT cite this answer as
   evidence.
-- Leave the answer blank only in Gated mode when nothing supports even a
-  low-confidence inference.
+- Leave the answer blank when nothing supports even a low-confidence inference;
+  do not invent an answer merely to complete the phase.
+
+Whenever an answer names structured policy input, use its canonical OPA path:
+`input.name` for the invoked tool, `input.args.<argument>` for tool arguments,
+and `input.extensions.subject.<field>` for runtime subject context. Do not use
+an unqualified argument or subject-field name in tables that downstream steps
+consume.
 
 ---
 
 #### STEP 2 — Fill the questionnaire
 
 Write the output file to `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/policy_guidance_questionnaire.md`
-using exactly this structure. Pre-fill where possible; ask the user only
-for answers that cannot be derived from the input files.
+using exactly this structure. Pre-fill every supported answer first. Put all
+remaining questions into one numbered clarification request; do not ask them
+one at a time. Apply the response in one pass. Ask at most one consolidated
+follow-up for contradictory or incomplete answers, then preserve unresolved
+items as documented blanks.
 
 ```
 # OPA Policy Guidance Questionnaire
 # Tool: <tool-name>
 
-Fill in each answer based on your tool and agent. You do not need to
-know OPA or security to complete this — just describe how your tool
-works and who should be able to use it.
+## Answer Register
 
----
+Use `See <table>` for structured answers. Every row has one confidence marker.
 
-## Section 1: Tool Identity
+| Q | Required answer | Answer | Confidence |
+|---|---|---|---|
+| Q1 | Tool name and one-sentence purpose | <answer> | <marker> |
+| Q2 | External systems: protocol, authentication, read/write | <answer> | <marker> |
+| Q3 | Reads, writes, or both | <answer> | <marker> |
+| Q4 | Parameters | See Parameter Details | <marker> |
+| Q5 | Every user role | <answer> | <marker> |
+| Q6 | Runtime subject provenance and integrity | See Runtime Subject Details | <marker> |
+| Q7 | User ID: canonical path, provider, use | <answer> | <marker> |
+| Q8 | Whether multiple simultaneous roles are supported | <answer> | <marker> |
+| Q9 | Tool permissions and scope per role | See Role Permissions | <marker> |
+| Q10 | Role-specific topics, values, or parameter combinations | <answer or none> | <marker> |
+| Q11 | Roles with no restrictions | <answer or none> | <marker> |
+| Q12 | Globally blocked enumerable values, formats, domains, or flags | <answer or none> | <marker> |
+| Q13 | Numeric hard caps | <canonical path and cap, or none> | <marker> |
+| Q13b | Conditional approval paths | See Approval Paths | <marker> |
+| Q14 | Rejected patterns in free-text fields | <canonical path and patterns, or none> | <marker> |
+| Q15 | Per-session call limits | See Rate Limits | <marker> |
+| Q16 | Counter owner/mechanism and canonical policy path | <answer> | <marker> |
+| Q17 | Post-response filtering | <answer or none> | <marker> |
+| Q18 | Response fields suppressed by role | <answer or none> | <marker> |
+| Q19 | Conditions making a result actionable | <answer or none> | <marker> |
+| Q20 | Silent rejection or user explanation | <answer> | <marker> |
+| Q21 | Hard-block and soft-block meanings | See Severity Levels | <marker> |
+| Q22 | Denial logging and existing violation-code scheme | See Violation Logging | <marker> |
 
-**Q1. What is the tool name and what does it do in one sentence?**
+Q12 covers enumerable values; Q14 covers patterns inside free text. Treat Q13b
+as part of Q13 for the 22-question completion count.
 
-> Tool name: `<tool_name>`
-> <one-sentence description>
+## Parameter Details (Q4)
 
----
+| Tool | Policy path | Type | Required | Valid values |
+|------|-------------|------|----------|--------------|
+| `<tool name>` | `input.args.<argument>` | <type> | Yes / No | <description> |
 
-**Q2. What external systems does it call?**
+## Runtime Subject Details (Q6)
 
-> <service name, protocol, authentication, read/write>
+| Policy path | Provider | Provenance | Verification / integrity mechanism |
+|-------------|----------|------------|------------------------------------|
+| `input.extensions.subject.<field>` | <runtime/provider or "not documented"> | Runtime-provided | <mechanism or "not documented"> |
 
----
+Provenance and verification are separate: do not reclassify a declared runtime
+field as self-reported or infer undocumented cryptographic verification.
 
-**Q3. Does it read data, write data, or both?**
-
-> <read / write / both — with brief explanation>
-
----
-
-**Q4. What are its parameters? For each: name, type, required or optional,
-what counts as a valid value?**
-
-| Parameter | Type | Required | Valid values |
-|-----------|------|----------|--------------|
-| <name> | <type> | Yes / No | <description> |
-
----
-
-## Section 2: Who Uses It
-
-**Q5. What are the types of users? List every role.**
-
-> - `<role>` — <description>
-
----
-
-**Q6. Are those roles verified by your system, or supplied by the user themselves?**
-
-> <Verified / Self-reported> — <explain mechanism>
-
----
-
-**Q7. Is there a user ID? Where does it come from?**
-
-> <yes/no, field name, source, how it is used>
-
----
-
-**Q8. Can a user belong to multiple roles at once?**
-
-> <yes/no — explain how the calling application handles this>
-
----
-
-## Section 3: What Each Role Is Allowed To Do
-
-**Q9. For each role, which tools are they allowed to use and with what
-conditions or scope restrictions?**
+## Role Permissions (Q9)
 
 | Tool | <role 1> | <role 2> | guidance.txt rule |
 |------|----------|----------|-------------------|
 | <tool> | <allowed/blocked + scope condition> | <allowed/blocked + scope condition> | Rule N |
 
----
+## Approval Paths (Q13b)
 
-**Q10. Are there topics, values, or parameter combinations some roles
-can use that others cannot?**
+| Parameter condition | Approval field | guidance.txt rule |
+|---|---|---|
+| `input.args.<field> <operator> <value>` | `input.extensions.subject.<field>` | Rule N |
 
-> <describe per-role restrictions, or "none">
-
----
-
-**Q11. Are there roles that have no restrictions?**
-
-> <role name(s) or "none">
-
----
-
-## Section 4: Hard Limits
-
-**Q12. Are there specific parameter values that should always be blocked
-for everyone, regardless of role?** Enumerable values only — named
-values, formats, domains, flags. Content patterns inside free-text
-fields belong in Q14, not here.
-
-> <list them, or "none">
-
----
-
-**Q13. Is there a maximum value for any numeric parameter that no role
-can exceed?**
-
-> <parameter name>: <hard cap value>, or "none">
-
----
-
-**Q13b. Are there approval paths — actions allowed conditionally when an
-approval field is set?**
-
-> | Parameter condition | Approval field | guidance.txt rule |
-> |---------------------|----------------|-------------------|
-> | <e.g. amount >= 200, role=employee> | <e.g. subject.approval == true> | Rule N |
-
----
-
-**Q14. Are there keywords or content patterns in free-text input that
-must always be rejected?** Free-text content only — a specific blocked
-parameter value belongs in Q12, and a numeric ceiling in Q13.
-
-> <list them with the free-text field they appear in, or "none">
-
----
-
-## Section 5: Volume and Rate Limits
-
-**Q15. Is there a maximum number of times this tool can be called in
-a single conversation session?**
-
-> <yes/no — if yes, per-role table>
+## Rate Limits (Q15)
 
 | Role | Max calls per session |
 |------|-----------------------|
 | <role> | <integer> |
 
----
+## Severity Levels (Q21)
 
-**Q16. Who keeps track of how many times the tool has been called —
-your app, or should the policy enforce it?**
+| Level | Examples |
+|---|---|
+| Hard block | <examples> |
+| Soft block with redirect | <examples> |
 
-> <explain the mechanism; name the field the policy should read>
+## Violation Logging (Q22)
 
----
+- Denial logging: <specific rule / denial only>
+- Existing code scheme: <yes / no>
 
-## Section 6: Response Filtering
+| Existing code | Meaning |
+|---|---|
+| <CODE> | <description> |
 
-**Q17. After the tool returns results, does anything need to be hidden,
-flagged, or categorised before the user sees it?**
-
-> <describe per-role filtering rules, or "none">
-
----
-
-**Q18. Are there fields in the response that should be suppressed for
-certain roles?**
-
-> <field names and roles, or "none">
-
----
-
-**Q19. Are there conditions on a result that determine whether it is
-"actionable"?**
-
-> <describe conditions, or "none">
-
----
-
-## Section 7: Violations
-
-**Q20. Should a blocked request be silently rejected, or should the
-user receive an explanation?**
-
-> <silent / explanation — if explanation, describe what to say>
-
----
-
-**Q21. Are there different severity levels — hard block vs. warning?**
-
-> | Level | Examples |
-> |-------|----------|
-> | Hard block | <examples> |
-> | Soft block with redirect | <examples> |
-
----
-
-**Q22. Do you need to log which rule was violated, or just that a
-request was denied? Does an existing violation-code scheme need to be
-reused (e.g. codes already emitted by the calling application or by
-another policy)?**
-
-> <log specific rule / log denial only>
->
-> If — and only if — a violation-code scheme already exists that the
-> policy must reuse, list it here. Do NOT invent new codes; those are
-> generated in Step D (enforcement_mapping) alongside the rules they
-> attach to. Leave the table empty if there is no pre-existing scheme.
->
-> | Code | Meaning |
-> |------|---------|
-> | <CODE> | <description> |
+Do not invent codes here. Leave the table empty when no scheme exists; Step D
+creates any new codes alongside its rules.
 ```
 
 ---
@@ -285,13 +188,22 @@ another policy)?**
 #### STEP 3 — Finalise
 
 Fill in any remaining blanks using the confidence markers defined in
-STEP 1. In Autonomous mode, do not leave answers empty — use
-`[inferred — low confidence]` when a real basis is missing rather than
-guessing without a tag. In Gated mode, leaving an answer blank is
-preferred over a low-confidence guess.
+STEP 1. A low-confidence answer still needs a stated basis; otherwise leave it
+blank and include it in Open gaps.
 
 Log a one-line breakdown at the end: how many answers are
 `[derived from guidance.txt]`, `[derived from architecture]`,
-`[inferred — low confidence]`, and blank. Then hand control back to the
-top-level workflow, which decides (per confirmation mode) whether to
-proceed to Step C.
+`[inferred — low confidence]`, and blank. Then append:
+
+```markdown
+## Phase Handoff
+
+- Status: PASS / FAIL
+- Artifact schema: questionnaire-v2
+- Questions answered: <count>/22
+- Confidence: <guidance count> guidance, <architecture count> architecture, <inferred count> inferred, <blank count> blank
+- Tools covered: <count and names>
+- Open gaps: <none, or unanswered question numbers>
+```
+
+`PASS` permits documented blanks but must identify them as gaps.
