@@ -51,15 +51,30 @@ ORIGINAL_GUIDANCE = "1. The original rule the user must not lose.\n"
 EDITED_GUIDANCE = "1. The edited rule the user just uploaded.\n"
 
 
+_TEST_TOKEN = "test-token-for-unit-tests"
+_TEST_HOST = "127.0.0.1:8110"
+
+
 def _post(handler_cls, path, body=b"", method="POST"):
     """Drive one request through the handler with no socket.
 
     ``BaseHTTPRequestHandler`` normally reads from a connection; here ``rfile`` is a
     canned request and ``wfile`` collects the response, so the whole route runs
     in-process.
+
+    The guard headers (Host, Content-Type, X-Smith-Token) are injected automatically
+    so unit tests exercise the route logic rather than the security layer.
     """
+    from smith.tools.local_server_guard import TOKEN_HEADER
+
+    headers = (
+        f"Host: {_TEST_HOST}\r\n"
+        f"Content-Type: application/json\r\n"
+        f"{TOKEN_HEADER}: {_TEST_TOKEN}\r\n"
+        f"Content-Length: {len(body)}\r\n"
+    )
     request = (
-        f"{method} {path} HTTP/1.1\r\nContent-Length: {len(body)}\r\n\r\n".encode()
+        f"{method} {path} HTTP/1.1\r\n{headers}\r\n".encode()
         + body
     )
 
@@ -96,7 +111,15 @@ def server(unit_env):
         session_config = root / "references" / "session_config.json"
 
         def handler(self):
-            return make_handler(self.base, str(self.guidance_path), {"tools": []}, {})
+            return make_handler(
+                self.base,
+                str(self.guidance_path),
+                {"tools": []},
+                {},
+                token=_TEST_TOKEN,
+                host="127.0.0.1",
+                port=8110,
+            )
 
     return Server()
 
