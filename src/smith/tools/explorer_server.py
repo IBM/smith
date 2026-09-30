@@ -1,21 +1,18 @@
 # Copyright 2026 Smith authors
 # SPDX-License-Identifier: Apache-2.0
 
-"""Local HTTP server for the Smith Policy Explorer.
-
-Serves the bundled ``policy_explorer.html`` and a small ``/reset`` endpoint so a
-button in the page can save edited guidance (overwrite ``guidance.txt`` and
-write ``session_config.json``). It is meant to be opened in the current VS
-Code window via the Simple Browser at the printed ``http://127.0.0.1:PORT`` URL.
-
-The server binds to loopback only and is single-purpose; it is not a
-general-purpose web server.
-"""
-
 import importlib.resources as resources
 import json
 import os
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+
+from smith.tools.local_server_guard import (
+    GuardMixin,
+    allowed_hosts,
+    allowed_origins,
+    inject_token,
+    new_token,
+)
 
 
 def _read_html() -> str:
@@ -30,8 +27,20 @@ def _resolve_guidance_path(base_url: str, guidance_file: str) -> str:
     return os.path.join(base_url, guidance_file)
 
 
-def make_handler(base_url: str, guidance_path: str):
-    class Handler(BaseHTTPRequestHandler):
+def make_handler(
+    base_url: str,
+    guidance_path: str,
+    token: str = "",
+    host: str = "127.0.0.1",
+    port: int = 8100,
+):
+    hosts = allowed_hosts(host, port)
+
+    class Handler(GuardMixin, BaseHTTPRequestHandler):
+        guard_hosts = hosts
+        guard_origins = allowed_origins(hosts)
+        guard_token = token
+
         # Quieter logging; still prints one line per request.
         def log_message(self, fmt, *a):  # noqa: A003 - stdlib signature
             print("[explorer] " + (fmt % a))
@@ -45,8 +54,16 @@ def make_handler(base_url: str, guidance_path: str):
             self.wfile.write(data)
 
         def do_GET(self):  # noqa: N802 - stdlib signature
+            # GET is guarded too: /guidance discloses the guidance text and its
+            # absolute path, which a rebound page would otherwise read.
+            if not self.check_request(require_token=False):
+                return
             if self.path in ("/", "/index.html"):
-                self._send(200, _read_html(), "text/html; charset=utf-8")
+                self._send(
+                    200,
+                    inject_token(_read_html(), token),
+                    "text/html; charset=utf-8",
+                )
                 return
             if self.path == "/guidance":
                 text = ""
@@ -61,6 +78,10 @@ def make_handler(base_url: str, guidance_path: str):
             self._send(404, json.dumps({"error": "not found"}))
 
         def do_POST(self):  # noqa: N802 - stdlib signature
+            # /reset overwrites guidance.txt — the source of truth the agent
+            # turns into the enforcement policy — so it needs the token.
+            if not self.check_request(require_token=True):
+                return
             if self.path != "/reset":
                 self._send(404, json.dumps({"error": "not found"}))
                 return
@@ -134,7 +155,8 @@ def serve(port: int = 8100, host: str = "127.0.0.1") -> None:
 
     guidance_path = _resolve_guidance_path(base_url, guidance_file)
 
-    handler = make_handler(base_url, guidance_path)
+    token = new_token()
+    handler = make_handler(base_url, guidance_path, token, host, port)
     httpd = ThreadingHTTPServer((host, port), handler)
     url = f"http://{host}:{port}/"
     print(f"Policy Explorer serving at: {url}")

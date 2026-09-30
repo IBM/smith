@@ -275,7 +275,7 @@ def generate_test(
         flatten_flag,
         batch_processing,
         batch_size,
-        generation_concurrency=generation_concurrency,
+        generation_concurrency,
         mode,
         guidance_snapshot_file,
         guidance_map_file,
@@ -318,6 +318,7 @@ def generate_test(
             output_file_grey_guidances,
             batch_processing,
             batch_size,
+            generation_concurrency=generation_concurrency,
         )
         variable_extraction(
             api_key,
@@ -330,6 +331,7 @@ def generate_test(
             output_file_variables,
             batch_processing,
             batch_size,
+            generation_concurrency=generation_concurrency,
         )
         case_generation(
             api_key,
@@ -343,6 +345,7 @@ def generate_test(
             tool_definitions,
             batch_processing,
             batch_size=case_generation_batch_size,
+            generation_concurrency=generation_concurrency,
         )
         if "ares" in attack_tools:
             attack(
