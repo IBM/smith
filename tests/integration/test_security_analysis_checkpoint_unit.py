@@ -14,6 +14,7 @@ import pytest
 from smith.tools.guidance_merge import merge_guidance, validate_addendum
 from smith.tools.guidance_reconciliation import ReconciliationError
 from smith.tools.security_analysis_checkpoint import (
+    PHASES,
     _is_emitted_verdict,
     _surface_ids,
     _validate_addendum_contract,
@@ -143,6 +144,11 @@ def test_checkpoint_rejects_failed_handoff_without_writing_state(tmp_path: Path)
     failed["handoff"]["Status"] = "FAIL"
     (analysis_dir / "architecture.json").write_text(json.dumps(failed))
     state_path = analysis_dir / "analysis_state.json"
+    state_path.write_text(json.dumps({"latest_phase": "D", "phases": {}}))
+    stale_markdown = analysis_dir / "architecture.md"
+    stale_markdown.write_text("stale successful result")
+    stale_later_markdown = analysis_dir / "threat_model.md"
+    stale_later_markdown.write_text("stale later result")
 
     with pytest.raises(ReconciliationError, match="status is not PASS"):
         checkpoint(
@@ -155,6 +161,8 @@ def test_checkpoint_rejects_failed_handoff_without_writing_state(tmp_path: Path)
         )
 
     assert not state_path.exists()
+    assert not stale_markdown.exists()
+    assert not stale_later_markdown.exists()
 
 
 def test_prepare_phase_creates_structured_template(tmp_path: Path):
@@ -171,6 +179,69 @@ def test_prepare_phase_creates_structured_template(tmp_path: Path):
         "Disposition",
     ]
     assert not (tmp_path / "architecture.md").exists()
+
+
+def test_prepare_phase_replaces_an_existing_draft(tmp_path: Path):
+    stale = architecture()
+    stale["status"] = "PASS"
+    stale["tables"]["Tool Arguments"] = [{"stale": "result"}]
+    source = tmp_path / "architecture.json"
+    source.write_text(json.dumps(stale))
+
+    result = prepare_phase("A", tmp_path)
+
+    draft = json.loads(source.read_text())
+    assert result == f"Security analysis phase A draft: {source}"
+    assert draft["status"] == "DRAFT"
+    assert draft["tables"]["Tool Arguments"] == []
+
+
+def test_prepare_phase_removes_current_and_later_outputs(tmp_path: Path):
+    for phase, (stem, _, _) in PHASES.items():
+        (tmp_path / f"{stem}.json").write_text(f"stale {phase} json")
+        (tmp_path / f"{stem}.md").write_text(f"stale {phase} markdown")
+        (tmp_path / f"{stem}.json.tmp").write_text("stale temporary")
+        (tmp_path / f"{stem}.md.tmp").write_text("stale temporary")
+    state_path = tmp_path / "analysis_state.json"
+    state_path.write_text(
+        json.dumps(
+            {
+                "schema": "security-analysis-state-v1",
+                "latest_phase": "D",
+                "inputs": {"guidance_updated": {"sha256": "stale"}},
+                "phases": {phase: {"phase": phase} for phase in PHASES},
+            }
+        )
+    )
+
+    prepare_phase("B", tmp_path)
+
+    assert (tmp_path / "architecture.json").read_text() == "stale A json"
+    assert (tmp_path / "architecture.md").read_text() == "stale A markdown"
+    assert json.loads((tmp_path / "policy_guidance_questionnaire.json").read_text())[
+        "status"
+    ] == "DRAFT"
+    for phase in ("B", "C", "D"):
+        stem = PHASES[phase][0]
+        assert not (tmp_path / f"{stem}.md").exists()
+        assert not (tmp_path / f"{stem}.json.tmp").exists()
+        assert not (tmp_path / f"{stem}.md.tmp").exists()
+    assert not (tmp_path / "threat_model.json").exists()
+    assert not (tmp_path / "owasp_policy_guidelines.json").exists()
+    state = json.loads(state_path.read_text())
+    assert state["latest_phase"] == "A"
+    assert list(state["phases"]) == ["A"]
+    assert state["inputs"]["guidance_updated"] is None
+
+
+def test_prepare_phase_removes_stale_downstream_guidance_addendum(tmp_path: Path):
+    guidance = tmp_path / "guidance.txt"
+    addendum = tmp_path / "guidance_updated.txt"
+    addendum.write_text("stale proposal")
+
+    prepare_phase("B", tmp_path / "analysis", guidance)
+
+    assert not addendum.exists()
 
 
 def test_surface_ids_accept_numeric_and_hash_prefixed_forms():

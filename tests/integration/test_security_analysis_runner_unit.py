@@ -59,7 +59,7 @@ def test_runner_launches_one_fresh_process_and_checkpoint_per_phase(
     monkeypatch.setattr(
         runner,
         "prepare_for_target",
-        lambda phase, _target: events.append(("prepare", phase)),
+        lambda phase, _target, _guidance: events.append(("prepare", phase)),
     )
     monkeypatch.setattr(
         runner,

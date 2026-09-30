@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import os
 import re
 from pathlib import Path
 
@@ -251,27 +250,3 @@ def merge_guidance(
             temporary.unlink()
     addendum.unlink()
     return f"Merged {len(proposed)} guidance rule(s); removed {addendum}"
-
-
-def merge_from_environment(environment: dict[str, str] | None = None) -> str:
-    env = os.environ if environment is None else environment
-    base = Path(env.get("BASE_URL") or ".")
-    if not base.is_absolute():
-        base = Path.cwd() / base
-    target_value = env.get("TARGET_AGENT_PATH")
-    guidance_value = env.get("GUIDANCE_FILE")
-    if not target_value:
-        raise ReconciliationError("TARGET_AGENT_PATH is not configured")
-    if not guidance_value:
-        raise ReconciliationError("GUIDANCE_FILE is not configured")
-    target = Path(target_value)
-    target = target if target.is_absolute() else base / target
-    guidance = Path(guidance_value)
-    guidance = guidance if guidance.is_absolute() else base / guidance
-    analysis_dir = target / "smith" / "guidelines-security-analysis"
-    return merge_guidance(
-        guidance,
-        guidance.with_name("guidance_updated.txt"),
-        analysis_dir / "analysis_state.json",
-        analysis_dir / "owasp_policy_guidelines.md",
-    )

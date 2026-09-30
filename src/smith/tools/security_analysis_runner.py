@@ -153,7 +153,7 @@ def run_isolated_analysis(
         guide = steps_dir / PHASE_GUIDES[phase]
         if not guide.is_file():
             raise ReconciliationError(f"phase {phase} guide is missing: {guide}")
-        prepare_for_target(phase, target)
+        prepare_for_target(phase, target, guidance)
         artifact = analysis_dir / PHASE_ARTIFACTS[phase]
         prompt = _phase_prompt(
             phase,

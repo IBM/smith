@@ -502,11 +502,24 @@ def main():
     if args.flag == "guidance_reconciliation":
         from smith.tools.guidance_reconciliation import (
             ReconciliationError,
-            reconcile_from_environment,
+            reconcile,
         )
 
         try:
-            print(reconcile_from_environment())
+            base_url = Path(os.getenv("BASE_URL") or ".").resolve()
+            target = _security_analysis_path(base_url, "TARGET_AGENT_PATH")
+            guidance = _security_analysis_path(base_url, "GUIDANCE_FILE")
+            system_vars = _security_analysis_path(base_url, "SYSTEM_VAR_FILE")
+            analysis_dir = target / "smith" / "guidelines-security-analysis"
+            print(
+                reconcile(
+                    analysis_dir / "owasp_policy_guidelines.md",
+                    target / "smith" / "tool_definitions.json",
+                    system_vars,
+                    guidance,
+                    guidance.with_name("guidance_updated.txt"),
+                )
+            )
         except ReconciliationError as exc:
             print(f"ERROR: {exc}", file=sys.stderr)
             sys.exit(1)
@@ -528,11 +541,11 @@ def main():
         try:
             base_url = Path(os.getenv("BASE_URL") or ".").resolve()
             target = _security_analysis_path(base_url, "TARGET_AGENT_PATH")
+            guidance = _optional_security_analysis_path(base_url, "GUIDANCE_FILE")
             if args.prepare:
-                print(prepare_for_target(args.phase, target))
+                print(prepare_for_target(args.phase, target, guidance))
             else:
                 system_vars = _security_analysis_path(base_url, "SYSTEM_VAR_FILE")
-                guidance = _optional_security_analysis_path(base_url, "GUIDANCE_FILE")
                 print(checkpoint_for_target(args.phase, target, system_vars, guidance))
         except ReconciliationError as exc:
             print(f"ERROR: {exc}", file=sys.stderr)
@@ -564,11 +577,22 @@ def main():
         sys.exit(0)
 
     if args.flag == "guidance_merge":
-        from smith.tools.guidance_merge import merge_from_environment
+        from smith.tools.guidance_merge import merge_guidance
         from smith.tools.guidance_reconciliation import ReconciliationError
 
         try:
-            print(merge_from_environment())
+            base_url = Path(os.getenv("BASE_URL") or ".").resolve()
+            target = _security_analysis_path(base_url, "TARGET_AGENT_PATH")
+            guidance = _security_analysis_path(base_url, "GUIDANCE_FILE")
+            analysis_dir = target / "smith" / "guidelines-security-analysis"
+            print(
+                merge_guidance(
+                    guidance,
+                    guidance.with_name("guidance_updated.txt"),
+                    analysis_dir / "analysis_state.json",
+                    analysis_dir / "owasp_policy_guidelines.md",
+                )
+            )
         except ReconciliationError as exc:
             print(f"ERROR: {exc}", file=sys.stderr)
             sys.exit(1)

@@ -6,7 +6,6 @@
 from __future__ import annotations
 
 import json
-import os
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -963,31 +962,4 @@ def reconcile(
         analyze_existing_relationships(valid_candidates, valid_existing),
         suggest_exact_unions(valid_candidates),
         find_normalized_text_duplicates(guidance, updated),
-    )
-
-
-def _resolve(base: Path, value: str, label: str) -> Path:
-    if not value:
-        raise ReconciliationError(f"{label} is not configured")
-    path = Path(value)
-    return path if path.is_absolute() else base / path
-
-
-def reconcile_from_environment(environment: dict[str, str] | None = None) -> str:
-    env = os.environ if environment is None else environment
-    base = Path(env.get("BASE_URL") or ".")
-    if not base.is_absolute():
-        base = Path.cwd() / base
-    target = _resolve(base, env.get("TARGET_AGENT_PATH", ""), "TARGET_AGENT_PATH")
-    guidance = _resolve(base, env.get("GUIDANCE_FILE", ""), "GUIDANCE_FILE")
-    system_vars = _resolve(base, env.get("SYSTEM_VAR_FILE", ""), "SYSTEM_VAR_FILE")
-    return reconcile(
-        target
-        / "smith"
-        / "guidelines-security-analysis"
-        / "owasp_policy_guidelines.md",
-        target / "smith" / "tool_definitions.json",
-        system_vars,
-        guidance,
-        guidance.with_name("guidance_updated.txt"),
     )

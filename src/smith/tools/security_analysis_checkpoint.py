@@ -423,15 +423,67 @@ def _structured_phase(
     return normalized, errors
 
 
-def prepare_phase(phase: str, analysis_dir: Path) -> str:
-    """Create a structured phase template without replacing an existing draft."""
+def _prune_checkpoint_state(phase: str, state_path: Path) -> None:
+    """Keep only the completed predecessor state for a new phase attempt."""
+    phase_names = list(PHASES)
+    phase_index = phase_names.index(phase)
+    state_path.with_suffix(".json.tmp").unlink(missing_ok=True)
+    if phase_index == 0:
+        state_path.unlink(missing_ok=True)
+        return
+    if not state_path.is_file():
+        return
+
+    predecessors = phase_names[:phase_index]
+    try:
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        saved_phases = state["phases"]
+        if not isinstance(saved_phases, dict) or any(
+            predecessor not in saved_phases for predecessor in predecessors
+        ):
+            raise KeyError("missing predecessor phase")
+    except (OSError, json.JSONDecodeError, KeyError, TypeError):
+        state_path.unlink(missing_ok=True)
+        return
+
+    state["latest_phase"] = predecessors[-1]
+    state["phases"] = {
+        predecessor: saved_phases[predecessor] for predecessor in predecessors
+    }
+    inputs = state.get("inputs")
+    if isinstance(inputs, dict):
+        inputs["guidance_updated"] = None
+    temporary = state_path.with_suffix(".json.tmp")
+    temporary.write_text(json.dumps(state, indent=2) + "\n", encoding="utf-8")
+    temporary.replace(state_path)
+
+
+def _reset_phase_outputs(phase: str, analysis_dir: Path) -> None:
+    """Remove stale outputs for this phase and every phase that follows it."""
+    phase_names = list(PHASES)
+    phase_index = phase_names.index(phase)
+    for current in phase_names[phase_index:]:
+        stem = PHASES[current][0]
+        for suffix in (".json", ".md", ".json.tmp", ".md.tmp"):
+            (analysis_dir / f"{stem}{suffix}").unlink(missing_ok=True)
+    _prune_checkpoint_state(phase, analysis_dir / "analysis_state.json")
+
+
+def prepare_phase(
+    phase: str, analysis_dir: Path, guidance: Path | None = None
+) -> str:
+    """Reset stale phase outputs and create a fresh structured template."""
     phase = phase.upper()
     if phase not in PHASES:
         raise ReconciliationError("phase must be one of A, B, C, or D")
+    analysis_dir.mkdir(parents=True, exist_ok=True)
+    _reset_phase_outputs(phase, analysis_dir)
+    if guidance is not None:
+        addendum = guidance.with_name("guidance_updated.txt")
+        if addendum != guidance:
+            addendum.unlink(missing_ok=True)
     stem, schema, title = PHASES[phase]
     path = analysis_dir / f"{stem}.json"
-    if path.exists():
-        return f"Security analysis phase {phase} draft already exists: {path}"
     layout = PHASE_LAYOUT[phase]
     payload = {
         "schema": schema,
@@ -449,7 +501,6 @@ def prepare_phase(phase: str, analysis_dir: Path) -> str:
             {"Q": question, "Required answer": prompt, "Answer": "", "Confidence": ""}
             for question, prompt in QUESTIONNAIRE_PROMPTS.items()
         ]
-    path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
     return f"Security analysis phase {phase} draft: {path}"
 
@@ -828,6 +879,13 @@ def checkpoint(
     phase = phase.upper()
     if phase not in PHASES:
         raise ReconciliationError("phase must be one of A, B, C, or D")
+    phase_names = list(PHASES)
+    phase_index = phase_names.index(phase)
+    for current in phase_names[phase_index:]:
+        stem = PHASES[current][0]
+        for suffix in (".md", ".md.tmp"):
+            (analysis_dir / f"{stem}{suffix}").unlink(missing_ok=True)
+    _prune_checkpoint_state(phase, state_path)
     selected = list(PHASES)[: list(PHASES).index(phase) + 1]
     states: dict[str, Any] = {}
     errors: list[str] = []
@@ -934,6 +992,12 @@ def checkpoint_for_target(
     )
 
 
-def prepare_for_target(phase: str, target: Path) -> str:
+def prepare_for_target(
+    phase: str, target: Path, guidance: Path | None = None
+) -> str:
     """Prepare a phase using a target path already resolved by the CLI."""
-    return prepare_phase(phase, target / "smith" / "guidelines-security-analysis")
+    return prepare_phase(
+        phase,
+        target / "smith" / "guidelines-security-analysis",
+        guidance,
+    )
