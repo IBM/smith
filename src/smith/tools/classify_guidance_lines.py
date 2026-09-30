@@ -14,20 +14,20 @@ _BULLET_RE = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s+")
 _HEADING_RE = re.compile(r"^\s*#{1,6}\s+")
 
 
-def split_guidance_lines(text):
+def split_guidance_lines(text, skip_headings=True):
     """Split guidance text into candidate rule lines.
 
     Returns a list of ``{"index", "raw", "text"}`` where ``raw`` is the verbatim
     source line (so it can be located/highlighted in the document) and ``text``
-    is the marker-stripped rule text sent to the classifier. Blank lines and
-    markdown headings are dropped.
+    is the marker-stripped rule text sent to the classifier. Blank lines are
+    always dropped; markdown headings are dropped too unless``skip_headings=False``
     """
     lines = []
     for i, raw in enumerate(text.splitlines()):
         stripped = raw.strip()
         if not stripped:
             continue
-        if _HEADING_RE.match(raw):
+        if skip_headings and _HEADING_RE.match(raw):
             continue
         clean = _BULLET_RE.sub("", raw).strip()
         if not clean:

@@ -4,8 +4,8 @@
 """Local HTTP server for the Smith Policy Explorer.
 
 Serves the bundled ``policy_explorer.html`` and a small ``/reset`` endpoint so a
-button in the page can trigger a Python-side reset (run ``clean_generated.sh``
-then overwrite ``guidance.txt``). It is meant to be opened in the current VS
+button in the page can save edited guidance (overwrite ``guidance.txt`` and
+write ``session_config.json``). It is meant to be opened in the current VS
 Code window via the Simple Browser at the printed ``http://127.0.0.1:PORT`` URL.
 
 The server binds to loopback only and is single-purpose; it is not a
@@ -15,7 +15,6 @@ general-purpose web server.
 import importlib.resources as resources
 import json
 import os
-import subprocess
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 
@@ -31,11 +30,7 @@ def _resolve_guidance_path(base_url: str, guidance_file: str) -> str:
     return os.path.join(base_url, guidance_file)
 
 
-def _find_clean_script(base_url: str) -> str:
-    return os.path.join(base_url, "scripts", "clean_generated.sh")
-
-
-def make_handler(base_url: str, guidance_path: str, clean_script: str):
+def make_handler(base_url: str, guidance_path: str):
     class Handler(BaseHTTPRequestHandler):
         # Quieter logging; still prints one line per request.
         def log_message(self, fmt, *a):  # noqa: A003 - stdlib signature
@@ -79,43 +74,7 @@ def make_handler(base_url: str, guidance_path: str, clean_script: str):
                 return
             guidance = payload.get("guidance", "")
 
-            # 1) run the clean script (repo-root scope: no ROOT arg).
-            if not os.path.exists(clean_script):
-                self._send(
-                    500,
-                    json.dumps(
-                        {
-                            "ok": False,
-                            "error": f"clean script not found: {clean_script}",
-                        }
-                    ),
-                )
-                return
-            try:
-                proc = subprocess.run(
-                    ["bash", clean_script],
-                    cwd=base_url,
-                    capture_output=True,
-                    text=True,
-                    timeout=120,
-                )
-            except (subprocess.SubprocessError, OSError) as exc:
-                self._send(500, json.dumps({"ok": False, "error": str(exc)}))
-                return
-            if proc.returncode != 0:
-                self._send(
-                    500,
-                    json.dumps(
-                        {
-                            "ok": False,
-                            "error": "clean_generated.sh failed",
-                            "detail": proc.stderr or proc.stdout,
-                        }
-                    ),
-                )
-                return
-
-            # 2) overwrite guidance.txt with the edited text.
+            # 1) overwrite guidance.txt with the edited text.
             try:
                 os.makedirs(os.path.dirname(guidance_path), exist_ok=True)
                 with open(guidance_path, "w", encoding="utf-8") as f:
@@ -127,7 +86,7 @@ def make_handler(base_url: str, guidance_path: str, clean_script: str):
                 )
                 return
 
-            # 3) write session_config.json with selected tools.
+            # 2) write session_config.json with selected tools.
             selected_tools = payload.get("selected_tools", [])
             session_config_path = os.path.join(
                 base_url,
@@ -155,8 +114,7 @@ def make_handler(base_url: str, guidance_path: str, clean_script: str):
                 json.dumps(
                     {
                         "ok": True,
-                        "message": "Cleaned generated files and wrote "
-                        + os.path.basename(guidance_path),
+                        "message": "Wrote " + os.path.basename(guidance_path),
                         "path": guidance_path,
                     }
                 ),
@@ -175,14 +133,12 @@ def serve(port: int = 8100, host: str = "127.0.0.1") -> None:
         )
 
     guidance_path = _resolve_guidance_path(base_url, guidance_file)
-    clean_script = _find_clean_script(base_url)
 
-    handler = make_handler(base_url, guidance_path, clean_script)
+    handler = make_handler(base_url, guidance_path)
     httpd = ThreadingHTTPServer((host, port), handler)
     url = f"http://{host}:{port}/"
     print(f"Policy Explorer serving at: {url}")
     print(f"  guidance.txt : {guidance_path}")
-    print(f"  clean script : {clean_script}")
     print("Open the URL above in VS Code's Simple Browser (Cmd+Shift+P →")
     print('  "Simple Browser: Show"), then use the Reset button in the page.')
     print("Press Ctrl+C to stop.")

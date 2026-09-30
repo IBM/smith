@@ -408,8 +408,8 @@
     <!-- Shown only when hosted inside the VS Code extension (acquireVsCodeApi present). -->
     <button id="resetSmithBtn" class="stat"
             style="display:none;cursor:pointer;border-color:var(--line-strong)"
-            title="Run the clean script and overwrite guidance.txt from the editor below">
-      ⟳ Reset Smith config
+            title="Overwrite guidance.txt from the editor below">
+      ⟳ Save Smith config
     </button>
     <div class="stat" id="statTools">0 tools</div>
     <div class="stat" id="statPolicies">0 policies</div>
@@ -1435,9 +1435,9 @@ window.addEventListener("resize", hideRefPopover);
 // ---------- Smith local-server bridge (active only when served over http) ----------
 // When this page is served by `smith --flag open_explorer` (a local HTTP
 // server), it can (a) load guidance.txt from GET /guidance and (b) POST the
-// edited guidance to /reset, which runs the clean script and overwrites
-// guidance.txt. When the file is opened directly (file://), fetch to /guidance
-// fails and the upload-driven UX is left unchanged.
+// edited guidance to /reset, which overwrites guidance.txt and writes
+// session_config.json. When the file is opened directly (file://), fetch to
+// /guidance fails and the upload-driven UX is left unchanged.
 (function () {
   if (location.protocol !== "http:" && location.protocol !== "https:") return;
   const editor = $("guidanceEditor");
@@ -1469,8 +1469,8 @@ window.addEventListener("resize", hideRefPopover);
       /* not served by Smith (e.g. plain preview) — keep upload-only UX */
     });
 
-  // Shared action: overwrite guidance.txt with the editor text, then run the
-  // clean script (server-side). Returns the server's JSON result (or throws).
+  // Shared action: overwrite guidance.txt with the editor text and write
+  // session_config.json. Returns the server's JSON result (or throws).
   function doReset() {
     resetBtn.disabled = true;
     runBtn.disabled = true;
@@ -1494,33 +1494,29 @@ window.addEventListener("resize", hideRefPopover);
 
   resetBtn.addEventListener("click", () => {
     if (!confirm(
-      "Reset Smith configuration?\n\n" +
-      "1. overwrite guidance.txt with the text in the editor\n" +
-      "2. run clean_generated.sh (delete generated files under references/)\n\n" +
-      "This cannot be undone."
+      "Save Smith configuration?\n\n" +
+      "This will overwrite guidance.txt with the text in the editor."
     )) return;
-    setStatus("Resetting…");
+    setStatus("Saving…");
     doReset()
       .then((res) => {
-        if (res.ok) setStatus(res.message || "Reset complete.", "ok");
-        else setStatus((res.error || "Reset failed.") + (res.detail ? " — " + res.detail : ""), "error");
+        if (res.ok) setStatus(res.message || "Saved.", "ok");
+        else setStatus((res.error || "Save failed.") + (res.detail ? " — " + res.detail : ""), "error");
       })
-      .catch((e) => setStatus("Reset request failed: " + e.message, "error"));
+      .catch((e) => setStatus("Save request failed: " + e.message, "error"));
   });
 
   runBtn.addEventListener("click", () => {
     if (!confirm(
       "Run Smith?\n\n" +
-      "1. overwrite guidance.txt with the text in the editor\n" +
-      "2. run clean_generated.sh (delete generated files under references/)\n\n" +
-      "This cannot be undone."
+      "This will overwrite guidance.txt with the text in the editor."
     )) return;
-    setStatus("Writing guidance and cleaning…");
+    setStatus("Writing guidance…");
     doReset()
       .then((res) => {
         if (res.ok) {
           setStatus(
-            "Guidance saved and generated files cleaned. " +
+            "Guidance saved. " +
             "Now start a code agent (e.g. Claude Code) and ask it to run Smith " +
             "to generate test cases / policy from the new guidance.",
             "ok"

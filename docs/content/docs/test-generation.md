@@ -30,6 +30,41 @@ The result is a labeled, tool-grounded test suite ready for [policy testing]({{<
 smith --flag test_generation
 ```
 
+## Fresh vs Update
+
+`--mode fresh` (the default) rebuilds the whole suite: the case tree is cleared first, so a shorter run cannot leave stale cases behind for the scorecard to keep counting.
+
+`--mode update` regenerates only the test cases whose guidance changed since the last run:
+
+```bash
+smith --flag test_generation --mode update
+```
+
+| Guidance change | What happens |
+|-----------------|--------------|
+| Nothing changed | Stops before any LLM call; nothing on disk is touched |
+| Rule removed | Its test cases are deleted, and nothing is regenerated |
+| Rule edited | Its old cases are deleted, and replacements are appended |
+| Rule added | New cases are appended; existing cases are untouched |
+
+All three kinds of change can occur in one run. Only the changed guidance reaches decomposition, variable extraction and case generation, so an edit costs a few lines' worth of LLM calls rather than a full run — and the cases belonging to untouched guidance are never rewritten.
+
+Reformatting guidance (renumbering, reordering, bullet style, blank lines) is not a content change and regenerates nothing.
+
+**Attack cases** differ by whether they can be traced to one guidance line. ARES cases inherit their parent case's guidance, so they are pruned selectively and regenerated from the changed prompts. Promptfoo cases target the agent as a whole, so they are cleared and fully regenerated whenever the guidance changed at all.
+
+**Prerequisite:** update mode needs the snapshots a previous run wrote. If they are missing it says so and exits without changing anything, so a first run must use `--mode fresh`.
+
+### Traceability files
+
+Every run maintains three files under `references/`, configurable via `GUIDANCE_MAP_FILE`, `GUIDANCE_SNAPSHOT_FILE` and `GUIDANCE_RAW_SNAPSHOT_FILE`:
+
+| File | Purpose |
+|------|---------|
+| `guidance_case_map.json` | Each guidance line paired with the test case files generated from it — how an update run finds the cases to remove |
+| `guidance_snapshot.txt` | The flattened guidance the run generated from, diffed against on the next run |
+| `guidance_raw_snapshot.txt` | The raw guidance file the run used, so the next run can compute exactly what you edited |
+
 ## Pipeline Stages
 
 1. **Decomposition** — Break guidance into testable atomic conditions

@@ -34,10 +34,10 @@ logic behind it belongs to the explorer UI rather than to a pipeline stage.
 
 ``POST /reset`` IS NEVER EXERCISED
 ---------------------------------
-It runs ``scripts/clean_generated.sh`` and then overwrites the target agent's real
-``guidance.txt``. Deleting a developer's generated artifacts and rewriting a tracked
-input file is not something a test may do to the working tree — the same reason the
-classifier's identical route is left alone.
+It overwrites the target agent's real ``guidance.txt`` and writes
+``session_config.json``. Rewriting a tracked input file is not something a test may
+do to the working tree — the same reason the classifier's identical route is left
+alone.
 
 The port is hardcoded in ``cli.py`` (``serve(port=8100)``), so unlike a
 fixture-chosen free port this test must skip when 8100 is already busy.

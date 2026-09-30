@@ -14,12 +14,6 @@ Source: https://github.com/yusaaztrk/car-price-mcp-main
 
 ## Starting the Agent
 
-**Note:** Before starting a new example, run the clean script from the repo root to remove generated artifacts left over from a previous example. It clears everything under `references/` (preserving `test_case_template.json`) and the generated ARES assets:
-
-```bash
-bash scripts/clean_generated.sh
-```
-
 Prerequisites: Ollama running locally with the model pulled.
 
 ```bash

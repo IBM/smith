@@ -12,14 +12,39 @@ Ask: "What kind of test cases would you like? (1) Guidance-targeted cases, (2) p
 
 Based on the answer, run the generation command(s) below, then proceed to Translation and Evaluation, which are the same regardless of which kind was generated.
 
-Before generating, print this reminder to the user: "If you're using promptfoo, make sure your promptfoo config is up to date (You can use `smith --flag generate_promptfoo_config` to auto generate it, make sure to double check the generated file)."
+## Step 0a: Offer to refresh the promptfoo config
+
+Only ask this if promptfoo is enabled (`ATTACK_TOOLS` includes `promptfoo`). Skip it entirely otherwise.
+
+Ask: "Your promptfoo config drives the red-team cases. Would you like me to regenerate it from your current guidance before generating test cases?"
+
+If the user says yes, run it yourself:
+
+```bash
+smith --flag generate_promptfoo_config
+```
+
+Then tell the user where the config was written and that they should review it before generating — it is LLM-generated, and the `contexts` block in particular is worth a look.
+
+If the user says no, continue with the existing config as-is.
+
+## Step 0b: Ask fresh or update (guidance-targeted cases only)
+
+Only ask this if the user chose (1) guidance-targeted or (3) both. Policy-bypass generation has no modes.
+
+Ask: "Fresh or update? **Fresh** regenerates from your whole guidance file. **Update** compares your guidance against the snapshot from the last run and only regenerates the lines you changed, leaving every other test case untouched."
 
 ## Generation
 
 ### Guidance-targeted cases
-
+If the user chose fresh mode, run: 
 ```bash
-smith --flag test_generation
+smith --flag test_generation --mode fresh
+```
+
+If the user choose update mode, run: or, 
+```bash
+smith --flag test_generation --mode update
 ```
 
 ### Policy-bypass cases
