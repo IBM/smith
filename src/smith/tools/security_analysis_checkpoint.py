@@ -466,12 +466,14 @@ def _reset_phase_outputs(phase: str, analysis_dir: Path) -> None:
         stem = PHASES[current][0]
         for suffix in (".json", ".md", ".json.tmp", ".md.tmp"):
             (analysis_dir / f"{stem}{suffix}").unlink(missing_ok=True)
+    if phase == "A":
+        inspection = analysis_dir / "architecture_inspection.json"
+        inspection.unlink(missing_ok=True)
+        inspection.with_suffix(".json.tmp").unlink(missing_ok=True)
     _prune_checkpoint_state(phase, analysis_dir / "analysis_state.json")
 
 
-def prepare_phase(
-    phase: str, analysis_dir: Path, guidance: Path | None = None
-) -> str:
+def prepare_phase(phase: str, analysis_dir: Path, guidance: Path | None = None) -> str:
     """Reset stale phase outputs and create a fresh structured template."""
     phase = phase.upper()
     if phase not in PHASES:
@@ -938,6 +940,7 @@ def checkpoint(
         temporary_artifact.replace(artifact)
         del states[current]["_markdown"]
     input_paths = {
+        "architecture_inspection": analysis_dir / "architecture_inspection.json",
         "tool_definitions": tool_definitions,
         "system_vars": system_vars,
         "guidance": guidance,
@@ -992,12 +995,21 @@ def checkpoint_for_target(
     )
 
 
-def prepare_for_target(
-    phase: str, target: Path, guidance: Path | None = None
-) -> str:
+def prepare_for_target(phase: str, target: Path, guidance: Path | None = None) -> str:
     """Prepare a phase using a target path already resolved by the CLI."""
-    return prepare_phase(
+    result = prepare_phase(
         phase,
         target / "smith" / "guidelines-security-analysis",
         guidance,
     )
+    if phase.upper() == "A":
+        from smith.tools.security_analysis_inspection import inspect_architecture
+
+        analysis_dir = target / "smith" / "guidelines-security-analysis"
+        inspection = inspect_architecture(
+            target,
+            target / "smith" / "tool_definitions.json",
+            analysis_dir / "architecture_inspection.json",
+        )
+        result += f"\n{inspection}"
+    return result

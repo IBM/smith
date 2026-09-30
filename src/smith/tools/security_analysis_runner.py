@@ -92,6 +92,7 @@ Read these instructions completely:
 Resolved inputs:
 - Target: {target}
 - Phase JSON to complete: {artifact}
+- Deterministic architecture inspection: {analysis_dir / "architecture_inspection.json" if phase == "A" else "N/A"}
 - Guidance: {guidance if guidance is not None else "ABSENT"}
 - System variables: {system_vars if system_vars is not None else "ABSENT"}
 - Tool definitions: {target / "smith" / "tool_definitions.json"}

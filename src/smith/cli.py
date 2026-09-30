@@ -552,6 +552,26 @@ def main():
             sys.exit(1)
         sys.exit(0)
 
+    if args.flag == "security_analysis_inspection":
+        from smith.tools.guidance_reconciliation import ReconciliationError
+        from smith.tools.security_analysis_inspection import inspect_architecture
+
+        try:
+            base_url = Path(os.getenv("BASE_URL") or ".").resolve()
+            target = _security_analysis_path(base_url, "TARGET_AGENT_PATH")
+            analysis_dir = target / "smith" / "guidelines-security-analysis"
+            print(
+                inspect_architecture(
+                    target,
+                    target / "smith" / "tool_definitions.json",
+                    analysis_dir / "architecture_inspection.json",
+                )
+            )
+        except ReconciliationError as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            sys.exit(1)
+        sys.exit(0)
+
     if args.flag == "security_analysis_run":
         from smith.tools.guidance_reconciliation import ReconciliationError
         from smith.tools.security_analysis_runner import run_isolated_analysis
@@ -912,6 +932,7 @@ def main():
         "get_current_agent",
         "guidance_reconciliation",
         "security_analysis_checkpoint",
+        "security_analysis_inspection",
         "security_analysis_run",
         "guidance_merge",
     ]
