@@ -6,18 +6,12 @@
         "extensions": {
             "subject": {
                 "claims": {},
+                "action_list": [
+                    "get_events"
+                ],
                 "user_name": "Bob",
                 "user_role": [
-                    "faculty",
-                    "phd_student",
-                    "guest"
-                ],
-                "queries_this_session": 1,
-                "dissertation_area": "Artificial intelligence",
-                "research_area": [
-                    "Artificial intelligence",
-                    "Cybersecurity and privacy",
-                    "Software engineering"
+                    "phd_student"
                 ]
             },
             "headers": {
@@ -28,7 +22,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Search for conferences about drug discovery and pharmaceutical research in Software engineering topic with limit 8",
+                "input": "Search WikiCFP for events related to 'CLINICAL TRIALS and machine learning' in the topic 'Artificial intelligence', up to 5 results.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,9 +33,9 @@
             }
         },
         "args": {
-            "keywords": "drug discovery and pharmaceutical research",
-            "topic": "Software engineering",
-            "limit": 8
+            "keywords": "CLINICAL TRIALS and machine learning",
+            "topic": "Artificial intelligence",
+            "limit": 5
         }
     }
 }

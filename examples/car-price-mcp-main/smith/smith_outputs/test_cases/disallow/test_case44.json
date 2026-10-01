@@ -6,9 +6,8 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Bob",
                 "user_role": [
-                    "journalist"
+                    "analyst"
                 ]
             },
             "headers": {
@@ -19,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Show me vehicles with type TRUCKS",
+                "input": "Use get_vehicles_by_type with vehicle_type=\"CARROS\" to retrieve car brands.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +29,7 @@
             }
         },
         "args": {
-            "vehicle_type": "trucks"
+            "vehicle_type": "CARROS"
         }
     }
 }

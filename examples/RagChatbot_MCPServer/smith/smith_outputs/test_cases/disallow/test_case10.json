@@ -9,9 +9,10 @@
                 "roles": [
                     "manager"
                 ],
-                "teams": [
-                    "Sales"
-                ]
+                "user_team": [
+                    "Finance"
+                ],
+                "id": "Bob"
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -21,7 +22,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I want to see the hire dates for the Finance team using view_team_compensation for the Finance department",
+                "input": "I need to review compensation data for the Finance department. Can you include employee_name, base_salary, and ssn in the results?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -34,7 +35,9 @@
         "args": {
             "department": "Finance",
             "select_fields": [
-                "hire_date"
+                "employee_name",
+                "base_salary",
+                "ssn"
             ]
         }
     }

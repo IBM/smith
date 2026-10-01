@@ -1,0 +1,42 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "get_events",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "action_list": [
+                    "get_events"
+                ],
+                "user_name": "Bob",
+                "user_role": [
+                    "phd_student"
+                ],
+                "dissertation_area": "Artificial intelligence"
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Search for conferences with keywords 'deep learning' and topic 'Artificial intelligence', limit 10.",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "keywords": "deep learning",
+            "topic": "Artificial intelligence",
+            "limit": 10
+        }
+    }
+}

@@ -1,0 +1,43 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "add_employee",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "department": [
+                    "Product"
+                ]
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "I'm a product manager and I'd like to register a new team member: David Kim, email david.kim@ibm.com, role product_manager, title Associate Product Manager, home address 75 Market St, San Francisco, CA, country code US.",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "first_name": "David",
+            "last_name": "Kim",
+            "email": "david.kim@ibm.com",
+            "role": "product_manager",
+            "title": "Associate Product Manager",
+            "home_address": "75 Market St, San Francisco, CA",
+            "country_code": "US",
+            "organization": "IBM",
+            "department_id": 1
+        }
+    }
+}

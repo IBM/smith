@@ -2,14 +2,17 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "purchase",
+        "name": "send_email",
         "extensions": {
             "subject": {
                 "claims": {},
                 "roles": [
                     "employee"
                 ],
-                "approval": false
+                "user_team": [
+                    "Legal"
+                ],
+                "id": "Bob"
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -19,7 +22,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I'd like to purchase software licenses for $500. The product is 'Adobe Creative Suite' in software category. This is needed for design work.",
+                "input": "Send an email to david.miller@personal.com with subject 'Contract Review Reminder' and body 'Hi David, just a reminder to review the contract documents by end of week.' No attached file.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -28,6 +31,13 @@
                 "managed_by": "tool",
                 "trust_domain": "internal"
             }
+        },
+        "args": {
+            "recipient_email": "david.miller@personal.com",
+            "subject": "Contract Review Reminder",
+            "body": "Hi David, just a reminder to review the contract documents by end of week.",
+            "email_content": "Hi David, just a reminder to review the contract documents by end of week.",
+            "attached_file": ""
         }
     }
 }

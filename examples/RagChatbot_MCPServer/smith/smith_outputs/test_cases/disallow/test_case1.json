@@ -7,11 +7,12 @@
             "subject": {
                 "claims": {},
                 "roles": [
-                    "manager"
+                    "employee"
                 ],
-                "teams": [
-                    "Finance"
-                ]
+                "user_team": [
+                    "HR"
+                ],
+                "id": "Bob"
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -21,7 +22,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please display the employee names from the Marketing department using view_team_compensation with department Marketing and select_fields set to employee_name",
+                "input": "I'd like to look at the HR team's compensation information, including everyone's salaries and titles.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,9 +33,14 @@
             }
         },
         "args": {
-            "department": "Marketing",
+            "department": "HR",
             "select_fields": [
-                "employee_name"
+                "employee_name",
+                "title",
+                "base_salary",
+                "bonus_target",
+                "actual_bonus_2024",
+                "performance_rating"
             ]
         }
     }

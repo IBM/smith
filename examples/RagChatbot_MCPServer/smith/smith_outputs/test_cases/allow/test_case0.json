@@ -9,9 +9,10 @@
                 "roles": [
                     "manager"
                 ],
-                "teams": [
+                "user_team": [
                     "IT"
-                ]
+                ],
+                "id": "Bob"
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -21,7 +22,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need to view the employee names for the IT department using the view_team_compensation tool with select_fields set to employee_name",
+                "input": "I'd like to view my team's compensation data for the IT department. Please show me employee names, titles, salaries, bonuses, departments, and hire dates.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -34,8 +35,14 @@
         "args": {
             "department": "IT",
             "select_fields": [
-                "employee_name"
-            ]
+                "employee_name",
+                "title",
+                "base_salary",
+                "actual_bonus_2024",
+                "department",
+                "hire_date"
+            ],
+            "include_benefits": false
         }
     }
 }

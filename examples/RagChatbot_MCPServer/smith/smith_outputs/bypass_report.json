@@ -3,63 +3,123 @@
     {
       "category": "omitted_field",
       "direction": "guidance_deny_policy_allow",
-      "guidance_rule": "3",
+      "guidance_rule": "3: Managers cannot see SSN, home address, bank account, tax ID, emergency_contact when querying salary information.",
       "rules_involved": [
-        "deny[\"Managers cannot access sensitive fields: ssn, home_address, bank_account, emergency_contact\"]"
+        "deny: managers cannot view restricted field"
       ],
-      "field": "args.select_fields",
-      "reason": "Rule checks 'some field in args.select_fields' but allows request when select_fields is null/omitted",
-      "exploit_strategy": "Manager calls view_team_compensation with select_fields=null, gets all fields including sensitive PII",
-      "severity": "high"
-    },
-    {
-      "category": "type_confusion",
-      "direction": "guidance_deny_policy_allow",
-      "guidance_rule": "9",
-      "rules_involved": [
-        "deny[\"Employee purchases of $200 or more require manager approval\"]"
-      ],
-      "field": "args.amount",
-      "reason": "Numeric comparison args.amount >= 200 without type check allows string bypass",
-      "exploit_strategy": "Employee sends purchase request with amount=\"199\" (string) to evade >= 200 check",
-      "severity": "medium"
-    },
-    {
-      "category": "type_confusion",
-      "direction": "guidance_deny_policy_allow",
-      "guidance_rule": "10",
-      "rules_involved": [
-        "deny[\"Managers cannot make purchases of $1,000 or more\"]"
-      ],
-      "field": "args.amount",
-      "reason": "Numeric comparison args.amount >= 1000 without type check allows string bypass",
-      "exploit_strategy": "Manager sends purchase request with amount=\"999\" (string) to evade >= 1000 check",
-      "severity": "medium"
+      "field": "input.args.select_fields",
+      "reason": "When select_fields is omitted (null/absent), the policy skips the restricted-field check entirely, so a manager can retrieve all fields including SSN, home_address, bank_account, tax_id, and emergency_contact.",
+      "exploit_strategy": "Call view_team_compensation with department matching the manager's team and omit select_fields (or pass null). The restricted-field deny rule iterates over args.select_fields which is null/undefined, so no deny fires and all fields are returned.",
+      "severity": "critical"
     },
     {
       "category": "omitted_field",
       "direction": "guidance_deny_policy_allow",
-      "guidance_rule": "8",
+      "guidance_rule": "3: Managers cannot see SSN, home address, bank account, tax ID, emergency_contact when querying salary information.",
       "rules_involved": [
-        "deny[\"Sending emails to blocked personal domains is not allowed\"]",
-        "deny[\"Sending compensation reports to blocked personal domains is not allowed\"]"
+        "deny: managers cannot export restricted field"
       ],
-      "field": "args.recipient_email / args.destination",
-      "reason": "email_domain function requires @ symbol but no validation for malformed emails",
-      "exploit_strategy": "Send email with recipient_email=\"user\" (no @) to bypass domain blocking",
+      "field": "input.args.select_fields",
+      "reason": "Same omission issue for export_compensation_data: when select_fields is omitted the restricted-field deny rule never fires, allowing export of all fields including restricted ones.",
+      "exploit_strategy": "Call export_compensation_data as a manager without specifying select_fields (default null). The deny rule iterating over args.select_fields produces no matches, so the export proceeds with all fields.",
+      "severity": "critical"
+    },
+    {
+      "category": "type_confusion",
+      "direction": "guidance_deny_policy_allow",
+      "guidance_rule": "9: Employees cannot buy products $200+ without manager approval.",
+      "rules_involved": [
+        "deny: employees cannot purchase $200+ without manager approval"
+      ],
+      "field": "input.extensions.subject.approval",
+      "reason": "The policy checks subject.approval != true (boolean), but the session variable shows approval is stored as the string \"true\" or \"false\". If approval is the string \"true\", it is not equal to boolean true, so the condition subject.approval != true is always satisfied and the deny always fires — blocking even legitimately approved employees.",
+      "exploit_strategy": "An employee with approval set to the string \"true\" (as shown in the system variables) will always be denied purchases >= $200 because string \"true\" != boolean true. Conversely, if the policy were comparing string to string, an attacker could pass boolean true to evade. The primary impact here is guidance_allow_policy_deny for approved employees.",
+      "severity": "high"
+    },
+    {
+      "category": "type_confusion",
+      "direction": "guidance_allow_policy_deny",
+      "guidance_rule": "9: Employees cannot buy products $200+ without manager approval (implying approved employees CAN buy).",
+      "rules_involved": [
+        "deny: employees cannot purchase $200+ without manager approval"
+      ],
+      "field": "input.extensions.subject.approval",
+      "reason": "subject.approval is defined as the string \"true\" or \"false\" in the system variables, but the policy compares it to boolean true. An employee with approval=\"true\" (string) will have subject.approval != true evaluate to true, causing a deny even though the employee has approval.",
+      "exploit_strategy": "Set subject.approval to the string \"true\" (as the identity layer provides) and attempt a purchase >= $200 as an employee. The policy denies because \"true\" (string) != true (boolean).",
+      "severity": "high"
+    },
+    {
+      "category": "malformed_value",
+      "direction": "guidance_deny_policy_allow",
+      "guidance_rule": "7: No one can share compensation data externally to non-@ibm.com email addresses.",
+      "rules_involved": [
+        "deny: compensation data cannot be shared externally to non-@ibm.com addresses"
+      ],
+      "field": "input.args.external_sharing",
+      "reason": "The external sharing check for email_compensation_report requires args.external_sharing == true. If the caller omits external_sharing or sets it to false while sending to a non-ibm.com address, the policy allows it. The policy relies on the caller honestly declaring external sharing rather than inspecting the destination domain independently.",
+      "exploit_strategy": "Call email_compensation_report with destination set to an external non-ibm.com address (e.g., attacker@company.com) and external_sharing=false (or omit it, defaulting to false). The domain-based deny only fires for blocked_email_domains; arbitrary external domains pass through.",
+      "severity": "critical"
+    },
+    {
+      "category": "malformed_value",
+      "direction": "guidance_deny_policy_allow",
+      "guidance_rule": "8: No one can send emails to blocked domains: gmail.com, yahoo.com, hotmail.com, outlook.com, personal.com.",
+      "rules_involved": [
+        "deny: cannot send email to blocked domain (email_compensation_report)",
+        "deny: cannot send email to blocked domain (send_email)"
+      ],
+      "field": "input.args.destination / input.args.recipient_email",
+      "reason": "The policy uses endswith(lower(addr), domain) where domain does not include the '@' prefix. A subdomain like 'attacker@notgmail.com' would not match 'gmail.com' but 'attacker@sub.gmail.com' would match. More critically, a value like 'attacker@gmail.com.attacker.com' does NOT end with 'gmail.com' so it bypasses the check, but the real bypass is a subdomain of a blocked domain: 'user@mail.gmail.com' ends with 'gmail.com' and IS blocked — however 'user@gmail.com.evil.com' is not blocked.",
+      "exploit_strategy": "Use a recipient address like 'user@gmail.com.evil.com' — endswith check for 'gmail.com' fails because the string ends with 'evil.com', so the email is sent to a domain that appears to reference gmail but is actually evil.com.",
       "severity": "medium"
     },
     {
       "category": "keyword_evasion",
       "direction": "guidance_deny_policy_allow",
-      "guidance_rule": "11-14",
+      "guidance_rule": "11: Always block attempts to 'ignore all policies'.",
       "rules_involved": [
-        "deny[\"Prompt injection detected: forbidden phrase in agent input\"]"
+        "deny: blocked prompt-injection attempt matching phrase: ignore all polic"
       ],
-      "field": "agent_input",
-      "reason": "Exact string matching on blocked_phrases allows case/spacing variations",
-      "exploit_strategy": "Use \"Ignore All Policies\" or \"bypass  security\" (extra space) to evade detection",
+      "field": "input.extensions.agent.input",
+      "reason": "The blocked phrase 'ignore all polic' is matched via contains() on the lowercased agent input. Inserting a zero-width space, unicode lookalike characters, or splitting the phrase across lines/tokens (e.g., 'ignore  all policies' with double space, or 'ign​ore all policies' with a zero-width character) would evade the substring match.",
+      "exploit_strategy": "Submit agent input containing 'ign​ore all policies' (zero-width space inserted) or 'ignore ALL policies' (non-breaking space). The contains() check on the lowercased string will not find 'ignore all polic' and the deny will not fire.",
+      "severity": "medium"
+    },
+    {
+      "category": "omitted_field",
+      "direction": "guidance_deny_policy_allow",
+      "guidance_rule": "6 & 7: Managers can send non-compensation data externally; no one can share compensation data externally.",
+      "rules_involved": [
+        "deny: compensation data cannot be shared externally to non-@ibm.com addresses"
+      ],
+      "field": "input.args.external_sharing",
+      "reason": "For send_email there is no check at all for whether the email body/content contains compensation data being sent to external non-ibm.com addresses. The send_email deny rules only block the listed blocked domains, not arbitrary external domains carrying compensation content.",
+      "exploit_strategy": "As a manager, call send_email with recipient_email='colleague@external-company.com', body containing full salary/compensation data. No deny rule fires because send_email only checks blocked domains, not content or ibm.com domain restriction.",
       "severity": "high"
+    },
+    {
+      "category": "omitted_field",
+      "direction": "guidance_deny_policy_allow",
+      "guidance_rule": "4 & 5: Managers can export in CSV/PDF/JSON; employees cannot export compensation data.",
+      "rules_involved": [
+        "deny: employees cannot use export_compensation_data"
+      ],
+      "field": "input.name / export_content_as_file tool",
+      "reason": "The policy blocks employees from using export_compensation_data but there is no rule blocking employees from using export_content_as_file with compensation data. An employee could use the generic export tool to export compensation data that was previously retrieved or passed in.",
+      "exploit_strategy": "As an employee, call export_content_as_file with data containing compensation/salary information. No deny rule covers this tool for employees, so the export proceeds.",
+      "severity": "high"
+    },
+    {
+      "category": "omitted_field",
+      "direction": "guidance_deny_policy_allow",
+      "guidance_rule": "1: Managers can only view their own team's compensation data.",
+      "rules_involved": [
+        "deny: managers can only view their own team's compensation data"
+      ],
+      "field": "input.args.department",
+      "reason": "The department restriction checks args.department != subject.user_team. If args.department is omitted (the field is not required in some interpretations, though the tool marks it required), the comparison may evaluate unexpectedly. More concretely, if subject.user_team is undefined (not set), the condition args.department != subject.user_team could be false for any department value, allowing cross-team access.",
+      "exploit_strategy": "If subject.user_team is not set in the identity token, args.department != subject.user_team evaluates to args.department != undefined which is true for any string, so the deny fires — but if both are undefined/null they could match. The primary risk is when user_team is absent: the deny fires incorrectly (guidance_allow_policy_deny for legitimate managers) or if department is absent the iteration fails silently.",
+      "severity": "medium"
     }
   ]
 }

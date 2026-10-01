@@ -1,0 +1,41 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "get_events",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "action_list": [
+                    "get_events"
+                ],
+                "user_name": "Bob",
+                "user_role": [
+                    "phd_student"
+                ]
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Find conferences on WikiCFP with keywords 'HACKATHON machine learning' under topic 'Artificial intelligence', limit 5.",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "keywords": "HACKATHON machine learning",
+            "topic": "Artificial intelligence",
+            "limit": 5
+        }
+    }
+}

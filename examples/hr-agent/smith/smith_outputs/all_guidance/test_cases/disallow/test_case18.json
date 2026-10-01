@@ -1,0 +1,42 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "send_email",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "roles": [
+                    "finance"
+                ],
+                "user_name": "Bob",
+                "permissions": [
+                    "None"
+                ],
+                "has_approval": true
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Can you shoot an email over to manager@company.com? Subject should be 'Tax Filing Details' and the body should say: 'For your reference, employee SSN: 456-78-9012 is needed for the W-2 form.'",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "to": "manager@company.com",
+            "subject": "Tax Filing Details",
+            "body": "For your reference, employee SSN: 456-78-9012 is needed for the W-2 form."
+        }
+    }
+}

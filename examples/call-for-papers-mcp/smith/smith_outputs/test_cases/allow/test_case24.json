@@ -1,0 +1,43 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "get_events",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "user_role": [
+                    "phd_student"
+                ],
+                "dissertation_area": "Artificial intelligence",
+                "research_area": [
+                    "Artificial intelligence",
+                    "Cybersecurity and privacy",
+                    "Software engineering"
+                ]
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Find upcoming academic events related to 'computer vision' with topic 'Artificial intelligence', up to 7 results please.",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "keywords": "computer vision",
+            "topic": "Artificial intelligence",
+            "limit": 7
+        }
+    }
+}

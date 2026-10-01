@@ -5,7 +5,14 @@
         "name": "send_email",
         "extensions": {
             "subject": {
-                "claims": {}
+                "claims": {},
+                "roles": [
+                    "employee"
+                ],
+                "user_team": [
+                    "Sales"
+                ],
+                "id": "Bob"
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -15,7 +22,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Draft email to supplier@outlook.com regarding invoice processing with subject 'Invoice Review' and include invoice_details.xlsx attachment",
+                "input": "Can you send a schedule update to mike.jones@hotmail.com? Subject: 'Q3 Schedule', body: 'Hi Mike, please find the updated Q3 schedule below. Let me know if you have questions.' No file attached.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -24,6 +31,13 @@
                 "managed_by": "tool",
                 "trust_domain": "internal"
             }
+        },
+        "args": {
+            "recipient_email": "mike.jones@hotmail.com",
+            "subject": "Q3 Schedule",
+            "body": "Hi Mike, please find the updated Q3 schedule below. Let me know if you have questions.",
+            "email_content": "Hi Mike, please find the updated Q3 schedule below. Let me know if you have questions.",
+            "attached_file": ""
         }
     }
 }

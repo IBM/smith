@@ -1,0 +1,91 @@
+{
+  "vectors": [
+    {
+      "category": "type_confusion",
+      "direction": "guidance_deny_policy_allow",
+      "guidance_rule": "Set the limit below 1, above the cap for the requesting user's role, or above the absolute maximum of 15 per request is disallowed.",
+      "rules_involved": [
+        "deny limit < 1",
+        "deny limit > absolute_limit_cap",
+        "deny limit > faculty_limit_cap",
+        "deny limit > phd_student_limit_cap"
+      ],
+      "field": "input.args.limit",
+      "reason": "If limit is supplied as a string (e.g. \"20\"), the numeric comparisons (<, >) are undefined in OPA and the deny rules never fire, allowing out-of-range limits.",
+      "exploit_strategy": "Send input.args.limit as the string \"20\" instead of the integer 20; OPA's < and > operators on mixed string/number types produce undefined, so no deny is triggered and the request is allowed despite exceeding the cap.",
+      "severity": "high"
+    },
+    {
+      "category": "keyword_evasion",
+      "direction": "guidance_deny_policy_allow",
+      "guidance_rule": "Disallowed keywords must not appear, case-insensitively, in the keywords parameter (e.g. 'bioinformatics', 'genomics', etc.).",
+      "rules_involved": [
+        "deny keywords contains disallowed term"
+      ],
+      "field": "input.args.keywords",
+      "reason": "The policy uses contains() for exact substring matching after lowercasing, but does not account for Unicode lookalike characters, zero-width spaces, or other homoglyph/separator tricks that break the substring match while the term is still semantically present.",
+      "exploit_strategy": "Insert a zero-width space or homoglyph inside a disallowed term, e.g. 'bio​informatics' or 'genοmics', so lower() + contains() fails to match the disallowed keyword while the search engine still interprets it as the forbidden topic.",
+      "severity": "medium"
+    },
+    {
+      "category": "omitted_field",
+      "direction": "guidance_deny_policy_allow",
+      "guidance_rule": "Perform more than 5 get_events searches in a single conversation session is disallowed.",
+      "rules_involved": [
+        "deny queries > max_session_queries"
+      ],
+      "field": "input.extensions.subject.queries_this_session",
+      "reason": "The session-query deny rule uses object.get with a default of 0, so if queries_this_session is omitted the count is treated as 0 and the deny never fires, even if the real count exceeds 5.",
+      "exploit_strategy": "Omit the queries_this_session field from subject entirely; the policy defaults to 0 and never denies on session count, allowing unlimited searches.",
+      "severity": "medium"
+    },
+    {
+      "category": "omitted_field",
+      "direction": "guidance_deny_policy_allow",
+      "guidance_rule": "PhD students are scoped to their own dissertation_area; a PhD student may call get_events only when topic equals the student's own dissertation_area.",
+      "rules_involved": [
+        "deny phd_student topic must match dissertation_area"
+      ],
+      "field": "input.extensions.subject.dissertation_area",
+      "reason": "If dissertation_area is absent, object.get returns \"\"; any non-empty topic will differ from \"\", so the deny fires correctly — but if topic is also omitted/empty both become \"\" and the deny does NOT fire, allowing the call with an empty topic (which separately should be denied by the approved_topics check). However, the more critical gap: if dissertation_area is missing the empty-string default means a PhD student whose record lacks the field can never match any real topic, effectively always being denied — this is a guidance_allow_policy_deny for legitimate PhD students whose system variable is missing.",
+      "exploit_strategy": "For a PhD student with a valid dissertation_area not present in the subject, every valid topic will not equal \"\", so the deny fires and blocks a legitimate request. Conversely, supplying topic=\"\" bypasses the approved_topics deny (topic not in approved_topics fires) but also bypasses the dissertation_area check since both are \"\".",
+      "severity": "low"
+    },
+    {
+      "category": "omitted_field",
+      "direction": "guidance_deny_policy_allow",
+      "guidance_rule": "Only faculty and phd_student may use get_events; a guest cannot use this tool.",
+      "rules_involved": [
+        "deny get_events is restricted to faculty and phd_student roles"
+      ],
+      "field": "input.extensions.subject.user_role",
+      "reason": "If user_role is omitted entirely, object.get returns []; neither 'faculty' nor 'phd_student' is in [], so the deny fires correctly. However, if user_role is present but empty [], the same logic applies and the guest is correctly denied. This path is safe. But a user with role [\"guest\"] who also has no other roles is correctly denied. No divergence here — included for completeness, confirmed safe.",
+      "exploit_strategy": "N/A — this specific path is correctly handled.",
+      "severity": "low"
+    },
+    {
+      "category": "type_confusion",
+      "direction": "guidance_deny_policy_allow",
+      "guidance_rule": "Perform more than 5 get_events searches in a single conversation session is disallowed.",
+      "rules_involved": [
+        "deny queries > max_session_queries"
+      ],
+      "field": "input.extensions.subject.queries_this_session",
+      "reason": "If queries_this_session is supplied as a string (e.g. \"6\"), the > comparison with integer 5 is undefined in OPA and the deny rule never fires, allowing more than 5 session queries.",
+      "exploit_strategy": "Supply queries_this_session as the string \"6\" instead of integer 6; OPA's > on string vs number is undefined, so the deny does not trigger.",
+      "severity": "medium"
+    },
+    {
+      "category": "keyword_evasion",
+      "direction": "guidance_deny_policy_allow",
+      "guidance_rule": "Disallowed keywords must not appear, case-insensitively, in the keywords parameter — specifically 'clinical trials', 'drug discovery', 'supply chain', 'trade show', 'career fair', 'startup expo'.",
+      "rules_involved": [
+        "deny keywords contains disallowed term"
+      ],
+      "field": "input.args.keywords",
+      "reason": "Multi-word disallowed terms (e.g. 'clinical trials') can be evaded by inserting extra spaces or punctuation between words ('clinical  trials'), since contains() requires an exact substring match.",
+      "exploit_strategy": "Send keywords containing 'clinical  trials' (double space) or 'trade-show'; the exact substring 'clinical trials' is not present so contains() returns false and the deny does not fire.",
+      "severity": "high"
+    }
+  ]
+}

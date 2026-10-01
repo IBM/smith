@@ -7,7 +7,7 @@
             "subject": {
                 "claims": {},
                 "roles": [
-                    "employee"
+                    "manager"
                 ]
             },
             "headers": {
@@ -18,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you show me when people in the Legal department were hired using view_team_compensation for the Legal department?",
+                "input": "I need to view salary info for the IT department. Please include title, level, actual_bonus_2024, and the ssn field for each employee.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -29,12 +29,12 @@
             }
         },
         "args": {
-            "department": "Legal",
+            "department": "IT",
             "select_fields": [
-                "employee_name",
                 "title",
-                "department",
-                "hire_date"
+                "level",
+                "actual_bonus_2024",
+                "ssn"
             ]
         }
     }
