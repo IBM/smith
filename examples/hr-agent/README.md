@@ -43,6 +43,25 @@ uvicorn agent:app --host 0.0.0.0 --port 9000
 ```
 
 
+## Smith Files (`smith/` directory)
+
+| File | Description |
+|------|-------------|
+| `guidance_raw.txt` | Source guidance to upload to the Guidance Classifier. |
+| `guidance.txt` | Active guidance saved by the classifier and used for policy generation. |
+| `system_vars.json` | Session roles, permissions, approval state, and action descriptions. Subject values map to `input.extensions.subject.*` in the OPA policy. |
+| `tool_definitions.json` | Tool definitions and parameters for the current Smith session; parameters map to `input.arguments.*`. |
+| `promptfooconfig.yaml` | Promptfoo configuration for red-team test generation. |
+| `redteam.yaml` | Saved Promptfoo red-team output. |
+| `smith_outputs/` | Saved outputs from Smith runs (see below). |
+
+### `smith/smith_outputs/` (for reproducibility: generated artifacts)
+
+| Folder | Description |
+|--------|-------------|
+| `get_compensation/` | Generated and revised policies, bypass report, and `allow/` and `disallow/` test cases for the `get_compensation` run. |
+| `all_guidance/` | Generated and revised policies, bypass report, and `allow/` and `disallow/` test cases for the broader guidance run. |
+
 ## How to Test Smith (End-to-End Workflow)
 
 

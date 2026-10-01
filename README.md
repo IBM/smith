@@ -152,7 +152,7 @@ policy against your generated test cases rather than testing Smith itself.
 
 ## Start Smith with Agent Examples
 
-Detailed instructions for each agent example can be found in the `examples/<agent>/README.md`.
+To start Smith with an agent example, follow the [HR Agent setup guide](examples/hr-agent/README.md). Other examples have their own `examples/<agent>/README.md`.
 
 Example layouts vary: an MCP server may use Python, JavaScript, or TypeScript;
 may run over stdio, HTTP, or SSE; and may use entrypoint names such as
