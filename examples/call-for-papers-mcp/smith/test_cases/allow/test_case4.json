@@ -6,12 +6,10 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Bob",
                 "user_role": [
-                    "faculty",
-                    "phd_student",
-                    "guest"
+                    "faculty"
                 ],
+                "user_name": "Bob",
                 "queries_this_session": 1,
                 "dissertation_area": "Artificial intelligence",
                 "research_area": [
@@ -28,7 +26,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Search for conferences with topic Artificial intelligence and keywords machine learning",
+                "input": "Search for conferences on neural networks with keywords 'neural networks', topic 'Artificial intelligence', and limit 10.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -38,9 +36,10 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "keywords": "machine learning",
-            "topic": "Artificial intelligence"
+        "args": {
+            "keywords": "neural networks",
+            "topic": "Artificial intelligence",
+            "limit": 10
         }
     }
 }

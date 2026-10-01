@@ -5,20 +5,7 @@
         "name": "get_events",
         "extensions": {
             "subject": {
-                "claims": {},
-                "user_name": "Bob",
-                "user_role": [
-                    "faculty",
-                    "phd_student",
-                    "guest"
-                ],
-                "queries_this_session": 1,
-                "dissertation_area": "Artificial intelligence",
-                "research_area": [
-                    "Artificial intelligence",
-                    "Cybersecurity and privacy",
-                    "Software engineering"
-                ]
+                "claims": {}
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -28,7 +15,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Find robotics events in Artificial intelligence topic with keywords 'autonomous systems', show me 25 results",
+                "input": "Search for software engineering conferences and give me 20 results.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -38,10 +25,10 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "keywords": "autonomous systems",
-            "topic": "Artificial intelligence",
-            "limit": 25
+        "args": {
+            "keywords": "software engineering",
+            "topic": "Software engineering",
+            "limit": 20
         }
     }
 }

@@ -5,20 +5,7 @@
         "name": "get_events",
         "extensions": {
             "subject": {
-                "claims": {},
-                "user_name": "Bob",
-                "user_role": [
-                    "faculty",
-                    "phd_student",
-                    "guest"
-                ],
-                "queries_this_session": 1,
-                "dissertation_area": "Artificial intelligence",
-                "research_area": [
-                    "Artificial intelligence",
-                    "Cybersecurity and privacy",
-                    "Software engineering"
-                ]
+                "claims": {}
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -28,7 +15,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Search for events with keywords 'career fair' in the topic of Artificial intelligence with a limit of 5",
+                "input": "Use get_events to find academic events related to 'EDUCATION and learning', topic 'Software engineering', limit 5.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -38,9 +25,9 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "keywords": "career fair",
-            "topic": "Artificial intelligence",
+        "args": {
+            "keywords": "EDUCATION and learning",
+            "topic": "Software engineering",
             "limit": 5
         }
     }

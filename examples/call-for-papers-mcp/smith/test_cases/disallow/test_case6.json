@@ -6,16 +6,8 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Bob",
                 "user_role": [
                     "faculty"
-                ],
-                "queries_this_session": 1,
-                "dissertation_area": "Artificial intelligence",
-                "research_area": [
-                    "Artificial intelligence",
-                    "Cybersecurity and privacy",
-                    "Software engineering"
                 ]
             },
             "headers": {
@@ -26,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Search for 'software testing' events in Software engineering topic with limit 0",
+                "input": "I'd like to see 50 conferences about natural language processing. Can you fetch them?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -36,10 +28,10 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "keywords": "software testing",
-            "topic": "Software engineering",
-            "limit": 0
+        "args": {
+            "keywords": "natural language processing",
+            "topic": "Artificial intelligence",
+            "limit": 50
         }
     }
 }

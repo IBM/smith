@@ -6,10 +6,10 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Bob",
                 "user_role": [
                     "phd_student"
                 ],
+                "user_name": "Bob",
                 "queries_this_session": 1,
                 "dissertation_area": "Artificial intelligence",
                 "research_area": [
@@ -26,7 +26,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Search for cybersecurity conferences using topic Cybersecurity and privacy with keywords encryption",
+                "input": "Look up upcoming academic workshops on software testing using keywords 'software testing', topic 'Software engineering', and return up to 8 results.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -36,9 +36,10 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "keywords": "encryption",
-            "topic": "Cybersecurity and privacy"
+        "args": {
+            "keywords": "software testing",
+            "topic": "Software engineering",
+            "limit": 8
         }
     }
 }

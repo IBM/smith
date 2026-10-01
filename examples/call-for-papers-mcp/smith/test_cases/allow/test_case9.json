@@ -6,18 +6,8 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Bob",
                 "user_role": [
-                    "faculty",
-                    "phd_student",
-                    "guest"
-                ],
-                "queries_this_session": 1,
-                "dissertation_area": "Artificial intelligence",
-                "research_area": [
-                    "Artificial intelligence",
-                    "Cybersecurity and privacy",
-                    "Software engineering"
+                    "faculty"
                 ]
             },
             "headers": {
@@ -28,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you get cybersecurity events with topic Cybersecurity and privacy and keywords network security",
+                "input": "Can you look up 5 conferences related to neural networks for me?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -38,9 +28,10 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "keywords": "network security",
-            "topic": "Cybersecurity and privacy"
+        "args": {
+            "keywords": "neural networks",
+            "topic": "Artificial intelligence",
+            "limit": 5
         }
     }
 }

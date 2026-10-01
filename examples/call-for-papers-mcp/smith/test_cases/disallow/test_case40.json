@@ -5,20 +5,7 @@
         "name": "get_events",
         "extensions": {
             "subject": {
-                "claims": {},
-                "user_name": "Bob",
-                "user_role": [
-                    "faculty",
-                    "phd_student",
-                    "guest"
-                ],
-                "queries_this_session": 1,
-                "dissertation_area": "Artificial intelligence",
-                "research_area": [
-                    "Artificial intelligence",
-                    "Cybersecurity and privacy",
-                    "Software engineering"
-                ]
+                "claims": {}
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -28,7 +15,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Find academic conferences with keywords 'machine learning education' in the topic of Artificial intelligence with limit 15",
+                "input": "Search for conferences with keywords 'finance' under topic 'Artificial intelligence', limit 10.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -38,10 +25,10 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "keywords": "machine learning education",
+        "args": {
+            "keywords": "finance",
             "topic": "Artificial intelligence",
-            "limit": 15
+            "limit": 10
         }
     }
 }

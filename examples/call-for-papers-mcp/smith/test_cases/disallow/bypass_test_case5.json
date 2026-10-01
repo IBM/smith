@@ -11,7 +11,7 @@
                     "faculty"
                 ],
                 "research_area": [
-                    "Software engineering"
+                    "Artificial intelligence"
                 ]
             },
             "headers": {
@@ -22,7 +22,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Find Software engineering conferences with keywords 'microservices' and limit 3",
+                "input": "Search for conferences on artificial intelligence and robotics.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,10 +32,10 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "keywords": "microservices",
-            "topic": "Software engineering",
-            "limit": 3
+        "args": {
+            "keywords": "artificial intelligence robotics",
+            "topic": "Artificial intelligence",
+            "limit": 10
         }
     }
 }

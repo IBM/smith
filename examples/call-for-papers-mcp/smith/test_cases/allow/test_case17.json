@@ -6,14 +6,9 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Bob",
                 "user_role": [
-                    "faculty",
-                    "phd_student",
-                    "guest"
+                    "faculty"
                 ],
-                "queries_this_session": 1,
-                "dissertation_area": "Artificial intelligence",
                 "research_area": [
                     "Artificial intelligence",
                     "Cybersecurity and privacy",
@@ -28,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Search for machine learning conferences with keywords 'deep learning' in Artificial intelligence topic, limit results to 5",
+                "input": "Please search for conferences with keywords 'machine learning' and topic 'Artificial intelligence', limit 5.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -38,8 +33,8 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "keywords": "deep learning",
+        "args": {
+            "keywords": "machine learning",
             "topic": "Artificial intelligence",
             "limit": 5
         }

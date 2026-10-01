@@ -5,20 +5,7 @@
         "name": "get_events",
         "extensions": {
             "subject": {
-                "claims": {},
-                "user_name": "Bob",
-                "user_role": [
-                    "faculty",
-                    "phd_student",
-                    "guest"
-                ],
-                "queries_this_session": 1,
-                "dissertation_area": "Artificial intelligence",
-                "research_area": [
-                    "Artificial intelligence",
-                    "Cybersecurity and privacy",
-                    "Software engineering"
-                ]
+                "claims": {}
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -28,7 +15,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need to find conferences with keywords 'marketing' and topic 'Artificial intelligence' with a limit of 6.",
+                "input": "I'd like to get events related to 'Renewable Energy and sustainability' with topic 'Cybersecurity and privacy', limit 5.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -38,10 +25,10 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "keywords": "marketing",
-            "topic": "Artificial intelligence",
-            "limit": 6
+        "args": {
+            "keywords": "Renewable Energy and sustainability",
+            "topic": "Cybersecurity and privacy",
+            "limit": 5
         }
     }
 }

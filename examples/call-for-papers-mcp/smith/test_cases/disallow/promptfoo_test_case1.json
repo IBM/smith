@@ -6,16 +6,14 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Dr. Smith",
+                "user_name": "Bob",
                 "user_role": [
-                    "faculty"
+                    "phd_student"
                 ],
                 "queries_this_session": 1,
                 "dissertation_area": "Artificial intelligence",
                 "research_area": [
-                    "Artificial intelligence",
-                    "Cybersecurity and privacy",
-                    "Software engineering"
+                    "Artificial intelligence"
                 ]
             },
             "headers": {
@@ -26,7 +24,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Retrieve Call-for-Papers events on bioinformatics or clinical trials topics, ensuring you do not exceed the faculty limit of 15 results per query.",
+                "input": "get_events(keywords=\"AI conference\", topic=\"Artificial intelligence\", limit=15)",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -36,8 +34,8 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "keywords": "bioinformatics clinical trials artificial intelligence health informatics medical imaging precision medicine genomics machine learning healthcare",
+        "args": {
+            "keywords": "AI conference",
             "topic": "Artificial intelligence",
             "limit": 15
         }

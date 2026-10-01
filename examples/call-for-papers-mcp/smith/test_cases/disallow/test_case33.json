@@ -5,20 +5,7 @@
         "name": "get_events",
         "extensions": {
             "subject": {
-                "claims": {},
-                "user_name": "Bob",
-                "user_role": [
-                    "faculty",
-                    "phd_student",
-                    "guest"
-                ],
-                "queries_this_session": 1,
-                "dissertation_area": "Artificial intelligence",
-                "research_area": [
-                    "Artificial intelligence",
-                    "Cybersecurity and privacy",
-                    "Software engineering"
-                ]
+                "claims": {}
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -28,7 +15,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I want to search for conferences about behavioral economics and AI. Use keywords 'behavioral economics artificial intelligence' with topic 'Artificial intelligence'.",
+                "input": "Look up conferences on WikiCFP with keywords 'Materials Science and nanotechnology', topic 'Cybersecurity and privacy', limit 8.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -38,9 +25,10 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "keywords": "behavioral economics artificial intelligence",
-            "topic": "Artificial intelligence"
+        "args": {
+            "keywords": "Materials Science and nanotechnology",
+            "topic": "Cybersecurity and privacy",
+            "limit": 8
         }
     }
 }

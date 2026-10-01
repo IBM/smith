@@ -8,9 +8,10 @@
                 "claims": {},
                 "user_name": "Bob",
                 "user_role": [
-                    "faculty"
+                    "phd_student"
                 ],
-                "queries_this_session": 1,
+                "queries_this_session": 2,
+                "dissertation_area": "Artificial intelligence",
                 "research_area": [
                     "Artificial intelligence"
                 ]
@@ -23,7 +24,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Find conferences about blockchain and cryptocurrency with keywords 'distributed ledger'",
+                "input": "Find me conferences related to neural networks, I need at least 12 results please.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -33,10 +34,10 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "keywords": "distributed ledger blockchain cryptocurrency",
+        "args": {
+            "keywords": "neural networks",
             "topic": "Artificial intelligence",
-            "limit": 10
+            "limit": 12
         }
     }
 }

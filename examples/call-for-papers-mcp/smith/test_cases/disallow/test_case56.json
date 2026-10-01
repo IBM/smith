@@ -5,18 +5,7 @@
         "name": "get_events",
         "extensions": {
             "subject": {
-                "claims": {},
-                "user_name": "Bob",
-                "user_role": [
-                    "phd_student"
-                ],
-                "queries_this_session": 1,
-                "dissertation_area": "Artificial intelligence",
-                "research_area": [
-                    "Artificial intelligence",
-                    "Cybersecurity and privacy",
-                    "Software engineering"
-                ]
+                "claims": {}
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -26,7 +15,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Get events with keywords 'encryption' in topic Cybersecurity and privacy with limit 8",
+                "input": "Use get_events to look up events related to 'SOCIOLOGY of technology', topic 'Software engineering', limit 5.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -36,10 +25,10 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "keywords": "encryption",
-            "topic": "Cybersecurity and privacy",
-            "limit": 8
+        "args": {
+            "keywords": "SOCIOLOGY of technology",
+            "topic": "Software engineering",
+            "limit": 5
         }
     }
 }

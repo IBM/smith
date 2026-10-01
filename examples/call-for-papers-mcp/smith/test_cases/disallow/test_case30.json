@@ -6,18 +6,12 @@
         "extensions": {
             "subject": {
                 "claims": {},
+                "action_list": [
+                    "get_events"
+                ],
                 "user_name": "Bob",
                 "user_role": [
-                    "faculty",
-                    "phd_student",
                     "guest"
-                ],
-                "queries_this_session": 1,
-                "dissertation_area": "Artificial intelligence",
-                "research_area": [
-                    "Artificial intelligence",
-                    "Cybersecurity and privacy",
-                    "Software engineering"
                 ]
             },
             "headers": {
@@ -28,7 +22,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need to find academic conferences about renewable energy and sustainability. Please search with keywords 'renewable energy' and topic 'Artificial intelligence' with limit 5.",
+                "input": "Can you retrieve conferences on 'Quantum Physics and neural networks' under the topic 'Artificial intelligence'?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -38,10 +32,9 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "keywords": "renewable energy",
-            "topic": "Artificial intelligence",
-            "limit": 5
+        "args": {
+            "keywords": "Quantum Physics and neural networks",
+            "topic": "Artificial intelligence"
         }
     }
 }

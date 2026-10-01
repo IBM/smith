@@ -6,13 +6,9 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Bob",
                 "user_role": [
-                    "faculty",
-                    "phd_student",
-                    "guest"
+                    "phd_student"
                 ],
-                "queries_this_session": 1,
                 "dissertation_area": "Artificial intelligence",
                 "research_area": [
                     "Artificial intelligence",
@@ -28,7 +24,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Find software architecture events in Software engineering topic with keywords 'microservices', show 10 results",
+                "input": "Search for conferences with keywords 'reinforcement learning' and topic 'Artificial intelligence', limit 10.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -38,9 +34,9 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "keywords": "software architecture microservices design patterns scalable systems distributed computing cloud-native applications service-based architectures enterprise integration system design best practices",
-            "topic": "Software engineering",
+        "args": {
+            "keywords": "reinforcement learning",
+            "topic": "Artificial intelligence",
             "limit": 10
         }
     }

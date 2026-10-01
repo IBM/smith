@@ -6,10 +6,10 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Bob",
                 "user_role": [
                     "phd_student"
                 ],
+                "user_name": "Bob",
                 "queries_this_session": 1,
                 "dissertation_area": "Artificial intelligence",
                 "research_area": [
@@ -26,7 +26,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you help me find conferences about deep learning with topic Artificial intelligence and keywords deep learning",
+                "input": "I'd like to find conferences about machine learning. Please search with keywords 'machine learning' and topic 'Artificial intelligence'.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -36,8 +36,8 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "keywords": "deep learning",
+        "args": {
+            "keywords": "machine learning",
             "topic": "Artificial intelligence"
         }
     }

@@ -6,10 +6,10 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Bob",
                 "user_role": [
                     "guest"
                 ],
+                "user_name": "Bob",
                 "queries_this_session": 1,
                 "dissertation_area": "Artificial intelligence",
                 "research_area": [
@@ -26,7 +26,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please find software engineering conferences using topic Software engineering and keywords programming",
+                "input": "Please find me events about cybersecurity using keywords 'cybersecurity', topic 'Cybersecurity and privacy', limit 10.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -36,9 +36,10 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "keywords": "programming",
-            "topic": "Software engineering"
+        "args": {
+            "keywords": "cybersecurity",
+            "topic": "Cybersecurity and privacy",
+            "limit": 10
         }
     }
 }

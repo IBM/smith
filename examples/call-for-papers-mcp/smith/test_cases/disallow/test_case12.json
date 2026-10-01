@@ -5,20 +5,7 @@
         "name": "get_events",
         "extensions": {
             "subject": {
-                "claims": {},
-                "user_name": "Bob",
-                "user_role": [
-                    "faculty",
-                    "phd_student",
-                    "guest"
-                ],
-                "queries_this_session": 1,
-                "dissertation_area": "Artificial intelligence",
-                "research_area": [
-                    "Artificial intelligence",
-                    "Cybersecurity and privacy",
-                    "Software engineering"
-                ]
+                "claims": {}
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -28,7 +15,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Get conferences about algorithms in Software engineering topic with keywords 'optimization', limit to 20 events",
+                "input": "I want 100 results for conferences on artificial intelligence. Please fetch them all.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -38,10 +25,10 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "keywords": "algorithm optimization",
-            "topic": "Software engineering",
-            "limit": 20
+        "args": {
+            "keywords": "artificial intelligence",
+            "topic": "Artificial intelligence",
+            "limit": 100
         }
     }
 }

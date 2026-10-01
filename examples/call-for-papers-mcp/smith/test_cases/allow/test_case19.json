@@ -6,14 +6,9 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Bob",
                 "user_role": [
-                    "faculty",
-                    "phd_student",
-                    "guest"
+                    "faculty"
                 ],
-                "queries_this_session": 1,
-                "dissertation_area": "Artificial intelligence",
                 "research_area": [
                     "Artificial intelligence",
                     "Cybersecurity and privacy",
@@ -28,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Find AI conferences with keywords 'computer vision' in Artificial intelligence topic, limit to 3 events",
+                "input": "Can you look up conferences with keywords 'agile development' and topic set to 'Software engineering', returning up to 8 results?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -38,10 +33,10 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "keywords": "computer vision",
-            "topic": "Artificial intelligence",
-            "limit": 3
+        "args": {
+            "keywords": "agile development",
+            "topic": "Software engineering",
+            "limit": 8
         }
     }
 }

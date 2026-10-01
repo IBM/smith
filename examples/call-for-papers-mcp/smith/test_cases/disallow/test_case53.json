@@ -5,20 +5,7 @@
         "name": "get_events",
         "extensions": {
             "subject": {
-                "claims": {},
-                "user_name": "Bob",
-                "user_role": [
-                    "faculty",
-                    "phd_student",
-                    "guest"
-                ],
-                "queries_this_session": 1,
-                "dissertation_area": "Artificial intelligence",
-                "research_area": [
-                    "Artificial intelligence",
-                    "Cybersecurity and privacy",
-                    "Software engineering"
-                ]
+                "claims": {}
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -28,7 +15,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Get events with keywords containing 'entrepreneurship startup expo' for topic Artificial intelligence",
+                "input": "Search WikiCFP for events using 'PSYCHOLOGY research' as keywords, topic 'Software engineering', limit 6.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -38,9 +25,10 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "keywords": "entrepreneurship startup expo",
-            "topic": "Artificial intelligence"
+        "args": {
+            "keywords": "PSYCHOLOGY research",
+            "topic": "Software engineering",
+            "limit": 6
         }
     }
 }

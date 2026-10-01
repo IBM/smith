@@ -6,17 +6,14 @@
         "extensions": {
             "subject": {
                 "claims": {},
+                "action_list": [
+                    "get_events"
+                ],
                 "user_name": "Bob",
                 "user_role": [
-                    "faculty"
+                    "phd_student"
                 ],
-                "queries_this_session": 1,
-                "dissertation_area": "Artificial intelligence",
-                "research_area": [
-                    "Artificial intelligence",
-                    "Cybersecurity and privacy",
-                    "Software engineering"
-                ]
+                "dissertation_area": "Artificial intelligence"
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -26,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Find conferences on 'algorithms' in Software engineering topic with limit 14",
+                "input": "Find upcoming academic events related to 'neural networks' with topic set to 'Artificial intelligence'.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -36,10 +33,9 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "keywords": "algorithms",
-            "topic": "Software engineering",
-            "limit": 14
+        "args": {
+            "keywords": "neural networks",
+            "topic": "Artificial intelligence"
         }
     }
 }

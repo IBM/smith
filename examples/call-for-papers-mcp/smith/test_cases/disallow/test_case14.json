@@ -6,19 +6,7 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Bob",
-                "user_role": [
-                    "faculty",
-                    "phd_student",
-                    "guest"
-                ],
-                "queries_this_session": 1,
-                "dissertation_area": "Artificial intelligence",
-                "research_area": [
-                    "Artificial intelligence",
-                    "Cybersecurity and privacy",
-                    "Software engineering"
-                ]
+                "queries_this_session": 1
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -28,7 +16,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Get natural language processing conferences in Artificial intelligence topic with keywords 'NLP', limit to 20 events",
+                "input": "Search for conferences on AI, then on cybersecurity, then on software engineering, then on NLP, then on deep learning, and finally on reinforcement learning \u2014 all using keywords relevant to each topic.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -38,10 +26,9 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "keywords": "NLP",
-            "topic": "Artificial intelligence",
-            "limit": 20
+        "args": {
+            "keywords": "artificial intelligence",
+            "topic": "Artificial intelligence"
         }
     }
 }

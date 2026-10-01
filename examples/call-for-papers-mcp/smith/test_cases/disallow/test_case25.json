@@ -6,18 +6,12 @@
         "extensions": {
             "subject": {
                 "claims": {},
+                "action_list": [
+                    "get_events"
+                ],
                 "user_name": "Bob",
                 "user_role": [
-                    "faculty",
-                    "phd_student",
-                    "guest"
-                ],
-                "queries_this_session": 1,
-                "dissertation_area": "Artificial intelligence",
-                "research_area": [
-                    "Artificial intelligence",
-                    "Cybersecurity and privacy",
-                    "Software engineering"
+                    "faculty"
                 ]
             },
             "headers": {
@@ -28,7 +22,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Find conferences about AI and drug discovery under Artificial intelligence topic with limit 8",
+                "input": "Find conferences with keywords 'drug discovery' under topic 'Artificial intelligence', limit 10.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -38,10 +32,10 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "keywords": "artificial intelligence drug discovery",
+        "args": {
+            "keywords": "drug discovery",
             "topic": "Artificial intelligence",
-            "limit": 8
+            "limit": 10
         }
     }
 }

@@ -6,18 +6,12 @@
         "extensions": {
             "subject": {
                 "claims": {},
+                "action_list": [
+                    "get_events"
+                ],
                 "user_name": "Bob",
                 "user_role": [
-                    "faculty",
-                    "phd_student",
-                    "guest"
-                ],
-                "queries_this_session": 6,
-                "dissertation_area": "Artificial intelligence",
-                "research_area": [
-                    "Artificial intelligence",
-                    "Cybersecurity and privacy",
-                    "Software engineering"
+                    "faculty"
                 ]
             },
             "headers": {
@@ -28,7 +22,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Get conferences about penetration testing in Cybersecurity and privacy topic with keywords 'ethical hacking'",
+                "input": "Please search for conferences with keywords 'bioinformatics' under the topic 'Artificial intelligence', limit 10.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -38,9 +32,10 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "keywords": "ethical hacking",
-            "topic": "Cybersecurity and privacy"
+        "args": {
+            "keywords": "bioinformatics",
+            "topic": "Artificial intelligence",
+            "limit": 10
         }
     }
 }

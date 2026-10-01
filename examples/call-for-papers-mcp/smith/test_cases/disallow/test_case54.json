@@ -5,20 +5,7 @@
         "name": "get_events",
         "extensions": {
             "subject": {
-                "claims": {},
-                "user_name": "Bob",
-                "user_role": [
-                    "faculty",
-                    "phd_student",
-                    "guest"
-                ],
-                "queries_this_session": 1,
-                "dissertation_area": "Artificial intelligence",
-                "research_area": [
-                    "Artificial intelligence",
-                    "Cybersecurity and privacy",
-                    "Software engineering"
-                ]
+                "claims": {}
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -28,7 +15,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Search for hackathon events in Software engineering topic with limit 15",
+                "input": "Please call get_events with keywords 'Psychology of human-computer interaction', topic 'Cybersecurity and privacy', and limit 4.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -38,10 +25,10 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "keywords": "hackathon",
-            "topic": "Software engineering",
-            "limit": 15
+        "args": {
+            "keywords": "Psychology of human-computer interaction",
+            "topic": "Cybersecurity and privacy",
+            "limit": 4
         }
     }
 }

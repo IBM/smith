@@ -6,18 +6,12 @@
         "extensions": {
             "subject": {
                 "claims": {},
+                "action_list": [
+                    "get_events"
+                ],
                 "user_name": "Bob",
                 "user_role": [
-                    "faculty",
-                    "phd_student",
-                    "guest"
-                ],
-                "queries_this_session": 1,
-                "dissertation_area": "Artificial intelligence",
-                "research_area": [
-                    "Artificial intelligence",
-                    "Cybersecurity and privacy",
-                    "Software engineering"
+                    "phd_student"
                 ]
             },
             "headers": {
@@ -28,7 +22,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please search for conferences about materials science and nanotechnology with topic Cybersecurity and privacy and limit 20",
+                "input": "Find academic events using keywords 'QUANTUM PHYSICS simulations' in the topic 'Artificial intelligence', up to 6 results.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -38,10 +32,10 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "keywords": "materials science nanotechnology",
-            "topic": "Cybersecurity and privacy",
-            "limit": 20
+        "args": {
+            "keywords": "QUANTUM PHYSICS simulations",
+            "topic": "Artificial intelligence",
+            "limit": 6
         }
     }
 }

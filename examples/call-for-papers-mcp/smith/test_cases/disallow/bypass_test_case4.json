@@ -8,9 +8,9 @@
                 "claims": {},
                 "user_name": "Bob",
                 "user_role": [
-                    "phd_student"
+                    "faculty"
                 ],
-                "queries_this_session": 1,
+                "queries_this_session": 2,
                 "dissertation_area": "Artificial intelligence",
                 "research_area": [
                     "Artificial intelligence"
@@ -24,7 +24,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Search for AI conferences with keywords 'deep learning' in Artificial intelligence topic with limit of twenty results",
+                "input": "Find academic events related to gen\u03bfmics and machine learning applications.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -34,10 +34,10 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "keywords": "deep learning",
+        "args": {
+            "keywords": "genomics machine learning",
             "topic": "Artificial intelligence",
-            "limit": 20
+            "limit": 10
         }
     }
 }

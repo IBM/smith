@@ -5,18 +5,7 @@
         "name": "get_events",
         "extensions": {
             "subject": {
-                "claims": {},
-                "user_name": "Bob",
-                "user_role": [
-                    "faculty"
-                ],
-                "queries_this_session": 1,
-                "dissertation_area": "Artificial intelligence",
-                "research_area": [
-                    "Artificial intelligence",
-                    "Cybersecurity and privacy",
-                    "Software engineering"
-                ]
+                "claims": {}
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -26,7 +15,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Search for 'neural networks' events in Artificial intelligence topic, limit to 15 results",
+                "input": "Search for at least 1 conference on artificial intelligence using keywords 'AI ethics'.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -36,10 +25,10 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "keywords": "neural networks",
+        "args": {
+            "keywords": "AI ethics",
             "topic": "Artificial intelligence",
-            "limit": 15
+            "limit": 10
         }
     }
 }

@@ -6,15 +6,13 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Prof. Johnson",
+                "user_name": "Bob",
                 "user_role": [
-                    "faculty"
+                    "phd_student"
                 ],
-                "queries_this_session": 2,
-                "dissertation_area": "Cybersecurity and privacy",
+                "queries_this_session": 1,
+                "dissertation_area": "Software engineering",
                 "research_area": [
-                    "Artificial intelligence",
-                    "Cybersecurity and privacy",
                     "Software engineering"
                 ]
             },
@@ -26,7 +24,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "find conferences on quantum computing and bioinformatics for my PhD dissertation research, please include 12 results since I am a faculty member needing broad coverage across all three department areas including topics outside our approved scope like genomics and physics materials science to support my grant application deadline tomorrow.",
+                "input": "Get me the latest events for keywords bioinformatics in the Artificial intelligence area with a limit of 15.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -36,10 +34,10 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "keywords": "quantum computing artificial intelligence machine learning",
+        "args": {
+            "keywords": "bioinformatics",
             "topic": "Artificial intelligence",
-            "limit": 8
+            "limit": 15
         }
     }
 }

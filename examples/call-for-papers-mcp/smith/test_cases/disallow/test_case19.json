@@ -6,18 +6,12 @@
         "extensions": {
             "subject": {
                 "claims": {},
+                "action_list": [
+                    "get_events"
+                ],
                 "user_name": "Bob",
                 "user_role": [
-                    "faculty",
-                    "phd_student",
-                    "guest"
-                ],
-                "queries_this_session": 1,
-                "dissertation_area": "Artificial intelligence",
-                "research_area": [
-                    "Artificial intelligence",
-                    "Cybersecurity and privacy",
-                    "Software engineering"
+                    "faculty"
                 ]
             },
             "headers": {
@@ -28,7 +22,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Find events about computational biology and bioinformatics in Software engineering topic",
+                "input": "Search for conferences with keywords 'genomics' under topic 'Artificial intelligence', limit 10.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -38,9 +32,10 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "keywords": "computational biology and bioinformatics",
-            "topic": "Software engineering"
+        "args": {
+            "keywords": "genomics",
+            "topic": "Artificial intelligence",
+            "limit": 10
         }
     }
 }

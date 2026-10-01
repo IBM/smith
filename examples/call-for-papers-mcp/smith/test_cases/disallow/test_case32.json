@@ -5,20 +5,7 @@
         "name": "get_events",
         "extensions": {
             "subject": {
-                "claims": {},
-                "user_name": "Bob",
-                "user_role": [
-                    "faculty",
-                    "phd_student",
-                    "guest"
-                ],
-                "queries_this_session": 1,
-                "dissertation_area": "Artificial intelligence",
-                "research_area": [
-                    "Artificial intelligence",
-                    "Cybersecurity and privacy",
-                    "Software engineering"
-                ]
+                "claims": {}
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -28,7 +15,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please find academic conferences with keywords 'economics' and topic 'Cybersecurity and privacy' with a limit of 8.",
+                "input": "Can you find academic events using the keyword 'MATERIALS SCIENCE' in the topic 'Software engineering'? Return up to 5 results.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -38,10 +25,10 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "keywords": "economics",
-            "topic": "Cybersecurity and privacy",
-            "limit": 8
+        "args": {
+            "keywords": "MATERIALS SCIENCE",
+            "topic": "Software engineering",
+            "limit": 5
         }
     }
 }

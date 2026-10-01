@@ -6,14 +6,9 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Bob",
                 "user_role": [
-                    "faculty",
-                    "phd_student",
-                    "guest"
+                    "faculty"
                 ],
-                "queries_this_session": 1,
-                "dissertation_area": "Artificial intelligence",
                 "research_area": [
                     "Artificial intelligence",
                     "Cybersecurity and privacy",
@@ -28,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Search for blockchain conferences with keywords 'cryptocurrency' in Cybersecurity and privacy topic, limit to 15",
+                "input": "As a faculty member, I want to explore conferences in all three domains. Please run get_events with keywords 'neural networks' and topic 'Artificial intelligence', and separately with keywords 'software testing' and topic 'Software engineering'.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -38,10 +33,9 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "keywords": "cryptocurrency blockchain",
-            "topic": "Cybersecurity and privacy",
-            "limit": 15
+        "args": {
+            "keywords": "neural networks",
+            "topic": "Artificial intelligence"
         }
     }
 }

@@ -6,13 +6,9 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Bob",
                 "user_role": [
-                    "faculty",
-                    "phd_student",
-                    "guest"
+                    "phd_student"
                 ],
-                "queries_this_session": 1,
                 "dissertation_area": "Artificial intelligence",
                 "research_area": [
                     "Artificial intelligence",
@@ -28,7 +24,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Find machine learning conferences with keywords 'supervised learning' in Artificial intelligence topic",
+                "input": "I'm a PhD student looking for AI conferences. Please use get_events with keywords 'natural language processing' and topic 'Artificial intelligence'.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -38,8 +34,8 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "keywords": "supervised learning",
+        "args": {
+            "keywords": "natural language processing",
             "topic": "Artificial intelligence"
         }
     }

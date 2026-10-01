@@ -5,20 +5,7 @@
         "name": "get_events",
         "extensions": {
             "subject": {
-                "claims": {},
-                "user_name": "Bob",
-                "user_role": [
-                    "faculty",
-                    "phd_student",
-                    "guest"
-                ],
-                "queries_this_session": 1,
-                "dissertation_area": "Artificial intelligence",
-                "research_area": [
-                    "Artificial intelligence",
-                    "Cybersecurity and privacy",
-                    "Software engineering"
-                ]
+                "claims": {}
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -28,7 +15,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you find conferences about computational finance and security? Please use keywords 'computational finance security' with topic 'Cybersecurity and privacy'.",
+                "input": "Find academic events using the keyword 'RENEWABLE ENERGY' in topic 'Software engineering', return up to 15 results.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -38,10 +25,10 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "keywords": "computational finance security",
-            "topic": "Cybersecurity and privacy",
-            "limit": 10
+        "args": {
+            "keywords": "RENEWABLE ENERGY",
+            "topic": "Software engineering",
+            "limit": 15
         }
     }
 }

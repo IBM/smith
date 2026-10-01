@@ -6,16 +6,8 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Bob",
                 "user_role": [
                     "phd_student"
-                ],
-                "queries_this_session": 1,
-                "dissertation_area": "Artificial intelligence",
-                "research_area": [
-                    "Artificial intelligence",
-                    "Cybersecurity and privacy",
-                    "Software engineering"
                 ]
             },
             "headers": {
@@ -26,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Get conferences about 'robotics' in Artificial intelligence topic with limit 11",
+                "input": "Please retrieve 15 conferences about machine learning for my dissertation research.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -36,10 +28,10 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "keywords": "robotics",
+        "args": {
+            "keywords": "machine learning",
             "topic": "Artificial intelligence",
-            "limit": 11
+            "limit": 15
         }
     }
 }

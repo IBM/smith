@@ -6,10 +6,10 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Bob",
                 "user_role": [
                     "faculty"
                 ],
+                "user_name": "Bob",
                 "queries_this_session": 1,
                 "dissertation_area": "Artificial intelligence",
                 "research_area": [
@@ -26,7 +26,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need to find conferences on neural networks, please use topic Software engineering and keywords neural networks",
+                "input": "Please find me academic events related to network security. Keywords: 'network security', topic: 'Cybersecurity and privacy', limit 5.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -36,9 +36,10 @@
                 "trust_domain": "internal"
             }
         },
-        "arguments": {
-            "keywords": "neural networks",
-            "topic": "Software engineering"
+        "args": {
+            "keywords": "network security",
+            "topic": "Cybersecurity and privacy",
+            "limit": 5
         }
     }
 }
