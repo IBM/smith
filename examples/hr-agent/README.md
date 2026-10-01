@@ -1,129 +1,18 @@
-# HR Agent — Smith Example
+# HR Agent — Smith Example - How to start
 
-For reproducibility: The per-tool artifacts this
-produces live under `smith/smith_outputs/{get_compensation,search_repo,send_email}/`.
-
----
-
-## What has been changed in this agent
-
-The agent (`agent.py`) speaks two protocols from a single codebase now:
-
-- **A2A (original, no change)** (`python agent.py` / `main()`) 
-- **A Smith HTTP shim (Added)** (`uvicorn agent:app`) — the two endpoints every Smith
-  example exposes:
-  - `POST /chat` — runs a full agent turn (LLM + tool execution), used by promptfoo.
-  - `POST /extract_tool_call` — returns the model's intended `{tool_name, arguments}`
-    **without executing it** (used by `smith --flag test_case_translation`).
-
-### New access-control guidance
-
-We translated the test cases into seven
-rules across several tools (`whole_guidance.txt`):
-
-```
-1. Only HR employee can access compensation records (e.g., salary)
-2. Only employees with `view_ssn` permission can view SSNs in compensation records. SSNs must be redacted if the HR does not have view_ssn.
-3. Only employees in engineer or security team can search repositories. 
-4. Engineers can only read internal repos. Security team member can search both internal and external repo.
-5. Employees cannot send SSNs through email. Email containing SSNs must be blocked
-```
-
-`smith/guidance.txt` (the file `.env`'s `GUIDANCE_FILE` currently points at)
-holds a slice of selected guidances, this is the output of the
-Guidance Classifier described below.
-
----
-
-## Prerequisites
-
-**1. Installation of Skills**
+## Prerequisites (run from the Smith skill directory):
 
 ```bash
-cd ./bob/skills/
-git clone <smith's most recent version>
+bash scripts/clean.sh # optional: remove generated results and clear assets/policy.rego
+cd examples/hr-agent
 ```
 
-Place the entire `smith` folder under the `skills/` or `plugin/` directory of your code agent (Claude Code, Bob, Aider, etc.). The coding agent automatically recognizes Smith as an open skill.
-
-**2. Python environment**
-
-```bash
-cd ./smith
-python -m venv .venv
-source .venv/bin/activate
-```
-
-**3. Ares environment (optional in this example)**
-```bash
-cd src/smith/test_generation/ares
-python -m venv .venv
-source .venv/bin/activate
-curl https://raw.githubusercontent.com/IBM/ares/refs/heads/main/install.sh | bash
-ares install-plugin ares-autodan
-ares install-plugin ares-human-jailbreak
-ares install-plugin ares-garak
-deactivate
-# Setup ares configuration
-cp ../ares_config/qwen-owasp-llm-01.yaml ./example_configs
-cp ../ares_config/human_jailbreaks.json ./assets
-export ARES_HOME=/absolute/path/to/smith/src/smith/test_generation/ares
-# Switch back to the original Python environment
-cd ../../../../
-source .venv/bin/activate
-```
-**4. Promptfoo**.
-
-```bash
-npm install -g promptfoo
-# To disable promptfoo remote connection:
-export PROMPTFOO_DISABLE_TELEMETRY=1
-export PROMPTFOO_DISABLE_REDTEAM_REMOTE_GENERATION=true
-export PROMPTFOO_DISABLE_SHARING=true
-```
-
----
-
-## Install Smith CLI
-
-Smith uses [uv](https://docs.astral.sh/uv/) for package management. From the repo root:
-
-```bash
-make install        # creates a uv venv and installs Smith (editable) + dev tools
-```
-
-Or install directly (dependencies are declared in `pyproject.toml`):
-
-```bash
-uv pip install -e .   # or: pip install -e .
-```
-
-This installs the `smith` CLI command.
-
-## Configure `.env` for the HR agent
-
-Copy the template and point Smith at this example:
-
-```bash
-cp .env_template .env
-```
-
-Set these values in `.env` (paths are relative to `BASE_URL`, which is the
-absolute path to the skill folder **with a trailing slash**):
-
+Make sure the `.env` in the Smith skill directory points to this example:
 ```dotenv
-# --- where the skill lives ---
-BASE_URL=/absolute/path/to/.bob/skills/smith/
-
-# --- LLM used by Smith's own pipelines ---
-OPENAI_API_KEY=<your key>
-OPENAI_BASE_URL=<your LLM endpoint>
-MODEL_SONNET=<model used across pipelines>
-
 # --- the target agent (the HR agent's Smith shim) ---
 AGENT_URL=http://localhost:9000
 
-# --- point Smith at THIS example ---
+# --- point Smith at this example ---
 TARGET_AGENT_PATH=examples/hr-agent/
 GUIDANCE_FILE=examples/hr-agent/smith/guidance.txt
 SYSTEM_VAR_FILE=examples/hr-agent/smith/system_vars.json
@@ -131,22 +20,14 @@ PROMPTFOO_CONFIG_FILE=examples/hr-agent/smith/promptfooconfig.yaml
 PROMPTFOO_OUTPUT_FILE=examples/hr-agent/smith/redteam.yaml
 
 # --- MCP transport ---
-# hr-agent exposes its tool definitions directly at GET /tool_definitions, so the
-# http transport just fetches that endpoint (no MCP server needed).
 MCP_TRANSPORT=http
 MCP_URL=http://localhost:9000/tool_definitions
-```
 
----
+# ---Inference model ---
+INFERENCE_MODEL=aws/claude-haiku-4-5
+INFERENCE_BASE_URL=${OPENAI_BASE_URL}
+INFERENCE_API_KEY=${OPENAI_API_KEY}
 
-## Start the agent and MCP server
-
-Install the agent's dependencies and start Ollama with the model pulled:
-
-```bash
-cd examples/hr-agent
-pip install -r requirements.txt
-ollama pull qwen3.5
 ```
 
 Start the MCP server (separate terminal):
@@ -160,69 +41,108 @@ Start the agent (separate terminal):
 ```bash
 uvicorn agent:app --host 0.0.0.0 --port 9000
 ```
----
 
-## Run Smith (Refer to demo video if there is any problem)
 
-### Select guidances
+## How to Test Smith (End-to-End Workflow)
 
-Launch the UI (serves on **port 8110**):
+
+### Step 0: Select Tools and Guidance
+
+From the Smith skill directory, start the Guidance Classifier:
 
 ```bash
 smith --flag classify_guidance
 ```
 
-Then open `http://127.0.0.1:8110/` — in VS Code, `Cmd+Shift+P → open browser`.
+Open the URL printed by the command (`http://127.0.0.1:8110/`) in a browser
+or VS Code's Simple Browser. Then:
 
-**What you do in the UI:**
+1. Upload `examples/employee/smith/guidance_raw.txt`.
+2. Click 1: Select a tool, such as `get_compensation`.
+3. Click 2: Check the guidance lines of this tool.
+4. Click 3: Click **Combine → guidance** and review the combined text.
+5. Click 4: Click **Save Smith inputs**.
 
-1. **Upload** a guidance document (e.g. `whole_guidance.txt`). The file on disk is never modified.
-2. **Browse lines grouped by tool**, select the lines you want, and **combine** them into the guidance text for the tool(s) you're targeting.
-3. Click **Reset**, to setup smith for selected guidancies.
+Saving overwrites `examples/hr-agent/smith/guidance.txt` and records the selected
+tools in `references/session_config.json`. The uploaded source file is unchanged.
 
-Run the normal Smith workflow (below) against it, then repeat the Classifier for the next
-tool. The results for each tool are what you see saved under
-`smith/smith_outputs/get_compensation/`, `.../search_repo/`, and `.../send_email/`
-(each with its own `guidance.txt`, `tool_definitions.json`, `policy.rego`, and a
-CPEX-translated `policy_cpex.rego`).
+![Guidance Classifier with selected get_compensation guidance](example_hr.png)
 
----
+### Step 1: Generate Policy and Test Cases
 
-### End-to-end Smith workflow
+#### Step 1.1: Generate Policy
 
-#### Optional: Security-Grounded Guidance Analysis
+Ask your coding assistant to use the Smith skill to generate an OPA policy from the guidance file:
 
-Before generating a policy, you can run the standalone security-grounded guidance analysis to produce an OWASP-mapped threat model and enforcement guidance for this MCP server. This four-step workflow produces guidance only; it never generates or modifies Rego or an OPA policy. It follows `SKILL.md`'s "Security-Grounded Guidance Analysis" entry.
+> Prompt: /smith generate an opa policy for the target agent
 
-Ask your coding agent:
+If Smith asks whether to limit the scope to the selected tools, confirm.
 
-> Run the security-grounded guidance analysis for this MCP server.
+#### Step 1.2: Generate Test Cases
 
-The agent asks whether to run **Gated** (pause after each step) or **Autonomous** (Steps A–D back-to-back with one final review), then produces four analysis artifacts under `smith/guidelines-security-analysis/`:
+There are three ways to generate or reuse test cases:
 
-| Step | Output |
-|------|--------|
-| A — Architecture Analysis | `smith/guidelines-security-analysis/architecture.md` |
-| B — Policy Guidance Questionnaire | `smith/guidelines-security-analysis/policy_guidance_questionnaire.md` |
-| C — Threat Model against OWASP Top 10 for Agentic AI Security | `smith/guidelines-security-analysis/threat_model.md` |
-| D — Enforcement Mapping | `smith/guidelines-security-analysis/owasp_policy_guidelines.md` |
+1. After generating the policy, Smith asks whether to generate test cases or reuse existing ones. If generating cases, follow its suggestions to refresh the Promptfoo config, generate cases, and translate them. Test case evaluation is optional.
 
-When Step D finds missing OPA-enforceable rules, it also proposes `smith/guidance_updated.txt`; otherwise that file is not created. After the analysis, you may separately ask the agent to merge the proposal into `smith/guidance.txt`. The agent then asks separately whether to start Policy Creation—merging does not create a policy.
+2. Generate test cases via CLI:
 
-1. Ask smith to generate an opa policy for your target agent. 
-2. Ask smith to generate test cases. 
-3. Follow the instruction from smith, run `smith --flag generate_promptfoo_config` to generate promptfoo config for test case generation.
-4. Ask smith to generate both kinds of test cases. 
-5. (optional) evaluate test case generation quality.
-6. Ask smith to test the policy after you have both test cases and policy.
-7. Cross validate test cases and policy. 
-8. Ask smith to patch, lint, deduplicate policy. 
-9. Ask smith to translate policy into cpex format.
-10. Ask smith to save copies, give smith the target save path.
+   ```bash
+   smith --flag generate_promptfoo_config # optional: generate and review the Promptfoo config
+   smith --flag test_generation --mode fresh # required: generate guidance-targeted cases
+   smith --flag bypass_case_generation    # optional: policy-bypass cases (requires an existing, non-empty policy)
+   smith --flag test_case_evaluation      # optional: visualize test cases without changing results
+   smith --flag test_case_translation     # required: translate cases, skipping those already translated
+   ```
 
-## Deploying the generated policy (CPEX / OPA gateway)
+3. To reuse the saved `get_compensation` cases, copy
+   `examples/hr-agent/smith/smith_outputs/get_compensation/test_cases/` to
+   `references/test_cases/`, then skip generation and translation.
 
-`policy-opa-2.yaml` shows the end goal: the per-tool Rego policies Smith
-generates (`smith_outputs/*/policy.rego`) are deployed as an in-process OPA PDP
-on a policy gateway. Each tool route queries its package —
-`data.compensation.allow`, `data.search_repo.allow`, `data.send_email.allow`. 
+### Step 2: Test the Policy
+
+Run policy testing (ask Smith or via CLI):
+
+- Smith: Follow Smith's suggestions and approve policy testing.
+
+- CLI:
+
+    ```bash
+    smith --flag policy_testing
+    ```
+
+### Step 2.1: Cross-Validation
+
+- **If there are 0 test cases or a 100% failure rate** — the policy may have structural or syntax issues. Ask Smith to cross-validate the policy (it will follow `opa_policy/policy_cross_validation/policy_cross_validation.md`).
+- **If some tests pass and others fail** — some test case labels may be wrong. Ask Smith to cross-validate the test cases before running the refinement loop (it should follow `test_generation/cross_validate.md`). This step can take time, depending on the number of failed test cases.
+
+### Step 3: Improve the Policy
+
+### Step 3.1: Patch the Policy
+
+If no test cases fail, Smith skips this step.
+
+If test cases fail, follow Smith's suggestions to patch the policy:
+
+**Fix failed test cases** — patch the policy to handle cases that should be denied but are currently allowed.
+
+### Step 3.2: Lint the Policy
+
+**Fix formatting issues** — resolve Regal lint warnings and `opa fmt` differences.
+
+### Step 3.3: Remove Duplicate Rules
+
+**Remove duplication** — eliminate redundant rules with overlapping logic.
+
+## Expand the Tool Scope
+
+- Go to the webpage opened in Step 0 and check all lines. 
+
+- Click **Combine → guidance**
+
+- click **Save Smith inputs**. 
+
+Repeat Previous Step 1-3. But at this turn, you can choose update test cases rather than generate from scratch. 
+
+```bash
+smith --flag test_generation --mode update
+```

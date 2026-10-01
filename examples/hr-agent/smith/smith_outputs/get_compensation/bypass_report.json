@@ -1,0 +1,53 @@
+{
+  "vectors": [
+    {
+      "category": "type_confusion",
+      "direction": "guidance_deny_policy_allow",
+      "guidance_rule": "Only employees with `view_ssn` permission can view SSNs in compensation records. SSNs must be redacted if the HR does not have view_ssn.",
+      "rules_involved": [
+        "deny[msg] if { input.name == \"get_compensation\"; args.include_ssn == true; not \"view_ssn\" in subject.permissions }"
+      ],
+      "field": "input.args.include_ssn",
+      "reason": "The SSN guard checks `args.include_ssn == true` with a strict boolean equality; passing the string \"true\" instead of the boolean true bypasses the check, allowing an HR user without view_ssn to receive SSNs.",
+      "exploit_strategy": "Send a get_compensation request with include_ssn set to the string \"true\" (not the boolean true). The equality check `args.include_ssn == true` evaluates to false in Rego because string != boolean, so the deny rule never fires and the SSN is returned to a caller lacking view_ssn.",
+      "severity": "high"
+    },
+    {
+      "category": "omitted_field",
+      "direction": "guidance_deny_policy_allow",
+      "guidance_rule": "Only employees with `view_ssn` permission can view SSNs in compensation records. SSNs must be redacted if the HR does not have view_ssn.",
+      "rules_involved": [
+        "deny[msg] if { input.name == \"get_compensation\"; args.include_ssn == true; not \"view_ssn\" in subject.permissions }"
+      ],
+      "field": "input.args.include_ssn",
+      "reason": "The deny rule only fires when include_ssn is explicitly true; if the field is omitted entirely (undefined), `args.include_ssn == true` is false and the deny rule is skipped, but the tool description says the default is false — however the policy never enforces redaction when the field is absent, so a downstream tool that defaults include_ssn to true would expose SSNs with no policy block.",
+      "exploit_strategy": "Omit include_ssn from the request entirely. The policy never denies the request on SSN grounds, so if the underlying tool interprets a missing field as 'include SSN', the SSN is returned without the permission check ever being evaluated.",
+      "severity": "medium"
+    },
+    {
+      "category": "omitted_field",
+      "direction": "guidance_deny_policy_allow",
+      "guidance_rule": "Only HR employee can access compensation records (e.g., salary)",
+      "rules_involved": [
+        "deny[msg] if { input.name == \"get_compensation\"; not \"hr\" in subject.roles }"
+      ],
+      "field": "input.extensions.subject.roles",
+      "reason": "If subject.roles is undefined or absent, `not \"hr\" in subject.roles` evaluates to true in Rego (iterating over undefined is an empty set), so the deny fires correctly — but if the field is an empty array `[]`, the same logic holds. However, the allow rule has no explicit check for HR role; it only relies on the absence of denies. A missing roles field causes deny to fire, so this direction is actually safe. Noting for completeness — no divergence here.",
+      "exploit_strategy": "N/A",
+      "severity": "low"
+    },
+    {
+      "category": "omitted_field",
+      "direction": "guidance_allow_policy_deny",
+      "guidance_rule": "Only HR employee can access compensation records (e.g., salary)",
+      "rules_involved": [
+        "allow if { not any_deny }",
+        "deny[msg] if { input.name == \"get_compensation\"; not \"hr\" in subject.roles }"
+      ],
+      "field": "input.name",
+      "reason": "The policy has no explicit allow rules for any tool other than the absence-of-deny logic. For tools like get_directory, send_email, search_repos, and display_compensation there are no deny rules either, so they are allowed by default — which is consistent with guidance. However, the policy also has no deny rule guarding display_compensation for non-HR users, which is correct per guidance (band-only, no salary). No divergence here.",
+      "exploit_strategy": "N/A",
+      "severity": "low"
+    }
+  ]
+}

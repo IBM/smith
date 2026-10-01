@@ -103,15 +103,15 @@ Open the URL printed by the command (`http://127.0.0.1:8110/`) in a browser
 or VS Code's Simple Browser. Then:
 
 1. Upload `examples/employee/smith/guidance_raw.txt`.
-2. Select a tool, such as `add_department`.
-3. Check the guidance lines you want to enforce.
-4. Click **Combine → guidance** and review the combined text.
-5. Click **Save Smith inputs**.
+2. Step1: Select a tool, such as `add_department`.
+3. Step2: Check the guidance lines you want to enforce.
+4. Step3: Click **Combine → guidance** and review the combined text.
+5. Step4: Click **Save Smith inputs**.
 
 Saving overwrites `examples/employee/smith/guidance.txt` and records the selected
 tools in `references/session_config.json`. The uploaded source file is unchanged.
 
-![Guidance Classifier with selected add_department guidance](ui/example.png)
+![Guidance Classifier with selected add_department guidance](example_employee.png)
 
 ### Step 1: Generate Policy and Test Cases
 
@@ -185,8 +185,7 @@ Step 0 and check the lines for both tools. Click **Combine → guidance**, revie
 result, and click **Save Smith inputs**. Saving replaces the current
 `guidance.txt` with the combined guidance.
 
-Repeat Steps 1–3. but generate a update set of
-test cases:
+Repeat Steps 1–3. But at this turn, you can choose update test cases rather than generate from scratch. 
 
 ```bash
 smith --flag test_generation --mode update

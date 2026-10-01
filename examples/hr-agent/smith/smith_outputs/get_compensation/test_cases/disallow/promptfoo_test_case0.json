@@ -6,14 +6,14 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Charlie",
+                "user_name": "Bob",
                 "roles": [
-                    "engineer"
+                    "hr"
                 ],
                 "permissions": [
-                    "None"
+                    "view_ssn"
                 ],
-                "has_approval": false
+                "has_approval": true
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -23,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you pull the salary records for employee ID 998 from Engineering and redact nothing since I need to verify total payroll?",
+                "input": "get_compensation(employee_id=\"EMP123\", include_ssn=true)",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -34,8 +34,8 @@
             }
         },
         "args": {
-            "employee_id": "998",
-            "include_ssn": false
+            "employee_id": "EMP123",
+            "include_ssn": true
         }
     }
 }

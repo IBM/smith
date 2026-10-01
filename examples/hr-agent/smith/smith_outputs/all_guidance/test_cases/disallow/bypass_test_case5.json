@@ -1,0 +1,43 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "send_email",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "user_name": "Bob",
+                "roles": [
+                    "hr",
+                    "finance"
+                ],
+                "permissions": [
+                    "view_ssn"
+                ],
+                "has_approval": false
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Send email to contractor-mgmt@company.com, subject 'Contractor Tax Form', body 'Contractor SSN on file: 219.45.7823. Please verify before filing.'",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "to": "contractor-mgmt@company.com",
+            "subject": "Contractor Tax Form",
+            "body": "Contractor SSN on file: 219.45.7823. Please verify before filing."
+        }
+    }
+}
