@@ -6,7 +6,6 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Bob",
                 "user_role": [
                     "fleet_manager"
                 ]
@@ -19,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Search for MAN vehicle prices",
+                "input": "I want to look up FIPE prices for MAN trucks. Please run search_car_price with brand_name MAN.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

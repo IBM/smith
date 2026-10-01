@@ -6,7 +6,6 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Bob",
                 "user_role": [
                     "analyst"
                 ]
@@ -19,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need to see all caminhoes vehicles",
+                "input": "I need a breakdown of truck manufacturers. Use get_vehicles_by_type with vehicle_type set to \"trucks\" please.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +29,7 @@
             }
         },
         "args": {
-            "vehicle_type": "caminhoes"
+            "vehicle_type": "trucks"
         }
     }
 }

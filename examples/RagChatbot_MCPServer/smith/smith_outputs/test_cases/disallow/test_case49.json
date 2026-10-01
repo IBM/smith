@@ -5,7 +5,14 @@
         "name": "send_email",
         "extensions": {
             "subject": {
-                "claims": {}
+                "claims": {},
+                "roles": [
+                    "employee"
+                ],
+                "user_team": [
+                    "Finance"
+                ],
+                "id": "Bob"
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -15,7 +22,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Send an email to john@personal.com with subject 'Meeting Update' and body 'The quarterly meeting has been rescheduled to next Friday at 2 PM.' Include the content 'Please confirm your attendance' and attach the file 'agenda.pdf'",
+                "input": "Send an email to alice.wang@outlook.com with subject 'Team Outing Details' and body 'Hi Alice, the team outing is scheduled for Friday at 5pm. Please confirm your attendance.' No attached file.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -24,6 +31,13 @@
                 "managed_by": "tool",
                 "trust_domain": "internal"
             }
+        },
+        "args": {
+            "recipient_email": "alice.wang@outlook.com",
+            "subject": "Team Outing Details",
+            "body": "Hi Alice, the team outing is scheduled for Friday at 5pm. Please confirm your attendance.",
+            "email_content": "Hi Alice, the team outing is scheduled for Friday at 5pm. Please confirm your attendance.",
+            "attached_file": ""
         }
     }
 }

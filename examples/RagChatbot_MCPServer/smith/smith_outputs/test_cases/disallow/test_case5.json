@@ -7,11 +7,12 @@
             "subject": {
                 "claims": {},
                 "roles": [
-                    "manager"
+                    "employee"
                 ],
-                "teams": [
-                    "Marketing"
-                ]
+                "user_team": [
+                    "Operations"
+                ],
+                "id": "Bob"
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -21,7 +22,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please display salary data for the Legal department using view_team_compensation with department Legal and select_fields set to base_salary",
+                "input": "Please show me the bonus targets for the Operations team. I'd like to see employee_name and bonus_target fields.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,6 +31,13 @@
                 "managed_by": "tool",
                 "trust_domain": "internal"
             }
+        },
+        "args": {
+            "department": "Operations",
+            "select_fields": [
+                "employee_name",
+                "bonus_target"
+            ]
         }
     }
 }

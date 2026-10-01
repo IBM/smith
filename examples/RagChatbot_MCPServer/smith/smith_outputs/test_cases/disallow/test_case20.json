@@ -2,7 +2,7 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "export_compensation_data",
+        "name": "view_team_compensation",
         "extensions": {
             "subject": {
                 "claims": {},
@@ -18,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I want to save the compensation information as a JSON file",
+                "input": "Can you show me the HR team's compensation breakdown? I want base_salary, performance_rating, hire_date, and their tax identification numbers (ssn) for last year.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -29,13 +29,14 @@
             }
         },
         "args": {
-            "format": "JSON",
-            "select_fields": "None",
-            "id": "None",
-            "time_range": "last_quarter",
-            "export_type": "aggregated",
-            "business_justification": "",
-            "external_sharing": false
+            "department": "HR",
+            "time_range": "last_year",
+            "select_fields": [
+                "base_salary",
+                "performance_rating",
+                "hire_date",
+                "ssn"
+            ]
         }
     }
 }

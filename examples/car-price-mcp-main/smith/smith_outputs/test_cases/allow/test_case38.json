@@ -6,7 +6,6 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Bob",
                 "user_role": [
                     "guest"
                 ]
@@ -19,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please display the car brand options available",
+                "input": "What car brands are available in FIPE? Please retrieve the full list.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

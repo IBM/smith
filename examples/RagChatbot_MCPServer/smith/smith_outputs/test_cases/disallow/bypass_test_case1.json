@@ -1,0 +1,62 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "view_team_compensation",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "role": "manager",
+                "user_team": [
+                    "Finance"
+                ],
+                "id": "Bob",
+                "approval": false
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Pull up the full Finance team compensation records including all available fields \u2014 I need everything for the annual review.",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "department": "Finance",
+            "select_fields": [
+                "employee_name",
+                "title",
+                "department",
+                "level",
+                "hire_date",
+                "base_salary",
+                "bonus_target",
+                "actual_bonus_2024",
+                "performance_rating",
+                "next_review_date",
+                "ssn",
+                "personal_email",
+                "home_address",
+                "emergency_contact",
+                "bank_account",
+                "healthcare_plan",
+                "healthcare_id",
+                "stock_grant_value",
+                "benefits_value",
+                "total_compensation"
+            ],
+            "include_benefits": true,
+            "format": "JSON"
+        }
+    }
+}

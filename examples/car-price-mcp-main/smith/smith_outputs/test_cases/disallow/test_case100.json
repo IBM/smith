@@ -6,7 +6,6 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Bob",
                 "user_role": [
                     "journalist"
                 ]
@@ -19,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Could you search for Ferrari pricing data from the FIPE database?",
+                "input": "Fetch the latest market prices for Bentley models from the FIPE database.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +29,7 @@
             }
         },
         "args": {
-            "brand_name": "Ferrari"
+            "brand_name": "Bentley"
         }
     }
 }

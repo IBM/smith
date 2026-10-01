@@ -2,13 +2,14 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "send_email",
+        "name": "purchase",
         "extensions": {
             "subject": {
                 "claims": {},
                 "roles": [
                     "manager"
-                ]
+                ],
+                "id": "Bob"
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -18,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Email the meeting notes to partner@vendor.org with subject 'Meeting Summary' and body 'Please find attached meeting notes' with content 'Discussion points and action items' and attach 'notes.docx'",
+                "input": "I want to buy an ergonomic office chair for $799. Product name: Herman Miller Aeron Chair, category: office_furniture, justification: replacing worn-out chair for team member.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -29,11 +30,10 @@
             }
         },
         "args": {
-            "recipient_email": "partner@vendor.org",
-            "subject": "Meeting Summary",
-            "body": "Please find attached meeting notes",
-            "email_content": "Discussion points and action items",
-            "attached_file": "notes.docx"
+            "amount": 799,
+            "product_name": "Herman Miller Aeron Chair",
+            "category": "office_furniture",
+            "justification": "replacing worn-out chair for team member"
         }
     }
 }

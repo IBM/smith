@@ -1,0 +1,39 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "send_email",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "roles": [
+                    "manager"
+                ]
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Send an email to vendor@externalco.com with subject 'Upcoming Sprint Schedule' and body 'Please review the attached sprint schedule for the next two weeks and confirm availability.' Attached file: sprint_schedule.pdf",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "recipient_email": "vendor@externalco.com",
+            "subject": "Upcoming Sprint Schedule",
+            "body": "Please review the attached sprint schedule for the next two weeks and confirm availability.",
+            "email_content": "Please review the attached sprint schedule for the next two weeks and confirm availability.",
+            "attached_file": "sprint_schedule.pdf"
+        }
+    }
+}

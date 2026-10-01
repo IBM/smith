@@ -1,0 +1,40 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "purchase",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "roles": [
+                    "employee"
+                ],
+                "approval": false,
+                "id": "Bob"
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Please process a purchase for a USB hub at $99. Product name: Anker USB Hub, category: office_supplies, justification: required for connecting multiple devices at my workstation.",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "amount": 99,
+            "product_name": "Anker USB Hub",
+            "category": "office_supplies",
+            "justification": "required for connecting multiple devices at my workstation"
+        }
+    }
+}

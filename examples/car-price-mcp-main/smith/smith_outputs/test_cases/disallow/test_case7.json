@@ -6,7 +6,6 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Bob",
                 "user_role": [
                     "fleet_manager"
                 ]
@@ -19,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please retrieve all carros using vehicle_type carros",
+                "input": "I want to look up vehicle brands. Call get_vehicles_by_type with vehicle_type set to 'carros'.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

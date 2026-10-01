@@ -1,0 +1,36 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "send_email",
+        "extensions": {
+            "subject": {
+                "claims": {}
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Send a meeting invite summary to vendor.contact@yahoo.com. Subject: 'Vendor Meeting Summary', body: 'Please find the summary of our vendor meeting held on Tuesday.', email content: 'Meeting summary', attached file: vendor_meeting_summary.pdf.",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "recipient_email": "vendor.contact@yahoo.com",
+            "subject": "Vendor Meeting Summary",
+            "body": "Please find the summary of our vendor meeting held on Tuesday.",
+            "email_content": "Meeting summary",
+            "attached_file": "vendor_meeting_summary.pdf"
+        }
+    }
+}

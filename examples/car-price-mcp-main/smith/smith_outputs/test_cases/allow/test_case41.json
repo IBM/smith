@@ -6,7 +6,6 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Bob",
                 "user_role": [
                     "fleet_manager"
                 ]
@@ -19,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Show me the caminhoes vehicle type information",
+                "input": "Fetch the brands available for caminhoes using get_vehicles_by_type. I'm managing our truck fleet and need this data.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

@@ -6,7 +6,6 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Bob",
                 "user_role": [
                     "journalist"
                 ]
@@ -19,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need to find Jaguar car prices and models",
+                "input": "I need pricing information from FIPE for Lexus. Please search with brand_name set to Lexus.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +29,7 @@
             }
         },
         "args": {
-            "brand_name": "Jaguar"
+            "brand_name": "Lexus"
         }
     }
 }

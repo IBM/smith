@@ -9,10 +9,10 @@
                 "roles": [
                     "manager"
                 ],
-                "teams": [
+                "user_team": [
                     "IT"
                 ],
-                "id": "Alice_Manager",
+                "id": "Bob",
                 "approval": true
             },
             "headers": {
@@ -23,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "view_team_compensation(department=\"Engineering\", select_fields=[\"employee name\", \"title\", \"salary\", \"bonus\", \"department\", \"hire date\"])",
+                "input": "view_team_compensation(department=\"Sales\", select_fields=[\"ssn\", \"home_address\", \"emergency_contact\"], id=\"all\")",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -34,19 +34,13 @@
             }
         },
         "args": {
-            "department": "Engineering",
-            "format": "JSON",
-            "id": "None",
-            "include_benefits": true,
+            "department": "Sales",
             "select_fields": [
-                "employee_name",
-                "title",
-                "base_salary",
-                "actual_bonus_2024",
-                "department",
-                "hire_date"
+                "ssn",
+                "home_address",
+                "emergency_contact"
             ],
-            "time_range": "last_quarter"
+            "id": "all"
         }
     }
 }

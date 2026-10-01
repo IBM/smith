@@ -7,7 +7,7 @@
             "subject": {
                 "claims": {},
                 "roles": [
-                    "employee"
+                    "manager"
                 ]
             },
             "headers": {
@@ -18,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I want to see bonus information for the Finance department using view_team_compensation",
+                "input": "Show me the Finance team's compensation data for the current year, including employee_name, base_salary, bonus_target, and bank_account fields.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -29,7 +29,15 @@
             }
         },
         "args": {
-            "department": "Finance"
+            "department": "Finance",
+            "time_range": "current_year",
+            "select_fields": [
+                "employee_name",
+                "base_salary",
+                "bonus_target",
+                "bank_account"
+            ],
+            "include_benefits": false
         }
     }
 }

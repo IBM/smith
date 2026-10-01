@@ -1,0 +1,39 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "send_email",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "roles": [
+                    "manager"
+                ]
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Please draft and send an email to sarah.miller@partner.org with subject 'Meeting Notes - Oct 15' and body 'Hi Sarah, here are the notes from our meeting: action items include finalizing the roadmap by end of month.' No attached file.",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "recipient_email": "sarah.miller@partner.org",
+            "subject": "Meeting Notes - Oct 15",
+            "body": "Hi Sarah, here are the notes from our meeting: action items include finalizing the roadmap by end of month.",
+            "email_content": "Hi Sarah, here are the notes from our meeting: action items include finalizing the roadmap by end of month.",
+            "attached_file": ""
+        }
+    }
+}

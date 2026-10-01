@@ -7,11 +7,12 @@
             "subject": {
                 "claims": {},
                 "roles": [
-                    "manager"
+                    "employee"
                 ],
-                "teams": [
-                    "HR"
-                ]
+                "user_team": [
+                    "Marketing"
+                ],
+                "id": "Bob"
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -21,7 +22,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please show me job titles from the IT department using view_team_compensation with department IT and select_fields set to title",
+                "input": "Can you show me the bonus_target and actual_bonus_2024 fields for the Marketing department team members?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,9 +33,12 @@
             }
         },
         "args": {
-            "department": "IT",
+            "department": "Marketing",
             "select_fields": [
-                "title"
+                "employee_name",
+                "title",
+                "bonus_target",
+                "actual_bonus_2024"
             ]
         }
     }

@@ -7,11 +7,12 @@
             "subject": {
                 "claims": {},
                 "roles": [
-                    "manager"
+                    "employee"
                 ],
-                "teams": [
-                    "Legal"
-                ]
+                "user_team": [
+                    "HR"
+                ],
+                "id": "Bob"
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -21,7 +22,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can I view department information for the Marketing team using view_team_compensation tool with department Marketing and select_fields department?",
+                "input": "Please pull up the hire dates for all HR department employees along with their names and titles.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,6 +31,14 @@
                 "managed_by": "tool",
                 "trust_domain": "internal"
             }
+        },
+        "args": {
+            "department": "HR",
+            "select_fields": [
+                "employee_name",
+                "title",
+                "hire_date"
+            ]
         }
     }
 }

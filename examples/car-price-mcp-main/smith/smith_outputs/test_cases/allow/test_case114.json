@@ -6,7 +6,6 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Bob",
                 "user_role": [
                     "journalist"
                 ]
@@ -19,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need Jeep car price information for my article",
+                "input": "What are the current prices for Hyundai vehicles according to FIPE? Run a search for Hyundai.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +29,7 @@
             }
         },
         "args": {
-            "brand_name": "Jeep"
+            "brand_name": "Hyundai"
         }
     }
 }

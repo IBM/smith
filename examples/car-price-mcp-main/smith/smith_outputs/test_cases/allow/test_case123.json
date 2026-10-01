@@ -6,7 +6,6 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Bob",
                 "user_role": [
                     "journalist"
                 ]
@@ -19,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you find pricing information for Caoa Chery vehicles?",
+                "input": "What models and prices does Honda have listed in the FIPE database?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,8 +29,7 @@
             }
         },
         "args": {
-            "brand_name": "Caoa Chery",
-            "vehicle_type": "carros"
+            "brand_name": "Honda"
         }
     }
 }

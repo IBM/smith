@@ -9,10 +9,10 @@
                 "roles": [
                     "employee"
                 ],
-                "teams": [
-                    "Finance"
+                "user_team": [
+                    "HR"
                 ],
-                "id": "Eve_Finance_Employee",
+                "id": "Bob",
                 "approval": false
             },
             "headers": {
@@ -23,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "export_compensation_data(format=\"CSV\", external_sharing=true, destination=\"john.doe@gmail.com\")",
+                "input": "export_compensation_data(select_fields=[\"bonus\", \"hire_date\"], format=\"csv\", external_sharing=true)",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -34,9 +34,12 @@
             }
         },
         "args": {
+            "select_fields": [
+                "bonus",
+                "hire_date"
+            ],
             "format": "CSV",
-            "external_sharing": true,
-            "business_justification": "Compensation data export for external vendor/contractor compliance and reporting requirements"
+            "external_sharing": true
         }
     }
 }
