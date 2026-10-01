@@ -1,0 +1,40 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "get_events",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "action_list": [
+                    "get_events"
+                ],
+                "user_name": "Bob",
+                "user_role": [
+                    "guest"
+                ]
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Can you look up events on WikiCFP with keywords 'Career Fair cybersecurity' and topic 'Cybersecurity and privacy'?",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "keywords": "Career Fair cybersecurity",
+            "topic": "Cybersecurity and privacy"
+        }
+    }
+}
