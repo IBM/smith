@@ -1,0 +1,36 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "add_department",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "department": [
+                    "Engineering"
+                ]
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Can you create a new department called 'Product' with description 'Owns the product lifecycle'?",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "name": "Product",
+            "description": "Owns the product lifecycle"
+        }
+    }
+}

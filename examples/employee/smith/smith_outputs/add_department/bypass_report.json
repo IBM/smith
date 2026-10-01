@@ -1,0 +1,72 @@
+{
+  "vectors": [
+    {
+      "category": "omitted_field",
+      "direction": "guidance_deny_policy_allow",
+      "guidance_rule": "Only HR may update a department",
+      "rules_involved": [
+        "allow",
+        "any_deny",
+        "deny"
+      ],
+      "field": "input.name",
+      "reason": "No deny rule exists for update_department, so any non-HR caller can update a department and the policy allows it.",
+      "exploit_strategy": "Send a request with input.name = 'update_department' and any subject.department other than 'HR'; no deny rule fires so allow = true.",
+      "severity": "high"
+    },
+    {
+      "category": "omitted_field",
+      "direction": "guidance_deny_policy_allow",
+      "guidance_rule": "Only HR may add a country holiday",
+      "rules_involved": [
+        "allow",
+        "any_deny",
+        "deny"
+      ],
+      "field": "input.name",
+      "reason": "No deny rule exists for add_holiday, so any non-HR caller can add a country holiday and the policy allows it.",
+      "exploit_strategy": "Send a request with input.name = 'add_holiday' and any subject.department other than 'HR'; no deny rule fires so allow = true.",
+      "severity": "high"
+    },
+    {
+      "category": "omitted_field",
+      "direction": "guidance_deny_policy_allow",
+      "guidance_rule": "Only HR may delete a country holiday",
+      "rules_involved": [
+        "allow",
+        "any_deny",
+        "deny"
+      ],
+      "field": "input.name",
+      "reason": "No deny rule exists for delete_holiday, so any non-HR caller can delete a country holiday and the policy allows it.",
+      "exploit_strategy": "Send a request with input.name = 'delete_holiday' and any subject.department other than 'HR'; no deny rule fires so allow = true.",
+      "severity": "high"
+    },
+    {
+      "category": "omitted_field",
+      "direction": "guidance_deny_policy_allow",
+      "guidance_rule": "Only HR may set a leave allotment",
+      "rules_involved": [
+        "allow",
+        "any_deny",
+        "deny"
+      ],
+      "field": "input.name",
+      "reason": "No deny rule exists for set_leave_allotment, so any non-HR caller can set a leave allotment and the policy allows it.",
+      "exploit_strategy": "Send a request with input.name = 'set_leave_allotment' and any subject.department other than 'HR'; no deny rule fires so allow = true.",
+      "severity": "high"
+    },
+    {
+      "category": "keyword_evasion",
+      "direction": "guidance_deny_policy_allow",
+      "guidance_rule": "department must be one of Corporate Leadership, Engineering, Product, HR, Finance",
+      "rules_involved": [
+        "deny (add_department name check)"
+      ],
+      "field": "input.args.name",
+      "reason": "The allowed_departments set uses exact case-sensitive string matching; a value with different casing (e.g. 'hr', 'engineering') is not in the set so the name-validation deny fires correctly — but the HR membership check uses subject.department which is trusted, so this is not exploitable from the caller side for the HR check. However, a caller could supply a name like 'hr' or 'FINANCE' and the name-validation deny would fire, but the guidance intent is that only the five exact names are valid, which the policy does enforce correctly via set membership.",
+      "exploit_strategy": "N/A — this is correctly enforced by set membership in Rego.",
+      "severity": "low"
+    }
+  ]
+}
