@@ -59,6 +59,7 @@ examples/sre/
 
 # ---- Generated: security-analysis runtime state ----
 **/smith/guidelines-security-analysis/analysis_state.json
+**/smith/guidelines-security-analysis/architecture_inspection.json
 **/smith/guidelines-security-analysis/.superseded_*/
 
 # ---- Generated: OPA intermediate results (assets/opa/outputs/) ----
