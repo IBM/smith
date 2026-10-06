@@ -1,0 +1,10 @@
+[
+ {"name":"catalog_loading",
+  "prompt":"Read SKILL.md, then read the instruction files for the policy-enhancement workflow it references (policy_patch, policy_regal, policy_duplication). Summarize in three lines what each step does. Do not modify any files."},
+ {"name":"policy_testing",
+  "prompt":"Activate .venv, run `smith --flag policy_testing`, and report the pass/fail counts and the false-positive and false-negative cases. Do not modify any files."},
+ {"name":"source_inspection",
+  "prompt":"Inspect assets/policy.rego and the failing test cases from the previous step. Identify which rules are responsible for the failures. Do not modify any files."},
+ {"name":"artifact_chaining",
+  "prompt":"Following opa_policy/policy_patch/policy_patch.md, patch the policy to fix the failed cases, then format it per policy_regal.md, then de-duplicate per policy_duplication.md. Proceed without asking for confirmation; you are authorized to modify assets/policy.rego."}
+]

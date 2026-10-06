@@ -1,0 +1,4 @@
+[
+ {"name":"catalog_loading","prompt":"Read SKILL.md and list only the workflow section headings. Reply with the list."},
+ {"name":"source_inspection","prompt":"Report the number of lines in assets/policy.rego. Reply with just the count."}
+]
