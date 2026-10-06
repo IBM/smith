@@ -56,6 +56,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+context-profile = [
+    "claude-agent-sdk>=0.2.144",
+]
 dev = [
     "ruff==0.15.20",
     "black==26.5.1",
@@ -77,6 +80,7 @@ Documentation = "https://github.com/IBM/smith#readme"
 
 [project.scripts]
 smith = "smith.cli:main"
+smith-context-profile = "smith.tools.context_profile:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

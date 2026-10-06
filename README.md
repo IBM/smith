@@ -248,6 +248,27 @@ Each step is a separate, resumable job with its own model context. In **Gated** 
 
 After the analysis is complete, the human may separately ask the agent to validate and append `guidance_updated.txt` to `guidance.txt`, preserving the existing file byte-for-byte. The agent then asks separately whether to start Policy Creation; merging guidance does not generate a policy or imply approval to do so.
 
+#### Context and cost profiling
+
+The optional context profiler runs Steps A-D twice against identical disposable copies of a target: once in one continuous Claude conversation and once with a fresh conversation per phase. It records Agent SDK token usage and cost plus UTF-8 bytes returned by `Read`/`Grep`, grouped as catalog, MCP source, Smith inputs, chained artifacts, instructions, or unattributed reads.
+
+```bash
+# Install the official Claude Agent SDK integration.
+uv sync --extra context-profile --extra dev
+
+# Run one continuous/isolated pair. Each variant has its own USD cap.
+uv run --extra context-profile smith-context-profile run \
+  --target examples/call-for-papers-mcp \
+  --pairs 1 \
+  --model sonnet \
+  --max-budget-usd 2.00 \
+  --output /tmp/smith-context-profile
+```
+
+Claude Code must already be installed and authenticated. The profiler reads the current `.env` configuration to run `get_current_agent` and `get_mcp_parameter` automatically in each workspace; for a stdio MCP server, `MCP_CWD` must point inside this repository. No Docker or OpenTelemetry collector is needed.
+
+Each pair gets a generated run directory containing `results.json` and `comparison.md`. Only aggregate measurements and run metadata are retained: prompts, model responses, tool-result contents, credentials, `.env`, and generated workspaces are not stored. A pair that fails or reaches its budget before all eight phase executions finish is marked incomplete and must not be used as a comparison. `--pairs` controls the number of complete experiment pairs, not the number of Smith phases. Because the Agent SDK enforces the budget after model calls and the budget applies separately to each variant, a pair may cost slightly more than twice `--max-budget-usd`.
+
 ### Test Case Generation
 
 The agent follows `test_generation/test_generation.md`, which first asks which kind of test cases you want, then runs the matching command(s):
