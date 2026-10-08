@@ -228,9 +228,7 @@ def merge_guidance(
         separator = (
             b""
             if not original or original.endswith(b"\n\n")
-            else b"\n"
-            if original.endswith(b"\n")
-            else b"\n\n"
+            else b"\n" if original.endswith(b"\n") else b"\n\n"
         )
     else:
         separator = b"" if not original or original.endswith(b"\n") else b"\n"
