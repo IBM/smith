@@ -4,10 +4,23 @@
   Served by `smith --flag classify_guidance`. It fetches /classification (an LLM
   pass that maps each guidance line to the MCP tool call(s) it governs), shows
   the guidance with per-tool highlights, lets you tick lines to combine, and
-  resets Smith's inputs (guidance.txt + clean_generated.sh + session_config.json).
+  saves Smith's inputs (guidance.txt + session_config.json).
 -->
 <html lang="en">
 <head>
+<script>
+// Injected by the local Smith server (explorer_server.py /
+// guidance_classifier_server.py). The placeholder stays literal when this file
+// is opened directly from disk, in which case there is no server to talk to.
+window.SMITH_RESET_TOKEN = "__SMITH_RESET_TOKEN__";
+window.smithHeaders = function (extra) {
+  const h = Object.assign({}, extra || {});
+  const t = window.SMITH_RESET_TOKEN;
+  if (t && t.indexOf("SMITH_RESET_TOKEN") === -1) h["X-Smith-Token"] = t;
+  return h;
+};
+</script>
+
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Smith · Guidance Classifier</title>
@@ -244,7 +257,7 @@
         </div>
       </div>
 
-      <!-- combined guidance editor + reset (served over http). -->
+      <!-- combined guidance editor + save (served over http). -->
       <div class="section" id="smithGuidanceSection" style="display:none">
         <h3>Combined guidance</h3>
         <textarea id="guidanceEditor" spellcheck="false"
@@ -256,7 +269,7 @@
                        font-family:inherit;font-size:13px;font-weight:600;color:#fff;
                        background:var(--accent);border:1px solid var(--accent);
                        border-radius:var(--radius)">
-          Reset Smith inputs
+          Save Smith inputs
         </button>
         <div id="resetTargetNote" class="small" style="margin-top:8px;color:var(--ink-faint);font-size:11.5px"></div>
         <div id="resetStatus" class="small" style="margin-top:6px;color:var(--ink-faint);font-size:12px"></div>
@@ -633,7 +646,7 @@ function renderItemDetail(el) {
 }
 
 // Gather the raw text of all checked lines and write them into the guidance
-// editor. The Reset button then persists them to guidance.txt.
+// editor. The Save button then persists them to guidance.txt.
 function combineCheckedIntoGuidance() {
   // de-dup by line index (a line checked under two tools should appear once)
   const seen = new Set();
@@ -690,7 +703,7 @@ document.querySelectorAll(".segmented").forEach((seg) => {
   });
 });
 
-// ---------- upload + classify + reset bridge ----------
+// ---------- upload + classify + save bridge ----------
 (function () {
   const editor = $("guidanceEditor");
   const section = $("smithGuidanceSection");
@@ -700,7 +713,7 @@ document.querySelectorAll(".segmented").forEach((seg) => {
   const drop = $("drop");
   const fileInput = $("fileInput");
 
-  // Server config: where Reset writes (.env guidance.txt) + tool_defs presence.
+  // Server config: where Save writes (.env guidance.txt) + tool_defs presence.
   let resetTargetPath = "";
 
   function setStatus(msg, kind) {
@@ -714,7 +727,7 @@ document.querySelectorAll(".segmented").forEach((seg) => {
       resetTargetPath = cfg.guidance_path || "";
       const note = $("resetTargetNote");
       if (note) {
-        note.textContent = "Reset writes to " + resetTargetPath +
+        note.textContent = "Save writes to " + resetTargetPath +
           " (the .env guidance.txt). Your uploaded file is never modified.";
       }
       if (cfg.tool_count === 0) {
@@ -733,7 +746,7 @@ document.querySelectorAll(".segmented").forEach((seg) => {
     $("centerContent").style.display = "none";
     return fetch("/classify", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: window.smithHeaders({ "Content-Type": "application/json" }),
       body: JSON.stringify({ guidance: state.guidance }),
     })
       .then((r) => (r.ok ? r.json() : r.json().then((e) => Promise.reject(e))))
@@ -793,7 +806,7 @@ document.querySelectorAll(".segmented").forEach((seg) => {
     )];
     return fetch("/reset", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: window.smithHeaders({ "Content-Type": "application/json" }),
       body: JSON.stringify({ guidance: editor.value, selected_tools: selectedTools }),
     })
       .then((r) => r.json())
@@ -802,26 +815,25 @@ document.querySelectorAll(".segmented").forEach((seg) => {
 
   runBtn.addEventListener("click", () => {
     if (!confirm(
-      "Reset Smith inputs?\n\n" +
+      "Save Smith inputs?\n\n" +
       "1. overwrite the .env guidance.txt (" + (resetTargetPath || "GUIDANCE_FILE") + ") with the editor text\n" +
-      "2. run clean_generated.sh (delete generated files under references/)\n" +
-      "3. write session_config.json with the checked lines' tools\n\n" +
-      "Your uploaded file is not touched. This cannot be undone."
+      "2. write session_config.json with the checked lines' tools\n\n" +
+      "Your uploaded file is not touched."
     )) return;
-    setStatus("Writing guidance and cleaning…");
+    setStatus("Writing guidance…");
     doReset()
       .then((res) => {
         if (res.ok) {
           setStatus(
-            "Guidance saved and generated files cleaned. Now start a code agent " +
+            "Guidance saved. Now start a code agent " +
             "(e.g. Claude Code) and ask it to run Smith to generate from the new guidance.",
             "ok"
           );
         } else {
-          setStatus((res.error || "Reset failed.") + (res.detail ? " — " + res.detail : ""), "error");
+          setStatus((res.error || "Save failed.") + (res.detail ? " — " + res.detail : ""), "error");
         }
       })
-      .catch((e) => setStatus("Reset request failed: " + e.message, "error"));
+      .catch((e) => setStatus("Save request failed: " + e.message, "error"));
   });
 })();
 </script>

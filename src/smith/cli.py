@@ -23,6 +23,8 @@ from smith.policy_agent.reduce_improve.detect_redundancy import write_graph_sugg
 from smith.policy_agent.policy_analysis.regal.regal_finder import (
     create_regal_suggestion,
 )
+from smith.test_generation.concurrency import resolve_generation_concurrency
+from smith.test_generation import guidance_map
 from smith.test_generation.decompose import decompose_guidance
 from smith.test_generation.variable_extraction import variable_extraction
 from smith.test_generation.attack import attack
@@ -155,6 +157,15 @@ class BlueAgent:
     def policy_checking_results(self):
         return run_policy_evaluation(self.base_url, self.test_results_path)
 
+    def reset_policy(self):
+        with open(self.policy_path, "w"):
+            pass
+        print(f"emptied policy: {self.policy_path}")
+        policy_cpex_path = re.sub(r"\.rego$", "_cpex.rego", self.policy_path)
+        if os.path.exists(policy_cpex_path):
+            os.remove(policy_cpex_path)
+            print(f"removed CPEX-translated policy: {policy_cpex_path}")
+
 
 VALID_ATTACK_TOOLS = {"ares", "promptfoo", "none"}
 
@@ -245,9 +256,33 @@ def generate_test(
     batch_processing=False,
     batch_size=10,
     flatten_flag=False,
+    generation_concurrency=None,
+    mode="fresh",
+    guidance_snapshot_file=None,
+    guidance_map_file=None,
+    guidance_raw_snapshot_file=None,
 ):
     flatten_flag = True
-    decompose_guidance(
+
+    if mode != "update":
+        # Fresh Mode: Empty existing test cases and intermidiate results first
+        guidance_map.clean_generated_cases(output_file_ready_cases)
+        guidance_map.clear_intermediates(
+            output_file_decompose,
+            output_file_variables,
+            output_file_cases,
+            output_file_attack,
+            output_file_attack_csv,
+        )
+        guidance_map.clean_ares_assets(ares_home)
+        if guidance_map_file:
+            guidance_map.save_mapping(guidance_map_file, {})
+
+    # Both fresh and update modes need to flatten the guidance for diff
+    # if the mode is update, it returns guidance_map.UNCHANGED etc
+    # Only diff block will be sent to decomposion
+    # If diff is empty, it skips decomposion,
+    decomposed = decompose_guidance(
         api_key,
         system_variables,
         guidance_file,
@@ -260,54 +295,86 @@ def generate_test(
         flatten_flag,
         batch_processing,
         batch_size,
+        generation_concurrency,
+        mode,
+        guidance_snapshot_file,
+        guidance_map_file,
+        output_file_ready_cases,
+        guidance_raw_snapshot_file,
     )
-    grey_extraction(
-        api_key,
-        system_variables,
-        openai_base_url,
-        model,
-        temp,
-        top_p,
-        output_file_decompose,
-        output_file_grey_guidances,
-        batch_processing,
-        batch_size,
-    )
-    variable_extraction(
-        api_key,
-        system_variables,
-        openai_base_url,
-        model,
-        temp,
-        top_p,
-        output_file_decompose,
-        output_file_variables,
-        batch_processing,
-        batch_size,
-    )
-    case_generation(
-        api_key,
-        system_variables,
-        openai_base_url,
-        model,
-        temp,
-        top_p,
-        output_file_variables,
-        output_file_cases,
-        tool_definitions,
-        batch_processing,
-        batch_size=case_generation_batch_size,
-    )
-    attack_tools = resolve_attack_tools()
 
-    if "ares" in attack_tools:
-        attack(
+    deleted_only = False
+
+    if mode == "update":
+        # nothing need to change
+        if decomposed in (guidance_map.UNCHANGED, guidance_map.NO_SNAPSHOT):
+            return ""
+        # promptfoo cases will be regenerate no matter update/fresh
+        # clean intermidiate results
+        guidance_map.clean_promptfoo_cases(output_file_ready_cases)
+        deleted_only = decomposed == guidance_map.DELETED_ONLY
+        guidance_map.clear_intermediates(
+            output_file_variables,
             output_file_cases,
             output_file_attack,
             output_file_attack_csv,
-            test_generation_path,
-            ares_home,
         )
+        guidance_map.clean_ares_assets(ares_home)
+
+    # fresh mode execute all of the following
+    # deletion only: Delete related test cases but skip regeneration
+    # Others: regenerate based on guidance changes (delete related cases and append new ones)
+    # promptfoo cases will be regenerate no matter update/fresh
+    attack_tools = resolve_attack_tools()
+    if not deleted_only:
+        grey_extraction(
+            api_key,
+            system_variables,
+            openai_base_url,
+            model,
+            temp,
+            top_p,
+            output_file_decompose,
+            output_file_grey_guidances,
+            batch_processing,
+            batch_size,
+            generation_concurrency=generation_concurrency,
+        )
+        variable_extraction(
+            api_key,
+            system_variables,
+            openai_base_url,
+            model,
+            temp,
+            top_p,
+            output_file_decompose,
+            output_file_variables,
+            batch_processing,
+            batch_size,
+            generation_concurrency=generation_concurrency,
+        )
+        case_generation(
+            api_key,
+            system_variables,
+            openai_base_url,
+            model,
+            temp,
+            top_p,
+            output_file_variables,
+            output_file_cases,
+            tool_definitions,
+            batch_processing,
+            batch_size=case_generation_batch_size,
+            generation_concurrency=generation_concurrency,
+        )
+        if "ares" in attack_tools:
+            attack(
+                output_file_cases,
+                output_file_attack,
+                output_file_attack_csv,
+                test_generation_path,
+                ares_home,
+            )
 
     if "promptfoo" in attack_tools:
         create_promptfoo_cases(
@@ -337,6 +404,19 @@ def generate_test(
         output_file_attack_promptfoo if "promptfoo" in attack_tools else None,
         system_variables,
         selected_tools,
+        (
+            guidance_map.next_indices(output_file_ready_cases)
+            if mode == "update"
+            else None
+        ),
+        guidance_map_file,
+    )
+    # as long as it is not NoChange, update snapshots
+    guidance_map.write_run_snapshots(
+        guidance_snapshot_file,
+        output_file_flatten,
+        guidance_raw_snapshot_file,
+        guidance_file,
     )
     return ""
 
@@ -357,6 +437,7 @@ def generate_bypass_cases(
     bypass_cases_file,
     base_url,
 ):
+    # no update mode since it does not depend on specific guidance line.
     """Find guidance-vs-policy divergences and generate adversarial cases."""
     if not os.path.exists(policy_path):
         print(
@@ -367,6 +448,11 @@ def generate_bypass_cases(
     if os.path.getsize(policy_path) == 0:
         print(f"Bypass case generation skipped: policy at {policy_path} is empty.")
         return ""
+
+    # Every run rebuilds the whole bypass set, so clear the previous one first:
+    # numbering restarts at 0, and without this a shorter run would leave the old
+    # higher-numbered cases behind for the scorecard to keep counting.
+    guidance_map.clean_bypass_cases(output_file_ready_cases)
 
     bypass_report = detect_bypass_vectors(
         api_key,
@@ -434,6 +520,10 @@ def main():
     if not args.flag:
         parser.print_help()
         sys.exit(0)
+
+    if args.mode != "fresh" and args.flag != "test_generation":
+        print("ERROR: --mode only applies to --flag test_generation.")
+        sys.exit(1)
 
     if args.flag == "open_explorer":
         from smith.tools.explorer_server import serve
@@ -625,6 +715,15 @@ def main():
         "BYPASS_CASE_FILE", "references/bypass_cases.json"
     )
     bypass_report_dir = base_url + os.getenv("BYPASS_REPORT_DIR", "references/bypass/")
+    guidance_snapshot_file = base_url + os.getenv(
+        "GUIDANCE_SNAPSHOT_FILE", "references/guidance_snapshot.txt"
+    )
+    guidance_raw_snapshot_file = base_url + os.getenv(
+        "GUIDANCE_RAW_SNAPSHOT_FILE", "references/guidance_raw_snapshot.txt"
+    )
+    guidance_map_file = base_url + os.getenv(
+        "GUIDANCE_MAP_FILE", "references/guidance_case_map.json"
+    )
     system_variables = {}
     with open(system_var_file, encoding="utf-8") as f:
         system_variables = json.load(f)
@@ -632,6 +731,7 @@ def main():
     batch_processing = os.getenv("BATCH_PROCESSING", "false").lower() == "true"
     batch_size = int(os.getenv("BATCH_SIZE", "10"))
     case_generation_batch_size = int(os.getenv("CASE_GENERATION_BATCH_SIZE", "5"))
+    generation_concurrency = resolve_generation_concurrency()
 
     # test case eveluation settings
     tier2_high = float(os.getenv("TIER2_HIGH_THRESHOLD", "0.70"))
@@ -663,6 +763,9 @@ def main():
 
     agent = BlueAgent()
 
+    if args.flag == "reset_policy":
+        agent.reset_policy()
+        sys.exit(0)
     if args.flag == "policy_testing":
         agent.policy_checking_results()
     if args.flag == "regal_suggestion":
@@ -704,6 +807,11 @@ def main():
             tool_definitions,
             batch_processing,
             batch_size,
+            generation_concurrency=generation_concurrency,
+            mode=args.mode,
+            guidance_snapshot_file=guidance_snapshot_file,
+            guidance_map_file=guidance_map_file,
+            guidance_raw_snapshot_file=guidance_raw_snapshot_file,
         )
 
     if args.flag == "bypass_case_generation":
@@ -881,6 +989,9 @@ def main():
             report_file=cross_validate_output,
             test_case_base_path=base_url
             + os.getenv("TEST_CASE_PATH", "references/test_cases/"),
+            # Moves and removals are reported to the map so the guidance ->
+            # test-case relation keeps pointing at files that exist.
+            guidance_map_file=guidance_map_file,
         )
 
     allowed_flags = [

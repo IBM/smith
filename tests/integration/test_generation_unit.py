@@ -47,6 +47,14 @@ STEP 3 · ``smith.test_generation.variable_extraction``
 STEP 4 · ``smith.test_generation.case_generation``
     ``case_generation``         — abstract cases written with their labels
 
+STEPS 1-4 · ``smith.test_generation.concurrency``
+    ``resolve_generation_concurrency`` — the env parse, including the serial
+                                  spellings and the invalid-value fallback
+    ``run_batches``             — input order preserved however batches finish,
+                                  and one failed batch not discarding the rest,
+                                  plus the same guarantee through the four
+                                  stages that batch their LLM calls
+
 STEP 5 · ``smith.cli.resolve_attack_tools``
     Covered in ``test_case_evaluation_unit.py``, where it is also step 0 of that
     flag. Not duplicated here.
@@ -72,6 +80,10 @@ from smith.test_generation import case_generation as case_gen_mod
 from smith.test_generation import decompose as decompose_mod
 from smith.test_generation import variable_extraction as var_mod
 from smith.test_generation.case_generation import case_generation
+from smith.test_generation.concurrency import (
+    resolve_generation_concurrency,
+    run_batches,
+)
 from smith.test_generation.convert_test_case import translate_case
 from smith.test_generation.decompose import decompose_guidance, remove_empty_line
 from smith.test_generation.grey_condition import group_guidance_by_tool
@@ -365,6 +377,276 @@ def test_generated_cases_are_written_with_their_labels(unit_env, monkeypatch, sv
 
 
 # ===========================================================================
+# STEPS 1-4 · concurrent batch dispatch
+# ===========================================================================
+
+
+def test_an_out_of_order_concurrency_setting_is_read_as_serial(monkeypatch):
+    # -1 is how TRANSLATION_CONCURRENCY spells "serial"; accept it here too so the
+    # two variables cannot mean opposite things.
+    monkeypatch.setenv("GENERATION_CONCURRENCY", "-1")
+    assert resolve_generation_concurrency() == 1
+
+    monkeypatch.setenv("GENERATION_CONCURRENCY", "1")
+    assert resolve_generation_concurrency() == 1
+
+    monkeypatch.setenv("GENERATION_CONCURRENCY", "8")
+    assert resolve_generation_concurrency() == 8
+
+    monkeypatch.delenv("GENERATION_CONCURRENCY", raising=False)
+    assert (
+        resolve_generation_concurrency() == 4
+    ), "online gateway should default parallel"
+
+
+def test_an_unparseable_concurrency_setting_falls_back_to_serial(monkeypatch, capsys):
+    # A typo must not take the whole stage down, and must not silently run wide.
+    monkeypatch.setenv("GENERATION_CONCURRENCY", "eight")
+    assert resolve_generation_concurrency() == 1
+    assert "eight" in capsys.readouterr().out
+
+
+def test_a_negative_concurrency_argument_runs_serially_rather_than_crashing():
+    # -1 reaching run_batches directly used to hit ThreadPoolExecutor and raise
+    # "max_workers must be greater than 0". The env parse clamps it, but a direct
+    # caller passing translation's -1 spelling must get serial, not a crash.
+    assert run_batches([1, 2, 3], lambda b: [b], "test", concurrency=-1) == [
+        [1],
+        [2],
+        [3],
+    ]
+
+
+def test_a_failed_batch_does_not_discard_the_other_batches():
+    # The reason each worker catches Exception: before this, one HTTP error threw
+    # away every other batch's completed work.
+    def work(batch):
+        if batch == "b1":
+            raise RuntimeError("gateway said 429")
+        return [batch]
+
+    results = run_batches(["b0", "b1", "b2"], work, "test", concurrency=4)
+
+    assert results[0] == ["b0"]
+    assert results[1] is None, "the failed batch's slot stays empty"
+    assert results[2] == ["b2"], "a later batch still ran and landed in its own slot"
+
+
+def test_batches_are_returned_in_input_order_however_they_finish():
+    # Completion order is deliberately the reverse of input order.
+    import time
+
+    def work(batch):
+        time.sleep((10 - batch) * 0.01)
+        return [f"rec{batch}"]
+
+    results = run_batches(list(range(10)), work, "test", concurrency=10)
+
+    assert results == [[f"rec{i}"] for i in range(10)]
+
+
+def _multi_batch_guidance(count):
+    return "\n".join(f"{i + 1}. Rule line{i} applies." for i in range(count))
+
+
+def test_concurrent_decomposition_keeps_each_rule_with_its_own_guidance(
+    unit_env, monkeypatch, sv
+):
+    # The corruption this guards against is silent: decompose pairs
+    # batch_lines[j] -> batch_results[j], so a cross-batch shuffle would attach a
+    # rule's action to another rule's guidance text.
+    guidance_file = write_text(unit_env.root / "guidance.txt", "ignored\n")
+    out = unit_env.root / "references" / "decomp.json"
+    flat = unit_env.root / "references" / "flatten.json"
+
+    flattened = _multi_batch_guidance(6)
+    # batch_size=2 over 6 lines => 3 batches, each keyed by the line it contains.
+    monkeypatch.setattr(
+        decompose_mod,
+        "OpenAI",
+        FakeOpenAI(
+            responses=[flattened],  # the flatten call, which runs first
+            by_prompt={
+                f"line{i}": fenced(_decompose_reply(f"action{i}", f"action{i + 1}"))
+                for i in (0, 2, 4)
+            },
+        ).as_factory(),
+    )
+
+    result = decompose_guidance(
+        "key",
+        sv,
+        str(guidance_file),
+        "http://localhost/v1",
+        "m",
+        0.0,
+        1.0,
+        str(out),
+        str(flat),
+        True,
+        True,
+        2,
+        generation_concurrency=3,
+    )
+
+    written = json.loads(out.read_text())
+    assert len(written) == 6, "every batch's records must survive"
+    # Record i came from guidance line i, so its action must be the one that batch
+    # was told to return. Any cross-batch shuffle breaks this pairing.
+    assert [r["action"] for r in written] == [f"action{i}" for i in range(6)]
+    for i, record in enumerate(written):
+        assert f"line{i}" in record["guidance"], f"record {i} carries another's text"
+    assert [r["action"] for r in result] == [f"action{i}" for i in range(6)]
+
+
+def test_concurrent_case_generation_writes_cases_in_batch_order(unit_env, monkeypatch):
+    # Case order decides the test_case<N>.json filenames downstream.
+    rules = [
+        decomposed(action=f"tool{i}", guidance_text=f"Rule line{i}.") for i in range(6)
+    ]
+    vars_file = write_json(unit_env.root / "references" / "vars.json", rules)
+    out = unit_env.root / "references" / "cases.json"
+
+    monkeypatch.setattr(
+        case_gen_mod,
+        "OpenAI",
+        FakeOpenAI(
+            by_prompt={
+                f"line{i}": fenced(
+                    [
+                        {
+                            "action": f"tool{i}",
+                            "condition": "c",
+                            "user_input": f"input{i}",
+                            "label": "allow",
+                            "system_variables": {},
+                        }
+                    ]
+                )
+                for i in range(6)
+            }
+        ).as_factory(),
+    )
+
+    case_generation(
+        "key",
+        system_vars(),
+        "http://localhost/v1",
+        "m",
+        0.0,
+        1.0,
+        str(vars_file),
+        str(out),
+        None,
+        True,
+        batch_size=1,
+        generation_concurrency=6,
+    )
+
+    written = json.loads(out.read_text())
+    assert [c["user_input"] for c in written] == [f"input{i}" for i in range(6)]
+
+
+def test_concurrent_variable_extraction_keeps_variables_on_their_own_rule(
+    unit_env, monkeypatch, sv
+):
+    rules = [
+        decomposed(action="get_events", guidance_text=f"Rule line{i}.")
+        for i in range(6)
+    ]
+    decomp = write_json(unit_env.root / "references" / "decomp.json", rules)
+    out = unit_env.root / "references" / "vars.json"
+
+    monkeypatch.setattr(
+        var_mod,
+        "OpenAI",
+        FakeOpenAI(
+            by_prompt={
+                f"line{i}": fenced(
+                    [
+                        {
+                            "system_variables": ["user_role"],
+                            "prompt_variables": [f"var{i}"],
+                        }
+                    ]
+                )
+                for i in range(6)
+            }
+        ).as_factory(),
+    )
+
+    variable_extraction(
+        "key",
+        sv,
+        "http://localhost/v1",
+        "m",
+        0.0,
+        1.0,
+        str(decomp),
+        str(out),
+        True,
+        1,
+        generation_concurrency=6,
+    )
+
+    written = json.loads(out.read_text())
+    assert len(written) == 6
+    for i, record in enumerate(written):
+        assert f"line{i}" in record["guidance"]
+        assert record["prompt_variables"] == [
+            f"var{i}"
+        ], f"rule {i} got another rule's variables"
+
+
+def test_a_serial_and_a_concurrent_run_write_the_same_cases(unit_env, monkeypatch):
+    # The strongest statement of the contract: concurrency changes timing only.
+    rules = [
+        decomposed(action=f"tool{i}", guidance_text=f"Rule line{i}.") for i in range(6)
+    ]
+    vars_file = write_json(unit_env.root / "references" / "vars.json", rules)
+
+    def _run(out_name, concurrency):
+        out = unit_env.root / "references" / out_name
+        monkeypatch.setattr(
+            case_gen_mod,
+            "OpenAI",
+            FakeOpenAI(
+                by_prompt={
+                    f"line{i}": fenced(
+                        [
+                            {
+                                "action": f"tool{i}",
+                                "condition": "c",
+                                "user_input": f"input{i}",
+                                "label": "allow",
+                                "system_variables": {},
+                            }
+                        ]
+                    )
+                    for i in range(6)
+                }
+            ).as_factory(),
+        )
+        case_generation(
+            "key",
+            system_vars(),
+            "http://localhost/v1",
+            "m",
+            0.0,
+            1.0,
+            str(vars_file),
+            str(out),
+            None,
+            True,
+            batch_size=1,
+            generation_concurrency=concurrency,
+        )
+        return json.loads(out.read_text())
+
+    assert _run("serial.json", 1) == _run("parallel.json", 6)
+
+
+# ===========================================================================
 # STEP 6 · translate_case — routing every generated case to its bucket
 # ===========================================================================
 
@@ -438,6 +720,20 @@ def test_a_missing_attack_file_is_skipped_rather_than_fatal(unit_env, capsys):
     assert "not found" in capsys.readouterr().out
 
 
+def test_a_missing_cases_file_produces_no_cases_rather_than_raising(unit_env):
+    out = str(unit_env.root / "references" / "test_cases") + "/"
+    written = translate_case(
+        str(unit_env.root / "references" / "absent_cases.json"),
+        str(unit_env.case_template),
+        out,
+        None,
+        None,
+        {},
+        None,
+    )
+    assert written == {label: [] for label in written}
+
+
 def test_cases_for_unselected_tools_are_filtered_out(unit_env, capsys):
     # When the explorer restricts a run to a subset of tools, cases for other
     # tools are noise — and would be scored against a policy that never sees them.
@@ -448,3 +744,144 @@ def test_cases_for_unselected_tools_are_filtered_out(unit_env, capsys):
     )
     assert len(list(root.rglob("test_case*.json"))) == 1
     assert "Filtered 1 test cases" in capsys.readouterr().out
+
+
+# ===========================================================================
+# STEP 7 · incremental regeneration — appending, and the guidance map
+# ===========================================================================
+
+
+def _translate_incremental(unit_env, cases, start_index=None, map_file=None, ares=None):
+    cases_file = write_json(unit_env.root / "references" / "cases.json", cases)
+    out = str(unit_env.root / "references" / "test_cases") + "/"
+    written = translate_case(
+        str(cases_file),
+        str(unit_env.case_template),
+        out,
+        str(ares) if ares else None,
+        None,
+        {},
+        None,
+        start_index,
+        str(map_file) if map_file else None,
+    )
+    return unit_env.root / "references" / "test_cases", written
+
+
+def test_without_a_start_index_numbering_begins_at_zero(unit_env):
+    """The fresh-mode guard: this path must not change.
+
+    ``test_case0.json`` is asserted by the scorecard harness and by the tests
+    above, so a default that shifted the first index would break both.
+    """
+    root, _ = _translate_incremental(unit_env, [abstract_case(label="allow")])
+    assert (root / "allow" / "test_case0.json").exists()
+
+
+def test_a_start_index_appends_after_the_existing_cases(unit_env):
+    root, _ = _translate_incremental(
+        unit_env, [abstract_case(label="allow")], start_index={"allow": 7}
+    )
+    assert (root / "allow" / "test_case7.json").exists()
+    assert not (root / "allow" / "test_case0.json").exists()
+
+
+def test_appending_leaves_the_surviving_cases_untouched(unit_env):
+    """The core no-rewrite contract: untouched guidance keeps its exact files."""
+    root = unit_env.root / "references" / "test_cases"
+    (root / "allow").mkdir(parents=True, exist_ok=True)
+    survivor = write_json(
+        root / "allow" / "test_case0.json", {"input": {"name": "survivor"}}
+    )
+    before = survivor.read_bytes()
+
+    _translate_incremental(
+        unit_env, [abstract_case(label="allow")], start_index={"allow": 1}
+    )
+
+    assert survivor.read_bytes() == before
+    assert (root / "allow" / "test_case1.json").exists()
+
+
+def test_each_label_takes_its_own_offset(unit_env):
+    root, _ = _translate_incremental(
+        unit_env,
+        [abstract_case(label="allow"), abstract_case(label="disallow")],
+        start_index={"allow": 3, "disallow": 11},
+    )
+    assert (root / "allow" / "test_case3.json").exists()
+    assert (root / "disallow" / "test_case11.json").exists()
+
+
+def test_the_written_paths_are_reported_per_label(unit_env):
+    _, written = _translate_incremental(unit_env, [abstract_case(label="allow")])
+    assert written["allow"] == ["allow/test_case0.json"]
+
+
+def test_the_guidance_map_records_which_rule_produced_which_case(unit_env):
+    map_file = unit_env.root / "references" / "map.json"
+    _translate_incremental(
+        unit_env,
+        [abstract_case(label="allow", guidance="Faculty may search events.")],
+        map_file=map_file,
+    )
+    assert json.loads(map_file.read_text()) == {
+        "Faculty may search events.": ["allow/test_case0.json"]
+    }
+
+
+def test_two_cases_from_one_rule_share_its_map_entry(unit_env):
+    map_file = unit_env.root / "references" / "map.json"
+    rule = "Faculty may search events."
+    _translate_incremental(
+        unit_env,
+        [
+            abstract_case(label="allow", guidance=rule),
+            abstract_case(label="disallow", guidance=rule),
+        ],
+        map_file=map_file,
+    )
+    assert json.loads(map_file.read_text()) == {
+        rule: ["allow/test_case0.json", "disallow/test_case0.json"]
+    }
+
+
+def test_the_guidance_map_is_only_written_when_asked_for(unit_env):
+    root, _ = _translate_incremental(unit_env, [abstract_case()])
+    assert not list(root.parent.glob("map.json"))
+
+
+def test_an_ares_attack_is_mapped_to_the_guidance_it_descends_from(unit_env):
+    """ARES derives each attack from one disallow case, so it inherits its rule.
+
+    That inheritance is what lets an update run delete the attacks belonging to
+    guidance that changed -- without it they would linger, unattributable.
+    """
+    rule = "Nobody may search outside the approved areas."
+    ares_file = write_json(
+        unit_env.root / "references" / "ares.json",
+        [
+            {
+                "guidance": rule,
+                "action": "get_events",
+                "condition": "outside approved areas",
+                "label": "disallow",
+                "system_variables": {"user_role": ["faculty"]},
+                "user_input": "search bioinformatics",
+                "attack_conditions": {"direct_requests_generate": ["ATTACK ONE"]},
+            }
+        ],
+    )
+    map_file = unit_env.root / "references" / "map.json"
+
+    _translate_incremental(
+        unit_env,
+        [abstract_case(label="disallow", guidance=rule)],
+        map_file=map_file,
+        ares=ares_file,
+    )
+
+    assert json.loads(map_file.read_text())[rule] == [
+        "disallow/test_case0.json",
+        "ares_malicious/test_case0.json",
+    ]

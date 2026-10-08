@@ -1,28 +1,19 @@
 # Copyright 2026 Smith authors
 # SPDX-License-Identifier: Apache-2.0
 
-"""Local HTTP server for the Smith Guidance Classifier.
-
-An *upstream* companion to the Policy Explorer (``explorer_server.py``). Where
-the explorer browses the decomposed per-tool ``specs/*.json`` produced by the
-full pipeline, this tool works on the raw ``guidance.txt`` *before* generation:
-it classifies each guidance line to the MCP tool call(s) it governs (via
-``classify_guidance_lines``, an LLM pass over ``tool_definitions.json``) and
-serves an explorer-style UI to browse lines by tool, tick lines to combine, and
-reset Smith's inputs.
-
-The server binds to loopback only and is single-purpose; it is not a
-general-purpose web server. Open the printed ``http://127.0.0.1:PORT`` URL in VS
-Code's Simple Browser.
-"""
-
 import importlib.resources as resources
 import json
 import os
-import subprocess
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from smith.tools.classify_guidance_lines import classify_guidance_lines
+from smith.tools.local_server_guard import (
+    GuardMixin,
+    allowed_hosts,
+    allowed_origins,
+    inject_token,
+    new_token,
+)
 
 
 def _read_html() -> str:
@@ -37,11 +28,17 @@ def _resolve_guidance_path(base_url: str, guidance_file: str) -> str:
     return os.path.join(base_url, guidance_file)
 
 
-def _find_clean_script(base_url: str) -> str:
-    return os.path.join(base_url, "scripts", "clean_generated.sh")
+def make_handler(
+    base_url,
+    guidance_path,
+    tool_definitions,
+    model_cfg,
+    token="",
+    host="127.0.0.1",
+    port=8110,
+):
+    hosts = allowed_hosts(host, port)
 
-
-def make_handler(base_url, guidance_path, clean_script, tool_definitions, model_cfg):
     def _classify_text(guidance):
         """Run the LLM classification over a guidance string uploaded by the UI."""
         try:
@@ -58,7 +55,11 @@ def make_handler(base_url, guidance_path, clean_script, tool_definitions, model_
             return None, f"classification failed: {exc}"
         return lines, None
 
-    class Handler(BaseHTTPRequestHandler):
+    class Handler(GuardMixin, BaseHTTPRequestHandler):
+        guard_hosts = hosts
+        guard_origins = allowed_origins(hosts)
+        guard_token = token
+
         # Quieter logging; still prints one line per request.
         def log_message(self, fmt, *a):  # noqa: A003 - stdlib signature
             print("[classifier] " + (fmt % a))
@@ -77,9 +78,17 @@ def make_handler(base_url, guidance_path, clean_script, tool_definitions, model_
             return json.loads(raw or b"{}")
 
         def do_GET(self):  # noqa: N802 - stdlib signature
+            # GET is guarded too: /config discloses the guidance path and the
+            # extracted tool count, which a rebound page would otherwise read.
+            if not self.check_request(require_token=False):
+                return
             path = self.path.split("?", 1)[0]
             if path in ("/", "/index.html"):
-                self._send(200, _read_html(), "text/html; charset=utf-8")
+                self._send(
+                    200,
+                    inject_token(_read_html(), token),
+                    "text/html; charset=utf-8",
+                )
                 return
             if path == "/config":
                 # The UI needs to know where Reset writes (the .env guidance.txt)
@@ -97,6 +106,10 @@ def make_handler(base_url, guidance_path, clean_script, tool_definitions, model_
             self._send(404, json.dumps({"error": "not found"}))
 
         def do_POST(self):  # noqa: N802 - stdlib signature
+            # Both POST routes need the token: /reset overwrites guidance.txt,
+            # and /classify bills the operator's OPENAI_API_KEY.
+            if not self.check_request(require_token=True):
+                return
             if self.path == "/classify":
                 # Classify guidance TEXT uploaded in the browser (the file on the
                 # user's disk is never read server-side).
@@ -127,43 +140,7 @@ def make_handler(base_url, guidance_path, clean_script, tool_definitions, model_
                 return
             guidance = payload.get("guidance", "")
 
-            # 1) run the clean script (repo-root scope: no ROOT arg).
-            if not os.path.exists(clean_script):
-                self._send(
-                    500,
-                    json.dumps(
-                        {
-                            "ok": False,
-                            "error": f"clean script not found: {clean_script}",
-                        }
-                    ),
-                )
-                return
-            try:
-                proc = subprocess.run(
-                    ["bash", clean_script],
-                    cwd=base_url,
-                    capture_output=True,
-                    text=True,
-                    timeout=120,
-                )
-            except (subprocess.SubprocessError, OSError) as exc:
-                self._send(500, json.dumps({"ok": False, "error": str(exc)}))
-                return
-            if proc.returncode != 0:
-                self._send(
-                    500,
-                    json.dumps(
-                        {
-                            "ok": False,
-                            "error": "clean_generated.sh failed",
-                            "detail": proc.stderr or proc.stdout,
-                        }
-                    ),
-                )
-                return
-
-            # 2) overwrite guidance.txt with the edited text.
+            # 1) overwrite guidance.txt with the edited text.
             try:
                 os.makedirs(os.path.dirname(guidance_path), exist_ok=True)
                 with open(guidance_path, "w", encoding="utf-8") as f:
@@ -175,7 +152,7 @@ def make_handler(base_url, guidance_path, clean_script, tool_definitions, model_
                 )
                 return
 
-            # 3) write session_config.json with selected tools.
+            # 2) write session_config.json with selected tools.
             selected_tools = payload.get("selected_tools", [])
             session_config_path = os.path.join(
                 base_url,
@@ -203,8 +180,7 @@ def make_handler(base_url, guidance_path, clean_script, tool_definitions, model_
                 json.dumps(
                     {
                         "ok": True,
-                        "message": "Cleaned generated files and wrote "
-                        + os.path.basename(guidance_path),
+                        "message": "Wrote " + os.path.basename(guidance_path),
                         "path": guidance_path,
                     }
                 ),
@@ -223,7 +199,6 @@ def serve(tool_definitions, port: int = 8110, host: str = "127.0.0.1") -> None:
         )
 
     guidance_path = _resolve_guidance_path(base_url, guidance_file)
-    clean_script = _find_clean_script(base_url)
     model_cfg = {
         "api_key": os.getenv("OPENAI_API_KEY"),
         "base_url": os.getenv("OPENAI_BASE_URL"),
@@ -232,15 +207,15 @@ def serve(tool_definitions, port: int = 8110, host: str = "127.0.0.1") -> None:
         "top_p": float(os.getenv("TOP_P", "0.9")),
     }
 
+    token = new_token()
     handler = make_handler(
-        base_url, guidance_path, clean_script, tool_definitions, model_cfg
+        base_url, guidance_path, tool_definitions, model_cfg, token, host, port
     )
     httpd = ThreadingHTTPServer((host, port), handler)
     url = f"http://{host}:{port}/"
     print(f"Guidance Classifier serving at: {url}")
     print(f"  reset target      : {guidance_path}  (.env GUIDANCE_FILE)")
     print(f"  tools extracted   : {len(tool_definitions.get('tools', []))}")
-    print(f"  clean script      : {clean_script}")
     print("Open the URL above in VS Code's Simple Browser (Cmd+Shift+P →")
     print('  "Simple Browser: Show"), then upload a guidance file to classify it.')
     print("Reset writes the uploaded/edited text to the reset target above; the")

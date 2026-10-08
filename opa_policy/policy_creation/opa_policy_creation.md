@@ -30,6 +30,9 @@ everywhere `<TARGET_AGENT_PATH>` and `<GUIDANCE_FILE>` appear below.
 Run `smith --flag get_current_agent` to confirm the active target agent path and
 guidance file path (do not read `.env` for these).
 
+Always run `smith --flag reset_policy` first to empty `assets/policy.rego` (and
+its CPEX sibling, if any) before generating a new one.
+
 Then run `smith --flag get_mcp_parameter` to generate `tool_definitions.json`. This connects to the MCP server and extracts all tool names, parameters, types, and descriptions. You always need to run this command to get up to date tool information, even a `tool_definitions.json` already exists. 
 
 ---

@@ -750,3 +750,129 @@ def test_a_stale_entry_does_not_stop_the_rest_of_the_report(unit_env, case_tree)
 
     apply_cross_validate_results(str(report), str(case_tree) + "/")
     assert (case_tree / "allow" / "cv_test_case_j.json").exists()
+
+def test_a_colliding_destination_gets_a_suffix_instead_of_overwriting(
+    unit_env, case_tree
+):
+    occupied = write_json(case_tree / "allow" / "cv_test_case5.json", envelope_case())
+    original = occupied.read_bytes()
+    src = _case_file(case_tree, "disallow", "test_case5.json")
+    report = write_json(
+        unit_env.root / "report.json",
+        cross_validate_report(cv_case(src, "move_to_allow")),
+    )
+
+    apply_cross_validate_results(str(report), str(case_tree) + "/")
+
+    assert occupied.read_bytes() == original, "the existing case was overwritten"
+    assert (case_tree / "allow" / "cv_test_case5_2.json").exists()
+
+
+def test_the_collision_is_reported_rather_than_silent(unit_env, case_tree, capsys):
+    write_json(case_tree / "allow" / "cv_test_case5.json", envelope_case())
+    src = _case_file(case_tree, "disallow", "test_case5.json")
+    report = write_json(
+        unit_env.root / "report.json",
+        cross_validate_report(cv_case(src, "move_to_allow")),
+    )
+
+    apply_cross_validate_results(str(report), str(case_tree) + "/")
+
+    out = capsys.readouterr().out
+    assert "WARNING" in out
+    assert "already exists" in out
+
+
+def test_a_second_collision_keeps_counting(unit_env, case_tree):
+    write_json(case_tree / "allow" / "cv_test_case5.json", envelope_case())
+    write_json(case_tree / "allow" / "cv_test_case5_2.json", envelope_case())
+    src = _case_file(case_tree, "disallow", "test_case5.json")
+    report = write_json(
+        unit_env.root / "report.json",
+        cross_validate_report(cv_case(src, "move_to_allow")),
+    )
+
+    apply_cross_validate_results(str(report), str(case_tree) + "/")
+
+    assert (case_tree / "allow" / "cv_test_case5_3.json").exists()
+
+
+def test_an_uncontested_name_is_used_as_is(unit_env, case_tree):
+    """The common path must keep the plain ``cv_`` name it always had."""
+    src = _case_file(case_tree, "disallow", "test_case5.json")
+    report = write_json(
+        unit_env.root / "report.json",
+        cross_validate_report(cv_case(src, "move_to_allow")),
+    )
+
+    apply_cross_validate_results(str(report), str(case_tree) + "/")
+
+    assert (case_tree / "allow" / "cv_test_case5.json").exists()
+    assert not (case_tree / "allow" / "cv_test_case5_2.json").exists()
+
+
+# ---------------------------------------------------------------------------
+# STEP 3c · keeping the guidance map honest
+# ---------------------------------------------------------------------------
+
+
+def test_a_moved_case_is_followed_in_the_guidance_map(unit_env, case_tree):
+    src = _case_file(case_tree, "disallow", "test_case5.json")
+    mapping = write_json(
+        unit_env.root / "map.json", {"a rule": ["disallow/test_case5.json"]}
+    )
+    report = write_json(
+        unit_env.root / "report.json",
+        cross_validate_report(cv_case(src, "move_to_allow")),
+    )
+
+    apply_cross_validate_results(
+        str(report), str(case_tree) + "/", guidance_map_file=str(mapping)
+    )
+
+    assert json.loads(mapping.read_text()) == {"a rule": ["allow/cv_test_case5.json"]}
+
+
+def test_a_removed_case_is_dropped_from_the_guidance_map(unit_env, case_tree):
+    src = _case_file(case_tree, "disallow", "test_case5.json")
+    mapping = write_json(
+        unit_env.root / "map.json",
+        {"a rule": ["disallow/test_case5.json", "allow/test_case1.json"]},
+    )
+    report = write_json(
+        unit_env.root / "report.json", cross_validate_report(cv_case(src, "remove"))
+    )
+
+    apply_cross_validate_results(
+        str(report), str(case_tree) + "/", guidance_map_file=str(mapping)
+    )
+
+    assert json.loads(mapping.read_text()) == {"a rule": ["allow/test_case1.json"]}
+
+
+def test_a_kept_case_leaves_the_guidance_map_untouched(unit_env, case_tree):
+    src = _case_file(case_tree, "disallow", "test_case5.json")
+    before = {"a rule": ["disallow/test_case5.json"]}
+    mapping = write_json(unit_env.root / "map.json", before)
+    report = write_json(
+        unit_env.root / "report.json", cross_validate_report(cv_case(src, "keep"))
+    )
+
+    apply_cross_validate_results(
+        str(report), str(case_tree) + "/", guidance_map_file=str(mapping)
+    )
+
+    assert json.loads(mapping.read_text()) == before
+
+
+def test_the_map_is_optional(unit_env, case_tree):
+    """Omitting it must behave exactly as before the map existed."""
+    src = _case_file(case_tree, "disallow", "test_case5.json")
+    report = write_json(
+        unit_env.root / "report.json",
+        cross_validate_report(cv_case(src, "move_to_allow")),
+    )
+
+    apply_cross_validate_results(str(report), str(case_tree) + "/")
+
+    assert (case_tree / "allow" / "cv_test_case5.json").exists()

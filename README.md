@@ -110,13 +110,16 @@ This installs the `smith` CLI command.
 ### Running the tests
 
 ```bash
-make integration    # stage-level tests driving the real smith CLI
+make unit           # offline subset: no .env, no network, no Docker (run by `make ci`)
+make integration    # stage-level tests driving the real smith CLI (opt-in)
 ```
 
-`tests/integration/` covers one pipeline stage per module (generation, translation, policy
-testing/validation, cross-validate, cpex translate, promptfoo config, bypass generation,
-refinement suggestions, explorer/classifier, snapshot, smoke), running against frozen
-fixtures. 
+`tests/integration/` holds both lanes — the pytest **marker** decides which runs, and a bare
+`pytest` selects the unit lane. Most pipeline stages have a pair of modules,
+Unit tests fake the
+external boundaries and run against frozen fixtures; integration tests use the real services
+and skip cleanly when one (Docker/OPA, an LLM, the example agent, ARES, Promptfoo) is absent.
+If a pipeline stage just simply reads variables from .env or start an online server, a unit test is not needed. 
 
 The separate `make test` target is the OPA policy scorecard, which scores the current
 policy against your generated test cases rather than testing Smith itself.
@@ -272,6 +275,14 @@ This generates `purpose`, `contexts`, and `policy` text from your guidance and s
 smith --flag test_generation
 ```
 
+Add `--mode update` to regenerate only the test cases whose guidance changed since the last run, instead of rebuilding the whole suite:
+
+```bash
+smith --flag test_generation --mode update
+```
+
+Guidance that was removed or edited loses its test cases; guidance that was added or edited is regenerated and appended, so every other case is left untouched. Reformatting guidance is not a content change, and an unchanged guidance file stops the run before any model call. Update mode needs the snapshots a previous run wrote (`references/guidance_snapshot.txt` and `references/guidance_raw_snapshot.txt`); without them it says so and exits, so a first run must use `--mode fresh` (the default).
+
 This runs the following stages:
 
 1. **Decomposition** — Break guidance into testable atomic conditions
@@ -390,7 +401,6 @@ smith/
 │   ├── policy_regal/        # Regal formatting workflow
 │   └── policy_duplication/  # Deduplication workflow
 ├── references/              # All intermediate results (incl. scorecard/ outputs)
-├── scripts/                 # Utility bash scripts (e.g. clean_generated.sh)
 ├── pyproject.toml           # Packaging, dependencies, ruff/black config
 ├── src/smith/               # The `smith` Python package
 │   ├── cli.py               # Main CLI entry point (smith.cli:main)
@@ -413,10 +423,7 @@ smith/
 
 ## Contributing
 
-Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for the
-development workflow, coding standards, source-file license headers, and the
-Developer Certificate of Origin (DCO) sign-off requirement. A green `make ci`
-locally means a green pipeline.
+Contributions are welcome. Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
 ## Security
 

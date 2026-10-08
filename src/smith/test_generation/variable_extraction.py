@@ -7,6 +7,8 @@ import httpx
 from openai import OpenAI
 from dotenv import load_dotenv
 
+from smith.test_generation.concurrency import run_batches
+
 load_dotenv()
 
 
@@ -21,6 +23,7 @@ def variable_extraction(
     output_file_variables,
     batch_processing=False,
     batch_size=10,
+    generation_concurrency=None,
 ):
 
     system_instruction = """
@@ -80,15 +83,11 @@ def variable_extraction(
     client = OpenAI(api_key=api_key, base_url=openai_base_url, http_client=http_client)
 
     if batch_processing and isinstance(guidances, list) and len(guidances) > batch_size:
-        all_results = []
-        total_batches = (len(guidances) + batch_size - 1) // batch_size
-        for i in range(0, len(guidances), batch_size):
-            batch = guidances[i : i + batch_size]
-            batch_num = i // batch_size + 1
-            print(
-                f"Sending batch {batch_num}/{total_batches} ({len(batch)} items) for variable extraction..."
-            )
+        batches = [
+            guidances[i : i + batch_size] for i in range(0, len(guidances), batch_size)
+        ]
 
+        def _extract_batch(batch):
             user_instruction = f"""
     System variable list: {system_variables}
 
@@ -107,17 +106,21 @@ def variable_extraction(
             match = re.search(r"```json\s*(.*?)```", llm_output, re.DOTALL)
             if match:
                 llm_output = match.group(1).strip()
-            try:
-                batch_results = json.loads(llm_output)
-                if not isinstance(batch_results, list):
-                    batch_results = [batch_results]
-                for j in range(len(batch_results)):
-                    batch[j]["system_variables"] = batch_results[j]["system_variables"]
-                    batch[j]["prompt_variables"] = batch_results[j]["prompt_variables"]
+            batch_results = json.loads(llm_output)
+            if not isinstance(batch_results, list):
+                batch_results = [batch_results]
+            for j in range(len(batch_results)):
+                batch[j]["system_variables"] = batch_results[j]["system_variables"]
+                batch[j]["prompt_variables"] = batch_results[j]["prompt_variables"]
+            return batch
+
+        # Flatten in batch order so the output matches a serial run.
+        all_results = []
+        for batch in run_batches(
+            batches, _extract_batch, "variable extraction", generation_concurrency
+        ):
+            if batch:
                 all_results.extend(batch)
-            except json.JSONDecodeError as e:
-                print(f"Error parsing LLM output for batch {batch_num}:", e)
-                print("Raw output will be skipped for this batch")
 
         with open(output_file_variables, "w") as f:
             json.dump(all_results, f, indent=4)

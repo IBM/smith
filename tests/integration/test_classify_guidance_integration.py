@@ -52,6 +52,7 @@ write) and its failure ordering. It was already tested in unit test.
 from __future__ import annotations
 
 import json
+import re
 import socket
 import subprocess
 import sys
@@ -81,6 +82,9 @@ CLASSIFY_GUIDANCE = (
 )
 
 
+_TOKEN_RE = re.compile(r'window\.SMITH_RESET_TOKEN\s*=\s*"([^"]+)"')
+
+
 def _port_in_use(port: int) -> bool:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         return s.connect_ex(("127.0.0.1", port)) == 0
@@ -102,16 +106,33 @@ def _get(url: str, timeout: float = 5.0):
         return None, ""
 
 
-def _post(url: str, payload, timeout: float = 600.0):
+def _extract_token(html: str) -> str:
+    """Pull the per-process token the server injected into ``GET /``.
+
+    The server replaces ``__SMITH_RESET_TOKEN__`` before serving the page.
+    The test must echo it on every POST — the same flow the browser follows
+    after reading ``window.SMITH_RESET_TOKEN`` from the page.
+    """
+    m = _TOKEN_RE.search(html)
+    if not m or "__SMITH_RESET_TOKEN__" in m.group(1):
+        raise RuntimeError(
+            "could not extract SMITH_RESET_TOKEN from the served HTML"
+        )
+    return m.group(1)
+
+
+def _post(url: str, payload, token: str = "", timeout: float = 600.0):
     """POST JSON; return ``(status, body)``. HTTP error codes are returned, not raised.
 
     ``payload`` may be ``bytes`` to send a deliberately malformed body. The default
     timeout is generous because ``/classify`` fans out one model call per line.
+    ``token`` is the per-process ``X-Smith-Token`` obtained from ``GET /``.
     """
     data = payload if isinstance(payload, bytes) else json.dumps(payload).encode()
-    request = urllib.request.Request(
-        url, data=data, headers={"Content-Type": "application/json"}
-    )
+    headers = {"Content-Type": "application/json"}
+    if token:
+        headers["X-Smith-Token"] = token
+    request = urllib.request.Request(url, data=data, headers=headers)
     try:
         with urllib.request.urlopen(request, timeout=timeout) as resp:  # noqa: S310
             return resp.status, resp.read().decode()
@@ -165,7 +186,11 @@ def classifier_server():
                 f"{out[-2000:]}"
             )
 
-        yield {"base": base, "proc": proc}
+        # Fetch GET / to extract the per-process token — mirrors the browser flow.
+        _, html = _get(f"{base}/", timeout=5.0)
+        token = _extract_token(html)
+
+        yield {"base": base, "proc": proc, "token": token}
     finally:
         proc.terminate()
         try:
@@ -238,7 +263,9 @@ def classified(classifier_server):
         pytest.skip(f"Smith LLM not configured (missing {', '.join(missing)})")
 
     status, body = _post(
-        classifier_server["base"] + "/classify", {"guidance": CLASSIFY_GUIDANCE}
+        classifier_server["base"] + "/classify",
+        {"guidance": CLASSIFY_GUIDANCE},
+        token=classifier_server["token"],
     )
     assert status == 200, f"/classify failed with {status}: {body[:1000]}"
 
@@ -290,7 +317,10 @@ def test_a_malformed_classify_body_is_rejected_without_calling_the_model(
     classifier_server,
 ):
     status, body = _post(
-        classifier_server["base"] + "/classify", b"{not json", timeout=30.0
+        classifier_server["base"] + "/classify",
+        b"{not json",
+        token=classifier_server["token"],
+        timeout=30.0,
     )
     assert status == 400
     assert json.loads(body)["error"] == "invalid JSON"
