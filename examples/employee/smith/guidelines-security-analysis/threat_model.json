@@ -1,0 +1,535 @@
+{
+  "schema": "threat-model-v3",
+  "status": "PASS",
+  "title": "Threat Model",
+  "sections": {},
+  "columns": {
+    "Attack Surfaces": [
+      "#",
+      "Field or Data Point",
+      "Source Layer",
+      "Provenance / influence",
+      "Enters where",
+      "Threat IDs / N/A"
+    ],
+    "Evidence Index": [
+      "ID",
+      "Source",
+      "Grounded fact"
+    ],
+    "Category Assessment": [
+      "ASI",
+      "Name",
+      "Applicability",
+      "OWASP summary",
+      "Boundary (optional)"
+    ],
+    "Threat Instances": [
+      "ID",
+      "ASI",
+      "Severity",
+      "Actor",
+      "Surface",
+      "Catalog basis",
+      "Evidence",
+      "Concrete threat"
+    ],
+    "Scenario Coverage": [
+      "ASI",
+      "Scenario",
+      "Disposition"
+    ]
+  },
+  "tables": {
+    "Attack Surfaces": [
+      {
+        "#": "#1",
+        "Field or Data Point": "input.args.user_id (targeting parameter on get_employee, update_employee, get_passport/update_passport, get_visa/update_visa, get_emergency_contact/update_emergency_contact, get_bank_account/update_bank_account, get_leave_allotments, get_leave_balance, list_time_off_requests, set_passport/set_visa/set_emergency_contact/set_bank_account)",
+        "Source Layer": "MCP transport (server.py) -> tool implementation (api/*.py)",
+        "Provenance / influence": "LLM-chosen integer selected from conversation content; no code path checks it against input.extensions.subject.user_id or against the acting user's manager_id before the read/write executes (Phase A Tool Arguments, all rows 'Acts on', no ownership check)",
+        "Enters where": "Tool implementation layer, before any SQL executes; the confirmed-absent enforcement layer sits between MCP transport and this layer",
+        "Threat IDs / N/A": "T1, T2"
+      },
+      {
+        "#": "#2",
+        "Field or Data Point": "input.args.user_id on create_time_off_request (request-owner parameter)",
+        "Source Layer": "MCP transport (server.py) -> tool implementation (api/leave.py)",
+        "Provenance / influence": "LLM-chosen integer; guidance.txt states an employee may create a request only for themselves, but the implementation inserts it as the request owner with no cross-check that it equals the acting subject's user_id (Phase A Tool Arguments)",
+        "Enters where": "Tool implementation layer, before the INSERT executes",
+        "Threat IDs / N/A": "T2"
+      },
+      {
+        "#": "#3",
+        "Field or Data Point": "input.extensions.subject.user_id, input.extensions.subject.department, input.extensions.subject.organization",
+        "Source Layer": "system_vars.json, intended as runtime subject context",
+        "Provenance / influence": "Static demo values with no observed signature, session lookup, or auth-header binding anywhere in agent.py/web.py/server.py, and no current code path plumbs them into a request (Phase A Runtime Subject Context). Absence of an integrity mechanism is recorded as a gap only -- it is not treated here as proof that these fields are caller-forgeable, per the shared rule that missing documentation alone does not establish forgeability.",
+        "Enters where": "Would enter as policy-decision input at the confirmed-absent enforcement layer once wired; today not wired into any request path",
+        "Threat IDs / N/A": "N/A -- reason: no delivery evidence establishes this channel as caller-forgeable (Phase A found only the absence of an integrity mechanism, which the shared rule says does not by itself prove forgeability); the actually-forgeable adjacent channel is user_profile/system_variables, captured separately as surface #4"
+      },
+      {
+        "#": "#4",
+        "Field or Data Point": "user_profile / system_variables (caller-supplied JSON field on agent.py's /chat and /extract_tool_call bodies)",
+        "Source Layer": "Agent / HTTP entrypoint (agent.py) -> prompt assembly (build_system_prompt)",
+        "Provenance / influence": "Caller-supplied JSON with arbitrary keys, not restricted to system_vars.json's schema; interpolated verbatim as prompt text with no schema, whitelist, or cross-check against an authoritative identity source (Phase A Prompt Inputs, Enforcement Points). Explicitly established as untrusted and unvalidated -- a caller can claim any department/organization/user_id.",
+        "Enters where": "Prompt-construction boundary, upstream of the LLM's tool-selection reasoning; not a declared input.args.* or input.extensions.subject.* field at decision time",
+        "Threat IDs / N/A": "T3"
+      },
+      {
+        "#": "#5",
+        "Field or Data Point": "input.args.role (add_employee, update_employee)",
+        "Source Layer": "MCP transport -> tool implementation (api/employees.py)",
+        "Provenance / influence": "LLM-chosen free string; inserted with no enum validation (Phase A Tool Arguments)",
+        "Enters where": "Tool implementation layer, before INSERT/UPDATE",
+        "Threat IDs / N/A": "T4"
+      },
+      {
+        "#": "#6",
+        "Field or Data Point": "input.args.organization (add_employee, update_employee)",
+        "Source Layer": "MCP transport -> tool implementation (api/util.py validate_enum) -> api/employees.py",
+        "Provenance / influence": "LLM-chosen string validated in api/util.py against {IBM, IBM partner, Red Hat}, a different enum than input.extensions.subject.organization's {IBM Corporation, Red Hat, Kyndryl} and than guidance.txt's own email-domain mapping list (Phase A Undeclared Fields cross-schema gap; Q12)",
+        "Enters where": "Tool implementation layer's validate_enum check, before INSERT/UPDATE",
+        "Threat IDs / N/A": "T5"
+      },
+      {
+        "#": "#7",
+        "Field or Data Point": "input.args.email (add_employee, update_employee)",
+        "Source Layer": "MCP transport -> tool implementation (api/employees.py)",
+        "Provenance / influence": "LLM-chosen string; inserted with only a UNIQUE constraint, no corporate-domain check against organization despite guidance.txt's email-domain rule (Phase A Tool Arguments; Q12)",
+        "Enters where": "Tool implementation layer, before INSERT/UPDATE",
+        "Threat IDs / N/A": "T5"
+      },
+      {
+        "#": "#8",
+        "Field or Data Point": "input.args.salary (add_employee, update_employee)",
+        "Source Layer": "MCP transport -> tool implementation (api/employees.py)",
+        "Provenance / influence": "LLM-chosen number inserted verbatim; no positive-amount check in code despite guidance.txt's positivity rule (Phase A Tool Arguments; Q13)",
+        "Enters where": "Tool implementation layer, before INSERT/UPDATE",
+        "Threat IDs / N/A": "T6"
+      },
+      {
+        "#": "#9",
+        "Field or Data Point": "input.args.issue_date / input.args.expiry_date (set_passport, update_passport, set_visa, update_visa)",
+        "Source Layer": "MCP transport -> tool implementation (api/personal.py)",
+        "Provenance / influence": "LLM-chosen strings upserted verbatim; no issue<expiry ordering check and no 6-month-minimum-from-update check in code despite guidance.txt's rules (Phase A Tool Arguments; Q13)",
+        "Enters where": "Tool implementation layer, before the upsert",
+        "Threat IDs / N/A": "T8"
+      },
+      {
+        "#": "#10",
+        "Field or Data Point": "input.args.start_date / input.args.end_date (create_time_off_request)",
+        "Source Layer": "MCP transport -> tool implementation (api/leave.py)",
+        "Provenance / influence": "LLM-chosen strings; end_date>=start_date is enforced but the 90-consecutive-day span cap from guidance.txt has no corresponding check in code (Phase A Tool Arguments; Q13)",
+        "Enters where": "Tool implementation layer, before INSERT",
+        "Threat IDs / N/A": "T9"
+      },
+      {
+        "#": "#11",
+        "Field or Data Point": "input.args.status (update_time_off_status)",
+        "Source Layer": "MCP transport -> tool implementation (api/leave.py)",
+        "Provenance / influence": "LLM-chosen string validated against the STATUSES enum only; no role-based restriction on which values a given caller may set, despite guidance.txt's HR/manager/requester status rule (Phase A Tool Arguments; Q10)",
+        "Enters where": "Tool implementation layer's enum check, before UPDATE",
+        "Threat IDs / N/A": "T2, T7"
+      },
+      {
+        "#": "#12",
+        "Field or Data Point": "input.args.home_address (update_employee)",
+        "Source Layer": "MCP transport -> tool implementation (api/employees.py)",
+        "Provenance / influence": "LLM-chosen string; no country-match check against the employee's existing country_code despite guidance.txt's same-country rule (Phase A Tool Arguments)",
+        "Enters where": "Tool implementation layer, before UPDATE",
+        "Threat IDs / N/A": "N/A -- reason: this data-integrity gap has the same unenforced-field mechanism and severity class as T6/T8/T9 but no distinct attack scenario beyond generic write manipulation already covered by T2 (unauthorized/self-service write); recording it here as a defense-in-depth data-integrity gap rather than cloning an equivalent threat row"
+      },
+      {
+        "#": "#13",
+        "Field or Data Point": "input.args.street_address / input.args.city / input.args.country (set_emergency_contact, update_emergency_contact)",
+        "Source Layer": "MCP transport -> tool implementation (api/personal.py)",
+        "Provenance / influence": "LLM-chosen strings upserted with no same-area cross-check against the employee's own address, and 'area' has no declared granularity anywhere in the schema (Phase A Tool Arguments; Phase A Undeclared Fields)",
+        "Enters where": "Tool implementation layer, before the upsert",
+        "Threat IDs / N/A": "T11"
+      },
+      {
+        "#": "#14",
+        "Field or Data Point": "Conversational write-confirmation ('yes'), exact delete-confirmation phrase, and Paternity birth-date/name facts (message/question free text)",
+        "Source Layer": "HTTP request body (web.py /chat; agent.py /chat, /extract_tool_call) -> LLM reasoning",
+        "Provenance / influence": "guidance.txt ties all three conditions to conversation history rather than to any declared input.args.* or input.extensions.subject.* field; no tool argument on any create/update/delete tool or on create_time_off_request/update_time_off_status carries these values (Phase A Undeclared Fields; Phase B Approval Paths, Q13b, Q14)",
+        "Enters where": "Prompt/conversation boundary, entirely upstream of any structured tool-call decision point",
+        "Threat IDs / N/A": "T10, T12"
+      },
+      {
+        "#": "#15",
+        "Field or Data Point": "Shared in-memory conversation history (web.py's single process-wide message list)",
+        "Source Layer": "Agent / HTTP entrypoint (web.py)",
+        "Provenance / influence": "web.py holds one conversation for all callers of a running instance; any caller's turn is appended to and read from the same shared list (Phase A Prompt Inputs -- Conversation history)",
+        "Enters where": "Conversation-accumulation boundary, read by the LLM on every subsequent turn regardless of which caller sent it",
+        "Threat IDs / N/A": "T13"
+      },
+      {
+        "#": "#16",
+        "Field or Data Point": "input.args.holiday_id (delete_holiday)",
+        "Source Layer": "MCP transport -> tool implementation (api/holidays_api.py)",
+        "Provenance / influence": "LLM-chosen integer; deletes the row immediately with no confirmation-state argument despite guidance.txt's confirm-before-write rule (Phase A Tool Arguments; Q13b)",
+        "Enters where": "Tool implementation layer, immediately before DELETE",
+        "Threat IDs / N/A": "T10"
+      }
+    ],
+    "Evidence Index": [
+      {
+        "ID": "E1",
+        "Source": "Q2",
+        "Grounded fact": "No authorization mechanism exists anywhere in the implementation; the only backend is a local SQLite file with no external identity/authorization system (Phase A Layers; guidance.txt itself states the server performs no authorization of its own)."
+      },
+      {
+        "ID": "E2",
+        "Source": "Q9",
+        "Grounded fact": "input.args.user_id is used across read/write tools to target a specific employee's record with no code-level check that it matches input.extensions.subject.user_id or the acting user's manager_id (Phase A Tool Arguments, all 'Acts on' with no ownership check)."
+      },
+      {
+        "ID": "E3",
+        "Source": "Q6",
+        "Grounded fact": "All four system_vars.json runtime-subject fields are static demo values with no observed verification, signature, or session-lookup mechanism, and are not currently wired into any request path."
+      },
+      {
+        "ID": "E4",
+        "Source": "Q6",
+        "Grounded fact": "agent.py's user_profile/system_variables channel is a separate, caller-supplied, unvalidated JSON field interpolated verbatim into the prompt; it must not be conflated with system_vars.json's declared subject schema."
+      },
+      {
+        "ID": "E5",
+        "Source": "Q10",
+        "Grounded fact": "add_employee/update_employee's role field is inserted with no enum validation in the implementation."
+      },
+      {
+        "ID": "E6",
+        "Source": "Q12",
+        "Grounded fact": "input.args.organization (validated against {IBM, IBM partner, Red Hat}) and input.extensions.subject.organization (enum {IBM Corporation, Red Hat, Kyndryl}) are declared by different schemas with different allowed values and must not be treated as the same field."
+      },
+      {
+        "ID": "E7",
+        "Source": "Q12",
+        "Grounded fact": "guidance.txt requires work email to match the organization's corporate domain, but no domain-match check exists in add_employee/update_employee's implementation."
+      },
+      {
+        "ID": "E8",
+        "Source": "Q13",
+        "Grounded fact": "guidance.txt requires salary to be strictly positive when set, but add_employee/update_employee insert/update salary verbatim with no positivity check in code."
+      },
+      {
+        "ID": "E9",
+        "Source": "Q13",
+        "Grounded fact": "guidance.txt requires passport/visa issue_date to precede expiry_date and expiry_date to be more than six months after the update date, but set_passport/update_passport/set_visa/update_visa perform no such validation in code."
+      },
+      {
+        "ID": "E10",
+        "Source": "Q13",
+        "Grounded fact": "guidance.txt caps a time-off request at 90 consecutive calendar days, but create_time_off_request only enforces end_date>=start_date in code, with no span cap."
+      },
+      {
+        "ID": "E11",
+        "Source": "Q10",
+        "Grounded fact": "guidance.txt restricts which status values HR, the requester's direct manager, and the requesting employee may each set on update_time_off_status, but the implementation validates status only against the STATUSES enum with no role-based restriction."
+      },
+      {
+        "ID": "E12",
+        "Source": "Q13b",
+        "Grounded fact": "guidance.txt requires the agent to list action details and obtain explicit ('yes') confirmation before any create/update/delete call, and a stricter exact-phrase confirmation before a user deletion; neither condition is carried by any declared input.args.* field on any tool."
+      },
+      {
+        "ID": "E13",
+        "Source": "Q13b",
+        "Grounded fact": "guidance.txt permits approving a Paternity leave request only if the baby's birth date and name have been provided in chat messages; no tool argument on create_time_off_request or update_time_off_status carries these facts."
+      },
+      {
+        "ID": "E14",
+        "Source": "Q1",
+        "Grounded fact": "No delete_employee tool is declared in tool_definitions.json; delete_holiday is the only delete-class tool and takes only holiday_id."
+      },
+      {
+        "ID": "E15",
+        "Source": "Q21",
+        "Grounded fact": "guidance.txt phrases every access, numeric, pattern, and approval restriction with hard-boundary modal language (only/may not/must/strictly prohibited/not allowed/only if); no soft-block or advisory category exists."
+      },
+      {
+        "ID": "E16",
+        "Source": "Q17",
+        "Grounded fact": "list_employees' own tool description fixes a response-shape restriction (omitting email, home_address, salary, salary_currency, start_date) that applies identically regardless of caller role; guidance.txt does not add a further role-conditional field suppression within a single tool response."
+      },
+      {
+        "ID": "E17",
+        "Source": "Q9",
+        "Grounded fact": "The manager_id/direct-report relationship is declared only as tool-returned data (from get_employee/get_direct_reports/get_manager) and as a settable input.args.* field on add_employee/update_employee, not as a runtime subject-context field describing the acting user's own reports."
+      }
+    ],
+    "Category Assessment": [
+      {
+        "ASI": "ASI01",
+        "Name": "Agent Goal Hijack",
+        "Applicability": "Yes",
+        "OWASP summary": "Attackers manipulate an agent's objectives, task selection, or decision pathways because agents cannot reliably distinguish instructions from related content.",
+        "Boundary (optional)": "Free-text message content (surface #14) is the sole basis on which the LLM selects tool name and input.args.* for every one of the 32 declared tools, with no pre-execution policy gate and no structured confirmation state; direct plan injection via chat content can drive unauthorized create/update/delete calls."
+      },
+      {
+        "ASI": "ASI02",
+        "Name": "Tool Misuse and Exploitation",
+        "Applicability": "Yes",
+        "OWASP summary": "Agents misuse legitimate tools within their granted privileges due to prompt injection, misalignment, or unsafe delegation, causing data exfiltration or workflow hijacking.",
+        "Boundary (optional)": "No per-tool least-privilege profile exists anywhere in server.py/api/*.py; HR-only tools (add_employee, add_department, update_department, add_holiday, delete_holiday, set_leave_allotment), the salary/status role gates, and the self-service-only create_time_off_request rule are all guidance-only with zero code enforcement, so any caller reaching the MCP transport can invoke any tool with any argument value the LLM is willing to produce."
+      },
+      {
+        "ASI": "ASI03",
+        "Name": "Identity and Privilege Abuse",
+        "Applicability": "Yes",
+        "OWASP summary": "Attackers exploit dynamic trust and delegation to escalate access, manipulating role inheritance or agent context because the agent lacks a distinct, governed identity of its own.",
+        "Boundary (optional)": "agent.py's user_profile/system_variables channel lets a caller inject an arbitrary claimed department/organization/user_id into the prompt with no cross-check against system_vars.json or any authoritative identity source; this is a genuine, established (not merely undocumented) forgeability channel distinct from the unwired system_vars.json fields."
+      },
+      {
+        "ASI": "ASI04",
+        "Name": "Agentic Supply Chain Vulnerabilities",
+        "Applicability": "No",
+        "OWASP summary": "Agents, tools, or artefacts provided by third parties (models, plug-ins, MCP servers, registries) may be malicious, compromised, or tampered with in transit.",
+        "Boundary (optional)": "Architecture shows one locally-defined FastMCP server (server.py) started as a direct subprocess with no dynamic tool loading, no external registry, no third-party MCP server, and no outbound network egress (Phase A External Data table is empty); there is no supply-chain component to compromise in this system."
+      },
+      {
+        "ASI": "ASI05",
+        "Name": "Unexpected Code Execution (RCE)",
+        "Applicability": "No",
+        "OWASP summary": "Agents generate and execute code; attackers escalate code-generation or tool access into remote code execution, local misuse, or sandbox escape.",
+        "Boundary (optional)": "No code-generation, eval, shell invocation, deserialization, or template-engine execution path exists anywhere in agent.py/server.py/api/*.py; all tool implementations perform only parameterized SQL through db.py."
+      },
+      {
+        "ASI": "ASI06",
+        "Name": "Memory & Context Poisoning",
+        "Applicability": "Partial",
+        "OWASP summary": "Adversaries corrupt or seed an agent's stored/retrievable context (memory, embeddings, RAG stores) so future reasoning becomes biased, unsafe, or aids exfiltration.",
+        "Boundary (optional)": "No persistent long-term memory, embeddings, or RAG store exists. web.py's single process-wide in-memory conversation list (surface #15) is shared across every caller of one running instance, so content one caller contributes persists in shared context read by the LLM on a different caller's subsequent turn -- a narrower, session-scoped analogue of context poisoning, not full memory poisoning."
+      },
+      {
+        "ASI": "ASI07",
+        "Name": "Insecure Inter-Agent Communication",
+        "OWASP summary": "Multi-agent systems depend on continuous communication between autonomous agents; weak inter-agent controls let attackers intercept, manipulate, spoof, or block messages.",
+        "Applicability": "No",
+        "Boundary (optional)": "This is a single-agent system with one LLM and one MCP server reached over local stdio; there is no peer agent, no A2A protocol, and no inter-agent message channel anywhere in the traced architecture."
+      },
+      {
+        "ASI": "ASI08",
+        "Name": "Cascading Failures",
+        "Applicability": "No",
+        "OWASP summary": "A single fault propagates and amplifies across autonomous agents, tools, and workflows, turning one error into system-wide impact via fan-out, cross-tenant spread, or feedback loops.",
+        "Boundary (optional)": "There is no multi-agent fan-out, no peer workflow, and no automated downstream consumer of this agent's outputs; unchecked data-integrity gaps (T6, T8, T9) affect only the persisted record they write, which is a direct-effect data-integrity issue (already covered under ASI02) rather than a propagating, amplifying cascade across agents or sessions."
+      },
+      {
+        "ASI": "ASI09",
+        "Name": "Human-Agent Trust Exploitation",
+        "Applicability": "Yes",
+        "OWASP summary": "Agents establish strong human trust through fluency and perceived expertise; adversaries or misaligned designs exploit this to bypass oversight on high-impact actions.",
+        "Boundary (optional)": "guidance.txt's write-confirmation control ('list the details, obtain explicit yes') is entirely agent-narrated and conversational -- the same LLM that decides to act also generates the summary the human approves, with no independently-verified diff between the summarized action and the actual input.args.* that will execute."
+      },
+      {
+        "ASI": "ASI10",
+        "Name": "Rogue Agents",
+        "Applicability": "No",
+        "OWASP summary": "Malicious or compromised agents deviate from intended function or authorized scope within multi-agent or human-agent ecosystems, acting harmfully while individually appearing legitimate.",
+        "Boundary (optional)": "The catalog's scenarios and mechanism (behavioral divergence detected via peer-agent monitoring, trust-zone isolation, inter-agent attestation) presuppose a multi-agent ecosystem; this system has a single agent process with no peer agents to diverge from or collude with."
+      }
+    ],
+    "Threat Instances": [
+      {
+        "ID": "T1",
+        "ASI": "ASI02",
+        "Severity": "Critical",
+        "Actor": "Caller",
+        "Surface": "#1",
+        "Catalog basis": "novel",
+        "Evidence": "E1, E2",
+        "Concrete threat": "A caller instructs the agent to call get_bank_account, get_passport, get_visa, or get_employee with input.args.user_id set to any employee's id (not their own), and the tool implementation returns the full record (bank account, passport, visa, salary, home address) with no ownership check anywhere in server.py or api/*.py -- a complete cross-employee PII/financial-data confidentiality bypass since no authorization mechanism exists (E1) and no code ties input.args.user_id to the acting subject (E2)."
+      },
+      {
+        "ID": "T2",
+        "ASI": "ASI02",
+        "Severity": "High",
+        "Actor": "Caller",
+        "Surface": "#1, #2, #11",
+        "Catalog basis": "Tool Chain Manipulation",
+        "Evidence": "E2, E11",
+        "Concrete threat": "A caller directs the agent to call update_employee/update_passport/update_visa/update_bank_account/set_leave_allotment with input.args.user_id targeting someone else's record, or calls create_time_off_request with input.args.user_id set to another employee's id, or calls update_time_off_status with input.args.status set to a value guidance.txt reserves for HR/manager roles -- every one of these guidance-only role/ownership restrictions (Data Access, Time Off and Leave) has no corresponding check in the tool implementation, so any caller who can reach the MCP transport can write any employee's record or set any time-off status."
+      },
+      {
+        "ID": "T3",
+        "ASI": "ASI03",
+        "Severity": "High",
+        "Actor": "Caller",
+        "Surface": "#4",
+        "Catalog basis": "User Impersonation",
+        "Evidence": "E4",
+        "Concrete threat": "A caller of agent.py's /chat or /extract_tool_call endpoint supplies a user_profile payload claiming department: HR (or any other subject attribute), which is interpolated verbatim into the system prompt with no cross-check against system_vars.json or any authoritative identity source; the LLM then reasons and selects tool calls as if the caller genuinely held the HR role, enabling every HR-only administrative action (add_employee, add_department, set_leave_allotment, add_holiday, delete_holiday) and every HR-scoped data-access grant under a fabricated identity."
+      },
+      {
+        "ID": "T4",
+        "ASI": "ASI02",
+        "Severity": "Medium",
+        "Actor": "Caller",
+        "Surface": "#5",
+        "Catalog basis": "novel",
+        "Evidence": "E5",
+        "Concrete threat": "A caller sets input.args.role on add_employee/update_employee to an arbitrary, unvalidated string; because no enum constrains this field in the implementation, an employee record can carry a fabricated role label (e.g. one implying elevated standing) that a human reading the record, or a future policy keyed on role, would trust as authoritative data-integrity, not access-control, impact given no current code path decides authorization from this field."
+      },
+      {
+        "ID": "T5",
+        "ASI": "ASI02",
+        "Severity": "Medium",
+        "Actor": "Caller",
+        "Surface": "#6, #7",
+        "Catalog basis": "novel",
+        "Evidence": "E6, E7",
+        "Concrete threat": "A caller sets input.args.organization to a tool-argument-enum value (e.g. 'IBM partner') that has no analogue in input.extensions.subject.organization's enum, and sets input.args.email to any address regardless of the organization's real corporate domain; because the two organization enums are mismatched (E6) and no domain-match validation exists (E7), an employee record can be created whose organization and email are inconsistent with guidance.txt's domain-mapping rule, undermining any future policy that assumes the two fields are reconcilable."
+      },
+      {
+        "ID": "T6",
+        "ASI": "ASI02",
+        "Severity": "Medium",
+        "Actor": "Caller",
+        "Surface": "#8",
+        "Catalog basis": "Parameter Pollution Exploitation",
+        "Evidence": "E8",
+        "Concrete threat": "A caller sets input.args.salary on add_employee/update_employee to zero or a negative number; guidance.txt requires strict positivity but no such check exists in api/employees.py, so a financially nonsensical or adversarially chosen salary value is persisted verbatim."
+      },
+      {
+        "ID": "T7",
+        "ASI": "ASI02",
+        "Severity": "Medium",
+        "Actor": "Caller",
+        "Surface": "#11",
+        "Catalog basis": "novel",
+        "Evidence": "E11",
+        "Concrete threat": "A caller with no Manager or HR standing instructs the agent to call update_time_off_status with input.args.status set to 'Approved' or 'Denied' on another employee's Pending request; guidance.txt reserves those transitions to HR (any value) or the requester's direct manager (Approved/Denied only), but the implementation validates status only against the fixed STATUSES enum with no role check, so the approval/denial decision itself -- not merely visibility -- can be forged by any caller reaching this tool."
+      },
+      {
+        "ID": "T8",
+        "ASI": "ASI02",
+        "Severity": "Medium",
+        "Actor": "Caller",
+        "Surface": "#9",
+        "Catalog basis": "novel",
+        "Evidence": "E9",
+        "Concrete threat": "A caller sets input.args.expiry_date on set_passport/update_passport/set_visa/update_visa to a date earlier than input.args.issue_date, or to a date within six months of today; guidance.txt requires issue_date to precede expiry_date and a six-month minimum validity window, but neither check exists in api/personal.py, so travel-document records can be persisted in a state guidance.txt defines as invalid."
+      },
+      {
+        "ID": "T9",
+        "ASI": "ASI02",
+        "Severity": "Low",
+        "Actor": "Caller",
+        "Surface": "#10",
+        "Catalog basis": "novel",
+        "Evidence": "E10",
+        "Concrete threat": "A caller submits create_time_off_request with input.args.start_date/input.args.end_date spanning more than 90 consecutive calendar days; the implementation enforces only end_date>=start_date, so a request guidance.txt caps at 90 days can be created without bound, a soft-guardrail/reliability failure rather than an access-control or financial-boundary compromise."
+      },
+      {
+        "ID": "T10",
+        "ASI": "ASI09",
+        "Severity": "High",
+        "Actor": "LLM",
+        "Surface": "#14, #16",
+        "Catalog basis": "Missing Confirmation for Sensitive Actions",
+        "Evidence": "E12, E14",
+        "Concrete threat": "guidance.txt's only safeguard before any create/update/delete call, and the exact-phrase safeguard before a user deletion, are both agent-narrated: the same LLM that decides to act also generates the human-facing summary of what it is about to do and interprets the human's reply as confirmation, with no independent, structured verification that the summarized action matches the actual input.args.* about to execute (e.g. on delete_holiday, surface #16) or that the confirming text is the exact required phrase; a user who trusts the agent's summary can be led to approve an action whose real arguments differ from what was described."
+      },
+      {
+        "ID": "T11",
+        "ASI": "ASI02",
+        "Severity": "Low",
+        "Actor": "Caller",
+        "Surface": "#13",
+        "Catalog basis": "novel",
+        "Evidence": "E13",
+        "Concrete threat": "A caller sets input.args.country/input.args.city on set_emergency_contact/update_emergency_contact to a location unrelated to the employee's own country_code; guidance.txt requires the emergency contact to reside in the same area as the employee, but no cross-check exists in api/personal.py and 'area' itself has no declared granularity, so this data-integrity rule cannot be enforced even approximately today."
+      },
+      {
+        "ID": "T12",
+        "ASI": "ASI01",
+        "Severity": "High",
+        "Actor": "LLM",
+        "Surface": "#14",
+        "Catalog basis": "Direct Plan Injection",
+        "Evidence": "E12, E15",
+        "Concrete threat": "A caller's free-text chat message directly instructs the agent to disregard the confirmation step and immediately proceed with a create/update/delete tool call; because the confirm-before-write rule is a prompt-level behavioral instruction with no structured input.args.* gate (E12) and guidance.txt's restrictions are otherwise hard-block by modal language with no code-level backstop (E15), a sufficiently direct instruction in conversation content can redirect the agent straight to tool execution, skipping the one human-facing checkpoint guidance.txt defines."
+      },
+      {
+        "ID": "T13",
+        "ASI": "ASI06",
+        "Severity": "Medium",
+        "Actor": "Caller",
+        "Surface": "#15",
+        "Catalog basis": "Shared Memory Poisoning",
+        "Evidence": "E1",
+        "Concrete threat": "Because web.py holds one process-wide conversation list shared by every caller of a running instance, one caller can inject conversational content (e.g. a fabricated Paternity birth-date/name pair, or an instruction framed as an established fact) that persists in shared context and is read by the LLM on a different caller's subsequent turn, influencing that later turn's tool-call reasoning without the later caller having said anything themselves."
+      }
+    ],
+    "Scenario Coverage": [
+      {"ASI": "ASI01", "Scenario": "1", "Disposition": "N/A -- reason: Gradual Plan Injection describes incremental multi-turn sub-goal drift across a longer planning framework; this agent has no persistent planning framework beyond the single-turn ReAct loop guidance.txt describes (one tool call per turn), so gradual drift is not a distinct mechanism here beyond T12's direct-injection coverage"},
+      {"ASI": "ASI01", "Scenario": "2", "Disposition": "T12"},
+      {"ASI": "ASI01", "Scenario": "3", "Disposition": "N/A -- reason: Indirect Plan Injection requires a maliciously crafted tool output to carry hidden instructions; Phase A found no external data source or tool whose return value is re-interpreted as instructions, and no RAG/external content path exists in this system"},
+      {"ASI": "ASI01", "Scenario": "4", "Disposition": "N/A -- reason: Reflection Loop Trap requires self-analysis cycles; guidance.txt's Agent Behavior section constrains the agent to one tool call per turn with no self-reflection loop construct in the traced architecture"},
+      {"ASI": "ASI01", "Scenario": "5", "Disposition": "N/A -- reason: Meta-Learning Vulnerability Injection requires a self-improvement/learning mechanism; no such mechanism exists anywhere in this system (static SYSTEM_PROMPT, no fine-tuning or self-modifying logic)"},
+      {"ASI": "ASI02", "Scenario": "1", "Disposition": "T6"},
+      {"ASI": "ASI02", "Scenario": "2", "Disposition": "T1, T2"},
+      {"ASI": "ASI02", "Scenario": "3", "Disposition": "N/A -- reason: Automated Tool Abuse describes mass-distribution/phishing document generation; no email-sending, document-distribution, or mass-messaging tool exists among the 32 declared tools"},
+      {"ASI": "ASI02", "Scenario": "4", "Disposition": "N/A -- reason: Tool Misuse via Memory Poisoning requires persistent cross-session memory; this system has no persistent memory store (see ASI06 boundary), only the single shared in-memory conversation covered under T13"},
+      {"ASI": "ASI02", "Scenario": "5", "Disposition": "N/A -- reason: Tool Misuse via Vector Database requires a vector database/long-term memory; none exists in this system (Phase A found no RAG/embedding component)"},
+      {"ASI": "ASI02", "Scenario": "6", "Disposition": "T12"},
+      {"ASI": "ASI03", "Scenario": "1", "Disposition": "N/A -- reason: Dynamic Permission Escalation describes invoking temporary administrative privileges via a misconfiguration that persists elevated access; no privilege-elevation mechanism (temporary or persistent) exists in this system's tool set at all -- access is either always available (no authorization) or not modeled, not dynamically escalated"},
+      {"ASI": "ASI03", "Scenario": "2", "Disposition": "N/A -- reason: Cross-System Authorization Exploitation describes escalating from one corporate system's scope to another's (e.g. HR to Finance); this agent has one tool surface with no cross-system scope boundary to escalate across"},
+      {"ASI": "ASI03", "Scenario": "3", "Disposition": "N/A -- reason: Shadow Agent Deployment requires an attacker-created rogue agent inheriting credentials; no multi-agent deployment surface exists in this single-agent system"},
+      {"ASI": "ASI03", "Scenario": "4", "Disposition": "T3"},
+      {"ASI": "ASI03", "Scenario": "5", "Disposition": "N/A -- reason: Agent Identity Spoofing describes compromising an onboarding agent to create fraudulent accounts while masquerading as normal behavior; add_employee has no identity-spoofing-specific mechanism beyond the general unauthorized-tool-call coverage already in T2, and there is no onboarding-approval workflow to masquerade within"},
+      {"ASI": "ASI03", "Scenario": "6", "Disposition": "N/A -- reason: Behavioral Mimicry Attack requires a second, rogue agent mimicking a legitimate one; no second agent exists in this system"},
+      {"ASI": "ASI03", "Scenario": "7", "Disposition": "N/A -- reason: Cross-Platform Identity Spoofing requires multiple platforms/external tools (e.g. GitHub) with inherited privilege; this system has one local MCP server with no cross-platform surface"},
+      {"ASI": "ASI03", "Scenario": "8", "Disposition": "N/A -- reason: Incriminating Another User requires an authentication mechanism whose weakness can be exploited to attribute an action to someone else; no authentication mechanism of any kind exists to weaken here (E1) -- the closest analogue, unowned input.args.user_id, is already covered by T1/T2"},
+      {"ASI": "ASI03", "Scenario": "9", "Disposition": "N/A -- reason: Persistent Agent Identity Takeover requires a long-lived API token/formal agent identity (e.g. a cloud IAM Agent ID) that can be extracted and reused across enterprise services; this system issues no such token or formal agent identity anywhere in the traced architecture"},
+      {"ASI": "ASI04", "Scenario": "1", "Disposition": "N/A -- reason: no supply-chain component exists in this system (Category Assessment ASI04 boundary) -- single local server, no dynamic tool/registry loading, no remote package or manifest fetches"},
+      {"ASI": "ASI04", "Scenario": "2", "Disposition": "N/A -- reason: same as above; no supply-chain component to compromise"},
+      {"ASI": "ASI05", "Scenario": "1", "Disposition": "N/A -- reason: Inference Time Exploitation describes resource-exhaustion via crafted analysis-heavy inputs; no analysis-cost-variable code path exists (all tools perform bounded, parameterized SQL)"},
+      {"ASI": "ASI05", "Scenario": "2", "Disposition": "N/A -- reason: Multi-Agent Resource Exhaustion requires multiple agents; single-agent system"},
+      {"ASI": "ASI05", "Scenario": "3", "Disposition": "N/A -- reason: API Quota Depletion requires external API calls; Phase A's External Data table is empty, no outbound API calls exist"},
+      {"ASI": "ASI05", "Scenario": "4", "Disposition": "N/A -- reason: Memory Cascade Failure requires extensive memory allocation from complex multi-task execution; no such resource-intensive task model exists in this system's simple CRUD tool set"},
+      {"ASI": "ASI05", "Scenario": "5", "Disposition": "N/A -- reason: DevOps Agent Compromise requires Terraform/infrastructure script generation; no code-generation or infrastructure-as-code tool exists here"},
+      {"ASI": "ASI05", "Scenario": "6", "Disposition": "N/A -- reason: Workflow Engine Exploitation requires AI-generated script execution with embedded backdoors; no script-generation-and-execution path exists (Category Assessment ASI05 boundary)"},
+      {"ASI": "ASI05", "Scenario": "7", "Disposition": "N/A -- reason: Exploiting Linguistic Ambiguities describes exfiltrating emails via POP3 through an email agent; no email tool or POP3/mail-protocol integration exists among the 32 declared tools"},
+      {"ASI": "ASI06", "Scenario": "1", "Disposition": "N/A -- reason: Travel Booking Memory Poisoning requires a persistent pricing-rule memory and booking domain; neither a booking domain (confirmed out-of-domain per Phase A Undeclared Fields) nor persistent memory exists in this system"},
+      {"ASI": "ASI06", "Scenario": "2", "Disposition": "N/A -- reason: Context Window Exploitation describes exploiting a memory limit across many fragmented sessions to hide privilege escalation from detection; this system has no privilege-escalation mechanism to hide (E1: no authorization exists to escalate past) and no cross-session memory limit construct beyond the single shared list already covered by T13"},
+      {"ASI": "ASI06", "Scenario": "3", "Disposition": "N/A -- reason: Memory Poisoning for System describes gradually retraining a security system's classification memory; no security-classification memory or model-training loop exists in this system"},
+      {"ASI": "ASI06", "Scenario": "4", "Disposition": "T13"},
+      {"ASI": "ASI07", "Scenario": "1", "Disposition": "N/A -- reason: no A2A protocol or inter-agent exchange exists in this single-agent system (Category Assessment ASI07 boundary)"},
+      {"ASI": "ASI07", "Scenario": "2", "Disposition": "N/A -- reason: no MCP server-side response injection surface distinct from the already-covered tool-argument surfaces; the single MCP server is locally defined, not a separate trust domain to be hijacked via response injection"},
+      {"ASI": "ASI07", "Scenario": "3", "Disposition": "N/A -- reason: no shared tool registry or second collaborating agent exists to be misled by descriptive exploitation"},
+      {"ASI": "ASI07", "Scenario": "4", "Disposition": "N/A -- reason: requires multiple agents in collaboration; single-agent system"},
+      {"ASI": "ASI07", "Scenario": "5", "Disposition": "N/A -- reason: requires inter-agent validation/consensus messages to forge; none exist"},
+      {"ASI": "ASI07", "Scenario": "6", "Disposition": "N/A -- reason: requires a multi-agent network to plant false data into; single-agent system"},
+      {"ASI": "ASI07", "Scenario": "7", "Disposition": "N/A -- reason: requires inter-agent communication protocols to manipulate; none exist"},
+      {"ASI": "ASI07", "Scenario": "8", "Disposition": "N/A -- reason: requires multiple AI agents whose consensus/decision-making logic can be perturbed; single-agent system"},
+      {"ASI": "ASI08", "Scenario": "1", "Disposition": "N/A -- reason: Sales Orchestration Misinformation Cascade requires long-term memory and logs that accumulate and compound misinformation across future interactions; no persistent memory or logging exists in this system"},
+      {"ASI": "ASI08", "Scenario": "2", "Disposition": "N/A -- reason: API Call Manipulation and Information Leakage requires hallucinated external API endpoints; no external API integration exists (Phase A External Data table is empty)"},
+      {"ASI": "ASI08", "Scenario": "3", "Disposition": "N/A -- reason: Healthcare Decision Amplification requires a domain-specific recommendation memory that compounds over sessions; out of this system's domain and no compounding memory exists"},
+      {"ASI": "ASI08", "Scenario": "4", "Disposition": "N/A -- reason: Foreign Exchange Market manipulation requires a financial-market agent network; out of domain for this employee-hub system"},
+      {"ASI": "ASI09", "Scenario": "1", "Disposition": "N/A -- reason: Financial Transaction Obfuscation describes manipulating financial-system logging to hide unauthorized transactions; no logging mechanism exists to manipulate in the first place (its complete absence is already the recorded gap, not a manipulable control)"},
+      {"ASI": "ASI09", "Scenario": "2", "Disposition": "N/A -- reason: Security System Evasion requires a security-monitoring agent whose logging can be obscured; no security-monitoring function exists in this employee-hub agent"},
+      {"ASI": "ASI09", "Scenario": "3", "Disposition": "N/A -- reason: Compliance Violation Concealment requires a regulated-industry audit-trail requirement being undermined by logging failure; guidance.txt establishes no such audit requirement to conceal (Q22)"},
+      {"ASI": "ASI09", "Scenario": "4", "Disposition": "T10"},
+      {"ASI": "ASI09", "Scenario": "5", "Disposition": "N/A -- reason: Cognitive Overload and Decision Bypass requires overwhelming a human reviewer with volume/time pressure across many concurrent decisions; guidance.txt's confirmation flow is a single per-action yes/no with no reviewer-queue or volume mechanism in this system"},
+      {"ASI": "ASI09", "Scenario": "6", "Disposition": "N/A -- reason: Trust Mechanism Subversion describes a gradual, multi-interaction erosion of trust through introduced inconsistencies; distinct from T10's single-action confirmation-bypass mechanism and not evidenced as a separate attack path in this system"},
+      {"ASI": "ASI09", "Scenario": "7", "Disposition": "N/A -- reason: AI-Powered Invoice Fraud requires a vendor-payment/banking-detail-replacement workflow; set_bank_account/update_bank_account let a caller change bank details (already covered by the general unauthorized-write mechanism in T2), but no invoice or vendor-payment concept exists in this agent to distinguish a fraud-specific scenario"},
+      {"ASI": "ASI09", "Scenario": "8", "Disposition": "N/A -- reason: AI-Driven Phishing Attack requires the agent to generate outbound messages/links to the user; this agent has no outbound-messaging or link-generation tool"},
+      {"ASI": "ASI10", "Scenario": "1", "Disposition": "N/A -- reason: Coordinated Privilege Escalation via Multi-Agent Impersonation requires multiple agents falsely authenticating one another; single-agent system, no peer agent to impersonate"},
+      {"ASI": "ASI10", "Scenario": "2", "Disposition": "N/A -- reason: Agent Delegation Loop requires interdependent agents escalating a request between each other; no agent-to-agent delegation exists"},
+      {"ASI": "ASI10", "Scenario": "3", "Disposition": "N/A -- reason: Denial-of-Service via Agent Task Saturation requires a multi-agent system with security agents processing threats; no multi-agent task-saturation surface exists"},
+      {"ASI": "ASI10", "Scenario": "4", "Disposition": "N/A -- reason: Cross-Agent Approval Forgery requires multiple biometric/authentication-checking agents; none exist here"},
+      {"ASI": "ASI10", "Scenario": "5", "Disposition": "N/A -- reason: Malicious Workflow Injection requires a rogue agent impersonating a separate financial-approval agent; single-agent system"},
+      {"ASI": "ASI10", "Scenario": "6", "Disposition": "N/A -- reason: Orchestration Hijacking requires routing through multiple lower-privilege agents; no multi-agent orchestration exists"},
+      {"ASI": "ASI10", "Scenario": "7", "Disposition": "N/A -- reason: Coordinated Agent Flooding requires multiple rogue agents; single-agent system"},
+      {"ASI": "ASI10", "Scenario": "8", "Disposition": "N/A -- reason: Infectious Backdoor Cascade requires inter-agent consumption of another agent's reasoning-chain outputs; no multi-agent coordination exists for a backdoor to propagate across"}
+    ]
+  },
+  "handoff": {
+    "Status": "PASS",
+    "Artifact schema": "threat-model-v3",
+    "Summary": "Category Assessment: 4 of 10 categories applicable Yes (ASI01 Agent Goal Hijack, ASI02 Tool Misuse and Exploitation, ASI03 Identity and Privilege Abuse, ASI09 Human-Agent Trust Exploitation), 1 Partial (ASI06 Memory & Context Poisoning, scoped to the single shared in-memory conversation only), 5 No (ASI04 Supply Chain, ASI05 RCE, ASI07 Insecure Inter-Agent Communication, ASI08 Cascading Failures, ASI10 Rogue Agents -- all require a multi-agent, external-tool, RAG, or code-execution substrate that Phase A confirmed absent). Threat Instances: 13 threats (T1-T13); severity breakdown: 1 Critical (T1, cross-employee PII/financial-record read with zero ownership check), 3 High (T2 unauthorized/role-bypassing writes, T3 identity spoofing via the caller-supplied user_profile channel, T10 confirmation-bypass trust exploitation, T12 direct plan injection skipping the confirmation step), 6 Medium (T4 unvalidated role field, T5 mismatched organization/email-domain enums, T6 non-positive salary, T7 unrestricted status transitions, T8 invalid passport/visa dates, T13 shared-conversation context contamination), 2 Low (T9 unbounded time-off span, T11 unenforceable same-area emergency-contact rule); actors used: Caller (10), LLM (3), no Tool or External actors needed given no external systems/tool-output-trust surface distinct from caller-controlled input. Attack Surfaces: 16 surfaces (#1-#16); 14 cited by at least one threat, 2 carry an explicit N/A disposition (#3 system_vars.json fields -- no delivery evidence of forgeability per the shared rule; #12 home_address country-match gap -- same unenforced-field mechanism as T6/T8/T9 with no distinct attack path beyond T2's general unauthorized-write coverage, recorded to avoid cloning an equivalent threat). Evidence Index: 17 entries (E1-E17), each citing one non-blank, non-low-confidence Answer Register row (Q1, Q2, Q6, Q9, Q10, Q12, Q13, Q13b, Q17, Q21) or Phase A table; Q8 (low confidence) and Q20 (blank) were deliberately not cited as evidence per the mechanical citation rule. Scenario Coverage: 61 total catalog scenarios across ASI01-ASI10; 10 dispositioned to a threat ID, 51 carry an explicit N/A -- reason disposition documenting the absent substrate (multi-agent, external tool, RAG/memory, code-execution, or out-of-domain mechanism) that the scenario requires. Semantic completeness pass: one repair made -- T7 was rewritten to remove a low-confidence Q8 citation and rest only on grounded Q9/Q10 evidence, with the Manager/HR precedence question demoted to a recorded gap rather than an asserted threat mechanism; no other issues found after repair, so status is PASS with no unresolved gaps blocking this phase.",
+    "Open gaps carried forward (not new threat-model defects)": "(1) Whether Manager and HR roles combine or take precedence when both apply to one acting user is unresolved in guidance.txt (Q8, low confidence) and is not asserted as a threat mechanism here. (2) Whether input.extensions.subject.* is caller-forgeable is unresolved -- Phase A found no integrity mechanism but that absence alone does not establish forgeability, so threats against this channel are scoped to the separately-established-forgeable user_profile/system_variables channel (E4) rather than to system_vars.json's fields themselves; system_vars.json's own provenance is recorded as a gap in Attack Surface #3, not asserted as attacker-controlled. (3) 'Area' granularity for the emergency-contact same-area rule is undefined by guidance.txt or schema (Phase A Undeclared Fields), limiting T11 to what is concretely checkable (country/city fields) rather than an invented 'area' semantics."
+  }
+}

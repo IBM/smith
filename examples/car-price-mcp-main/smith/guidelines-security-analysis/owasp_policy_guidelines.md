@@ -1,226 +1,85 @@
 # OWASP Top 10 for Agentic AI Security — Scope Assessment and Policy Guidelines
-# Tool: car-price-mcp
-
----
 
 ## Architecture Summary
 
-`car-price-mcp` is a five-layer system: an HTTP API layer accepts an unauthenticated `question` and a self-reported `user_profile` dict, an LLM-based Agent layer resolves which of three FIPE tools to call, an MCP Tool layer is the OPA interception point, a Tool Implementation layer performs HTTP GET calls against the public FIPE API, and the External Service layer is the unauthenticated FIPE price API. All three tools are read-only; no writes or mutations exist anywhere in the system.
+Car Price MCP exposes 3 read-only stdio tools (get_car_brands, search_car_price, get_vehicles_by_type) behind a LangGraph ReAct agent (agent.py) with no authentication on its HTTP entrypoints. Two governed tool arguments are structured and 'Acts on' at the pre-execution boundary: input.args.brand_name (search_car_price) and input.args.vehicle_type (get_vehicles_by_type, silently coerced to 'carros' for any unrecognized value by app.py's type_mapping.get(...,'carros')). Two subject fields, input.extensions.subject.user_role and input.extensions.subject.user_name, are declared in system_vars.json as intended OPA inputs but have no verified runtime carrier anywhere in app.py/agent.py/server.py — the only runtime analog, user_profile, is unauthenticated, unvalidated, free-form caller text that only reaches the LLM as advisory prompt content. guidance.txt's access model is entirely role-keyed (tool access by role, vehicle_type allowlists by role, brand_name allow/deny lists by role, unknown-role default-deny) with hard-boundary modal language throughout and no soft tier, numeric caps, rate limits, approval paths, or violation-code scheme. Consequence for this phase: the two globally-worded, role-independent hard boundaries (vehicle_type must match a fixed recognized set; brand_name must not be empty/whitespace) are OPA-eligible today because they need no subject field. Every role-scoped rule (the large majority of guidance.txt) fails eligibility gate #4 today because user_role has no authoritative pre-execution source, and is recorded in the Gap Register rather than emitted as a candidate.
 
----
+## Threat Disposition
+
+| Threat ID | Field / surface | Owner | Reason |
+|---|---|---|---|
+| T1 | #1 question (caller text steering LLM-generated brand_name/vehicle_type) | Agent | Direct plan injection through free-text 'question' with no structured field involved until the LLM has already generated an argument; the manipulation happens at the prompt/reasoning boundary, not at a pre-execution structured input a Rego rule can inspect. Gate #6 fails (requires prompt reasoning inspection, not declared structured data). The resulting argument values are still checked once they arrive as input.args.* (see T2/T8/T9 dispositions), but the injection vector itself is an agent/prompt-hardening concern, not an OPA rule. |
+| T2 | #4 input.args.vehicle_type (silent coercion to 'carros' in app.py) | OPA | The role-independent slice of this threat (an unrecognized/miscased vehicle_type silently succeeding as 'carros' instead of being denied) is fully OPA-eligible: input.args.vehicle_type is declared only by get_vehicles_by_type (gate #3), is 'Acts on' (gate #7), and the recognized-value set is fixed, structured, and role-independent (gates #1, #4, #5, #6). A pre-execution OPA deny on non-recognized values closes the exploitable gap before app.py's fallback ever runs, per gate #7's carve-out (a rule that rejects a submitted value does not require the tool to act on it). The underlying app.py code defect itself (the silent .get(...,'carros') fallback) remains a separate Tool implementation finding — see Gap Register G1 — but OPA can independently neutralize it pre-execution. |
+| T3 | #3 input.args.brand_name (miscased brand_name evades role allow/deny lists) | Agent | guidance.txt requires brand_name to be normalized to canonical Title Case 'before the policy check' (line 43); no such normalization step exists in server.py or app.py (Phase A Undeclared Fields, E4). Per the shared source-boundary rule, OPA cannot invent or relocate a canonicalization step — it can only compare the raw input.args.brand_name against role-scoped Title-Case lists, and that comparison itself requires input.extensions.subject.user_role, which fails eligibility gate #4 today (no authoritative runtime source). Both the missing normalization step and the missing role source are prerequisites outside OPA's boundary; disposed to Agent (normalization is a pre-tool-call input-shaping step) with the role-dependent portion cross-referenced in the Gap Register (G2, G3). |
+| T4 | #2 user_profile (forged role claim, e.g. {"user_role":"fleet_manager"}) | Infrastructure | This threat is precisely about the absence of an authoritative identity/role source: user_profile is unauthenticated, unvalidated, caller-supplied free text (E2) with no signature/session/token backing. Closing this requires establishing a verified identity/role-issuance mechanism (authentication + a trustworthy claims source) before any structured input.extensions.subject.user_role can exist for OPA to key on — that is an infrastructure/identity-provider concern, not an OPA rule or an agent-prompt fix. Fails eligibility gate #4 (no authoritative pre-execution subject field exists or could be produced by a policy rule itself). |
+| T5 | #2 user_profile (arbitrary instruction-like text injected via a system-variable value) | Agent | build_system_prompt() interpolates user_profile values verbatim into system-prompt text (E3); this is a prompt-construction/injection-hardening concern (sanitizing or refusing to interpolate untrusted free text into the system prompt) rather than a structured pre-execution field a Rego rule can evaluate. Fails eligibility gate #6 (requires prompt-content handling, not declared structured data). |
+| T6 | #3 input.args.brand_name (LLM generates a non-canonical casing organically) | Agent | Same missing-canonicalization gap as T3 (E4), but here the actor is the LLM itself rather than an adversarial caller. The fix (normalize brand_name to Title Case before any policy check, per guidance line 43) is an agent/tool-call-shaping step upstream of any OPA evaluation; OPA can still deny an un-normalized value that fails exact match once user_role is available (see Gap Register G2), but the normalization step itself is not OPA's to add or infer. |
+| T7 | #3 input.args.brand_name (app.py's own substring/case-insensitive match resolves data independent of canonical casing) | Tool implementation | This is app.py's own business logic (query_lower in brand['nome'].lower()), a different operation from the exact Title-Case equality guidance requires for the policy check (E4). The match behavior lives entirely inside the tool implementation and does not involve a distinct caller/LLM action or a pre-execution structured decision point OPA intercepts before app.py runs its own resolution — the fix is to change or gate app.py's matching logic itself, or to ensure any OPA denial runs strictly before app.py is invoked (already true architecturally per Phase A's Enforcement Points table, but the residual matching behavior itself is a tool-implementation characteristic). |
+| T8 | #4 input.args.vehicle_type (role-restricted or wholly-denied caller bypasses role-scoped or full-tool restriction via the silent fallback) | OPA | Same underlying mechanism as T2. The role-independent portion (any caller submitting an unrecognized/miscased vehicle_type value) is OPA-eligible and closed by CARPRICE_OPA_001 regardless of role. The role-scoped portion of this threat (a guest or unknown-role caller being denied the tool entirely, or a role being restricted to a vehicle_type subset) additionally requires input.extensions.subject.user_role, which fails eligibility gate #4 today — that remaining slice is recorded in Gap Register G3/G4 rather than emitted. Disposed to OPA because the highest-confirmed-in-code blind spot (the silent coercion itself, applicable to every role) is fully closable by OPA today. |
+| T9 | #3 input.args.brand_name, #4 input.args.vehicle_type (complete, system-wide unenforced hard-boundary set: tool access by role, brand/vehicle_type role allow-deny lists, unknown-role denial) | Infrastructure | This threat is the aggregate realization of guidance's entire role-keyed access model being unenforced because no verified user_role reaches any enforcement point (E1) and no enforcement layer exists at all today (Phase A Enforcement Points). The blocking prerequisite for every constituent rule (tool access by role, per-role vehicle_type/brand_name lists, unknown-role default-deny) is the same missing authoritative identity/role source described under T4 — an infrastructure/identity-provider gap, not something an OPA rule or an agent-side prompt fix can supply on its own. Each constituent rule is individually recorded in the Gap Register (G3, G4, G5) rather than emitted as a candidate. |
+| T10 | #5 FIPE API response payloads (unverified third-party data trusted verbatim) | Infrastructure | This concerns the integrity of returned/external data after a tool call has already executed, not a pre-execution request-side decision. guidance.txt does not govern response content (Phase B Q17/Q18), and a pre-execution OPA gate on tool calls has no way to evaluate response payloads before they exist. Mitigating this (response signing/schema validation/TLS pinning on the FIPE integration) is an infrastructure/integration-hardening concern outside OPA's pre-execution scope. |
 
 ## OWASP Top 10 for Agentic AI Security — Scope Assessment
 
-### ASI01 — Agent Goal Hijack
-**Risk:** Crafted `question` or `user_profile` values redirect the LLM's tool-selection reasoning away from the caller's authorized scope.
-**Verdict:** Partial (Out of scope for OPA, in scope for Agent layer) — The `question` field and the injected `user_profile` text live in the LLM's context; they are not structured fields OPA can evaluate. OPA sees only the resolved tool name and arguments after the LLM has already reasoned, so it catches the *output* of goal hijacking but cannot prevent the LLM from being manipulated in the first place.
-
-### ASI02 — Tool Misuse and Exploitation
-**Risk:** Callers or the LLM pass disallowed `brand_name` or `vehicle_type` values, bypassing role-based restrictions.
-**Verdict:** In scope — `input.args.brand_name` and `input.args.vehicle_type` are visible at OPA interception time and Rego rules can enforce exact-match allow-lists and recognized-value checks against them.
-
-### ASI03 — Identity and Privilege Abuse
-**Risk:** Callers self-assign high-privilege roles (e.g. `analyst`) in the unverified `user_profile.user_role` field.
-**Verdict:** In scope — `input.extensions.subject.user_role` is visible at OPA interception time; Rego rules can enforce which tools a given role may call and with which parameter values.
-
-### ASI04 — Agentic Supply Chain Vulnerabilities
-**Risk:** Compromised third-party libraries (`mcp`, `langchain`, `requests`) or a tampered FIPE API response inject malicious behavior.
-**Verdict:** Out of scope — library loading occurs before any request; FIPE API responses are the tool's return value, after OPA has already acted. Both are infrastructure/deployment concerns.
-
-### ASI05 — Unexpected Code Execution
-**Risk:** Repeated `search_car_price` calls exhaust the FIPE API's rate limit (up to ~8 sub-requests per invocation).
-**Verdict:** Out of scope — OPA has no call-count state and no rate-limiting capability at the invocation boundary. This belongs to infrastructure (API gateway rate limiting).
-
-### ASI06 — Memory & Context Poisoning
-**Risk:** Within a request's conversation window, fragmented injections poison the LLM's context.
-**Verdict:** Out of scope — conversation history lives in the Agent layer; OPA only sees the resolved tool call, not the reasoning that produced it.
-
-### ASI07 — Insecure Inter-Agent Communication
-**Risk:** N/A — single-agent system with no inter-agent communication.
-**Verdict:** Out of scope — not applicable.
-
-### ASI08 — Cascading Failures
-**Risk:** LangGraph retry loops compound FIPE API calls.
-**Verdict:** Out of scope — retry logic is in the Agent layer; OPA sees individual calls but not loop depth or aggregate call count.
-
-### ASI09 — Human-Agent Trust Exploitation
-**Risk:** Misleading `user_profile` context or LLM hallucinations cause the agent to present false pricing as authoritative.
-**Verdict:** Out of scope — the misleading text in system prompt and the tool's return value are post-execution; OPA enforces pre-execution only.
-
-### ASI10 — Rogue Agents
-**Risk:** N/A — single-agent system with no multi-agent coordination.
-**Verdict:** Out of scope — not applicable.
-
----
-
-## Summary Table
-
-| OWASP Category | In OPA scope? | Out-of-scope owner |
-|---|---|---|
-| ASI01 Agent Goal Hijack | Partial (OPA catches resolved args; prompt injection itself is Agent layer) | Agent layer — system prompt hardening, prompt injection detection |
-| ASI02 Tool Misuse and Exploitation | Yes | — |
-| ASI03 Identity and Privilege Abuse | Yes | Infrastructure — authentication upstream of OPA |
-| ASI04 Agentic Supply Chain Vulnerabilities | No | Infrastructure/deployment — dependency pinning, SBOM, API integrity |
-| ASI05 Unexpected Code Execution | No | Infrastructure — API gateway rate limiting |
-| ASI06 Memory & Context Poisoning | No | Agent layer — context window size limits, per-request session isolation |
-| ASI07 Insecure Inter-Agent Communication | No | N/A (not applicable) |
-| ASI08 Cascading Failures | No | Agent layer / Infrastructure — LangGraph loop limits, API rate limiting |
-| ASI09 Human-Agent Trust Exploitation | No | Agent layer / Monitoring — output verification, provenance metadata |
-| ASI10 Rogue Agents | No | N/A (not applicable) |
-
-**Categories flowing into the OPA policy: ASI02, ASI03**
-
----
+| OWASP | Scope | OPA threat IDs | Other-layer threat IDs | Reason / owner |
+|---|---|---|---|---|
+| ASI01 | Partial |  | T1, T5 | Both ASI01-linked threat instances (T1: direct plan injection via question text; T5: instruction-like text injected via user_profile) act entirely at the prompt/reasoning boundary before any structured, declared input exists for OPA to evaluate — they fail eligibility gate #6 (no prompt reasoning, output inspection, or undeclared data may be required). No ASI01 threat instance has an OPA-eligible slice; both are owned by the Agent layer (prompt/input hardening). Scope is Partial at the category level (per Phase C's own Category Assessment) but 0 of its threat instances land on OPA. |
+| ASI02 | Partial | T2, T8 | T3, T6, T7, T9, T10 | ASI02 spans both OPA and other layers, so Partial applies at the category level. T2 and T8's role-independent vehicle_type-recognized-set slice is OPA-eligible (CARPRICE_OPA_001) and closes the single highest-confirmed-in-code blind spot (the silent 'carros' fallback) regardless of role. T3/T6 (brand_name canonicalization) and T7 (app.py's own substring-match business logic) are Agent/Tool-implementation owned per missing normalization and missing structured role source. T9 (the aggregate role-keyed access model) and T10 (external data integrity) are Infrastructure owned — T9 because every constituent rule needs an authoritative user_role that does not exist yet, T10 because it concerns response content outside a pre-execution gate's scope. |
+| ASI03 | Partial |  | T4 | The sole ASI03 threat instance (T4: forged role claim via user_profile) is Infrastructure owned — it requires establishing an authenticated, verified identity/role source before any input.extensions.subject.user_role can be authoritative for a Rego rule to key on (fails eligibility gate #4). No ASI03 threat instance has an OPA-eligible slice today; Scope remains Partial at the category level per Phase C, consistent with 0 of its threat instances landing on OPA. |
 
 ## Gap Register
 
-| Threat | Layer | Recommended action |
+| Finding ID | Layer | Recommended action |
 |---|---|---|
-| ASI01 — Goal hijack via `question` field prompt injection | Agent layer | Add prompt-injection detection middleware; consider sandboxed system-prompt templates that reject natural-language overrides |
-| ASI01 — Goal hijack via `user_profile` value injection into system prompt | Agent layer | Sanitize `user_profile` values before embedding in system prompt; strip or escape natural-language instruction patterns |
-| ASI03 — `user_role` is entirely self-reported, no authentication | Infrastructure/deployment | Add authentication (e.g. JWT with role claims) at the HTTP API layer; OPA enforces the role it receives but cannot verify it is truthful |
-| ASI04 — Unpinned third-party dependencies (`mcp`, `langchain`, `requests`) | Infrastructure/deployment | Pin all dependencies to exact versions; generate an SBOM; scan for typosquats and malicious packages before install |
-| ASI04 — FIPE API response integrity not verified | Tool Implementation | Add response schema validation in `app.py`; consider caching brand lists to reduce exposure to poisoned live responses |
-| ASI05 — FIPE API quota exhaustion from repeated `search_car_price` calls | Infrastructure/deployment | Add an API gateway or middleware rate limiter (per-IP or per-session); `search_car_price` makes up to ~8 sub-calls per invocation |
-| ASI06 — In-request context poisoning via fragmented `question` turns | Agent layer | Limit conversation history retained per session; validate that message sequence does not contain known injection patterns |
-| ASI08 — LangGraph retry loop fan-out on FIPE API errors | Agent layer / Infrastructure | Set a hard maximum iteration count in the LangGraph ReAct agent; log and alert on loop depth exceeding threshold |
-| ASI09 — LLM presenting hallucinated pricing data as authoritative | Agent layer / Monitoring | Add a disclaimer in the system prompt that results are from the FIPE API (not the agent's own knowledge); consider response validation against the raw FIPE data |
-| ASI09 — Misleading `user_profile` text in system prompt influencing output trust | Agent layer | Sanitize `user_profile` values before embedding (same as ASI01 gap); do not embed raw user input as "authoritative system context" |
-
----
+| G1 | Tool implementation | app.py's getCarsByType silently coerces any unrecognized vehicle_type to 'carros' via type_mapping.get(vehicle_type.lower(), 'carros') instead of raising/rejecting (confirmed in code, T2/T8, E5). Recommend app.py itself reject unrecognized values rather than defaulting, as defense-in-depth independent of any future OPA gate — CARPRICE_OPA_001 mitigates the pre-execution exposure today, but the tool-level silent fallback remains a latent blind spot for any caller/path that bypasses the OPA gate in the future. |
+| G2 | Agent (tool-call construction) / Tool implementation | No brand_name canonicalization to Title Case exists anywhere in server.py or app.py, though guidance.txt line 43 requires it 'before the policy check' (E4, T3, T6). Recommend adding an explicit normalization step upstream of any future policy check. Until added, per guidance's own stated default, any brand_name not already in exact canonical Title Case must be denied rather than silently matched by app.py's case-insensitive substring logic (T7) or incorrectly allowed. |
+| G3 | Infrastructure (identity / subject-field plumbing) | input.extensions.subject.user_role has no authoritative, verified runtime source anywhere in the codebase (E1) — it fails eligibility gate #4 for every role-keyed candidate. The only runtime analog, user_profile, is unauthenticated, unvalidated, caller-supplied free text (E2) and must not be treated as equivalent to a verified subject field (T4). Recommend establishing an authenticated identity/role-issuance mechanism (e.g. a verified session or token claim) before any role-scoped OPA rule can be written against this system. This blocks every role-scoped rule in guidance.txt: Tool Access by Role (lines 11-19), Vehicle Type Restrictions (21-31), Brand Restrictions (33-45), and Unknown Roles (47-49). |
+| G4 | Infrastructure (blocked pending G3) | Role-scoped hard boundaries — fleet_manager/consumer/journalist restricted to a vehicle_type subset (guidance lines 25-28); fleet_manager restricted to 8 named brands, journalist restricted to a 12-brand allow list plus explicit 14-brand deny list (guidance lines 37-40) — are fully specified in guidance and would each be a straightforward Rego-translatable predicate (role in {...} and value in {...}) once G3 is resolved. Recorded here rather than emitted as candidates solely because eligibility gate #4 fails today; no interpretation gap exists once an authoritative user_role is available. |
+| G5 | Infrastructure (blocked pending G3) | Tool Access by Role (guest may call only get_car_brands; unknown/unrecognized user_role may call no tool at all, including get_car_brands — guidance lines 11-19, 47-49) is fully specified and Rego-translatable once G3 is resolved. Recorded here rather than emitted as a candidate solely because eligibility gate #4 fails today. |
+| G6 | Infrastructure (out of pre-execution OPA scope) | FIPE API response content is trusted verbatim with no signature, schema validation, or TLS pinning (E9, T10); guidance.txt does not govern response content, so this is not encodable as a pre-execution tool-call policy. Recommend response integrity hardening (schema validation, signing, or pinning) as an infrastructure/integration change, independent of this policy layer. |
+| G7 | Unresolved human decision (no invention) | guidance.txt specifies no numeric hard caps, no rate limits, no denial-explanation/silent-vs-explicit behavior, and no violation-code/logging scheme (Phase B Q13/Q15/Q20/Q22, E10). None of these are invented in this phase; a human policy owner should decide whether to adopt any before they can be encoded. |
 
 ## Policy Rules (OPA scope only)
+
+2 OPA-eligible rules are emitted, both classified Additive (Existing Guidance Normalization has no row to mechanically compare against, since guidance.txt is sectioned Markdown, not a numbered-rule format the reconciliation engine can index; each rule nonetheless makes an already-stated prose requirement enforceable for the first time at the pre-execution boundary): (1) CARPRICE_OPA_001 denies get_vehicles_by_type when input.args.vehicle_type is not one of the 6 recognized lowercase strings, matched exactly and case-sensitively — this closes the code-confirmed silent-fallback-to-'carros' blind spot (T2, T8) for the portion of guidance.txt line 31 that does not depend on role. (2) CARPRICE_OPA_002 denies search_car_price when input.args.brand_name is missing, null, or empty/whitespace-only — a role-independent hard boundary already stated in guidance.txt line 43 and already behaviorally reproduced (informally) by server.py's presence check. No role-scoped rule (tool access by role, vehicle_type role-subsets, brand_name role allow/deny lists, unknown-role denial) is emitted, because none can pass eligibility gate #4 (no authoritative pre-execution input.extensions.subject.user_role exists) — all are recorded in the Gap Register instead. No Rego is written; this section is guidance-language only.
 
 ### Input Schema
 
 | Field | Source |
 |---|---|
-| `input.name` | MCP tool name (one of: `get_car_brands`, `search_car_price`, `get_vehicles_by_type`) |
-| `input.args.brand_name` | Tool argument — declared on `search_car_price` only |
-| `input.args.vehicle_type` | Tool argument — declared on `get_vehicles_by_type` only |
-| `input.extensions.subject.user_role` | Self-reported role array from `system_vars.json`; exact values from the recognised five-role set |
+| input.args.vehicle_type | tool_definitions.json — get_vehicles_by_type parameter 'vehicle_type' (string, optional, schema default 'carros'); declared only by get_vehicles_by_type per the source-boundary rule. |
+| input.args.brand_name | tool_definitions.json — search_car_price parameter 'brand_name' (string, required); declared only by search_car_price per the source-boundary rule. |
 
 ### Known values
 
-**Recognised roles:** `fleet_manager`, `consumer`, `journalist`, `analyst`, `guest`
+vehicle_type recognized set (global, case-sensitive): {"carros","cars","motos","motorcycles","caminhoes","trucks"}. Declared roles (system_vars.json enum, not yet an authoritative runtime field): fleet_manager, consumer, journalist, analyst, guest. Declared tool arguments: search_car_price.brand_name (required string), get_vehicles_by_type.vehicle_type (optional string, schema default 'carros'). No numeric caps, rate limits, approval paths, or existing violation codes exist anywhere in guidance.txt, system_vars.json, or tool_definitions.json (open gap, not invented here).
 
-**Truck-brand allow-list (fleet_manager):** `Scania`, `Volvo`, `Mercedes-Benz`, `MAN`, `DAF`, `Iveco`, `Ford`, `Volkswagen`
+### Rules
 
-**Domestic-brand allow-list (journalist):** `Fiat`, `Chevrolet`, `Volkswagen`, `Hyundai`, `Toyota`, `Renault`, `Honda`, `Nissan`, `Jeep`, `Peugeot`, `Citroën`, `Caoa Chery`
-
-**Luxury/imported-brand block-list (journalist):** `BMW`, `Mercedes-Benz`, `Audi`, `Porsche`, `Jaguar`, `Land Rover`, `Lexus`, `Maserati`, `Ferrari`, `Lamborghini`, `Bentley`, `Rolls-Royce`, `Mini`, `Alfa Romeo`
-*(Implementation note: use the domestic allow-list as a positive test — deny any `brand_name` not in the allow-list — rather than the luxury block-list as a negative test, to avoid gaps from newly added luxury brands.)*
-
-**Recognised vehicle types:** `carros`, `cars`, `motos`, `motorcycles`, `caminhoes`, `trucks`
-
-**Fleet-manager allowed vehicle types:** `caminhoes`, `trucks`
-
-**Consumer/journalist allowed vehicle types:** `carros`, `cars`
-
-**Role note:** `user_role` is an array. A user may carry multiple roles. For deny rules that are role-specific, a deny fires when the caller's role array contains the restricted role but NOT a more-privileged role that would override it (e.g. if a caller is simultaneously `fleet_manager` and `analyst`, the analyst privilege should take precedence for brand/vehicle-type checks). Evaluate per-role checks as: deny if the restricted role is present AND no overriding role is present. For the `guest` tool-access block, deny if the role array contains `guest` and no non-guest role is present.
-
----
-
-### Rule: ROLE_BLOCKED
-- OWASP: ASI03 — Identity and Privilege Abuse
-- Severity: Hard block
-- Condition: `input.name` is any of the three tools AND `input.extensions.subject.user_role` contains no value that is a member of the five recognised roles (`fleet_manager`, `consumer`, `journalist`, `analyst`, `guest`)
-- Matching: exact set-membership check against the five-element role set
-- Source: ASI03 threat instances (Critical, Caller); questionnaire Q9 "Unknown Roles" rule
-
-### Rule: GUEST_TOOL_BLOCKED
-- OWASP: ASI03 — Identity and Privilege Abuse
-- Severity: Hard block
-- Condition: `input.name` is `search_car_price` or `get_vehicles_by_type` AND `input.extensions.subject.user_role` contains `guest` AND `input.extensions.subject.user_role` contains no non-guest role
-- Matching: exact tool-name match; exact set-membership check on role array
-- Source: ASI03 threat instances; questionnaire Q9 guest access rule; guidance.txt "Tool Access by Role" (guest section)
-
-### Rule: BRAND_EMPTY
-- OWASP: ASI02 — Tool Misuse and Exploitation
-- Severity: Hard block
-- Condition: `input.name` is `search_car_price` AND `input.args.brand_name` is empty string or whitespace-only (after trimming)
-- Matching: exact equality to empty string or string containing only whitespace characters
-- Source: ASI02 threat instance (Caller, High); questionnaire Q12; guidance.txt "Brand Restrictions" (empty/whitespace brand)
-
-### Rule: BRAND_BLOCKED_FLEET
-- OWASP: ASI02 — Tool Misuse and Exploitation
-- Severity: Hard block
-- Condition: `input.name` is `search_car_price` AND `input.extensions.subject.user_role` contains `fleet_manager` AND NOT `analyst` AND `input.args.brand_name` is not a member of the truck-brand allow-list {Scania, Volvo, Mercedes-Benz, MAN, DAF, Iveco, Ford, Volkswagen}
-- Matching: exact case-sensitive set-membership against the truck-brand allow-list
-- Source: ASI02 threat instance (Caller, High); questionnaire Q9/Q10; guidance.txt "Brand Restrictions" (fleet_manager)
-
-### Rule: BRAND_BLOCKED_JOURNALIST
-- OWASP: ASI02 — Tool Misuse and Exploitation
-- Severity: Hard block
-- Condition: `input.name` is `search_car_price` AND `input.extensions.subject.user_role` contains `journalist` AND NOT `analyst` AND `input.args.brand_name` is not a member of the domestic-brand allow-list {Fiat, Chevrolet, Volkswagen, Hyundai, Toyota, Renault, Honda, Nissan, Jeep, Peugeot, Citroën, Caoa Chery}
-- Matching: exact case-sensitive set-membership against the domestic-brand allow-list
-- Source: ASI02 threat instance (Caller, High); questionnaire Q9/Q10; guidance.txt "Brand Restrictions" (journalist)
-
-### Rule: VEHICLE_TYPE_BLOCKED
-- OWASP: ASI02 — Tool Misuse and Exploitation
-- Severity: Hard block
-- Condition: `input.name` is `get_vehicles_by_type` AND `input.args.vehicle_type` is not a member of the recognized set {carros, cars, motos, motorcycles, caminhoes, trucks}
-- Matching: exact case-sensitive set-membership (e.g. `"Caminhoes"` with capital C is NOT in the set and must be denied)
-- Source: ASI02 threat instance (Caller, Medium — vehicle_type wrong casing); questionnaire Q12; guidance.txt "Vehicle Type Restrictions" (any other value denied for every role)
-
-### Rule: VEHICLE_TYPE_FLEET_BLOCKED
-- OWASP: ASI02 — Tool Misuse and Exploitation
-- Severity: Hard block
-- Condition: `input.name` is `get_vehicles_by_type` AND `input.extensions.subject.user_role` contains `fleet_manager` AND NOT `analyst` AND `input.args.vehicle_type` is not a member of {caminhoes, trucks}
-- Matching: exact case-sensitive set-membership against the fleet_manager allowed vehicle types
-- Source: ASI02 threat instance (Caller, High); questionnaire Q9/Q10; guidance.txt "Vehicle Type Restrictions" (fleet_manager)
-
-### Rule: VEHICLE_TYPE_CONSUMER_BLOCKED
-- OWASP: ASI02 — Tool Misuse and Exploitation
-- Severity: Hard block
-- Condition: `input.name` is `get_vehicles_by_type` AND `input.extensions.subject.user_role` contains `consumer` AND NOT `analyst` AND `input.args.vehicle_type` is not a member of {carros, cars}
-- Matching: exact case-sensitive set-membership against the consumer allowed vehicle types
-- Source: ASI02 threat instance (Caller, High); questionnaire Q9/Q10; guidance.txt "Vehicle Type Restrictions" (consumer)
-
-### Rule: VEHICLE_TYPE_JOURNALIST_BLOCKED
-- OWASP: ASI02 — Tool Misuse and Exploitation
-- Severity: Hard block
-- Condition: `input.name` is `get_vehicles_by_type` AND `input.extensions.subject.user_role` contains `journalist` AND NOT `analyst` AND `input.args.vehicle_type` is not a member of {carros, cars}
-- Matching: exact case-sensitive set-membership against the journalist allowed vehicle types
-- Source: ASI02 threat instance (Caller, High); questionnaire Q9/Q10; guidance.txt "Vehicle Type Restrictions" (journalist)
-
----
-
-## Violation Code Reference
-
-| Code | OWASP | Severity |
-|---|---|---|
-| ROLE_BLOCKED | ASI03 | Hard block |
-| GUEST_TOOL_BLOCKED | ASI03 | Hard block |
-| BRAND_EMPTY | ASI02 | Hard block |
-| BRAND_BLOCKED_FLEET | ASI02 | Hard block |
-| BRAND_BLOCKED_JOURNALIST | ASI02 | Hard block |
-| VEHICLE_TYPE_BLOCKED | ASI02 | Hard block |
-| VEHICLE_TYPE_FLEET_BLOCKED | ASI02 | Hard block |
-| VEHICLE_TYPE_CONSUMER_BLOCKED | ASI02 | Hard block |
-| VEHICLE_TYPE_JOURNALIST_BLOCKED | ASI02 | Hard block |
-
----
-
-*STEP 6b citation verification: All 9 rules verified. `brand_name` declared by `search_car_price.parameters`; `vehicle_type` declared by `get_vehicles_by_type.parameters`; `user_role` declared by `system_vars.json`. All governed tool assignments correct (no rule references a tool that lacks the cited field). All brand and vehicle-type values present in `guidance.txt` and `tool_definitions.json` descriptions. Citations verified: 9/9.*
-
-*STEP 7 candidate list: 9 candidates total — 9 from OWASP (ASI02: 7 rules, ASI03: 2 rules) + 9 from questionnaire Q9/Q10/Q12 (all overlap with OWASP candidates, deduplicated). Final list: 9 unique rules, all tagged [ASI02 or ASI03] + [questionnaire Q9/Q10/Q12].*
-
-*STEP 8 coverage scratch table:*
-| Candidate | Verified (tool, field) | Field | Operator | Value set | Matching guidance.txt rule | Covered? |
+| Code | OWASP | Threat IDs | Severity | Tool(s) / field | Condition | Matching |
 |---|---|---|---|---|---|---|
-| ROLE_BLOCKED | all tools / subject.user_role | input.extensions.subject.user_role | set-membership (not in 5 roles) | {fleet_manager,consumer,journalist,analyst,guest} | "Unknown Roles" section | Yes |
-| GUEST_TOOL_BLOCKED | search_car_price, get_vehicles_by_type / subject.user_role | input.name + subject.user_role | exact name match + set-membership | guest only | "Tool Access by Role" guest section | Yes |
-| BRAND_EMPTY | search_car_price / args.brand_name | input.args.brand_name | empty/whitespace check | "" or whitespace | "Brand Restrictions" last rule | Yes |
-| BRAND_BLOCKED_FLEET | search_car_price / args.brand_name | input.args.brand_name | exact set-membership (allow-list) | truck brands | "Brand Restrictions" fleet_manager | Yes |
-| BRAND_BLOCKED_JOURNALIST | search_car_price / args.brand_name | input.args.brand_name | exact set-membership (allow-list) | domestic brands | "Brand Restrictions" journalist | Yes |
-| VEHICLE_TYPE_BLOCKED | get_vehicles_by_type / args.vehicle_type | input.args.vehicle_type | exact set-membership | 6 recognised values | "Vehicle Type Restrictions" any-other-value sentence | Yes |
-| VEHICLE_TYPE_FLEET_BLOCKED | get_vehicles_by_type / args.vehicle_type | input.args.vehicle_type + subject.user_role | exact set-membership | {caminhoes,trucks} | "Vehicle Type Restrictions" fleet_manager | Yes |
-| VEHICLE_TYPE_CONSUMER_BLOCKED | get_vehicles_by_type / args.vehicle_type | input.args.vehicle_type + subject.user_role | exact set-membership | {carros,cars} | "Vehicle Type Restrictions" consumer | Yes |
-| VEHICLE_TYPE_JOURNALIST_BLOCKED | get_vehicles_by_type / args.vehicle_type | input.args.vehicle_type + subject.user_role | exact set-membership | {carros,cars} | "Vehicle Type Restrictions" journalist | Yes |
+| CARPRICE_OPA_001 | ASI02 | T2, T8 | High | get_vehicles_by_type / input.args.vehicle_type | Deny when input.args.vehicle_type is not one of the 6 recognized values, regardless of role. This closes the pre-execution gap for the code-confirmed silent fallback (app.py's type_mapping.get(vehicle_type.lower(), 'carros')) so an unrecognized or miscased value is rejected before it would otherwise be silently coerced to 'carros'. | Exact, case-sensitive string match against the fixed set {"carros", "cars", "motos", "motorcycles", "caminhoes", "trucks"} (operator: not_in); no case-folding, no partial/substring match, no default substitution performed by the policy itself. |
+| CARPRICE_OPA_002 | ASI02 |  | Medium | search_car_price / input.args.brand_name | Deny when input.args.brand_name is missing, null, or empty/whitespace-only, for every role. This is a role-independent hard boundary already stated in guidance.txt (line 43) and already informally reproduced by server.py's presence/whitespace check; classified Additive since Existing Guidance Normalization has no row to mechanically compare against (guidance.txt is not numbered-rule formatted) — recorded here because it is the one role-independent brand_name rule that is fully OPA-eligible today. | missing/null/empty operator on the raw string value; no trimming semantics beyond recognizing whitespace-only as empty, per guidance's own wording ('empty or whitespace-only'). |
 
-All 9 candidates are covered by existing `guidance.txt` rules. No new lines needed in `guidance_updated.txt`.
+## Candidate Reconciliation
 
-*STEP 8b redundancy self-check: No new rules to add; no pairs to compare. Result: Redundancy self-check: no new rules proposed — nothing to scan.*
+| Candidate ID | Tool | Subject scope | Field expression | Operator | Values | Action | Sources | Related rule | Guidance group | Verdict |
+|---|---|---|---|---|---|---|---|---|---|---|
+| C1 | get_vehicles_by_type | any role (role-independent) | input.args.vehicle_type | not_in | {"carros","cars","motos","motorcycles","caminhoes","trucks"} | deny | T2, T8; E5, E7; guidance.txt line 31 | N/A (Existing Guidance Normalization is empty — guidance.txt has no numbered-rule format to index; the requirement is stated in prose at line 31) | GG-VEHICLE-TYPE-RECOGNIZED-SET | Additive — guidance.txt line 31 already states this requirement in natural language ('Any other value ... is denied for every role'), but Existing Guidance Normalization is empty (guidance.txt uses Markdown headings/bullets, not a numbered-rule format the reconciliation engine can index), so no existing-guidance row exists for the engine to mechanically compare against. This candidate is the first pre-execution mechanism that makes the already-stated textual requirement enforceable, independently closing the code-confirmed silent-fallback gap (T2, T8); emitted as CARPRICE_OPA_001. |
+| C2 | search_car_price | any role (role-independent) | input.args.brand_name | missing/null/empty | N/A | deny | guidance.txt line 43; Phase A server.py presence check | N/A (Existing Guidance Normalization is empty — guidance.txt has no numbered-rule format to index; the requirement is stated in prose at line 43) | GG-BRAND-EMPTY | Additive — guidance.txt line 43 already states this requirement in natural language, and server.py already performs an informal presence/whitespace check, but Existing Guidance Normalization is empty for the same reason as C1 (no numbered-rule format to index), so no existing-guidance row exists for the engine to compare against. This candidate makes the requirement enforceable at the pre-execution OPA boundary rather than only informally in server.py; emitted as CARPRICE_OPA_002. |
 
-*STEP 8c regression check: Prior `guidance_updated.txt` was empty (first run or prior run also found full coverage). No regressions — prior run's outcome is consistent with this run.*
+## Existing Guidance Normalization
+
+| Existing ID | Rule number | Tool | Subject scope | Field expression | Operator | Values | Action |
+|---|---|---|---|---|---|---|---|
+
+## Prior Proposal Reconciliation
+
+| Prior ID | Original number | Normalized rule | Disposition | Candidate / reason |
+|---|---|---|---|---|
+
+## Phase Handoff
+
+- Status: PASS
+- Artifact schema: enforcement-mapping-v8
+- Summary: 10 Phase C threats (T1-T10) mapped: 2 to OPA (T2, T8 — both via the single role-independent vehicle_type-recognized-set rule, CARPRICE_OPA_001), 4 to Agent (T1, T3, T5, T6 — prompt-boundary injection and missing brand_name canonicalization), 1 to Tool implementation (T7 — app.py's own substring-match business logic), 3 to Infrastructure (T4, T9, T10 — missing authoritative identity/role source and out-of-scope response-content integrity). ASI01 and ASI03 contribute 0 OPA threat IDs (Agent/Infrastructure only); ASI02 is the only category with an OPA-eligible slice (T2, T8), alongside Agent/Tool-implementation/Infrastructure threats in the same category, hence Partial for all three categories per Phase C. 2 candidates evaluated (C1, C2), both role-independent and both classified Additive: guidance.txt is sectioned Markdown with no numbered-rule format, so Existing Guidance Normalization is empty and the reconciliation engine has no existing-guidance row to mechanically compare either candidate against, even though both requirements are already stated in guidance.txt's prose (lines 31 and 43 respectively) — each candidate is nonetheless the first mechanism making that requirement enforceable at the pre-execution OPA boundary. Every role-scoped candidate initially drafted for this phase (tool access by role; vehicle_type role subsets for fleet_manager/consumer/journalist/analyst; brand_name role allow/deny lists for fleet_manager/journalist; unknown-role denial) was removed from Candidate Reconciliation rather than emitted, because every one fails eligibility gate #4 (no authoritative, pre-execution input.extensions.subject.user_role exists anywhere in the codebase) — per the Phase D guide's instruction to record a failed candidate in the Gap Register and emit nothing rather than force it through reconciliation. Those findings are recorded in Gap Register G3 (root cause: no verified runtime user_role source), G4 (role-scoped vehicle_type/brand_name lists, blocked pending G3), and G5 (tool-access-by-role and unknown-role denial, blocked pending G3). No Clarification, Overlap, Conflict, or Contradictory-correction verdicts arose; no blocking relationship exists. 2 rules emitted (CARPRICE_OPA_001, CARPRICE_OPA_002). 7 Gap Register entries (G1: app.py silent-fallback code defect; G2: missing brand_name canonicalization; G3: missing authoritative user_role source, the single highest-impact and most consequential blocker; G4/G5: role-scoped rules blocked pending G3; G6: FIPE response-integrity, out of pre-execution scope; G7: unresolved human decisions — no numeric caps/rate limits/denial-explanation/violation-code scheme exist to encode, none invented). No prior addendum existed, so Prior Proposal Reconciliation is empty. guidance_updated.txt WAS created, containing exactly 2 plain top-level bullet rules (one per Guidance group: GG-VEHICLE-TYPE-RECOGNIZED-SET, GG-BRAND-EMPTY), matching guidance.txt's sectioned-Markdown bullet style with no added heading or phase metadata. Status PASS: no blocking Clarification/Overlap/Conflict/Contradictory-correction relationship and no addendum error remains.

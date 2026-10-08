@@ -1,156 +1,74 @@
-# Architecture Analysis — HR Agent
+# Architecture Analysis
 
-## 1. System Overview
+## Layers
 
-The HR Agent is a multi-layer agentic system that allows users (via HTTP/A2A) to interact with HR data through a natural-language agent backed by an MCP tool server. The system exposes 6 tools that act on employee compensation records, directory data, repository access, and email communication.
+| Layer | File | Role | Inputs | Outputs | Current enforcement |
+|---|---|---|---|---|---|
+| Agent / client (A2A + Smith shim) | agent.py | Builds SYSTEM_PROMPT + TOOLS, runs the litellm tool-calling loop (HRAgent.run_turn), threads inbound identity headers to outbound tool calls, exposes FastAPI /chat, /extract_tool_call, /tool_definitions, /health for Smith. | user_text; inbound headers x-user-token/authorization/x-session-id (A2A path only; empty on /chat); litellm tool_calls JSON. | reply_text; tool_trace list; MCP tools/call HTTP requests. | None on args themselves — only checks that x-user-token and authorization are non-empty before proceeding (A2A path). No role/permission check occurs in this file. |
+| Agent (predecessor, superseded) | old_agent.py | Earlier version of agent.py with the same architecture; lacks the adjust_compensation tool and the Smith HTTP shim (/chat, /extract_tool_call, /tool_definitions). Per README.md this codebase now runs agent.py; old_agent.py is not the active implementation. | Same shape as agent.py, minus adjust_compensation. | Same shape as agent.py, minus adjust_compensation. | None (superseded; not part of the active request path). |
+| MCP tool implementation | server.py | FastAPI JSON-RPC 2.0 /mcp endpoint; dispatches tools/call to TOOLS[name](args); implements get_compensation, send_email, display_compensation, get_directory, search_repos, adjust_compensation against in-memory EMPLOYEES/REPOS/SENT_EMAILS fixtures. | JSON-RPC body {method, params:{name, arguments}}; select request headers logged only (authorization, x-user-token, x-cpex-violation, x-praxis-mcp-*). | JSON-RPC result.content[0].text (JSON-encoded tool output) or error envelope. | None. No role, permission, or approval check anywhere in server.py; tool_get_compensation includes real ssn whenever include_ssn is true regardless of caller identity (comment at line 113-117 states redaction is expected to occur upstream, i.e. is a blind spot here). |
+| Runtime context / gateway (documented, not present in this tree) | policy-opa-2.yaml (config only; no code in this tree executes it) | Describes an authbridge-cpex sidecar: jwt-user/jwt-client identity resolution from X-User-Token/Authorization via Keycloak JWKS, an APL gate requiring role.hr on get_compensation, RFC 8693 token delegation (workday-oauth), and args.ssn redaction unless perm.view_ssn. This is a conceptual/deployment-target description; Smith's own OPA policy (policy.rego) does not use this shape (no JWT, no Cedar) and this sidecar is not invoked by agent.py/server.py when run locally (MCP_PROXY empty). | X-User-Token, Authorization headers; Keycloak JWKS. | Resolved identity claims (security.subject, security.client); redacted args.ssn; delegated audience-scoped token. | Documented only for the CPEX/Cedar deployment variant; not exercised by any file inspected in this codebase and not the same input shape as policy.rego. Treated as Unknown/out-of-scope runtime enforcement for this tree, distinct from Smith's own OPA target. |
+| Policy enforcement (Smith-generated, offline) | smith/smith_outputs/policy.rego | Existing Rego policy already encoding all seven guidance.txt rules against input.name, input.args.*, input.extensions.subject.*. Not wired into agent.py or server.py's request path in this tree; evaluated only by Smith's policy-testing harness against recorded test cases. | input.name; input.args.{visibility, include_ssn, amount, subject, body}; input.extensions.subject.{roles, permissions, has_approval, user_role (undeclared fallback)}. | deny[] messages; allow boolean. | Full coverage of all 7 guidance rules exists as Rego, but is not invoked at agent/tool-call time in this codebase — it is a downstream/offline artifact, not a live pre-execution gate in the inspected tree. |
 
-OPA policy enforcement is applied at the Agent→MCP boundary (Layer 2→Layer 4), intercepting all tool calls before execution.
+### Runtime Subject Context
 
----
+| Field | Provider | Provenance | Verification / integrity | OPA-visible? |
+|---|---|---|---|---|
+| input.extensions.subject.roles | system_vars.json | Declared candidate list (hr, engineer, marketing, finance, platform, security); in the live CPEX deployment this is documented as sourced from Keycloak JWT claims via the jwt-user plugin (policy-opa-2.yaml), but no code in this tree (agent.py/server.py) resolves or forwards a roles array to the tool call or to any policy check. | Documented as JWT-signature-verified (RS256, Keycloak JWKS) only in the sidecar config, not implemented in this tree — Unknown/unverified here. | Yes — declared as input.extensions.subject.roles and consumed by policy.rego (subject_roles, caller_has_hr_role, any_repo_role). |
+| input.extensions.subject.permissions | system_vars.json | Declared candidate list (view_ssn, None); documented provenance is a Keycloak claim carried through token delegation, not implemented in this tree's agent.py/server.py. | Unknown in this tree — documented JWT verification lives only in the sidecar config, not in inspected code. | Yes — declared as input.extensions.subject.permissions and consumed by policy.rego (view_ssn check). |
+| input.extensions.subject.has_approval | system_vars.json | Declared as a string enum "true\|false"; no code in this tree sets or forwards this value from any manager-approval workflow — it is a policy-input placeholder with no producing implementation observed. | None observed; no signing/attestation of the approval flag exists in this tree. | Yes — declared as input.extensions.subject.has_approval and consumed by policy.rego (ADJ_APPROVAL_THRESHOLD rule). |
+| input.extensions.subject.user_name | system_vars.json | Declared as a fixed example value ("Bob"); no consuming code observed in agent.py, server.py, or policy.rego. | None observed. | Declared but not referenced by any guidance rule or policy.rego rule inspected — OPA-visible in principle (would appear at input.extensions.subject.user_name) but currently unused. |
 
-## 2. Layer Map
+### Tool Arguments
 
-| # | Layer | Component | File | Description |
-|---|-------|-----------|------|-------------|
-| 1 | A2A / HTTP API | FastAPI entrypoints | `agent.py` | Receives inbound requests via `/chat` (Smith shim) and A2A path. Validates that at least one of `X-User-Token` or `Authorization` is present on the A2A path; Smith shim sets headers to empty strings. |
-| 2 | Agent Loop | `HRAgent` | `agent.py` | LiteLLM completion loop. Holds per-session conversation history (`_histories[session_id]`). Dispatches tool calls via `call_tool()`. Forwards `X-User-Token`, `Authorization`, `X-Session-Id` to MCP server. |
-| 3 | Sidecar (authbridge-cpex) | Forward proxy | *(absent locally)* | In K8s: Cedar PDP, SSN redaction, PII scan, session taint. **Not present in local/Smith runs.** All sidecar mitigations are unavailable at this intercept layer. |
-| 4 | MCP Tool Server | FastAPI JSON-RPC | `server.py` | Receives tool calls on `:9100/mcp`. Routes to tool implementations. No authorization at this layer — executes any tool call received. |
-| 5 | Tool Implementation | Python functions | `server.py` | 6 tool functions operating on in-memory fixtures: `EMPLOYEES` dict, `SENT_EMAILS` list, `REPOS` list. |
+| Field | Tool | Origin / influence | Disposition |
+|---|---|---|---|
+| input.args.employee_id | get_compensation | LLM-generated from user_text via litellm tool_calls; no validation in agent.py or server.py beyond a dict lookup. | Acts on — server.py tool_get_compensation uses it directly as the EMPLOYEES dict key to select the returned record. |
+| input.args.include_ssn | get_compensation | LLM-generated boolean; SYSTEM_PROMPT instructs the model to set it true only when the user explicitly asks for the SSN. | Acts on — server.py tool_get_compensation directly gates whether result['ssn'] is populated with the real SSN; no permission check is performed on this value anywhere in the inspected implementation (the check exists only in policy.rego, which is not wired into this request path). |
+| input.args.employee_id | display_compensation | LLM-generated from user_text. | Acts on — used as the EMPLOYEES dict key; drives the salary_band computation. |
+| input.args.department | get_directory | LLM-generated optional filter from user_text. | Acts on — tool_get_directory filters EMPLOYEES by case-insensitive department match when non-empty; otherwise returns all entries. |
+| input.args.to | send_email | LLM-generated from user_text. | Acts on — tool_send_email appends it to SENT_EMAILS and echoes it back in the response; not itself scanned for SSN content. |
+| input.args.subject | send_email | LLM-generated from user_text (may echo prior tool output, e.g. a previously fetched SSN, per guidance rule 7 concern). | Acts on — stored in SENT_EMAILS and echoed in the response; server.py performs no SSN pattern scan (that check exists only in policy.rego, not in server.py). |
+| input.args.body | send_email | LLM-generated from user_text, same echo/carry-over concern as subject. | Acts on — stored in SENT_EMAILS; no SSN pattern scan in server.py (only in policy.rego, not wired in). |
+| input.args.repo_name | search_repos | LLM-generated optional substring filter. | Acts on — tool_search_repos filters REPOS by case-insensitive substring match when non-empty. |
+| input.args.visibility | search_repos | LLM-generated; required, constrained to internal/public/external by input_schema enum. | Acts on — tool_search_repos filters REPOS by exact case-insensitive match; no role check occurs in server.py itself (the internal-only and engineer/security gating exist only in policy.rego, not in the inspected tool implementation). |
+| input.args.employee_id | adjust_compensation | LLM-generated from user_text. | Acts on — tool_adjust_compensation uses it as the EMPLOYEES dict key and mutates that record's salary in place. |
+| input.args.amount | adjust_compensation | LLM-generated integer from user_text; agent.py's tool schema describes it as a positive raise but does not enforce sign or magnitude. | Acts on — tool_adjust_compensation does `employee['salary'] += amount` unconditionally (accepts negative or arbitrarily large values); the >$10,000 approval gate exists only in policy.rego and is not enforced in server.py itself, which is a genuine implementation-level blind spot regardless of the offline Rego coverage. |
 
-**OPA intercept point: Layer 2 → Layer 4** (agent dispatches tool call; OPA evaluates before MCP server receives it).
+### Prompt Inputs
 
----
+| Field or data | Source | Consumer | Trust / influence |
+|---|---|---|---|
+| SYSTEM_PROMPT | Hardcoded string literal in agent.py | litellm.completion messages[0] | Trusted, static; instructs the model to set include_ssn only on explicit request and to relay tool output verbatim (including a real SSN) rather than self-redact — this is a prompt-level behavioral control with no structured/OPA-visible counterpart. |
+| user_text | A2A context.get_user_input() or /chat request body (untrusted end-user input) | litellm.completion messages (user role); indirectly shapes which tool and which arguments the model chooses to call | Untrusted; this is the sole driver of tool_name/arguments selection since the LLM decides tool calls from this text plus conversation history. |
+| conversation history (self._histories[session_id]) | Accumulated prior turns (user text, assistant tool_calls, tool results) within the same session_id | litellm.completion messages on every subsequent turn in that session | Mixed trust — includes prior tool outputs (e.g. a previously fetched SSN) which the model could carry into a later send_email call; this is the mechanism behind guidance rule 7's 'data the caller accessed earlier as sensitive in the same session' concern noted in system_vars.json's send_email description, and it is not tracked as a structured/OPA-visible field anywhere. |
+| tool result text (format_tool_response output) | server.py tool output, JSON-encoded and flattened to text | Appended to message history as a 'tool' role message; read by the second litellm.completion call to produce the final reply | Semi-trusted (originates from the mock server's own fixtures in this demo, not an external network source); SYSTEM_PROMPT explicitly directs the model to relay it verbatim rather than reinterpret it. |
 
-## 3. Tool Inventory and Argument Disposition
+### External Data
 
-| Tool | Parameter | Type | Required | Disposition | Notes |
-|------|-----------|------|----------|-------------|-------|
-| `get_compensation` | `employee_id` | string | yes | Acts on | Selects which employee record to return |
-| `get_compensation` | `include_ssn` | boolean | no (default false) | Acts on | If true, SSN field is added to response |
-| `display_compensation` | `employee_id` | string | yes | Acts on | Selects which employee to show band summary for |
-| `get_directory` | `department` | string | no (default "") | Acts on | Filters returned employee list by department |
-| `send_email` | `to` | string | yes | Acts on | Email recipient — written to SENT_EMAILS |
-| `send_email` | `subject` | string | yes | Acts on | Email subject — written to SENT_EMAILS |
-| `send_email` | `body` | string | yes | Acts on | Email body — written to SENT_EMAILS |
-| `search_repos` | `repo_name` | string | no | Acts on | Substring filter on repo names |
-| `search_repos` | `visibility` | string | yes (enum) | Acts on | Filters repos by visibility: `internal`, `public`, `external` |
-| `adjust_compensation` | `employee_id` | string | yes | Acts on | Selects which employee's salary to modify |
-| `adjust_compensation` | `amount` | integer | yes | Acts on | Dollar amount added directly to `employee["salary"]` |
+| Data | Source | Verification / integrity | Consumer |
+|---|---|---|---|
+| Employee records (EMPLOYEES dict: salary, bonus, ssn, department, internal_notes, email, title) | In-memory Python literal in server.py — a mock fixture, not a real external HR system in this tree | None applicable; static, trusted test fixture. In the documented CPEX deployment this would be sourced from a real HR/Workday system with delegated-token access, but no such integration exists in the inspected code. | get_compensation, display_compensation, get_directory, adjust_compensation tool implementations in server.py |
+| Repository listing (REPOS list: name, visibility, stars, language) | In-memory Python literal in server.py — a mock fixture standing in for GitHub Enterprise | None applicable; static trusted test fixture. | search_repos tool implementation in server.py |
+| LLM completion output (tool_calls, final assistant text) | litellm.completion against a configurable model endpoint (Ollama or OpenAI-compatible; MODEL/LLM_API_BASE env vars) | None; model output is trusted at face value by agent.py (JSON-parsed tool arguments with a bare except that substitutes {} on failure rather than rejecting the call). | call_tool() (arguments), message history, final reply text returned to the user/A2A client |
 
-No arguments are Echoed or Ignored. All parameters influence the tool's execution or output.
+## Enforcement Points
 
----
+| Layer | Current | Available (OPA-interceptable) | Blind spots |
+|---|---|---|---|
+| Agent tool-dispatch (agent.py call_tool / HRAgent.run_turn) | None — presence-only check of x-user-token/authorization headers on the A2A path; no role, permission, or content check before issuing the MCP request. | Yes — a pre-execution Rego decision could gate here using input.name (tool_name), input.args.* (all tool arguments, fully structured and available before the call is issued), and input.extensions.subject.* (roles, permissions, has_approval) if those fields were actually populated from a real identity source at this point. | None structural, but see Runtime Subject Context: roles/permissions/has_approval are declared inputs with no producing implementation in this tree, so even though the shape is OPA-expressible, the runtime values reaching it would currently be Unknown/unpopulated. |
+| MCP tool implementation (server.py tool_* functions) | None — every tool function trusts args completely; get_compensation returns the real ssn whenever include_ssn=true with no permission check; adjust_compensation mutates salary by any signed integer with no threshold/approval check; search_repos returns matches with no role/visibility gate; send_email stores/echoes subject and body with no SSN pattern scan. | Yes for all five gaps — input.args.include_ssn, input.args.amount, input.args.visibility, input.args.subject, input.args.body are all declared structured fields already covered by policy.rego's existing rules; the predicate is fully OPA-expressible using only args + subject.roles/permissions/has_approval, no external state needed. | True blind spot: server.py's internal_notes field is silently included in get_compensation's response to any successful caller with no guidance rule or policy.rego rule addressing it at all — not OPA-interceptable as a gap because no guidance dependency was ever declared for it, and not fixable by the args/subject schema (it is response content, a different boundary than input.args). |
+| Cross-tool session content reuse (send_email carrying earlier-session sensitive data) | None — conversation history is unrestricted; the model can copy a previously fetched SSN or salary from an earlier get_compensation result into a later send_email call. | Partially — the SSN-pattern half of this is already OPA-expressible and encoded in policy.rego (regex.match against args.subject/args.body). The broader 'data the caller accessed earlier as sensitive in the same session' concern named in system_vars.json's send_email description is not expressible from input.args/input.extensions.subject alone; it needs session-scoped state (an OPA data document or session-taint mechanism) that is not a declared structured field in this tree. | True blind spot for the non-SSN-pattern case: e.g. relaying a salary figure or internal_notes via email leaves no structured signal for a stateless per-call Rego decision to detect, since no session-taint field is declared in system_vars.json or any tool schema. |
 
-## 4. Trust Boundaries
+## Undeclared Fields
 
-| Field Path | Source | Trusted? | Notes |
-|------------|--------|----------|-------|
-| `input.extensions.subject.roles` | Self-reported by caller via request headers | No | Populated from `X-User-Token` or `Authorization` headers; no cryptographic verification in local runs |
-| `input.extensions.subject.permissions` | Self-reported | No | Same as above |
-| `input.extensions.subject.has_approval` | Self-reported | No | String "true" or "false"; trivially spoofable in local runs |
-| `input.extensions.subject.user_name` | Self-reported | No | Advisory only |
-| `input.args.*` | LLM-generated / caller-supplied | No | All tool arguments are constructed by the LLM from conversation context; not independently verified |
-| `EMPLOYEES` / `REPOS` / `SENT_EMAILS` | Server-side in-memory fixtures | Yes | Authoritative data held server-side; not attacker-controlled |
-| `SYSTEM_PROMPT` | Hardcoded in `agent.py` | Yes (advisory) | Static, not user-controlled; provides behavioral guidance to LLM but cannot be cryptographically enforced |
+| Field | Referenced by guidance rule # | Declared by | Consequence |
+|---|---|---|---|
+| team (caller's team membership) | 2 | Declared nowhere — not in system_vars.json, not in any tool_definitions.json schema. Independently corroborated by the pre-existing smith/extension_suggestions.json, which proposes input.extensions.subject.team as a future addition with the same reasoning (repo-to-team ownership also has no representation anywhere). | Guidance rule 2 ('All employees cannot access other teams' repositories') cannot be encoded as an OPA predicate today; policy.rego does not attempt it and instead only encodes the internal-vs-non-internal visibility gate (rule 1) and the role-based search gate (rule 5). |
+| user_role (singular) | 3 (Only HR employees can access compensation records — policy.rego's caller_has_hr_role helper checks this as a fallback) | Declared nowhere in system_vars.json (only the plural roles array is declared there) or in any tool schema; it exists solely as a defensive alternate check inside the pre-existing policy.rego (subject.user_role == "hr"). | Not a guidance-driven gap — guidance rule 3 is already satisfiable via the declared roles array — but it is a policy artifact referencing a field with no declared provider; if roles were ever absent and user_role were the only field populated, OPA visibility of that field would be unconfirmed against the authoritative schemas. |
 
-**Key risk**: All identity fields (`roles`, `permissions`, `has_approval`) are self-reported. A caller that can set HTTP headers can claim any role or permission. This is the primary enforcement gap when authbridge-cpex is absent.
+## Phase Handoff
 
----
-
-## 5. Guidance Coverage Sweep
-
-Current `guidance.txt` (2 rules):
-
-```
-All employees can only access internal repositories.
-All employees cannot access other teams' repositories.
-```
-
-| Rule # | Rule Text | OPA Field Required | Field Available? | Status |
-|--------|-----------|--------------------|------------------|--------|
-| 1 | All employees can only access internal repositories. | `input.args.visibility` (via `search_repos`) | Yes — `visibility` is a required enum parameter in `tool_definitions.json` | Enforceable |
-| 2 | All employees cannot access other teams' repositories. | `input.extensions.subject.team` | **No** — not declared in `system_vars.json`, not present in any tool schema | Blind spot — cannot fire as stated |
-
-### Undeclared Fields
-
-| Field | Required By | Declared In | Status |
-|-------|-------------|-------------|--------|
-| `input.extensions.subject.team` | Rule 2 | Nothing | Not declared anywhere — rule cannot be enforced without this field |
-
-### Coverage Gaps (tools with no corresponding guidance rule)
-
-The following tools and risk vectors have no corresponding rule in the current `guidance.txt`:
-
-| Tool / Vector | Risk | Guidance Coverage |
-|---------------|------|-------------------|
-| `get_compensation` | Any role can retrieve salary + SSN data | None |
-| `display_compensation` | Any role can view compensation bands | None |
-| `adjust_compensation` | Any role can raise any salary by any amount | None |
-| `send_email` | Any role can send email with arbitrary content, including PII/SSN | None |
-| `search_repos` (role gate) | Any role can search repos — guidance says "internal only", not "engineers/security only" | Partial (visibility only, no role restriction) |
-
----
-
-## 6. Enforcement Points Summary
-
-| OPA `input` Path | Available | Populated By |
-|------------------|-----------|-------------|
-| `input.name` | Yes | Tool name from dispatch |
-| `input.args.employee_id` | Yes | Caller |
-| `input.args.include_ssn` | Yes | LLM / caller |
-| `input.args.amount` | Yes | LLM / caller |
-| `input.args.visibility` | Yes | LLM / caller |
-| `input.args.department` | Yes | LLM / caller |
-| `input.args.to` | Yes | LLM / caller |
-| `input.args.subject` | Yes | LLM / caller |
-| `input.args.body` | Yes | LLM / caller |
-| `input.args.repo_name` | Yes | LLM / caller |
-| `input.extensions.subject.roles` | Yes | Identity headers (self-reported) |
-| `input.extensions.subject.permissions` | Yes | Identity headers (self-reported) |
-| `input.extensions.subject.has_approval` | Yes | Identity headers (self-reported) |
-| `input.extensions.subject.team` | **No** | Not declared — see Rule 2 blind spot |
-
----
-
-## 7. Data Flow Diagram (Text)
-
-```
-User / A2A Client
-      │
-      ▼ HTTP (X-User-Token, Authorization, X-Session-Id)
-┌─────────────────────────────┐
-│  Layer 1: FastAPI Entrypoint│  agent.py /chat  /a2a
-│  (Smith shim or A2A path)   │
-└─────────────┬───────────────┘
-              │ session_id, message
-              ▼
-┌─────────────────────────────┐
-│  Layer 2: HRAgent Loop      │  LiteLLM completion
-│  (LLM + tool dispatch)      │  per-session history
-└─────────────┬───────────────┘
-              │ tool_name + args
-              ▼
-         ┌──────────┐
-         │  OPA     │  ← INTERCEPT POINT
-         │  Policy  │  input = {name, args, extensions}
-         └────┬─────┘
-              │ allow / deny
-              ▼
-┌─────────────────────────────┐
-│  Layer 3: authbridge-cpex   │  ABSENT in local/Smith runs
-│  (Cedar PDP, SSN redact)    │  Cedar, PII scan unavailable
-└─────────────┬───────────────┘
-              │
-              ▼
-┌─────────────────────────────┐
-│  Layer 4: MCP Tool Server   │  server.py :9100/mcp
-│  (FastAPI JSON-RPC)         │  No authz — executes all calls
-└─────────────┬───────────────┘
-              │
-              ▼
-┌─────────────────────────────┐
-│  Layer 5: Tool Implementation│  EMPLOYEES, REPOS, SENT_EMAILS
-│  (Python functions)         │  in-memory fixtures
-└─────────────────────────────┘
-```
+- Status: PASS
+- Artifact schema: architecture-v2
+- Summary: 6 tools inventoried (get_compensation, display_compensation, get_directory, send_email, search_repos, adjust_compensation) from tool_definitions.json, all matched to concrete implementation in agent.py (TOOLS schema, litellm dispatch) and server.py (tool_* functions) — no missing/extra/incompatible declarations found; tool_definitions.json's 'action_list' in system_vars.json omits adjust_compensation but this is a system_vars.json list, not the authoritative tool_definitions.json, so it is not a FAIL per the shared rule (recorded as a note, not a mismatch). 5 layers recorded (agent/A2A+shim, superseded old_agent.py, MCP tool implementation server.py, documented-but-inactive CPEX/OPA sidecar config, offline Smith-generated policy.rego). 4 runtime subject fields (roles, permissions, has_approval, user_name) all declared in system_vars.json and OPA-visible via input.extensions.subject.*, but none has a producing implementation in the inspected agent.py/server.py request path — provenance for roles/permissions is documented only in the sidecar config (policy-opa-2.yaml), not implemented here. 11 tool-argument rows covering every input.args.* field across all 6 tools, all disposition 'Acts on' per function-body inspection (server.py trusts args unconditionally; no Echoed/Ignored/Unclear cases found). 4 prompt-input rows (SYSTEM_PROMPT, user_text, conversation history, tool-result text). 3 external-data rows (mock EMPLOYEES, mock REPOS, LLM completion output). 3 enforcement-point rows identifying that server.py itself performs zero authorization/content checks (all seven guidance rules are only encoded in the offline policy.rego, not live in the request path), plus one true blind spot (internal_notes leakage in get_compensation, and session-level sensitive-data reuse in send_email beyond the SSN regex pattern). 2 undeclared-fields rows: 'team' (guidance rule 2, declared nowhere, corroborated by prior extension_suggestions.json) and 'user_role' (a policy.rego-only fallback field, declared nowhere, but not guidance-driven since rule 3 is already satisfiable via the declared roles array). Open gaps: chat.py is present but empty (no client implementation to inspect); the documented CPEX/Cedar/Keycloak sidecar enforcement path is Unknown/out-of-scope since no code in this tree invokes it when MCP_PROXY is unset (the default for a local Smith run).

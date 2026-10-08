@@ -47,3 +47,6 @@ When calling `search_car_price`, the allowed `brand_name` values depend on the u
 ## Unknown Roles
 
 A request whose `user_role` matches none of the five defined roles has no privileges and may call no tool, including `get_car_brands`.
+
+- `vehicle_type` for `get_vehicles_by_type` must be denied for every role unless it is exactly one of `"carros"`, `"cars"`, `"motos"`, `"motorcycles"`, `"caminhoes"`, or `"trucks"`, matched case-sensitively; the policy must not rely on the backend's silent fallback to `"carros"` for any other value.
+- A `search_car_price` call must be denied for every role when `brand_name` is missing, null, or empty/whitespace-only.
