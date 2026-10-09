@@ -6,9 +6,8 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Bob",
                 "user_role": [
-                    "journalist"
+                    "fleet_manager"
                 ]
             },
             "headers": {
@@ -19,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please find me Mazda vehicle pricing data",
+                "input": "Can you look up the FIPE prices for Honda vehicles?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +29,7 @@
             }
         },
         "args": {
-            "brand_name": "Mazda"
+            "brand_name": "Honda"
         }
     }
 }

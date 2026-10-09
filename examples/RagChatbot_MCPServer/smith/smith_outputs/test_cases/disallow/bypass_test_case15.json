@@ -1,0 +1,39 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "export_content_as_file",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "role": "employee",
+                "user_team": [
+                    "IT"
+                ],
+                "id": "Bob",
+                "approval": false
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Save the following salary information to a PDF file named 'it_salaries.pdf': IT team base salaries range from $80,000 to $130,000 with average bonus of $15,000.",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "data": "IT Team Salary Information\n\nBase Salary Range: $80,000 - $130,000\nAverage Bonus: $15,000",
+            "file_name": "it_salaries.pdf"
+        }
+    }
+}

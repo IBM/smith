@@ -1,85 +1,29 @@
 {
-  "suggestions": [
-    {
-      "guidance_rule": "A Manager may view only their direct reports' data, in addition to their own.",
-      "missing_context": "Whether the acting user is the direct manager of the target employee requires a DB lookup (SELECT * FROM employees WHERE manager_id = subject.user_id). This relationship is not available in input.args.* or input.extensions.subject.* at invocation time.",
-      "suggested_path": "input.extensions.subject.direct_report_ids",
-      "type": "array of integers",
-      "candidates": [],
-      "reason": "Pre-compute the list of direct-report user_ids for the acting user and inject as a system variable. OPA can then check: args.user_id in subject.direct_report_ids."
-    },
-    {
-      "guidance_rule": "An employee's salary may be updated only by HR or by that employee's direct manager.",
-      "missing_context": "Same as above — manager relationship requires a DB lookup.",
-      "suggested_path": "input.extensions.subject.direct_report_ids",
-      "type": "array of integers",
-      "candidates": [],
-      "reason": "Shared fix with the manager-view rule above. Once direct_report_ids is available, the salary-update rule can check: subject.department == 'HR' OR args.user_id in subject.direct_report_ids."
-    },
-    {
-      "guidance_rule": "An employee may set or update a passport or visa expiration date only if the new expiration is more than six months after the date of the update.",
-      "missing_context": "The current wall-clock date is not available in OPA input at invocation time.",
-      "suggested_path": "input.extensions.subject.current_date",
-      "type": "string (YYYY-MM-DD)",
-      "candidates": [],
-      "reason": "Inject the server-side current date as a system variable. OPA can then compare args.expiry_date against subject.current_date + 6 months."
-    },
-    {
-      "guidance_rule": "An employee may update their home address only to an address within their own current country; changing the address to a different country is not allowed.",
-      "missing_context": "The employee's current country_code is a DB field on their employee record, not present in input.args.* (country_code in update_employee is the new value being set, not the current value).",
-      "suggested_path": "input.extensions.subject.current_country_code",
-      "type": "string (ISO 3166-1 alpha-2)",
-      "candidates": [],
-      "reason": "Pre-fetch the employee's current country_code and inject as a system variable. OPA can then enforce: args.country_code == subject.current_country_code."
-    },
-    {
-      "guidance_rule": "An employee who is on the blacklist (persona non grata list) may not update their passport information.",
-      "missing_context": "No 'blacklist' or 'persona_non_grata' field exists in system_vars.json or any tool parameter. The blacklist status is a DB field not surfaced to OPA.",
-      "suggested_path": "input.extensions.subject.blacklisted",
-      "type": "boolean",
-      "candidates": ["true", "false"],
-      "reason": "Add a 'blacklisted' boolean to system_vars.json and populate it from the DB at session creation time. OPA can then enforce: NOT subject.blacklisted when passport tools are called."
-    },
-    {
-      "guidance_rule": "An employee's emergency contact must reside in the same area as the employee.",
-      "missing_context": "The employee's current location (city, country) is a DB field not available in OPA input at invocation time.",
-      "suggested_path": "input.extensions.subject.current_country_code",
-      "type": "string",
-      "candidates": [],
-      "reason": "Shared fix with the home-address rule. Once current_country_code is available, OPA can compare args.country (emergency contact) against subject.current_country_code."
-    },
-    {
-      "guidance_rule": "An employee may not create a time-off request unless they have sufficient available balance for the requested leave type.",
-      "missing_context": "Leave balance requires computing annual_days - used_days from DB records. This is a runtime aggregation not available in OPA input.",
-      "suggested_path": "input.extensions.subject.leave_balances",
-      "type": "object (leave_type -> remaining_days)",
-      "candidates": [],
-      "reason": "Pre-compute leave balances per type and inject as a system variable map. OPA can then check: subject.leave_balances[args.leave_type] >= requested_days."
-    },
-    {
-      "guidance_rule": "A Paternity leave request may be approved only if the requester has provided both the baby's birth date and the baby's name in their chat messages.",
-      "missing_context": "Conversation history is not present in OPA input at tool-call invocation time.",
-      "suggested_path": "input.extensions.subject.paternity_details_confirmed",
-      "type": "boolean",
-      "candidates": ["true", "false"],
-      "reason": "Add a boolean system variable set by the agent layer before invoking create_time_off_request with leave_type=Paternity. OPA can then enforce: subject.paternity_details_confirmed == true when leave_type == 'Paternity'."
-    },
-    {
-      "guidance_rule": "A time-off request's status may be changed by the requester's direct manager (Approved or Denied) or by the requesting employee themselves (Pending only).",
-      "missing_context": "The 'self-Pending' path requires mapping request_id to the requester's user_id — a DB lookup not available in OPA input. The manager path requires the direct-report relationship (see above).",
-      "suggested_path": "input.extensions.subject.direct_report_ids",
-      "type": "array of integers",
-      "candidates": [],
-      "reason": "Shared fix with the manager-view rule. Additionally, the request's owner_user_id could be added as an input extension: input.extensions.object.owner_user_id."
-    },
-    {
-      "guidance_rule": "Users outside the IBM organization are strictly prohibited from viewing IBM employee data (cross-user access path).",
-      "missing_context": "The target employee's organization is a DB field on their record. When args.user_id != subject.user_id, OPA cannot determine the target's organization without a DB lookup.",
-      "suggested_path": "input.extensions.object.organization",
-      "type": "string",
-      "candidates": ["IBM Corporation", "Red Hat", "Kyndryl"],
-      "reason": "Pre-fetch the target employee record's organization field and attach it as input.extensions.object.organization. OPA can then enforce: subject.organization == object.organization (or allow HR regardless)."
-    }
-  ],
-  "note": "These are suggestions for future system variable or input extension additions. They are NOT part of the current policy. The current policy enforces the 10 rules that are fully enforceable from existing input.args.* and input.extensions.subject.* fields."
+    "suggestions": [
+        {
+            "guidance_rule": "An employee's salary may be updated only by HR or by that employee's direct manager.",
+            "missing_context": "No 'update_employee' (or similar salary-update) tool is in tool_definitions.json under the current session scope, so there is no update call to attach this rule to. Even if it were in scope, system_vars.json has no manager/direct-report relationship field (e.g. a 'manager_id' or 'direct_reports' claim for the subject) needed to check 'direct manager'.",
+            "suggested_path": "input.extensions.subject.manager_of",
+            "type": "array",
+            "candidates": ["<list of user_ids this subject manages>"],
+            "reason": "This rule cannot be enforced without both an in-scope update tool and a system variable describing the subject's direct reports."
+        },
+        {
+            "guidance_rule": "Only HR may add or update a department, add or delete a country holiday, or set a leave allotment.",
+            "missing_context": "Tools 'update_department', 'add_holiday', 'delete_holiday', and 'set_leave_allotment' are not present in tool_definitions.json under the current session scope (only 'add_employee' and 'add_department' are selected), so these parts of the rule cannot be enforced. The 'add_department' portion is enforced in the generated policy.",
+            "suggested_path": "input.name",
+            "type": "string",
+            "candidates": ["update_department", "add_holiday", "delete_holiday", "set_leave_allotment"],
+            "reason": "These tools exist in the agent's action_list but were excluded from tool_definitions.json by the current session_config.json tool selection. Re-run get_mcp_parameter with these tools selected to enforce the HR-only restriction for them."
+        },
+        {
+            "guidance_rule": "department — one of Corporate Leadership, Engineering, Product, HR, Finance.",
+            "missing_context": "add_employee only accepts 'department_id', an opaque integer foreign key, not the department name string. The enum check cannot be applied there without a lookup from department_id to department name, which is not available in tool arguments or system variables.",
+            "suggested_path": "input.args.department_id",
+            "type": "integer",
+            "candidates": [],
+            "reason": "Cannot validate department_id against a name enum without a department_id -> name mapping, which is not in system_vars.json or tool_definitions.json. The enum check is enforced on add_department.name instead, where the value is a plain string."
+        }
+    ],
+    "note": "These are suggestions for future tool-scope or system-variable additions. They are NOT part of the current policy."
 }

@@ -4,7 +4,7 @@
 
 Invoked when `smith --flag policy_testing` returns **0 test cases** or **100% failure**. Fixes the policy so tests produce meaningful results before the normal enhancement workflow.
 
-If the scorecard shows mixed results (some pass, some fail), skip this — use `policy_patch` instead.
+If the scorecard shows mixed results (some cases classified correctly), skip this — use `policy_patch` instead.
 
 ---
 

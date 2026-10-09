@@ -6,14 +6,9 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Bob",
                 "user_role": [
-                    "faculty",
-                    "phd_student",
-                    "guest"
+                    "faculty"
                 ],
-                "queries_this_session": 1,
-                "dissertation_area": "Artificial intelligence",
                 "research_area": [
                     "Artificial intelligence",
                     "Cybersecurity and privacy",
@@ -28,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Search for machine learning conferences with keywords 'natural language processing' in Artificial intelligence topic, limit to 15 results",
+                "input": "I'd like to search for events across different areas. First, find conferences with keywords 'deep learning' and topic 'Artificial intelligence'. Then also search with keywords 'privacy preserving' and topic 'Cybersecurity and privacy'.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,9 +34,8 @@
             }
         },
         "args": {
-            "keywords": "natural language processing",
-            "topic": "Artificial intelligence",
-            "limit": 15
+            "keywords": "deep learning",
+            "topic": "Artificial intelligence"
         }
     }
 }

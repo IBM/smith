@@ -1,0 +1,39 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "export_content_as_file",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "role": "employee",
+                "user_team": [
+                    "Sales"
+                ],
+                "id": "Bob",
+                "approval": false
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Export this compensation data to a file called 'team_salaries.csv': Employee: Alice, Salary: $95,000; Employee: Charlie, Salary: $87,000; Employee: Dana, Salary: $102,000.",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "data": "Employee,Salary\nAlice,$95,000\nCharlie,$87,000\nDana,$102,000",
+            "file_name": "team_salaries.csv"
+        }
+    }
+}

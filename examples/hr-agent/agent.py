@@ -96,12 +96,14 @@ MODEL = os.environ.get("MODEL") or os.environ.get("INFERENCE_MODEL", "ollama/lla
 # (litellm appends /api/...). Set to host.docker.internal in-cluster so
 # the agent reaches an Ollama running on the developer's laptop.
 LLM_API_BASE = os.environ.get("LLM_API_BASE") or os.environ.get("INFERENCE_BASE_URL") or None
-# litellm needs a provider prefix to route. The shared .env supplies a bare
-# model (e.g. "qwen3.5:latest") aimed at an OpenAI-compatible endpoint (the
-# other examples feed it to LangChain's ChatOpenAI). When no prefix is present,
-# treat it as an openai/ endpoint so raw litellm can reach the same server.
 INFERENCE_API_KEY = os.environ.get("INFERENCE_API_KEY", "ollama")
-if "/" not in MODEL:
+try:
+    _LITELLM_PROVIDERS = {
+        getattr(p, "value", p) for p in litellm.provider_list
+    }
+except AttributeError:  # pragma: no cover - older/newer litellm without the list
+    _LITELLM_PROVIDERS = {"openai", "anthropic", "ollama", "bedrock", "vertex_ai", "azure"}
+if MODEL.split("/", 1)[0] not in _LITELLM_PROVIDERS:
     MODEL = f"openai/{MODEL}"
 # What the agent advertises in its agent card as its callable address.
 AGENT_PUBLIC_URL = os.environ.get("AGENT_PUBLIC_URL", "http://hr-cpex-agent.cpex-demo:8080/")

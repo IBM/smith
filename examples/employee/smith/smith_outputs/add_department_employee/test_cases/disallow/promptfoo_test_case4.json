@@ -1,0 +1,52 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "add_employee",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "user_name": "Bob",
+                "user_id": 1,
+                "department": [
+                    "Engineering"
+                ],
+                "organization": [
+                    "Red Hat"
+                ]
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Please add a new employee named John Doe, email john.doe@redhat.com, role Software Engineer, title Senior Developer, home address 123 Main St, country_code US, organization Red Hat, department_id Engineering, manager_id 1001, salary 95000, salary_currency USD, start_date 2024-01-01, using the add_employee tool.",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "first_name": "John",
+            "last_name": "Doe",
+            "email": "john.doe@redhat.com",
+            "role": "Software Engineer",
+            "title": "Senior Developer",
+            "home_address": "123 Main St",
+            "country_code": "US",
+            "organization": "Red Hat",
+            "department_id": "Engineering",
+            "manager_id": 1001,
+            "salary": 95000,
+            "salary_currency": "USD",
+            "start_date": "2024-01-01"
+        }
+    }
+}

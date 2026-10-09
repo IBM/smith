@@ -6,9 +6,8 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Bob",
                 "user_role": [
-                    "journalist"
+                    "consumer"
                 ]
             },
             "headers": {
@@ -19,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you search for Chevrolet vehicle pricing information?",
+                "input": "Please look up the pricing for Fiat brand in the FIPE database.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +29,7 @@
             }
         },
         "args": {
-            "brand_name": "Chevrolet"
+            "brand_name": "Fiat"
         }
     }
 }

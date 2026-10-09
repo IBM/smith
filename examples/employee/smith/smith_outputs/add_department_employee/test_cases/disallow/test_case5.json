@@ -1,0 +1,41 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "add_employee",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "department": [
+                    "Engineering"
+                ]
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "I'm an engineer and I want to add a new employee: first name Kevin, last name Wu, email kevin.wu@ibm.com, role engineer, title Junior Engineer, home address 50 Innovation Dr, San Jose, CA, country code US.",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "first_name": "Kevin",
+            "last_name": "Wu",
+            "email": "kevin.wu@ibm.com",
+            "role": "engineer",
+            "title": "Junior Engineer",
+            "home_address": "50 Innovation Dr, San Jose, CA",
+            "country_code": "US"
+        }
+    }
+}

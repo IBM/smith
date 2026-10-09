@@ -5,18 +5,7 @@
         "name": "get_events",
         "extensions": {
             "subject": {
-                "claims": {},
-                "user_name": "Bob",
-                "user_role": [
-                    "faculty"
-                ],
-                "queries_this_session": 1,
-                "dissertation_area": "Artificial intelligence",
-                "research_area": [
-                    "Artificial intelligence",
-                    "Cybersecurity and privacy",
-                    "Software engineering"
-                ]
+                "claims": {}
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -26,7 +15,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Find conferences with keywords 'computer vision' in Artificial intelligence topic with limit 14",
+                "input": "Find 5 conferences related to software engineering for me.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -37,9 +26,9 @@
             }
         },
         "args": {
-            "keywords": "computer vision",
-            "topic": "Artificial intelligence",
-            "limit": 14
+            "keywords": "software engineering",
+            "topic": "Software engineering",
+            "limit": 5
         }
     }
 }

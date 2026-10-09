@@ -15,7 +15,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Send an email to colleague@gmail.com with subject 'Project Update' and body 'Meeting scheduled for tomorrow' with no attachments",
+                "input": "Draft and send an email to alice.jones@gmail.com. Subject: 'Meeting Notes from Monday', body: 'Hi Alice, please find the notes from our Monday standup attached.', attached file: meeting_notes.pdf.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -26,11 +26,11 @@
             }
         },
         "args": {
-            "recipient_email": "colleague@gmail.com",
-            "subject": "Project Update",
-            "body": "Meeting scheduled for tomorrow",
-            "email_content": "Meeting scheduled for tomorrow",
-            "attached_file": ""
+            "recipient_email": "alice.jones@gmail.com",
+            "subject": "Meeting Notes from Monday",
+            "body": "Hi Alice, please find the notes from our Monday standup attached.",
+            "email_content": "Hi Alice, please find the notes from our Monday standup attached.",
+            "attached_file": "meeting_notes.pdf"
         }
     }
 }

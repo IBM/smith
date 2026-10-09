@@ -3,64 +3,74 @@
     {
       "category": "omitted_field",
       "direction": "guidance_deny_policy_allow",
-      "guidance_rule": "A request whose user_role matches none of the five defined roles has no privileges and may call no tool, including get_car_brands.",
+      "guidance_rule": "A search_car_price call with an empty or whitespace-only brand_name must be denied for all roles.",
       "rules_involved": [
-        "effective_role",
-        "deny[\"Unknown role: access denied\"]"
+        "deny[msg] if { input.name == \"search_car_price\"; trim_space(args.brand_name) == \"\" ... }"
       ],
-      "field": "input.extensions.subject.user_role",
-      "reason": "Policy allows requests when user_role field is completely omitted from the subject",
-      "exploit_strategy": "Send request with input.extensions.subject containing no user_role field at all",
+      "field": "input.args.brand_name",
+      "reason": "If brand_name is omitted entirely from args, args.brand_name is undefined; trim_space(undefined) does not equal \"\" in Rego, so the empty-brand deny rule never fires, and the restricted-brand deny rule also skips (trim_space check passes as non-empty is not evaluated), allowing a call with no brand_name.",
+      "exploit_strategy": "Send a search_car_price request with no brand_name field in args (omit it entirely). The empty-check deny rule silently fails because args.brand_name is undefined, and the restricted-brand rule's trim_space guard also fails to trigger, so allow fires.",
       "severity": "high"
     },
     {
       "category": "omitted_field",
       "direction": "guidance_deny_policy_allow",
-      "guidance_rule": "get_vehicles_by_type vehicle_type restrictions based on role",
+      "guidance_rule": "vehicle_type is matched exactly and case-sensitively against these lowercase values. Any other value — including different casing — is denied for every role.",
       "rules_involved": [
-        "deny[\"vehicle_type must be a recognized value\"]"
+        "deny[msg] if { input.name == \"get_vehicles_by_type\"; subject.user_role in valid_roles; subject.user_role != \"guest\"; not args.vehicle_type in allowed_vehicle_types_by_role[subject.user_role] ... }"
       ],
-      "field": "input.arguments.vehicle_type",
-      "reason": "Policy uses object.get with empty string default, but tool schema shows 'carros' default - omitting the field bypasses validation",
-      "exploit_strategy": "Call get_vehicles_by_type with no vehicle_type argument in the request body",
-      "severity": "medium"
-    },
-    {
-      "category": "type_confusion",
-      "direction": "guidance_deny_policy_allow",
-      "guidance_rule": "vehicle_type is matched exactly and case-sensitively against these lowercase values",
-      "rules_involved": [
-        "deny[\"vehicle_type must be a recognized value\"]"
-      ],
-      "field": "input.arguments.vehicle_type",
-      "reason": "Policy checks string membership without type assertion - non-string values bypass validation",
-      "exploit_strategy": "Send vehicle_type as integer 0 or boolean false to bypass string set membership check",
-      "severity": "medium"
-    },
-    {
-      "category": "type_confusion",
-      "direction": "guidance_deny_policy_allow",
-      "guidance_rule": "brand_name restrictions for fleet_manager and journalist roles",
-      "rules_involved": [
-        "deny[\"fleet_manager may only search truck-relevant brands\"]",
-        "deny[\"journalist may only search domestic-market brands\"]"
-      ],
-      "field": "input.arguments.brand_name",
-      "reason": "Policy checks string membership without type assertion - non-string values bypass brand restrictions",
-      "exploit_strategy": "Send brand_name as integer or boolean to bypass string set membership checks for restricted roles",
-      "severity": "medium"
-    },
-    {
-      "category": "type_confusion",
-      "direction": "guidance_deny_policy_allow",
-      "guidance_rule": "A search_car_price call with an empty or whitespace-only brand_name must be denied for all roles",
-      "rules_involved": [
-        "deny[\"brand_name must not be empty or whitespace\"]"
-      ],
-      "field": "input.arguments.brand_name",
-      "reason": "trim_space function expects string input - non-string values bypass empty/whitespace validation",
-      "exploit_strategy": "Send brand_name as integer 0 or boolean false to bypass trim_space check",
+      "field": "input.args.vehicle_type",
+      "reason": "vehicle_type is optional (default 'carros' in the tool schema). If omitted, args.vehicle_type is undefined. 'undefined in set' evaluates to false in Rego, so 'not ... in ...' is true and the deny fires — but only for roles whose allowed set does not include undefined. However, for analyst the set includes all types; undefined is still not in the set, so deny fires correctly. The real issue: the backend default coerces missing vehicle_type to 'carros', which the guidance says the policy must reject rather than rely on. For consumer/journalist the deny correctly fires on undefined, but for analyst undefined is also not in the set so deny fires too — this is actually correct. Re-examining: the divergence is that a fleet_manager omitting vehicle_type gets denied (correct), but the guidance says the policy must reject unrecognized types rather than rely on backend fallback — the policy does deny undefined, so this is fine. The actual omitted_field divergence is for brand_name as described above.",
+      "exploit_strategy": "N/A — this specific sub-case is actually handled correctly by the policy.",
       "severity": "low"
+    },
+    {
+      "category": "omitted_field",
+      "direction": "guidance_deny_policy_allow",
+      "guidance_rule": "A search_car_price call with an empty or whitespace-only brand_name must be denied for all roles. brand_name compared by exact case-sensitive equality; partial or differently-cased names are denied.",
+      "rules_involved": [
+        "deny[msg] if { input.name == \"search_car_price\"; subject.user_role in object.keys(allowed_brands_by_role); trim_space(args.brand_name) != \"\"; not args.brand_name in allowed_brands_by_role[subject.user_role] ... }"
+      ],
+      "field": "input.args.brand_name",
+      "reason": "When brand_name is omitted, args.brand_name is undefined. trim_space(undefined) is undefined, which is neither == \"\" nor != \"\", so both the empty-check deny and the restricted-brand deny silently fail. A fleet_manager or journalist can call search_car_price with no brand_name and the policy allows it.",
+      "exploit_strategy": "As fleet_manager or journalist, send search_car_price with args={} (no brand_name key). Both deny rules referencing brand_name fail due to undefined, so allow=true.",
+      "severity": "high"
+    },
+    {
+      "category": "keyword_evasion",
+      "direction": "guidance_deny_policy_allow",
+      "guidance_rule": "vehicle_type is matched exactly and case-sensitively against these lowercase values. Any other value — including different casing such as 'Caminhoes' — is denied for every role.",
+      "rules_involved": [
+        "deny[msg] if { input.name == \"get_vehicles_by_type\"; subject.user_role in valid_roles; subject.user_role != \"guest\"; not args.vehicle_type in allowed_vehicle_types_by_role[subject.user_role] ... }"
+      ],
+      "field": "input.args.vehicle_type",
+      "reason": "The policy correctly uses set membership for exact case-sensitive matching, so 'Caminhoes' would not be in the fleet_manager set and would be denied. This is actually correct — no divergence here.",
+      "exploit_strategy": "N/A",
+      "severity": "low"
+    },
+    {
+      "category": "omitted_field",
+      "direction": "guidance_deny_policy_allow",
+      "guidance_rule": "A guest may only call get_car_brands. Calls to search_car_price or get_vehicles_by_type must be denied for guests.",
+      "rules_involved": [
+        "deny[msg] if { input.name == \"get_vehicles_by_type\"; subject.user_role in valid_roles; subject.user_role != \"guest\"; not args.vehicle_type in allowed_vehicle_types_by_role[subject.user_role] ... }"
+      ],
+      "field": "input.extensions.subject.user_role / allowed_vehicle_types_by_role",
+      "reason": "The vehicle_type deny rule explicitly skips guests (subject.user_role != 'guest'). Guest calling get_vehicles_by_type is already blocked by the tool-access deny rule, so this is correctly handled. No divergence.",
+      "exploit_strategy": "N/A",
+      "severity": "low"
+    },
+    {
+      "category": "omitted_field",
+      "direction": "guidance_deny_policy_allow",
+      "guidance_rule": "A search_car_price call with an empty or whitespace-only brand_name must be denied for all roles (including consumer and analyst).",
+      "rules_involved": [
+        "deny[msg] if { input.name == \"search_car_price\"; trim_space(args.brand_name) == \"\" ... }"
+      ],
+      "field": "input.args.brand_name",
+      "reason": "For consumer and analyst (unrestricted brand roles), the only brand_name guard is the empty/whitespace check. If brand_name is omitted, args.brand_name is undefined, trim_space(undefined) is not == \"\", so the deny does not fire. Consumer or analyst can call search_car_price with no brand_name and the policy allows it.",
+      "exploit_strategy": "As consumer or analyst, send search_car_price with args={} (omit brand_name). The empty-check deny fails silently on undefined, no restricted-brand deny applies, so allow=true.",
+      "severity": "high"
     }
   ]
 }

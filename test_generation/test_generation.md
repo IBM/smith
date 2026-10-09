@@ -14,9 +14,11 @@ Based on the answer, run the generation command(s) below, then proceed to Transl
 
 ## Step 0a: Offer to refresh the promptfoo config
 
-Only ask this if promptfoo is enabled (`ATTACK_TOOLS` includes `promptfoo`). Skip it entirely otherwise.
+Only ask this if promptfoo is enabled (`<ATTACK_TOOLS>` includes `promptfoo`). Skip it entirely otherwise.
 
 Ask: "Your promptfoo config drives the red-team cases. Would you like me to regenerate it from your current guidance before generating test cases?"
+
+Check if `<PROMPTFOO_CONFIG_FILE>` exists, if it does not exist, user should choose regenerate. 
 
 If the user says yes, run it yourself:
 

@@ -88,6 +88,17 @@ The policy MUST only reference data available from:
 - `input.args.*` — tool parameters defined in `tool_definitions.json`
 - `input.extensions.subject.*` — system variables defined in `system_vars.json`
 
+A value in `system_vars.json` declares the field's **shape**, not always its literal value:
+
+| Declared value | At request time | Policy reads it as |
+|---|---|---|
+| `"user_id": 1` | that literal value | `subject.user_id == 42` |
+| `"department": ["Engineering", "HR"]` | one or a few of those values | `"HR" in subject.department` |
+| `"has_approval": "true\|false"` | one alternative, as a scalar | `subject.has_approval == "true"` |
+
+An array-valued field is **always returned as an array**, whether the caller can only have one value or
+several — a single value arrives as `[value]`. 
+
 If a guidance rule requires context that is NOT available in either tool arguments or system variables, do NOT add it to the policy. Instead, log it as a suggestion in `extension_suggestions.json` (see Step 4).
 
 **Ask user for confirmation before proceeding.**

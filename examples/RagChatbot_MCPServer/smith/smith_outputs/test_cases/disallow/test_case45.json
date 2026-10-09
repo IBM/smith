@@ -15,7 +15,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Send email to client@hotmail.com with subject 'Meeting Confirmation' and body 'Confirming our appointment for next week' with agenda.pdf attached",
+                "input": "I need to email the project status update to my colleague at david.lee@yahoo.com. Subject: 'Project Status', body: 'Hi David, here is the latest status update on the Operations project.', email content: 'Status update for Operations project', attached file: none.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -24,6 +24,13 @@
                 "managed_by": "tool",
                 "trust_domain": "internal"
             }
+        },
+        "args": {
+            "recipient_email": "david.lee@yahoo.com",
+            "subject": "Project Status",
+            "body": "Hi David, here is the latest status update on the Operations project.",
+            "email_content": "Status update for Operations project",
+            "attached_file": ""
         }
     }
 }
