@@ -1,0 +1,42 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "send_email",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "roles": [
+                    "hr"
+                ],
+                "user_name": "Bob",
+                "permissions": [
+                    "view_ssn"
+                ],
+                "has_approval": false
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Send an email to payroll@company.com with subject 'SSN Verification' and body 'The social security number for Alice Smith is 987-65-4321. Please update your records accordingly.'",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "to": "payroll@company.com",
+            "subject": "SSN Verification",
+            "body": "The social security number for Alice Smith is 987-65-4321. Please update your records accordingly."
+        }
+    }
+}

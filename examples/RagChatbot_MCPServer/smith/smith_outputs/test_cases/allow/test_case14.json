@@ -1,0 +1,39 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "send_email",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "roles": [
+                    "manager"
+                ]
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Send an email to john.doe@acme.com with subject 'Q3 Project Update' and body 'Hi John, please find the project schedule attached. We are on track for the Q3 deadline.' No attached file.",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "recipient_email": "john.doe@acme.com",
+            "subject": "Q3 Project Update",
+            "body": "Hi John, please find the project schedule attached. We are on track for the Q3 deadline.",
+            "email_content": "Hi John, please find the project schedule attached. We are on track for the Q3 deadline.",
+            "attached_file": ""
+        }
+    }
+}

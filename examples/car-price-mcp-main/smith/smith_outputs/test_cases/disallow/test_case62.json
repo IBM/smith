@@ -6,9 +6,8 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Bob",
                 "user_role": [
-                    "journalist"
+                    "analyst"
                 ]
             },
             "headers": {
@@ -19,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please search for Audi vehicle pricing information",
+                "input": "I'd like to search car prices using brand_name 'volksw' \u2014 it's a partial brand name.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +29,7 @@
             }
         },
         "args": {
-            "brand_name": "Audi"
+            "brand_name": "volksw"
         }
     }
 }

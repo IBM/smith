@@ -6,18 +6,12 @@
         "extensions": {
             "subject": {
                 "claims": {},
+                "action_list": [
+                    "get_events"
+                ],
                 "user_name": "Bob",
                 "user_role": [
-                    "faculty",
-                    "phd_student",
-                    "guest"
-                ],
-                "queries_this_session": 1,
-                "dissertation_area": "Artificial intelligence",
-                "research_area": [
-                    "Artificial intelligence",
-                    "Cybersecurity and privacy",
-                    "Software engineering"
+                    "phd_student"
                 ]
             },
             "headers": {
@@ -28,7 +22,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Find conferences with keywords 'bioinformatics' in Artificial intelligence topic, limit to 10 results",
+                "input": "Find me upcoming academic events using the keyword 'BIOINFORMATICS' in the topic area 'Artificial intelligence', up to 5 results.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,9 +33,9 @@
             }
         },
         "args": {
-            "keywords": "bioinformatics",
+            "keywords": "BIOINFORMATICS",
             "topic": "Artificial intelligence",
-            "limit": 10
+            "limit": 5
         }
     }
 }

@@ -6,7 +6,6 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Bob",
                 "user_role": [
                     "journalist"
                 ]
@@ -19,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I want to look up car prices for Citro\u00ebn brand",
+                "input": "I'm writing an article and need the latest FIPE prices for Renault models. Please look up Renault.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +29,7 @@
             }
         },
         "args": {
-            "brand_name": "Citro\u00ebn"
+            "brand_name": "Renault"
         }
     }
 }

@@ -6,18 +6,12 @@
         "extensions": {
             "subject": {
                 "claims": {},
+                "action_list": [
+                    "get_events"
+                ],
                 "user_name": "Bob",
                 "user_role": [
-                    "faculty",
-                    "phd_student",
-                    "guest"
-                ],
-                "queries_this_session": 1,
-                "dissertation_area": "Artificial intelligence",
-                "research_area": [
-                    "Artificial intelligence",
-                    "Cybersecurity and privacy",
-                    "Software engineering"
+                    "faculty"
                 ]
             },
             "headers": {
@@ -28,7 +22,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Find events with keywords healthcare clinical trials for Artificial intelligence topic",
+                "input": "Please find conferences with keywords 'clinical trials' under topic 'Artificial intelligence', limit 10.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,8 +33,9 @@
             }
         },
         "args": {
-            "keywords": "healthcare clinical trials",
-            "topic": "Artificial intelligence"
+            "keywords": "clinical trials",
+            "topic": "Artificial intelligence",
+            "limit": 10
         }
     }
 }

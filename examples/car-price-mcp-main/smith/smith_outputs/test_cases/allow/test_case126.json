@@ -6,9 +6,8 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Bob",
                 "user_role": [
-                    "analyst"
+                    "journalist"
                 ]
             },
             "headers": {
@@ -19,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you help me find BMW vehicle pricing information?",
+                "input": "Could you look up the latest prices for Nissan vehicles in the FIPE database?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +29,7 @@
             }
         },
         "args": {
-            "brand_name": "BMW"
+            "brand_name": "Nissan"
         }
     }
 }

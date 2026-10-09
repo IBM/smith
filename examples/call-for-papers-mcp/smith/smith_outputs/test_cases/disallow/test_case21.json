@@ -6,18 +6,12 @@
         "extensions": {
             "subject": {
                 "claims": {},
+                "action_list": [
+                    "get_events"
+                ],
                 "user_name": "Bob",
                 "user_role": [
-                    "faculty",
-                    "phd_student",
                     "guest"
-                ],
-                "queries_this_session": 1,
-                "dissertation_area": "Artificial intelligence",
-                "research_area": [
-                    "Artificial intelligence",
-                    "Cybersecurity and privacy",
-                    "Software engineering"
                 ]
             },
             "headers": {
@@ -28,7 +22,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Get conferences about clinical trials and medical research in Cybersecurity and privacy topic with limit 15",
+                "input": "Look up conferences using keywords 'Genomics and AI' under the topic 'Artificial intelligence'.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,9 +33,8 @@
             }
         },
         "args": {
-            "keywords": "clinical trials medical research",
-            "topic": "Cybersecurity and privacy",
-            "limit": 15
+            "keywords": "Genomics and AI",
+            "topic": "Artificial intelligence"
         }
     }
 }

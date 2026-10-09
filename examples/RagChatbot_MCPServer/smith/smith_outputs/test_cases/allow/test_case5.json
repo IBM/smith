@@ -2,15 +2,12 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "view_team_compensation",
+        "name": "export_compensation_data",
         "extensions": {
             "subject": {
                 "claims": {},
                 "roles": [
                     "manager"
-                ],
-                "teams": [
-                    "Operations"
                 ]
             },
             "headers": {
@@ -21,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Show me salary information for Operations department employees using view_team_compensation with department Operations and select_fields as base_salary",
+                "input": "Can you generate a CSV export of the IT department's compensation data for the current year? I need it for headcount analysis.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,10 +29,10 @@
             }
         },
         "args": {
-            "department": "Operations",
-            "select_fields": [
-                "base_salary"
-            ]
+            "format": "CSV",
+            "department": "IT",
+            "time_range": "current_year",
+            "business_justification": "Headcount analysis"
         }
     }
 }

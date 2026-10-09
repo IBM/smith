@@ -7,11 +7,12 @@
             "subject": {
                 "claims": {},
                 "roles": [
-                    "manager"
+                    "employee"
                 ],
-                "teams": [
+                "user_team": [
                     "Sales"
-                ]
+                ],
+                "id": "Bob"
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -21,7 +22,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you get the employee titles for the Operations team using view_team_compensation tool with department Operations and select_fields title?",
+                "input": "Please pull up the full compensation report for the Sales department so I can review everyone's pay.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,10 +33,8 @@
             }
         },
         "args": {
-            "department": "Operations",
-            "select_fields": [
-                "title"
-            ]
+            "department": "Sales",
+            "include_benefits": true
         }
     }
 }

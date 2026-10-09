@@ -2,15 +2,12 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "view_team_compensation",
+        "name": "export_compensation_data",
         "extensions": {
             "subject": {
                 "claims": {},
                 "roles": [
                     "manager"
-                ],
-                "teams": [
-                    "IT"
                 ]
             },
             "headers": {
@@ -21,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Show me the bonus data for IT department employees using view_team_compensation with department IT and select_fields as actual_bonus_2024",
+                "input": "Export the Marketing department's compensation data to a CSV file for last year. I need the name, title, current_salary, and total_comp_2024 fields for workforce planning.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,10 +29,15 @@
             }
         },
         "args": {
-            "department": "IT",
             "select_fields": [
-                "actual_bonus_2024"
-            ]
+                "name",
+                "title",
+                "current_salary",
+                "total_comp_2024"
+            ],
+            "format": "CSV",
+            "time_range": "last_year",
+            "business_justification": "Workforce planning"
         }
     }
 }

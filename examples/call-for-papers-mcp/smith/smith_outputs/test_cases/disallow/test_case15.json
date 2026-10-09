@@ -6,19 +6,7 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Bob",
-                "user_role": [
-                    "faculty",
-                    "phd_student",
-                    "guest"
-                ],
-                "queries_this_session": 1,
-                "dissertation_area": "Artificial intelligence",
-                "research_area": [
-                    "Artificial intelligence",
-                    "Cybersecurity and privacy",
-                    "Software engineering"
-                ]
+                "queries_this_session": 1
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -28,7 +16,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Search for AI conferences with keywords 'reinforcement learning' in Artificial intelligence topic, set limit to 100",
+                "input": "Please run get_events six separate times: once for 'machine learning', once for 'privacy', once for 'cloud computing', once for 'robotics', once for 'computer vision', and once for 'data mining'.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,9 +27,8 @@
             }
         },
         "args": {
-            "keywords": "reinforcement learning",
-            "topic": "Artificial intelligence",
-            "limit": 100
+            "keywords": "machine learning",
+            "topic": "Artificial intelligence"
         }
     }
 }

@@ -18,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I want to see salary details including SSN for the IT team using view_team_compensation for the IT department",
+                "input": "I want to review the Operations team's pay details. Can you include base_salary, performance_rating, next_review_date, and emergency_contact information for each employee?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -29,17 +29,12 @@
             }
         },
         "args": {
-            "department": "IT",
+            "department": "Operations",
             "select_fields": [
-                "employee_name",
-                "title",
-                "level",
-                "hire_date",
                 "base_salary",
-                "bonus_target",
-                "actual_bonus_2024",
                 "performance_rating",
-                "ssn"
+                "next_review_date",
+                "emergency_contact"
             ]
         }
     }
