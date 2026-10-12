@@ -1,3 +1,21 @@
+# Smith Evaluation Plan
+
+This plan implements the research questions stated in `motivation.tex`
+(§Research Questions). Each section below answers exactly one RQ and reports the
+metrics that RQ promises.
+
+| RQ | Question | Limitation | Section |
+|----|----------|-----------|---------|
+| RQ1 | Does the security analysis stage add requirements the guidance never contained? | I | [Security enhancement](#rq1--security-enhancement) |
+| RQ2 | Does Smith produce a valid initial policy from the guidance? | I | [Policy creation](#rq2--policy-creation) |
+| RQ3 | Does Smith generate a useful suite of legitimate and adversarial cases? | II | [Test case generation](#rq3--test-case-generation) |
+| RQ4 | Are the generated labels correct enough to serve as ground truth? | II | [Label validation](#rq4--label-validation) |
+| RQ5 | Does refinement improve the policy without regressing or bloating it? | III | [Refinement loop](#rq5--refinement-loop) |
+| RQ6 | Is the automation cheap enough to be practical? | — | [Cost](#rq6--cost) |
+
+**Dependency order.** RQ4 produce the validated suite that RQ2 and RQ5 are
+scored against.
+
 ## Evaluation Setup
 
 ### Agent datasets
@@ -18,7 +36,7 @@ The **MCP tools** column counts only valid, agent-exposed tools (functions regis
 
 Smith uses two distinct LLM roles, which we configure independently:
 
-- **Target-agent model** — the model *inside* the agent. By default the target agent runs a local ollama qwen 3.5:latest model. 
+- **Target-agent model** — the model *inside* the agent. By default the target agent runs `aws/claude-haiku-4-5`.
 
 - **Pipeline model** — the model that runs every Smith
   generation/analysis stage (guidance decomposition, test-case generation, label
@@ -30,50 +48,108 @@ Smith uses two distinct LLM roles, which we configure independently:
 | M2 (mid) | Claude 5 Sonnet | 
 | M3 (new) | Claude 5 opus | 
 
-(include gpt models)
+Varying the pipeline model while holding the scaffolding fixed is what separates
+Smith's contribution from the underlying model's capability. Every RQ1-RQ5 table is
+reported per model setting.
 
 ### Parameter settings
 
 | Parameter | Value | Role |
 |-----------|-------|------|
 | `TEMP` (temperature) | 0.2 | low-variance, near-deterministic generation |
-| `top_k` | 40 | candidate-token cap (where the provider exposes it) |
 | `max_tokens` | 4096 | per-call completion budget |
 | `CLUSTER_EPS` / `CLUSTER_MIN_SAMPLES` | 0.3 / 2 | DBSCAN clustering of failed cases in refinement |
 
 ### Evaluation metrics
 
-TN, TP, FN, FP, policy coverage, number of policy lines. 
+- **TP / TN / FP / FN** — scorecard outcome per test case. 
+- **Coverage** — fraction of policy reached by existing test cases.
+- **Policy lines** — length of `policy.rego`, reported as a reviewability proxy.
+- **Tokens** — per stage, per agent.
 
+---
 
-## Evaluation
+## RQ1 — Security enhancement
 
-### Security enhanchement
+*Does the security analysis stage add correct requirements the guidance never contained?*
 
-| Agent | Original line of guidance | After line|
-|-------|-------------:|----------------:|
-| `A1` | — | — | — |
-| `A2` | — | — | — |
-| `A3` | — | — | — |
-| `A4` | — | — | — | 
-| `A5` | — | — | — |
+**Claim under test.** Limitation I asserts that guidance is a product document rather
+than a threat model, so requirements originating in security standards are absent by construction. The stage is worth running only if the requirements it proposes are new
+rather than restatements of what the prose already said.
 
-**Case Study**
-- A1
-- A2
-- A3
-- A4
-- A5
+**Steps**
+- Run the guidelines security analysis per agent.
+- Record guidance length before and after the stage.
+- For each agent, identify the requirement its prose was missing.
 
-### Test case generation
+**Table (guidance growth)**
 
-The test datasets are **not hand-curated**: they are produced by Smith's own test-case
-generation phase. For each agent we therefore report the exact composition of the generated suite, for each model setting. 
+| Agent | Guidance lines (before) | Guidance lines (after) | Added | 
+|-------|------------------------:|-----------------------:|------:|
+| `A1` | 13 | — | — |
+| `A2` | 5 | — | — | 
+| `A3` | 79 | — | — |
+| `A4` | 45 | — | — | 
+| `A5` | 49 | — | — |
 
-We distinguish **legitimate** cases from **adversarial** cases, and further split the
-adversarial cases into three kinds by their source:
+**Case studies.** One per agent, naming the overlooked requirement and its threat
+class, since the informative result is *which* class the author was blind to, not how many lines were added.
 
-(three tables for three model setting)
+- A1 —
+- A2 — expected: `adjust_compensation` is an unguarded write, as G1-G5 govern only
+  reads. (This is the case `motivation.tex` uses.)
+- A3 —
+- A4 —
+- A5 —
+
+---
+
+## RQ2 — Policy creation
+
+*Does Smith produce a valid initial policy from the guidance?*
+
+**Claim under test.** A policy can be well-formed Rego and still encode the wrong
+rule, so validity and faithfulness are separate failures and are measured separately.
+
+**Steps**
+- Run `policy_creation` per agent, from the RQ1-enhanced guidance.
+- Check whether `opa fmt` / Regal passes, and count the automatic fix iterations
+  needed to reach a parsing policy.
+- Score the **initial** policy, before any refinement, against the RQ4-validated
+  suite via the scorecard.
+
+**Table**
+
+| Agent | opa fmt passes | Auto-fix iterations | TP | TN | FP | FN | Coverage | Policy lines |
+|-------|:--------------:|--------------------:|---:|---:|---:|---:|---------:|-------------:|
+| `A1` | | | | | | | | |
+| `A2` | | | | | | | | |
+| `A3` | | | | | | | | |
+| `A4` | | | | | | | | |
+| `A5` | | | | | | | | |
+
+---
+
+## RQ3 — Test case generation
+
+*Does Smith generate a useful suite of legitimate and adversarial cases?*
+
+**Claim under test.** Limitation II asserts that a comprehensive suite needs
+legitimate, adversarial, and policy-based bypass cases together, and that existing
+red-teaming frameworks supply only the prompt-level kind. 
+
+The test datasets are **not hand-curated**: they are produced by Smith's own
+test-case generation phase. For each agent we therefore report the exact composition
+of the generated suite, for each model setting.
+
+**Steps**
+- Run `test_generation` per agent (legitimate allow/disallow, Promptfoo).
+- Run `bypass_case_generation` to synthesize cases from guidance-vs-policy
+  divergences.
+- Report composition by provenance, one table per model setting.
+
+**Table (suite composition, one per model setting M1/M2/M3)**
+
 | Agent | Legit. allow | Legit. disallow | Adv. native | Adv. bypass | Adv. Promptfoo | Total |
 |-------|-------------:|----------------:|------------:|------------:|---------------:|------:|
 | `A1` | — | — | — | — | — | — |
@@ -82,98 +158,117 @@ adversarial cases into three kinds by their source:
 | `A4` | — | — | — | — | — | — |
 | `A5` | — | — | — | — | — | — |
 
-1. motivation section. (draft a few RQs, draft of an example)
-2. script for each example (set of claude commands), open an issue for it. 
+---
 
+## RQ4 — Label validation
 
-### Policy creation: does Smith produce a valid initial policy?
+*Are the generated labels correct enough to serve as ground truth?*
 
-*Can Smith turn natural-language guidance into an enforceable OPA policy that matches the
-guidance?*
+**Claim under test.** This is load-bearing: every number in RQ2 and RQ5 is computed
+against this suite, and a refinement loop that patches to satisfy mislabeled cases
+degrades the policy while reporting success. No existing generation tool validates
+its own labels.
 
-**Steps** 
-- Run `policy_creation` per agent; 
-- Evaluate the **initial** policy (before any
-  refinement) on the test suite via the scorecard.
-- Evaluate if the opa fmt passes or not, how many steps needed to fix the gramar problem. 
-
-**Table**
-| Agent | TN | TP | FN | FP | Coverage | Policy lines | auto fix required?|
-|-------|---:|---:|---:|---:|---------:|-------------:|:--------: |
-| A1  |  |  |  |  |  |  |  |
-| A2  |  |  |  |  |  |  |  |
-| A3  |  |  |  |  |  |  |  |
-| A4  |  |  |  |  |  |  |  |
-| A5  |  |  |  |  |  |  |  |
-
-### Test generation-cross validation
-
-*Does Smith generate a useful legitimate + adversarial test suite?*
-
-**Steps** 
-- Run `test_generation` (legitimate allow/disallow + Promptfoo).
+**Steps**
+- Run `cross_validate` on failed cases, then `apply_cross_validate`.
+- Manually verify a sampled subset of the final suite; report sample size.
 
 **Metrics**
-  - Initial generated numbers of cases. 
-  - Number of removed tool-name mismatches
-  - Number of cross validation removed cases
-  - Accuracy: Each test case either consistent with policy classification, or manually verified correctness. 
+- Initial generated case count.
+- Removed by tool-name mismatch.
+- Removed or corrected by cross-validation.
+- Final count, and accuracy under manual verification.
 
-**Table (cross validation results)**
+**Table (filtering funnel and accuracy)**
 
-| Agent | Initial generated | Removed (tool-name mismatch) | Removed (cross-validation) | Final |Accuracy |
-|-------|------------------:|-----------------------------:|---------------------------:|------:|------:|
-| A1 | 1/2/3/4 |  |  |  |  |
-| A2 |  |  |  |  |  |
+| Agent | Initial generated | Removed (tool-name mismatch) | Removed/corrected (cross-validation) | Final | Accuracy | Sample size |
+|-------|------------------:|-----------------------------:|-------------------------------------:|------:|---------:|------------:|
+| `A1` | | | | | | |
+| `A2` | | | | | | |
+| `A3` | | | | | | |
+| `A4` | | | | | | |
+| `A5` | | | | | | |
 
+Accuracy is reported on the final suite under manual verification of the sampled
+subset, because cross-validation uses an LLM to check LLM-generated labels and the
+manual sample is what bounds that circularity.
 
-**Table (policy testing)**
-| Agent | TN | TP | FN | FP | Coverage | Policy lines |
-|-------|---:|---:|---:|---:|---------:|-------------:|
-| A1  |  |  |  |  |  |  | 
-| A2  |  |  |  |  |  |  | 
-| A3  |  |  |  |  |  |  | 
-| A4  |  |  |  |  |  |  | 
-| A5  |  |  |  |  |  |  | 
+---
 
+## RQ5 — Refinement loop
 
-### Refinement loop: does iterative refinement improve the policy without regressing or bloating it?
+*Does refinement improve the policy without regressing or bloating it?*
 
-**Defect step**
+**Claim under test.** The approach claims Smith detects and fixes all three defect
+classes: failed test cases, formatting violations, and duplicated rules. Patching a
+failing cluster is also the operation most likely to break a neighbouring case, so
+improvement must be shown without regression or unbounded growth.
 
-*Starting from the initial policy of RQ1 and the test suite of RQ2, does the refinement
-contract turn a partially-correct policy into a correct one without breaking cases it
-already handled or bloating the rule set?*
+**Steps**
+- Start from RQ2's initial policy and RQ4's validated suite.
+- Run the refinement contract: `red_suggestion` (cluster failed cases) → patch →
+  `regal_suggestion` → `duplication_suggestion`, re-running `policy_testing` after
+  each step.
 
-- **Setup.** Run the refinement contract: `red_suggestion` (cluster failed cases)
-  → patch → `regal_suggestion` → `duplication_suggestion`, iterating `policy_testing` after each step. 
+**Table (failed-case patching)**
 
-**Table for patching**
+| Agent | FP (before → after) | FN (before → after) | Iterations | Regressions | Policy lines (before → after) | Coverage (before → after) |
+|-------|:-------------------:|:-------------------:|-----------:|------------:|:-----------------------------:|:-------------------------:|
+| `A1` | | | | | | |
+| `A2` | | | | | | |
+| `A3` | | | | | | |
+| `A4` | | | | | | |
+| `A5` | | | | | | |
 
-| Agent | FPs | FNs | Iterations | Policy lines | Coverage |
-|-------|:--------------------------:|-----------:|------------:|:-----------------------------:|:----------------------:|
-| A1 |    |  |  |    |   |
-| A2 |    |  |  |    |    |
+**Regressions** counts cases passing at iteration *n* that fail at *n+1*, and
+**iterations** says whether the loop terminates or oscillates. A loop that reports
+only "failures went down" is not credible without both.
 
-**Table for linting/duplication**
-| Agent | FPs | FNs | # of linting problems | Policy lines | Coverage |
-|-------|:--------------------------:|-----------:|------------:|:-----------------------------:|:----------------------:|
-| A1 |    |  |  |    |    |
-| A2 |    |  |  |    |    |
+**Table (linting and duplication)**
 
-**Comparison with baseline**
-| Agent | FPs | FNs | Policy lines | Coverage |
-|-------|:--------------------------:|-----------:|------------:|:-----------------------------:|
-| A1 |    |  |  |    |    |
-| A2 |    |  |  |    |    |
+| Agent | Linting problems found | Linting problems fixed | Duplicate rules merged | FP | FN | Policy lines (before → after) | Coverage |
+|-------|-----------------------:|-----------------------:|-----------------------:|---:|---:|:-----------------------------:|---------:|
+| `A1` | | | | | | | |
+| `A2` | | | | | | | |
+| `A3` | | | | | | | |
+| `A4` | | | | | | | |
+| `A5` | | | | | | | |
 
-### Time and resource costs
+Lint and dedup must be **behaviour-preserving**: FP and FN must be unchanged from the
+patching table's post-refinement values. A dedup pass that changes any decision has
+broken the policy regardless of how much cleaner the result looks.
+
+**Table (comparison with baseline)**
+
+| Agent | FP (initial) | FP (refined) | FN (initial) | FN (refined) | Policy lines (initial → refined) | Coverage (initial → refined) |
+|-------|-------------:|-------------:|-------------:|-------------:|:--------------------------------:|:----------------------------:|
+| `A1` | | | | | | |
+| `A2` | | | | | | |
+| `A3` | | | | | | |
+| `A4` | | | | | | |
+| `A5` | | | | | | |
+
+---
+
+## RQ6 — Cost
 
 *Is the automation cheap enough to be practical, and where is the cost concentrated?*
 
-- **Metrics.** For each stage × agent: **total tokens**
+**Claim under test.** Automation costing more than hand-writing the policy is a
+curiosity rather than a tool.
 
-| Agent | Policy generation | Test case evaluation | Policy patching | Policy regal linting | Policy Duplication linting |
-|-------|:--------------------------:|-----------:|------------:|:-----------------------------:|:-----------------------------:|
-| A1 |    |  |  |    |    |
-| A2 |    |  |  |    |    |
+**Metrics.** Total tokens per stage × agent. Reported per model setting, since cost
+and capability trade off against each other.
+
+**Table (tokens per stage)**
+
+| Agent | Security analysis | Policy generation | Test generation | Label validation | Policy patching | Regal linting | Duplication | Total |
+|-------|------------------:|------------------:|----------------:|-----------------:|----------------:|--------------:|------------:|------:|
+| `A1` | | | | | | | | |
+| `A2` | | | | | | | | |
+| `A3` | | | | | | | | |
+| `A4` | | | | | | | | |
+| `A5` | | | | | | | | |
+
+The expected result, that test generation dominates as the only stage scaling with
+guidance line count, is worth confirming rather than assuming.
