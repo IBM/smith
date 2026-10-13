@@ -1,199 +1,168 @@
-# Policy Guidance Questionnaire — Enterprise Employee Hub
+# OPA Policy Guidance Questionnaire
 
-**Target agent path:** `examples/employee/`
-**Generated:** 2026-09-04
-**Workflow step:** B — Policy Guidance Questionnaire
+## Answer Register
 
----
+| Q | Required answer | Answer | Confidence |
+|---|---|---|---|
+| Q1 | Tool names and one-sentence purposes | 32 tools declared in tool_definitions.json, one-to-one with server.py @mcp.tool() registrations (per Phase A): add_employee (create an employee record), update_employee (update any provided fields on an existing employee), get_employee (return a full employee record by user_id), list_employees (list employees filtered by department_id/manager_id/country_code, with a reduced field set), get_manager (return an employee's manager), get_direct_reports (return an employee's direct reports), get_reporting_chain (return the manager chain to the top of the org), add_department (create a department), update_department (update a department's name/description), get_department (return one department), list_departments (return all departments), set_passport (create/replace a passport record), update_passport (update provided passport fields), get_passport (return a passport record), set_visa (create/replace a visa record), update_visa (update provided visa fields), get_visa (return a visa record), set_emergency_contact (create/replace an emergency contact), update_emergency_contact (update provided emergency-contact fields), get_emergency_contact (return an emergency contact), set_bank_account (create/replace a bank account), update_bank_account (update provided bank-account fields), get_bank_account (return a bank account), set_leave_allotment (set the annual allotment for a leave type), get_leave_allotments (return all leave allotments for an employee), create_time_off_request (create a Pending time-off request), update_time_off_status (set a time-off request's status), get_time_off_request (return one time-off request), list_time_off_requests (list time-off requests filtered by user_id/status), get_leave_balance (return per-leave-type balance for a year), add_holiday (add a country holiday), list_holidays (list holidays for a country), delete_holiday (delete a holiday by id). A 33rd catch-all action, "other", covers general Q&A not backed by any tool. | [derived from architecture] |
+| Q2 | External systems: protocol, authentication, and read/write behavior | None. Phase A's External Data table is empty ("None found") -- no outbound HTTP calls or external-service integrations exist anywhere in the inspected tree. The only backend is a local SQLite file (employee_hub.db) accessed via db.py's shared sqlite3 connection; guidance.txt itself states "The server performs no authorization of its own," confirming there is no external authorization/identity system either. | [derived from architecture] |
+| Q3 | Whether each tool reads, writes, or both | Determined by name/description, confirmed by Phase A's Tool Arguments disposition (all 'Acts on'). Write-only: add_employee, update_employee, add_department, update_department, set_passport, update_passport, set_visa, update_visa, set_emergency_contact, update_emergency_contact, set_bank_account, update_bank_account, set_leave_allotment, create_time_off_request, update_time_off_status, add_holiday, delete_holiday. Read-only: get_employee, list_employees, get_manager, get_direct_reports, get_reporting_chain, get_department, list_departments, get_passport, get_visa, get_emergency_contact, get_bank_account, get_leave_allotments, get_time_off_request, list_time_off_requests, get_leave_balance, list_holidays. No tool both reads and writes in a single call. | [derived from architecture] |
+| Q4 | Parameters; use Parameter Details | See Parameter Details table for every declared input.args.* field per tool, its type, required/optional status, and valid values where an enumeration or format is established by guidance.txt or tool_definitions.json. | [derived from architecture] |
+| Q5 | Every user role | guidance.txt establishes three roles: (1) Employee -- the default/base role held by every acting user, granted self-service access to their own data; (2) Manager -- a derived role held by any employee who has at least one direct report (an employee whose employees.manager_id equals the acting user's input.extensions.subject.user_id), granted access to direct reports' data in addition to their own; (3) HR -- held when input.extensions.subject.department equals "HR", granted the broadest access (view/edit all employees' data, add employees, administrative actions). department itself is a 5-value enum (Corporate Leadership, Engineering, Product, HR, Finance) but only the "HR" value carries a named role in guidance.txt; the other four department values do not grant any role-specific permission beyond the base Employee/Manager roles. | [derived from guidance.txt] |
+| Q6 | Runtime subject provenance and integrity; use Runtime Subject Details | See Runtime Subject Details table. Per Phase A, all four system_vars.json fields (user_id, user_name, department, organization) are static demo values with no observed verification, signature, or session-lookup mechanism anywhere in agent.py, web.py, or server.py, and no current code path plumbs them into an actual request or tool call. A separate, unvalidated user_profile/system_variables channel exists in agent.py (caller-supplied JSON, interpolated verbatim into the prompt) that must not be conflated with system_vars.json's declared subject schema -- it is a prompt-boundary input, not a verified runtime-subject source. | [derived from architecture] |
+| Q7 | User ID canonical path, provider, and use | input.extensions.subject.user_id, provided by system_vars.json ("user_id": 1 in the demo config), numeric, matching employees.user_id. guidance.txt uses it to define "own data" (target record's user_id equals the acting user's user_id, i.e. input.args.user_id == input.extensions.subject.user_id for self-service tools) and, transitively via employees.manager_id, to define the "direct reports" / "direct manager" relationship. | [derived from guidance.txt] |
+| Q8 | Whether simultaneous roles are supported | guidance.txt does not explicitly state whether Manager and HR can be held simultaneously or how precedence resolves if both apply to the same acting user. Because HR's grant ("HR may view and edit all employees' data") is a strict superset of Manager's grant (direct reports' data plus own), the two are not observed to conflict in the guidance text, but no explicit combination or precedence rule is written down. Architecture confirms no code models role combination at all (no role concept exists in the implementation). | [inferred — low confidence] |
+| Q9 | Tool permissions and scope per role; use Role Permissions | See Role Permissions table for the per-tool, per-role access and scope predicates drawn from guidance.txt's Data Access, Administrative Actions, and Time Off and Leave sections. | [derived from guidance.txt] |
+| Q10 | Role-specific topics, values, or parameter combinations | Role-specific restrictions beyond plain view/edit scope: (1) salary on update_employee/add_employee may be set or changed only by HR or by the target employee's direct manager (input.extensions.subject.department == "HR" or acting user's user_id == target employees.manager_id) -- this is a field-specific restriction narrower than general Data Access; (2) update_time_off_status's status value is role-gated: HR may set input.args.status to any value; the requester's direct manager may set it only to "Approved" or "Denied"; the requesting employee may set it only to "Pending"; (3) add_employee, add_department, update_department, add_holiday, delete_holiday, and set_leave_allotment are restricted to HR only, regardless of any other role; (4) viewing an employee's leave allotments, time-off requests, or leave balance (get_leave_allotments, list_time_off_requests/get_time_off_request, get_leave_balance) is restricted to HR, the employee themselves, or the employee's direct manager -- narrower than general employee-data viewing. | [derived from guidance.txt] |
+| Q11 | Roles with no restrictions | guidance.txt states the org chart (get_manager, get_direct_reports, get_reporting_chain), department listings (get_department, list_departments), and country holidays (list_holidays) "may be viewed by any user" -- no role restriction applies to these read tools. | [derived from guidance.txt] |
+| Q12 | Globally blocked enumerable values, formats, domains, or flags | Enumerated/format constraints established by guidance.txt: (1) work email (input.args.email on add_employee/update_employee) must use the organization's corporate domain when organization is provided in the same call: IBM Corporation -> @ibm.com, Red Hat -> @redhat.com, Kyndryl -> @kyndryl.com (note: this domain-mapping list's organization spelling matches input.extensions.subject.organization's enum, not the input.args.organization tool-argument enum -- see the Undeclared Fields cross-schema gap recorded in Phase A; input.args.organization is validated in api/util.py against {IBM, IBM partner, Red Hat}, a different value set that does not include Kyndryl); (2) leave_type on set_leave_allotment/create_time_off_request is a fixed set per tool_definitions.json: Vacation, Sick Leave, Maternity, Paternity, Jury Duty, Unpaid; (3) status on update_time_off_status is one of Pending, Approved, Denied; (4) relationship on set_emergency_contact/update_emergency_contact is one of Spouse, Parent, Sibling, Child, Relative, Friend, Guardian, Partner (per tool_definitions.json description); (5) input.extensions.subject.department is one of Corporate Leadership, Engineering, Product, HR, Finance; (6) input.extensions.subject.organization is one of IBM Corporation, Red Hat, Kyndryl. No flags (booleans) are declared as guidance-governed enumerable values. | [derived from guidance.txt] |
+| Q13 | Numeric hard caps | (1) A time-off request (create_time_off_request) may not span more than 90 consecutive calendar days (input.args.end_date minus input.args.start_date); (2) salary (input.args.salary on add_employee/update_employee) must be a positive amount, i.e. strictly greater than zero, when set or updated; (3) a passport/visa expiration date (input.args.expiry_date on set_passport/update_passport/set_visa/update_visa) being set or updated must be more than six months after the date of the update. A fourth numeric limit appears in guidance.txt's Booking section ("a customer with a regular membership may not book a flight for more than three passengers unless they own at least 200 frequent flyer points") but, per Phase A's Undeclared Fields finding, this concerns booking/flight/membership/frequent-flyer concepts that do not exist anywhere in this agent's tool_definitions.json, system_vars.json, or schema.sql -- it is out-of-domain content and is excluded from the in-scope caps above. | [derived from guidance.txt] |
+| Q13b | Conditional approval paths; use Approval Paths | See Approval Paths table for the two conditional-approval rules established by guidance.txt: the generic write-confirmation requirement before any create/update/delete call, and the Paternity-leave-specific conversational-fact requirement before an update_time_off_status approval. | [derived from guidance.txt] |
+| Q14 | Rejected patterns and their input source | guidance.txt establishes exactly one literal pattern: a user deletion may proceed only after the requester provides explicit confirmation in exactly the form "I request to delete user [USER NAME] with the following user id: [USER ID]". Per the shared source-boundary rule, this pattern's governed input source is conversational/prompt content (the requester's chat message to the agent), not a declared input.args.* field on any delete tool -- no tool in tool_definitions.json (there is no delete_employee tool; delete_holiday takes only holiday_id) carries a confirmation-string argument. This is consistent with Phase A's Undeclared Fields finding that write-confirmation state is nowhere a structured field. No other rejected regex/pattern is stated in guidance.txt for any input.args.* field (e.g. email format beyond the domain-suffix rule in Q12, passport/visa number format, phone format, address format are all unconstrained by guidance.txt). | [derived from guidance.txt] |
+| Q15 | Per-session call limits; use Rate Limits | guidance.txt establishes no per-session or per-role call-count limit for any tool or role. The Rate Limits table is empty. | [derived from guidance.txt] |
+| Q16 | Counter owner, mechanism, and canonical policy path | Not applicable -- no rate/counter requirement exists in guidance.txt (see Q15), so there is no counter owner, mechanism, or canonical policy path to record. This is an explicit absence of intent, not a gap. | [derived from guidance.txt] |
+| Q17 | Post-response filtering | guidance.txt's Data Access section, read together with tool_definitions.json, implies post-response/field-level filtering rather than only call-level blocking: list_employees's own description states its returned dicts are "limited to user_id, first_name, last_name, role, organization, title, department_id, manager_id, and country_code (email, home_address, salary, salary_currency, and start_date are omitted)" for every caller regardless of role -- this is a response-shape restriction on a tool that otherwise has no stated role gate (guidance.txt does not restrict who may call list_employees, only get_employee/personal-record tools by 'own data'/'direct reports'/HR). guidance.txt itself does not separately state a role-conditional field-suppression rule beyond the general 'may view only own/direct-reports/all data' scoping in Q9/Q10, i.e. the visibility restriction is expressed at the record level (which employee's record) rather than a further per-field redaction within a permitted record. | [derived from architecture] |
+| Q18 | Response fields suppressed by role | The only role-independent field suppression established by architecture is list_employees's fixed omission of email, home_address, salary, salary_currency, and start_date from every response, per its tool_definitions.json description (applies identically to all roles, not conditioned on the caller's role). guidance.txt does not state any additional per-field suppression that varies by the caller's role within a single tool response (e.g. it does not say a Manager sees a direct report's record with certain fields hidden) -- the role scoping guidance.txt describes operates at the record-access level (Q9/Q10), not at a sub-record field level. | [derived from architecture] |
+| Q19 | Conditions making a result actionable | guidance.txt's Agent Behavior section: the agent should make only one tool call at a time; when it makes a tool call it should not simultaneously respond to the user, and when it responds to the user it should not simultaneously make a tool call. This establishes that a tool-call result becomes actionable (i.e. eligible to drive the next agent turn) only as the sole action of that turn -- no guidance is given on further per-result actionability conditions (e.g. minimum data completeness) beyond the specific approval conditions already recorded in Q13b's Approval Paths. | [derived from guidance.txt] |
+| Q20 | Silent rejection or user explanation | guidance.txt does not state whether a denied action should be silently rejected or explained to the user. It only prescribes pre-action behavior (listing details and obtaining confirmation before a write) and role/value/numeric restrictions on what is permitted; it is silent on the denial-communication behavior itself. |  |
+| Q21 | Hard-block and soft-block meanings; use Severity Levels | guidance.txt consistently uses hard-boundary modal language for every access, numeric, pattern, and approval restriction recorded in this questionnaire ("only," "may not," "must," "strictly prohibited," "not allowed," "only if"), per the shared rule that these establish hard boundaries rather than exclusive allowlists' complements. No rule in guidance.txt is phrased as advisory, warn-and-continue, or otherwise soft. The Severity Levels table therefore records a single hard-block level; guidance.txt establishes no distinct soft-block category or severity gradation. | [derived from guidance.txt] |
+| Q22 | Denial logging and existing violation-code scheme | guidance.txt establishes no denial-logging requirement. Architecture confirms no logging, audit trail, or violation-code mechanism exists anywhere in the current implementation (server.py/api/*.py return only {"error": str(ValueError)} for data-integrity failures, which is a caller-facing error message, not a logged violation record). No existing violation code is present to reuse or extend; per the shared rule, none is invented here. The Violation Codes table is left empty. | [derived from architecture] |
 
-## Section 1 — System Identity and Scope
+## Parameter Details
 
-**Q1. What is the name and purpose of this MCP server?**
-Enterprise Employee Hub. It exposes an SQLite-backed employee directory through 33 MCP tools covering employee records, org chart, departments, personal records (passport, visa, emergency contact, bank account), country holidays, and time-off (allotments, requests, balances).
-
-**Q2. What deployment model is used?**
-Single agent (LangGraph ReAct) served over FastAPI at `:9000`. No multi-agent orchestration. The MCP server runs as a subprocess (stdio transport).
-
-**Q3. What is the primary trust boundary at which the OPA policy is enforced?**
-Agent → MCP server boundary (pre-execution). The policy intercepts every tool call before the MCP server executes it. This is the **only** access-control enforcement layer; the MCP server performs no authorization.
-
----
-
-## Section 2 — Actor Identity and Trust Model
-
-**Q4. How is the acting user's identity established?**
-Via `user_profile` JSON in the `/chat` and `/extract_tool_call` request bodies. `build_system_prompt()` in `agent.py` embeds these key/values verbatim into the system prompt. There is no cryptographic authentication; all identity claims are self-reported by the caller.
-
-Available subject fields (`input.extensions.subject.*`):
-- `user_id` (integer) — maps to `employees.user_id` in DB
-- `user_name` (string) — display name
-- `department` (one of: Corporate Leadership, Engineering, Product, HR, Finance)
-- `organization` (one of: IBM Corporation, Red Hat, Kyndryl)
-
-**Q5. What roles or groups are defined, and how are they determined?**
-- **HR** — `input.extensions.subject.department == "HR"`. The only role that gates privileged write operations.
-- **Manager** — *not* a declared field in `system_vars.json`. Manager status is inferred from the DB (`employees.manager_id`); it is not available as an OPA-enforceable subject field at invocation time. [inferred — low confidence: manager exception for direct-reports view cannot be enforced at OPA layer]
-- **IBM employee** — determined by `input.extensions.subject.organization == "IBM Corporation"`. Cross-user org check (blocking non-IBM from viewing IBM records) requires the target employee's org from the DB — not available in OPA input.
-
-**Q6. What is the threat model for identity claims?**
-Since all `input.extensions.subject.*` values are self-reported, any caller can claim any department or organization. A policy relying on these must account for the possibility that a malicious caller claims `department = HR` or `organization = IBM Corporation` falsely. No additional authentication layer exists in the current architecture.
-
----
-
-## Section 3 — Tool Access Rules
-
-**Q7. Which tools require HR department?**
-The following tools may only be invoked by users with `department = HR`:
-- `add_employee` — add new employee record
-- `add_department` — add department
-- `update_department` — update department name/description
-- `add_holiday` — add country holiday
-- `delete_holiday` — delete holiday
-- `set_leave_allotment` — set annual leave allotment
-
-Source: guidance.txt §Administrative Actions.
-
-**Q8. Which tools are read-only and open to any user?**
-- `list_employees`, `get_manager`, `get_direct_reports`, `get_reporting_chain`
-- `get_department`, `list_departments`
-- `list_holidays`
-
-Source: guidance.txt §Administrative Actions ("org chart, department listings, and country holidays may be viewed by any user").
-
-**Q9. Which tools require ownership (target user_id == acting user_id)?**
-Ownership check required for:
-- Personal-record tools: `get_passport`, `set_passport`, `update_passport`, `get_visa`, `set_visa`, `update_visa`, `get_emergency_contact`, `set_emergency_contact`, `update_emergency_contact`, `get_bank_account`, `set_bank_account`, `update_bank_account`
-- Employee-record tools: `get_employee`, `update_employee`
-- Leave-view tools: `get_leave_allotments`, `list_time_off_requests`, `get_leave_balance`, `get_time_off_request`
-- Time-off creation: `create_time_off_request`
-
-Exception: HR bypasses ownership checks for all of the above.
-Exception (blind spot): Direct manager may view direct reports' data — requires DB lookup, not enforceable at OPA.
-
-**Q10. What ownership field is used in tool arguments?**
-`input.args.user_id` for all employee/personal/leave tools. The exception is `update_time_off_status` and `get_time_off_request` / `list_time_off_requests` — these use `request_id`, not `user_id` directly.
-
----
-
-## Section 4 — Data Integrity Rules
-
-**Q11. What constraints apply to salary?**
-Salary must be a positive number (greater than zero) when set via `add_employee` or `update_employee`. The constraint applies only when the `salary` argument is present in the call; it is optional.
-
-**Q12. What constraints apply to employee email?**
-When `add_employee` or `update_employee` is called with both `email` and `organization` in the same call, the email domain must match the organization's corporate domain:
-- `IBM Corporation` → `@ibm.com`
-- `Red Hat` → `@redhat.com`
-- `Kyndryl` → `@kyndryl.com`
-
-**Q13. What constraints apply to passport and visa dates?**
-When both `issue_date` and `expiry_date` are provided in the same call to any of `set_passport`, `update_passport`, `set_visa`, `update_visa`, the issue date must be strictly earlier than the expiry date.
-
-Note: The 6-month expiry rule (expiry must be >6 months from current date) is a blind spot — the current date is not in OPA input. [inferred — low confidence: not enforceable at OPA layer without adding `current_date` to system_vars.json]
-
----
-
-## Section 5 — Time-Off and Leave Rules
-
-**Q14. Who may create a time-off request?**
-Only the acting user for themselves: `input.args.user_id` must equal `input.extensions.subject.user_id`.
-
-**Q15. What is the maximum time-off span?**
-A single request may not span more than 90 consecutive calendar days (`end_date` minus `start_date` ≤ 90 days).
-
-**Q16. Who may view leave data?**
-Leave allotments, time-off requests, and leave balance may be viewed only by:
-- HR (any leave data for any user)
-- The employee themselves (`input.args.user_id == input.extensions.subject.user_id`)
-- [blind spot] The employee's direct manager — requires DB lookup, not enforceable at OPA
-
-**Q17. Who may change time-off request status?**
-- HR may set any status (Pending, Approved, Denied)
-- Direct manager may set Approved or Denied [blind spot — DB lookup required; safe default: block all non-HR from Approved/Denied]
-- Requesting employee may set only Pending [blind spot — requires mapping request_id to requester user_id; not enforceable at OPA]
-
-OPA-enforceable rule: if `department != HR` and `status` is `Approved` or `Denied`, deny.
-
-**Q18. What leave balance check applies?**
-An employee may not create a time-off request unless they have sufficient available balance. [blind spot — balance requires computing annual_days minus used_days from DB; not enforceable at OPA layer without pre-computation]
-
----
-
-## Section 6 — Administrative and Org-Chart Rules
-
-**Q19. Who may modify departments and holidays?**
-Only HR (see Q7). Read access is open to all users.
-
-**Q20. Who may delete employees?**
-Not covered by any tool in the current tool_definitions.json — there is no `delete_employee` tool. The guidance.txt mentions explicit confirmation phrasing for user deletion, but this is an agent-layer control, not OPA-enforceable.
-
-**Q21. What cross-organization data restrictions apply?**
-Users outside IBM Corporation are prohibited from viewing IBM employee data. [blind spot — the target employee's organization is in the DB, not in input.args.*; requires pre-fetch or DB-layer enforcement]
-
----
-
-## Section 7 — Agent Behavior Rules
-
-**Q22. Are there agent behavior rules beyond tool access?**
-Yes, from guidance.txt:
-- DB write confirmation: before any write, agent must list the action and get explicit "yes". [agent-layer gate; not OPA-enforceable]
-- Agent makes one tool call at a time. [agent-layer / structured output; not OPA-enforceable]
-- Paternity leave approved only if baby details in conversation. [agent-layer gate; not OPA-enforceable]
-
----
-
-## Section 8 — Full Tool Role-Permission Matrix
-
-| Tool | HR | Own (self) | Direct Manager | Any user |
+| Tool | Policy path | Type | Required | Valid values |
 |---|---|---|---|---|
-| `add_employee` | ✓ write | — | — | ✗ |
-| `update_employee` | ✓ write | ✓ self only | ✗ (blind spot) | ✗ |
-| `get_employee` | ✓ read | ✓ self only | ✗ (blind spot) | ✗ |
-| `list_employees` | ✓ | ✓ | ✓ | ✓ (filtered) |
-| `get_manager` | ✓ | ✓ | ✓ | ✓ |
-| `get_direct_reports` | ✓ | ✓ | ✓ | ✓ |
-| `get_reporting_chain` | ✓ | ✓ | ✓ | ✓ |
-| `add_department` | ✓ write | — | — | ✗ |
-| `update_department` | ✓ write | — | — | ✗ |
-| `get_department` | ✓ | ✓ | ✓ | ✓ |
-| `list_departments` | ✓ | ✓ | ✓ | ✓ |
-| `set_passport` | ✓ write | ✓ self only | ✗ | ✗ |
-| `update_passport` | ✓ write | ✓ self only | ✗ | ✗ |
-| `get_passport` | ✓ read | ✓ self only | ✗ | ✗ |
-| `set_visa` | ✓ write | ✓ self only | ✗ | ✗ |
-| `update_visa` | ✓ write | ✓ self only | ✗ | ✗ |
-| `get_visa` | ✓ read | ✓ self only | ✗ | ✗ |
-| `set_emergency_contact` | ✓ write | ✓ self only | ✗ | ✗ |
-| `update_emergency_contact` | ✓ write | ✓ self only | ✗ | ✗ |
-| `get_emergency_contact` | ✓ read | ✓ self only | ✗ | ✗ |
-| `set_bank_account` | ✓ write | ✓ self only | ✗ | ✗ |
-| `update_bank_account` | ✓ write | ✓ self only | ✗ | ✗ |
-| `get_bank_account` | ✓ read | ✓ self only | ✗ | ✗ |
-| `set_leave_allotment` | ✓ write | — | — | ✗ |
-| `get_leave_allotments` | ✓ read | ✓ self only | ✗ (blind spot) | ✗ |
-| `create_time_off_request` | ✓ | ✓ self only | ✗ | ✗ |
-| `update_time_off_status` | ✓ any status | ✗ (blind spot) | ✗ (blind spot) | ✗ |
-| `get_time_off_request` | ✓ read | ✓ self only (blind spot) | ✗ (blind spot) | ✗ |
-| `list_time_off_requests` | ✓ read | ✓ self only | ✗ (blind spot) | ✗ |
-| `get_leave_balance` | ✓ read | ✓ self only | ✗ (blind spot) | ✗ |
-| `add_holiday` | ✓ write | — | — | ✗ |
-| `list_holidays` | ✓ | ✓ | ✓ | ✓ |
-| `delete_holiday` | ✓ write | — | — | ✗ |
+| add_employee | input.args.first_name | string | true | unconstrained by guidance.txt |
+| add_employee | input.args.last_name | string | true | unconstrained by guidance.txt |
+| add_employee | input.args.email | string | true | must use the corporate domain of input.args.organization when organization is provided in the same call: IBM Corporation->@ibm.com, Red Hat->@redhat.com, Kyndryl->@kyndryl.com (guidance.txt); tool-argument organization is separately validated in implementation against {IBM, IBM partner, Red Hat}, a different enum than the domain-mapping list -- see Q12 |
+| add_employee | input.args.role | string | true | unconstrained by guidance.txt |
+| add_employee | input.args.title | string | true | unconstrained by guidance.txt |
+| add_employee | input.args.home_address | string | true | unconstrained by guidance.txt |
+| add_employee | input.args.country_code | string | true | unconstrained by guidance.txt |
+| add_employee | input.args.organization | any (string or null) | false | IBM, IBM partner, Red Hat per implementation enum (Phase A); distinct from input.extensions.subject.organization's enum |
+| add_employee | input.args.department_id | any (integer or null) | false | unconstrained by guidance.txt |
+| add_employee | input.args.manager_id | any (integer or null) | false | unconstrained by guidance.txt |
+| add_employee | input.args.salary | any (number or null) | false | must be > 0 if provided (guidance.txt) |
+| add_employee | input.args.salary_currency | any (string or null) | false | unconstrained by guidance.txt |
+| add_employee | input.args.start_date | any (string or null) | false | YYYY-MM-DD (tool_definitions.json format convention) |
+| update_employee | input.args.user_id | integer | true | must equal employees.user_id of an existing employee |
+| update_employee | input.args.salary | any (number or null) | false | must be > 0 if provided (guidance.txt); settable only by HR or the target's direct manager (guidance.txt) |
+| update_employee | input.args.organization | any (string or null) | false | IBM, IBM partner, Red Hat per implementation enum; see email-domain interaction in Q12 |
+| update_employee | input.args.email | any (string or null) | false | must use organization's corporate domain when organization is provided in the same call (guidance.txt) |
+| update_employee | input.args.home_address | any (string or null) | false | must remain within the employee's own current country_code; changing to a different country is not allowed through this agent (guidance.txt) |
+| get_employee | input.args.user_id | integer | true | n/a |
+| list_employees | input.args.department_id | any (integer or null) | false | n/a |
+| list_employees | input.args.manager_id | any (integer or null) | false | n/a |
+| list_employees | input.args.country_code | any (string or null) | false | n/a |
+| get_manager | input.args.user_id | integer | true | n/a |
+| get_direct_reports | input.args.user_id | integer | true | n/a |
+| get_reporting_chain | input.args.user_id | integer | true | n/a |
+| add_department | input.args.name | string | true | unique (implementation constraint) |
+| add_department | input.args.description | any (string or null) | false | unconstrained |
+| update_department | input.args.department_id | integer | true | n/a |
+| set_passport | input.args.user_id | integer | true | n/a |
+| set_passport | input.args.expiry_date | any (string or null) | false | if set, must be more than six months after the date of the update (guidance.txt); must be strictly later than input.args.issue_date when both provided in the same call (guidance.txt) |
+| set_passport | input.args.issue_date | any (string or null) | false | must be strictly earlier than input.args.expiry_date when both provided in the same call (guidance.txt) |
+| update_passport | input.args.user_id | integer | true | n/a |
+| update_passport | input.args.expiry_date | any (string or null) | false | if set/updated, must be more than six months after the date of the update (guidance.txt); blocked entirely if the target employee is on the blacklist (guidance.txt; field undeclared per Phase A) |
+| update_passport | input.args.issue_date | any (string or null) | false | must be strictly earlier than input.args.expiry_date when both provided in the same call (guidance.txt) |
+| set_visa | input.args.user_id | integer | true | n/a |
+| set_visa | input.args.expiry_date | any (string or null) | false | must be more than six months after the date of the update (guidance.txt); must be strictly later than input.args.issue_date when both provided in the same call (guidance.txt) |
+| set_visa | input.args.issue_date | any (string or null) | false | must be strictly earlier than input.args.expiry_date when both provided in the same call (guidance.txt) |
+| update_visa | input.args.user_id | integer | true | n/a |
+| update_visa | input.args.expiry_date | any (string or null) | false | must be more than six months after the date of the update (guidance.txt) |
+| update_visa | input.args.issue_date | any (string or null) | false | must be strictly earlier than input.args.expiry_date when both provided in the same call (guidance.txt) |
+| set_emergency_contact | input.args.user_id | integer | true | n/a |
+| set_emergency_contact | input.args.relationship | string | true | Spouse, Parent, Sibling, Child, Relative, Friend, Guardian, Partner (tool_definitions.json) |
+| set_emergency_contact | input.args.country | any (string or null) | false | must place the contact in the same area as the employee (guidance.txt; 'area' granularity undeclared per Phase A) |
+| set_emergency_contact | input.args.city | any (string or null) | false | must place the contact in the same area as the employee (guidance.txt; 'area' granularity undeclared per Phase A) |
+| update_emergency_contact | input.args.user_id | integer | true | n/a |
+| update_emergency_contact | input.args.relationship | any (string or null) | false | Spouse, Parent, Sibling, Child, Relative, Friend, Guardian, Partner (tool_definitions.json) |
+| set_bank_account | input.args.user_id | integer | true | n/a |
+| update_bank_account | input.args.user_id | integer | true | n/a |
+| set_leave_allotment | input.args.user_id | integer | true | n/a |
+| set_leave_allotment | input.args.leave_type | string | true | Vacation, Sick Leave, Maternity, Paternity, Jury Duty, Unpaid (tool_definitions.json) |
+| set_leave_allotment | input.args.annual_days | any (integer or null) | false | n/a; null = untracked (tool_definitions.json) |
+| get_leave_allotments | input.args.user_id | integer | true | n/a |
+| create_time_off_request | input.args.user_id | integer | true | must equal input.extensions.subject.user_id -- an employee may create a request only for themselves (guidance.txt) |
+| create_time_off_request | input.args.leave_type | string | true | Vacation, Sick Leave, Maternity, Paternity, Jury Duty, Unpaid (tool_definitions.json); requester must have sufficient available balance for the requested leave type (guidance.txt) |
+| create_time_off_request | input.args.start_date | string | true | YYYY-MM-DD; with end_date, span must not exceed 90 consecutive calendar days (guidance.txt) |
+| create_time_off_request | input.args.end_date | string | true | YYYY-MM-DD; end_date minus start_date must not exceed 90 consecutive calendar days (guidance.txt) |
+| update_time_off_status | input.args.request_id | integer | true | n/a |
+| update_time_off_status | input.args.status | string | true | Pending, Approved, Denied (tool_definitions.json); role-gated per guidance.txt -- see Role Permissions; Approved for a Paternity request additionally requires baby's birth date and name to have been provided in conversation (guidance.txt) |
+| get_time_off_request | input.args.request_id | integer | true | n/a |
+| list_time_off_requests | input.args.user_id | any (integer or null) | false | n/a |
+| list_time_off_requests | input.args.status | any (string or null) | false | Pending, Approved, Denied |
+| get_leave_balance | input.args.user_id | integer | true | n/a |
+| get_leave_balance | input.args.year | integer | true | n/a |
+| add_holiday | input.args.country_code | string | true | n/a |
+| add_holiday | input.args.holiday_date | string | true | YYYY-MM-DD |
+| list_holidays | input.args.country_code | string | true | n/a |
+| delete_holiday | input.args.holiday_id | integer | true | n/a |
 
----
+## Runtime Subject Details
 
-## Section 9 — Violation Code Convention
+| Policy path | Provider | Provenance | Verification / integrity mechanism |
+|---|---|---|---|
+| input.extensions.subject.user_id | system_vars.json | Static demo value ("user_id": 1); not observed wired into any request path -- agent.py's separate, unvalidated user_profile channel is a distinct, untrusted prompt-boundary input and must not be conflated with this field (Phase A) | None observed -- no signature, session lookup, or auth-header binding anywhere in agent.py, web.py, or server.py (Phase A) |
+| input.extensions.subject.user_name | system_vars.json | Static demo value ("user_name": "Bob"); same caveat as user_id (Phase A) | None observed (Phase A) |
+| input.extensions.subject.department | system_vars.json | Static demo value; enum Corporate Leadership, Engineering, Product, HR, Finance; guidance.txt's HR role predicate depends on this field equaling "HR" (Phase A) | None observed (Phase A) |
+| input.extensions.subject.organization | system_vars.json | Static demo value; enum IBM Corporation, Red Hat, Kyndryl; differs from the input.args.organization tool-argument enum (IBM, IBM partner, Red Hat validated in api/util.py) -- the two organization fields are declared by different schemas with different allowed values and must not be treated as the same field despite the shared name (Phase A) | None observed (Phase A) |
 
-All denial messages use the format: `UPPER_SNAKE_CASE: description`.
+## Role Permissions
 
-| Code | Applies to |
+| Tool | Role | Permission / scope | guidance.txt rule |
+|---|---|---|---|
+| get_employee | Employee | own data only (input.args.user_id == input.extensions.subject.user_id) | Data Access: "An employee may view and edit only their own data" |
+| get_employee | Manager | own data plus direct reports' data (target employees.manager_id == input.extensions.subject.user_id) | Data Access: "A Manager may view only their direct reports' data, in addition to their own" |
+| get_employee | HR | all employees' data | Data Access: "HR may view and edit all employees' data" |
+| update_employee | Employee | own data only; excludes salary (see Q10) | Data Access: "An employee may view and edit only their own data" |
+| update_employee | HR | all employees' data, including salary | Data Access: "HR may view and edit all employees' data"; "An employee's salary may be updated only by HR or by that employee's direct manager" |
+| update_employee | Manager (direct manager) | direct report's salary field specifically | Data Access: "An employee's salary may be updated only by HR or by that employee's direct manager" |
+| add_employee | HR | sole role permitted to call this tool | Data Access: "Only HR may add a new employee" |
+| set_passport / update_passport / set_visa / update_visa / set_emergency_contact / update_emergency_contact / set_bank_account / update_bank_account | Employee | own personal records only | Data Access: "An employee may view and edit only their own data -- home address, passport, visa, emergency contact, and bank account" |
+| set_passport / update_passport / set_visa / update_visa / set_emergency_contact / update_emergency_contact / set_bank_account / update_bank_account | Manager | direct reports' personal records (view only, per "view only" wording) | Data Access: "A Manager may view only their direct reports' data, in addition to their own" |
+| set_passport / update_passport / set_visa / update_visa / set_emergency_contact / update_emergency_contact / set_bank_account / update_bank_account | HR | all employees' personal records | Data Access: "HR may view and edit all employees' data" |
+| add_department / update_department / add_holiday / delete_holiday / set_leave_allotment | HR | sole role permitted to call these tools | Administrative Actions: "Only HR may add or update a department, add or delete a country holiday, or set a leave allotment" |
+| get_department / list_departments / get_manager / get_direct_reports / get_reporting_chain / list_holidays | any role | unrestricted viewing | Administrative Actions: "The org chart, department listings, and country holidays may be viewed by any user" |
+| get_leave_allotments / list_time_off_requests / get_time_off_request / get_leave_balance | Employee | own leave data only | Time Off and Leave: "An employee's leave allotments, time-off requests, and leave balance may be viewed only by HR, the employee themselves, or the employee's direct manager" |
+| get_leave_allotments / list_time_off_requests / get_time_off_request / get_leave_balance | Manager (direct manager) | direct report's leave data | Time Off and Leave: "...or the employee's direct manager" |
+| get_leave_allotments / list_time_off_requests / get_time_off_request / get_leave_balance | HR | any employee's leave data | Time Off and Leave: "...may be viewed only by HR..." |
+| create_time_off_request | Employee | may create a request only for themselves (input.args.user_id == input.extensions.subject.user_id) | Time Off and Leave: "An employee may create a time-off request only for themselves" |
+| update_time_off_status | HR | may set input.args.status to any value | Time Off and Leave: "HR may set any status" |
+| update_time_off_status | Manager (requester's direct manager) | may set input.args.status only to Approved or Denied | Time Off and Leave: "the requester's direct manager may set it only to Approved or Denied" |
+| update_time_off_status | Employee (requesting employee) | may set input.args.status only to Pending | Time Off and Leave: "the requesting employee may set it only to Pending" |
+
+## Approval Paths
+
+| Parameter condition | Approval field | guidance.txt rule |
+|---|---|---|
+| any create/update/delete tool call (a call that writes to or modifies the database) | explicit user confirmation ("yes") after the agent lists the action's details; no structured input.args.* field carries this state -- conversational/prompt content per the shared source-boundary rule (Phase A Undeclared Fields) | Database Writes and Confirmation: "Before performing any action that writes to or modifies the database (create, update, or delete), the agent must first list the details of the action and obtain the user's explicit confirmation ("yes") before proceeding." |
+| user deletion (no delete_employee tool is declared in tool_definitions.json; guidance.txt states this rule generally) | exact confirmation phrase "I request to delete user [USER NAME] with the following user id: [USER ID]" -- conversational/prompt content, not a declared input.args.* field | Database Writes and Confirmation: "A user may be deleted only after the requester provides explicit confirmation in exactly this form..." |
+| update_time_off_status with input.args.status == "Approved" and the target request's leave_type == "Paternity" | baby's birth date and baby's name both present in the requester's chat messages to the agent -- conversational content, not a declared input.args.* field on create_time_off_request or update_time_off_status (Phase A Undeclared Fields) | Time Off and Leave: "A Paternity leave request may be approved only if the requester has provided both the baby's birth date and the baby's name in their chat messages to the agent (i.e. these details appear in the conversation history)." |
+
+## Rate Limits
+
+| Role | Max calls per session |
 |---|---|
-| `HR_ONLY` | Tool restricted to HR department |
-| `OWNERSHIP` | Personal or employee record access requires own user_id or HR |
-| `SALARY_INVALID` | Salary must be positive |
-| `EMAIL_DOMAIN` | Email domain does not match organization |
-| `TIMEOFF_OWNERSHIP` | Time-off request must be for the requesting user |
-| `TIMEOFF_SPAN` | Time-off span exceeds 90 days |
-| `DATE_ORDER` | Issue date must be before expiry date |
-| `LEAVE_OWNERSHIP` | Leave records restricted to employee or HR |
-| `TIMEOFF_STATUS` | Non-HR user cannot set Approved or Denied status |
+
+## Severity Levels
+
+| Level | Examples |
+|---|---|
+| Hard block | Every restriction recorded in this questionnaire is hard-block per guidance.txt's modal language ("only," "may not," "must," "strictly prohibited," "not allowed," "only if"): e.g. non-HR calling add_employee/add_department/set_leave_allotment/add_holiday/delete_holiday; a non-owner/non-manager/non-HR viewing or editing employee or personal-record data; a user outside the IBM organization viewing IBM employee data; salary <= 0; passport/visa expiry not more than six months after the update date; home-address country change; blacklisted employee's passport update; emergency contact outside the employee's area; time-off request exceeding 90 consecutive days; insufficient leave balance for a time-off request; an employee creating a time-off request for someone else; a role setting update_time_off_status to a status it is not permitted to set; a Paternity approval without both conversational facts; a write proceeding without explicit confirmation; a deletion without the exact confirmation phrase. |
+
+## Violation Logging
+
+guidance.txt establishes no denial-logging requirement and no violation-code scheme for the Enterprise Employee Hub. Architecture (Phase A) confirms no logging/audit mechanism exists anywhere in the current implementation (server.py, api/*.py) beyond returning {"error": str(ValueError)} to the caller on data-integrity failures. No violation code is invented here per the shared rule; see Q22 and the empty Violation Codes table.
+
+## Violation Codes
+
+| Existing code | Meaning |
+|---|---|
+
+## Phase Handoff
+
+- Status: PASS
+- Artifact schema: questionnaire-v2
+- Summary: All 23 Answer Register rows (Q1-Q22 plus Q13b) are answered. Confidence breakdown: 15 answers [derived from guidance.txt] (Q5, Q7, Q9, Q10, Q11, Q12, Q13, Q13b, Q14, Q15, Q16, Q19, Q21, plus Q22's guidance-side finding folded into its architecture-grounded answer), 6 answers [derived from architecture] (Q1, Q2, Q3, Q4, Q6, Q17, Q18, Q22 -- architecture confirms the absence of logging/rate/external-system mechanisms where guidance.txt is silent), 1 answer [inferred — low confidence] (Q8, simultaneous-role precedence, not stated by guidance.txt or architecture), and 1 open gap (Q20, silent-rejection-vs-explanation behavior, left blank because guidance.txt and architecture are both silent and any answer would be invented). Detail tables populated: Parameter Details (63 rows spanning all 32 tools' guidance-relevant or fully-declared input.args.* fields), Runtime Subject Details (4 rows, all system_vars.json fields, carried forward from Phase A with no new provenance claims), Role Permissions (19 rows covering Employee/Manager/HR across all guidance-restricted tool groups), Approval Paths (3 rows: generic write confirmation, exact delete-confirmation phrase, Paternity-approval conversational-fact condition), Severity Levels (1 row: hard block only -- guidance.txt states no soft-block category), Rate Limits and Violation Codes left as empty arrays because guidance.txt and architecture establish neither a rate/counter requirement nor any existing violation code (none invented, per the shared rule). Consolidated open question for a future clarification round (not blocking this phase): guidance.txt leaves four points unresolved that materially affect access/matching semantics -- (1) whether Manager and HR roles combine or take precedence when both apply to one acting user (Q8), (2) whether a denied action should be communicated to the user or silently rejected (Q20), (3) what granularity defines 'same area' for the emergency-contact rule (Undeclared Fields, Phase A), and (4) how to reconcile the two incompatible 'organization' enumerations (input.extensions.subject.organization vs input.args.organization) referenced by the email-domain rule (Q12, Undeclared Fields). These are retained as open gaps rather than invented answers. Tools covered: all 32 declared tools plus the 'other' catch-all action are addressed across Q1-Q22; every guidance.txt rule in Actors and Identity, Data Access, Administrative Actions, Personal-Record Update Rules, Data Integrity, Time Off and Leave, Database Writes and Confirmation, and Agent Behavior is mapped to at least one question. The out-of-domain Booking/flight rule (Phase A Undeclared Fields) is excluded from Q13/Q9 scope as not belonging to any tool in this agent.

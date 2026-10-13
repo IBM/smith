@@ -1,0 +1,966 @@
+{
+  "schema": "architecture-v2",
+  "status": "PASS",
+  "title": "Architecture Analysis",
+  "sections": {
+    "Run Context": "TARGET_AGENT_PATH=/Users/saisree/smith-trial/.claude/skills/smith/examples/employee. Authoritative inputs: smith/tool_definitions.json (32 tools, stdio transport, source '.venv/bin/python server.py'), smith/system_vars.json, smith/guidance.txt. Inventoried once via `rg --files` under the example root (excluded smith/test_cases/*, smith/smith_outputs/*, and other generated/reference JSON as tests/generated analysis). Files read: agent.py, server.py, web.py, db.py, schema.sql, api/__init__.py (empty), api/util.py, api/employees.py, api/org.py, api/departments.py, api/personal.py, api/leave.py, api/holidays_api.py, ui/index.html (skimmed only to confirm UI-only role, no tool-call or policy participation beyond calling web.py's /chat and /reset). Total implementation files inspected: 13, within the 20-file budget and at most two import/call hops from any registered tool (server.py tool -> api/*.py function -> db.py connection helpers).",
+    "Trust Boundaries": "(1) HTTP client (ui/index.html or any caller) -> web.py /chat: untrusted free-text message, no runtime subject fields accepted at this boundary (web.py's /chat only reads body['message']; user_profile/system_variables are only wired in agent.py's FastAPI app, not in web.py's Starlette app that ui/index.html actually calls). (2) agent.py FastAPI /chat and /extract_tool_call: accepts an optional user_profile dict that is interpolated verbatim as '- **key**: value' lines into the system prompt with no schema, whitelist, or validation -- this is prompt-construction, not a declared runtime-subject mechanism, and is a distinct boundary from system_vars.json. (3) LLM (ChatOpenAI via langchain) -> MCP tool call: the model chooses tool name and arguments; arguments become input.args.* for the exact tool. (4) MCP client (agent.py's MultiServerMCPClient) -> server.py subprocess over stdio: tool name + arguments only, no separate authentication/session channel observed. (5) server.py tool wrapper -> api/*.py -> db.py sqlite3 connection -> employee_hub.db (local file, single shared connection opened once at server start). No network egress, no external HTTP calls, and no policy/OPA interception exists at any boundary in the current implementation.",
+    "Data Flow": "Request: user message (web.py) or question+user_profile (agent.py) -> system prompt assembly (SYSTEM_PROMPT + optional interpolated user_profile/system_variables) -> LangGraph ReAct loop -> LLM selects tool + input.args.* -> langchain_mcp_adapters invokes the named FastMCP tool over stdio -> server.py's @mcp.tool() wrapper calls _safe(api_fn, ...) -> api/*.py performs validation (api/util.py validate_enum/parse_date/require) and executes parameterized SQL against the shared sqlite3 connection -> db.py returns row/rows_to_dicts. Response: api function return value (dict/list) or {'error': str(ValueError)} -> returned to the MCP client as the tool result -> appended to conversation as a ToolMessage -> LLM produces final assistant text -> web.py extracts reply text and a call/result 'steps' timeline -> HTTP JSON response to caller. No step in this path evaluates any authorization policy; guidance.txt states the server performs no authorization of its own."
+  },
+  "columns": {
+    "Layers": [
+      "Layer",
+      "File",
+      "Role",
+      "Inputs",
+      "Outputs",
+      "Current enforcement"
+    ],
+    "Runtime Subject Context": [
+      "Field",
+      "Provider",
+      "Provenance",
+      "Verification / integrity",
+      "OPA-visible?"
+    ],
+    "Tool Arguments": [
+      "Field",
+      "Tool",
+      "Origin / influence",
+      "Disposition"
+    ],
+    "Prompt Inputs": [
+      "Field or data",
+      "Source",
+      "Consumer",
+      "Trust / influence"
+    ],
+    "External Data": [
+      "Data",
+      "Source",
+      "Verification / integrity",
+      "Consumer"
+    ],
+    "Enforcement Points": [
+      "Layer",
+      "Current",
+      "Available (OPA-interceptable)",
+      "Blind spots"
+    ],
+    "Undeclared Fields": [
+      "Field",
+      "Referenced by guidance rule #",
+      "Declared by",
+      "Consequence"
+    ]
+  },
+  "tables": {
+    "Layers": [
+      {
+        "Layer": "Client / UI",
+        "File": "ui/index.html",
+        "Role": "Static browser UI; posts user chat text to web.py and calls /reset. No tool selection, no subject-field injection observed.",
+        "Inputs": "User-typed chat text",
+        "Outputs": "Rendered reply text and step timeline from web.py's JSON response",
+        "Current enforcement": "None"
+      },
+      {
+        "Layer": "Agent / HTTP entrypoint (chat server)",
+        "File": "web.py",
+        "Role": "Starlette app wrapping the LangGraph ReAct agent; maintains one in-memory conversation; exposes POST /chat and POST /reset; reseeds the DB on boot via seed.py.",
+        "Inputs": "JSON body {message: str}",
+        "Outputs": "JSON {reply: str, steps: [...]}",
+        "Current enforcement": "None"
+      },
+      {
+        "Layer": "Agent / HTTP entrypoint (alt FastAPI app)",
+        "File": "agent.py",
+        "Role": "Builds the same ReAct agent plus a non-executing tool-bound LLM; exposes POST /chat, POST /extract_tool_call, GET /health, and a REPL main(). Interpolates an optional user_profile/system_variables dict into the system prompt.",
+        "Inputs": "JSON body {question: str, user_profile: dict|None}",
+        "Outputs": "JSON {response: str} or {tool_name: str, arguments: dict}",
+        "Current enforcement": "None"
+      },
+      {
+        "Layer": "MCP transport / registration",
+        "File": "server.py",
+        "Role": "FastMCP('enterprise-employee-hub') server; registers 32 @mcp.tool() functions over stdio transport; opens one shared sqlite3 connection at import time; wraps every tool body in _safe() which converts ValueError to {'error': msg}.",
+        "Inputs": "Tool name + keyword arguments from the MCP client",
+        "Outputs": "dict/list tool results or {'error': str}",
+        "Current enforcement": "None (no authorization; only input-shape/domain validation inside api/*.py, e.g. enum checks, date parsing, FK existence checks)"
+      },
+      {
+        "Layer": "Tool implementation (business logic)",
+        "File": "api/employees.py, api/org.py, api/departments.py, api/personal.py, api/leave.py, api/holidays_api.py",
+        "Role": "Implements each tool's actual read/write logic against the SQLite schema; the only place where argument values are actually consumed to build SQL and business rules (enum validation, date parsing, business-day counting).",
+        "Inputs": "Parameters forwarded from server.py wrappers",
+        "Outputs": "dicts/lists mirroring table rows, or raised ValueError",
+        "Current enforcement": "Data-integrity validation only (validate_enum, parse_date, FK existence via get_employee/get_department/get_time_off_request); no identity/authorization checks anywhere in this layer"
+      },
+      {
+        "Layer": "Persistence",
+        "File": "db.py, schema.sql, employee_hub.db",
+        "Role": "SQLite connection factory and row-dict helpers; schema defines employees, departments, passports, visas, emergency_contacts, bank_accounts, leave_allotments, time_off_requests, holidays.",
+        "Inputs": "Parameterized SQL from api/*.py",
+        "Outputs": "sqlite3.Row results",
+        "Current enforcement": "SQL-level constraints only (UNIQUE, NOT NULL, FK with ON DELETE CASCADE); no row-level security"
+      },
+      {
+        "Layer": "Runtime context / enforcement (absent)",
+        "File": "N/A (not implemented anywhere in this tree)",
+        "Role": "No policy/OPA interception point, middleware, or decorator exists between the MCP transport and the tool implementation, or between the HTTP entrypoints and the agent loop.",
+        "Inputs": "N/A",
+        "Outputs": "N/A",
+        "Current enforcement": "None -- confirmed absent by inspection; matches guidance.txt's explicit statement that 'the server performs no authorization of its own'"
+      }
+    ],
+    "Runtime Subject Context": [
+      {
+        "Field": "input.extensions.subject.user_id",
+        "Provider": "system_vars.json (\"user_id\": 1)",
+        "Provenance": "Static demo value in the authoritative system_vars.json; not observed to be read or injected by any Python file in this tree (agent.py/web.py accept an arbitrary caller-supplied user_profile dict at runtime, which is a distinct, unvalidated channel -- see Prompt Inputs)",
+        "Verification / integrity": "None observed. No signature, session lookup, or auth-header binding found in agent.py, web.py, or server.py.",
+        "OPA-visible?": "Yes, as input.extensions.subject.user_id, if the caller supplies it through whatever channel a future enforcement point uses -- but no current code path plumbs system_vars.json's static value into a tool call or policy decision."
+      },
+      {
+        "Field": "input.extensions.subject.user_name",
+        "Provider": "system_vars.json (\"user_name\": \"Bob\")",
+        "Provenance": "Static demo value; same caveat as user_id -- not observed wired into any request path.",
+        "Verification / integrity": "None observed.",
+        "OPA-visible?": "Yes, as input.extensions.subject.user_name, once wired."
+      },
+      {
+        "Field": "input.extensions.subject.department",
+        "Provider": "system_vars.json (enum: Corporate Leadership, Engineering, Product, HR, Finance)",
+        "Provenance": "Static demo value; guidance.txt's 'HR' role predicate depends on this field equaling 'HR'.",
+        "Verification / integrity": "None observed.",
+        "OPA-visible?": "Yes, as input.extensions.subject.department, once wired."
+      },
+      {
+        "Field": "input.extensions.subject.organization",
+        "Provider": "system_vars.json (enum: IBM Corporation, Red Hat, Kyndryl)",
+        "Provenance": "Static demo value. Note: this enum's spelling ('IBM Corporation', 'Kyndryl') differs from the tool-argument organization enum validated in api/util.py (ORGANIZATIONS = {'IBM', 'IBM partner', 'Red Hat'}) and from guidance.txt's own domain-mapping list (IBM Corporation, Red Hat, Kyndryl). The subject-context organization and the tool-argument organization are declared by different schemas with different allowed values and must not be treated as the same field despite the shared name.",
+        "Verification / integrity": "None observed.",
+        "OPA-visible?": "Yes, as input.extensions.subject.organization, once wired -- but any policy must not conflate it with the employees.organization tool argument (see Tool Arguments and Undeclared Fields)."
+      }
+    ],
+    "Tool Arguments": [
+      {
+        "Field": "input.args.first_name",
+        "Tool": "add_employee",
+        "Origin / influence": "LLM-chosen string",
+        "Disposition": "Acts on (inserted into employees.first_name)"
+      },
+      {
+        "Field": "input.args.last_name",
+        "Tool": "add_employee",
+        "Origin / influence": "LLM-chosen string",
+        "Disposition": "Acts on (inserted into employees.last_name)"
+      },
+      {
+        "Field": "input.args.email",
+        "Tool": "add_employee",
+        "Origin / influence": "LLM-chosen string",
+        "Disposition": "Acts on (inserted; UNIQUE constraint enforced; no corporate-domain check performed in code despite guidance.txt's email-domain rule)"
+      },
+      {
+        "Field": "input.args.role",
+        "Tool": "add_employee",
+        "Origin / influence": "LLM-chosen string",
+        "Disposition": "Acts on (inserted, no enum validation)"
+      },
+      {
+        "Field": "input.args.title",
+        "Tool": "add_employee",
+        "Origin / influence": "LLM-chosen string",
+        "Disposition": "Acts on (inserted, no validation)"
+      },
+      {
+        "Field": "input.args.home_address",
+        "Tool": "add_employee",
+        "Origin / influence": "LLM-chosen string",
+        "Disposition": "Acts on (inserted, no validation)"
+      },
+      {
+        "Field": "input.args.country_code",
+        "Tool": "add_employee",
+        "Origin / influence": "LLM-chosen string",
+        "Disposition": "Acts on (inserted, no validation)"
+      },
+      {
+        "Field": "input.args.organization",
+        "Tool": "add_employee",
+        "Origin / influence": "LLM-chosen string",
+        "Disposition": "Acts on (validated against ORGANIZATIONS = {IBM, IBM partner, Red Hat} in api/util.py; raises ValueError otherwise)"
+      },
+      {
+        "Field": "input.args.department_id",
+        "Tool": "add_employee",
+        "Origin / influence": "LLM-chosen integer",
+        "Disposition": "Acts on (inserted; FK enforced by SQLite)"
+      },
+      {
+        "Field": "input.args.manager_id",
+        "Tool": "add_employee",
+        "Origin / influence": "LLM-chosen integer",
+        "Disposition": "Acts on (inserted; FK enforced by SQLite; self-referencing employees.user_id)"
+      },
+      {
+        "Field": "input.args.salary",
+        "Tool": "add_employee",
+        "Origin / influence": "LLM-chosen number",
+        "Disposition": "Acts on (inserted verbatim; no positive-amount check in code despite guidance.txt's positivity rule)"
+      },
+      {
+        "Field": "input.args.salary_currency",
+        "Tool": "add_employee",
+        "Origin / influence": "LLM-chosen string",
+        "Disposition": "Acts on (inserted, no validation)"
+      },
+      {
+        "Field": "input.args.start_date",
+        "Tool": "add_employee",
+        "Origin / influence": "LLM-chosen string",
+        "Disposition": "Acts on (inserted verbatim; no date-format validation, unlike leave/holiday dates)"
+      },
+      {
+        "Field": "input.args.user_id",
+        "Tool": "update_employee",
+        "Origin / influence": "LLM-chosen integer",
+        "Disposition": "Acts on (identifies row to update; existence-checked via get_employee)"
+      },
+      {
+        "Field": "input.args.first_name",
+        "Tool": "update_employee",
+        "Origin / influence": "LLM-chosen string",
+        "Disposition": "Acts on (partial update if not None)"
+      },
+      {
+        "Field": "input.args.last_name",
+        "Tool": "update_employee",
+        "Origin / influence": "LLM-chosen string",
+        "Disposition": "Acts on (partial update if not None)"
+      },
+      {
+        "Field": "input.args.email",
+        "Tool": "update_employee",
+        "Origin / influence": "LLM-chosen string",
+        "Disposition": "Acts on (partial update if not None; no domain re-check)"
+      },
+      {
+        "Field": "input.args.role",
+        "Tool": "update_employee",
+        "Origin / influence": "LLM-chosen string",
+        "Disposition": "Acts on (partial update if not None)"
+      },
+      {
+        "Field": "input.args.organization",
+        "Tool": "update_employee",
+        "Origin / influence": "LLM-chosen string",
+        "Disposition": "Acts on (validated against ORGANIZATIONS if provided)"
+      },
+      {
+        "Field": "input.args.title",
+        "Tool": "update_employee",
+        "Origin / influence": "LLM-chosen string",
+        "Disposition": "Acts on (partial update if not None)"
+      },
+      {
+        "Field": "input.args.department_id",
+        "Tool": "update_employee",
+        "Origin / influence": "LLM-chosen integer",
+        "Disposition": "Acts on (partial update if not None; FK enforced)"
+      },
+      {
+        "Field": "input.args.home_address",
+        "Tool": "update_employee",
+        "Origin / influence": "LLM-chosen string",
+        "Disposition": "Acts on (partial update if not None; no country-match check in code despite guidance.txt's same-country rule)"
+      },
+      {
+        "Field": "input.args.manager_id",
+        "Tool": "update_employee",
+        "Origin / influence": "LLM-chosen integer",
+        "Disposition": "Acts on (partial update if not None; FK enforced)"
+      },
+      {
+        "Field": "input.args.country_code",
+        "Tool": "update_employee",
+        "Origin / influence": "LLM-chosen string",
+        "Disposition": "Acts on (partial update if not None)"
+      },
+      {
+        "Field": "input.args.salary",
+        "Tool": "update_employee",
+        "Origin / influence": "LLM-chosen number",
+        "Disposition": "Acts on (partial update if not None; no positivity check in code)"
+      },
+      {
+        "Field": "input.args.salary_currency",
+        "Tool": "update_employee",
+        "Origin / influence": "LLM-chosen string",
+        "Disposition": "Acts on (partial update if not None)"
+      },
+      {
+        "Field": "input.args.start_date",
+        "Tool": "update_employee",
+        "Origin / influence": "LLM-chosen string",
+        "Disposition": "Acts on (partial update if not None; no date validation)"
+      },
+      {
+        "Field": "input.args.user_id",
+        "Tool": "get_employee",
+        "Origin / influence": "LLM-chosen integer",
+        "Disposition": "Acts on (selects the row; no ownership check)"
+      },
+      {
+        "Field": "input.args.department_id",
+        "Tool": "list_employees",
+        "Origin / influence": "LLM-chosen integer, optional",
+        "Disposition": "Acts on (SQL filter if not None)"
+      },
+      {
+        "Field": "input.args.manager_id",
+        "Tool": "list_employees",
+        "Origin / influence": "LLM-chosen integer, optional",
+        "Disposition": "Acts on (SQL filter if not None)"
+      },
+      {
+        "Field": "input.args.country_code",
+        "Tool": "list_employees",
+        "Origin / influence": "LLM-chosen string, optional",
+        "Disposition": "Acts on (SQL filter if not None)"
+      },
+      {
+        "Field": "input.args.user_id",
+        "Tool": "get_manager",
+        "Origin / influence": "LLM-chosen integer",
+        "Disposition": "Acts on (looks up employee then its manager)"
+      },
+      {
+        "Field": "input.args.user_id",
+        "Tool": "get_direct_reports",
+        "Origin / influence": "LLM-chosen integer",
+        "Disposition": "Acts on (filters list_employees by manager_id=user_id)"
+      },
+      {
+        "Field": "input.args.user_id",
+        "Tool": "get_reporting_chain",
+        "Origin / influence": "LLM-chosen integer",
+        "Disposition": "Acts on (walks manager_id chain)"
+      },
+      {
+        "Field": "input.args.name",
+        "Tool": "add_department",
+        "Origin / influence": "LLM-chosen string",
+        "Disposition": "Acts on (inserted; UNIQUE constraint)"
+      },
+      {
+        "Field": "input.args.description",
+        "Tool": "add_department",
+        "Origin / influence": "LLM-chosen string, optional",
+        "Disposition": "Acts on (inserted)"
+      },
+      {
+        "Field": "input.args.department_id",
+        "Tool": "update_department",
+        "Origin / influence": "LLM-chosen integer",
+        "Disposition": "Acts on (identifies row; existence-checked)"
+      },
+      {
+        "Field": "input.args.name",
+        "Tool": "update_department",
+        "Origin / influence": "LLM-chosen string, optional",
+        "Disposition": "Acts on (partial update if not None)"
+      },
+      {
+        "Field": "input.args.description",
+        "Tool": "update_department",
+        "Origin / influence": "LLM-chosen string, optional",
+        "Disposition": "Acts on (partial update if not None)"
+      },
+      {
+        "Field": "input.args.department_id",
+        "Tool": "get_department",
+        "Origin / influence": "LLM-chosen integer",
+        "Disposition": "Acts on (selects the row)"
+      },
+      {
+        "Field": "input.args.user_id",
+        "Tool": "set_passport",
+        "Origin / influence": "LLM-chosen integer",
+        "Disposition": "Acts on (upsert key; existence-checked)"
+      },
+      {
+        "Field": "input.args.passport_number",
+        "Tool": "set_passport",
+        "Origin / influence": "LLM-chosen string",
+        "Disposition": "Acts on (upserted)"
+      },
+      {
+        "Field": "input.args.issuing_country",
+        "Tool": "set_passport",
+        "Origin / influence": "LLM-chosen string",
+        "Disposition": "Acts on (upserted)"
+      },
+      {
+        "Field": "input.args.issue_date",
+        "Tool": "set_passport",
+        "Origin / influence": "LLM-chosen string, optional",
+        "Disposition": "Acts on (upserted verbatim; no format validation; no issue<expiry cross-check in code despite guidance.txt's rule)"
+      },
+      {
+        "Field": "input.args.expiry_date",
+        "Tool": "set_passport",
+        "Origin / influence": "LLM-chosen string, optional",
+        "Disposition": "Acts on (upserted verbatim; no 6-month-minimum check in code despite guidance.txt's rule)"
+      },
+      {
+        "Field": "input.args.user_id",
+        "Tool": "update_passport",
+        "Origin / influence": "LLM-chosen integer",
+        "Disposition": "Acts on (identifies row; existence-checked)"
+      },
+      {
+        "Field": "input.args.passport_number",
+        "Tool": "update_passport",
+        "Origin / influence": "LLM-chosen string, optional",
+        "Disposition": "Acts on (partial update if not None)"
+      },
+      {
+        "Field": "input.args.issuing_country",
+        "Tool": "update_passport",
+        "Origin / influence": "LLM-chosen string, optional",
+        "Disposition": "Acts on (partial update if not None)"
+      },
+      {
+        "Field": "input.args.issue_date",
+        "Tool": "update_passport",
+        "Origin / influence": "LLM-chosen string, optional",
+        "Disposition": "Acts on (partial update if not None; no validation)"
+      },
+      {
+        "Field": "input.args.expiry_date",
+        "Tool": "update_passport",
+        "Origin / influence": "LLM-chosen string, optional",
+        "Disposition": "Acts on (partial update if not None; no validation)"
+      },
+      {
+        "Field": "input.args.user_id",
+        "Tool": "get_passport",
+        "Origin / influence": "LLM-chosen integer",
+        "Disposition": "Acts on (selects the row)"
+      },
+      {
+        "Field": "input.args.user_id",
+        "Tool": "set_visa",
+        "Origin / influence": "LLM-chosen integer",
+        "Disposition": "Acts on (upsert key; existence-checked)"
+      },
+      {
+        "Field": "input.args.visa_number",
+        "Tool": "set_visa",
+        "Origin / influence": "LLM-chosen string",
+        "Disposition": "Acts on (upserted)"
+      },
+      {
+        "Field": "input.args.issuing_country",
+        "Tool": "set_visa",
+        "Origin / influence": "LLM-chosen string",
+        "Disposition": "Acts on (upserted)"
+      },
+      {
+        "Field": "input.args.visa_type",
+        "Tool": "set_visa",
+        "Origin / influence": "LLM-chosen string, optional",
+        "Disposition": "Acts on (upserted, no validation)"
+      },
+      {
+        "Field": "input.args.issue_date",
+        "Tool": "set_visa",
+        "Origin / influence": "LLM-chosen string, optional",
+        "Disposition": "Acts on (upserted verbatim; no validation)"
+      },
+      {
+        "Field": "input.args.expiry_date",
+        "Tool": "set_visa",
+        "Origin / influence": "LLM-chosen string, optional",
+        "Disposition": "Acts on (upserted verbatim; no validation)"
+      },
+      {
+        "Field": "input.args.user_id",
+        "Tool": "update_visa",
+        "Origin / influence": "LLM-chosen integer",
+        "Disposition": "Acts on (identifies row; existence-checked)"
+      },
+      {
+        "Field": "input.args.visa_number",
+        "Tool": "update_visa",
+        "Origin / influence": "LLM-chosen string, optional",
+        "Disposition": "Acts on (partial update if not None)"
+      },
+      {
+        "Field": "input.args.visa_type",
+        "Tool": "update_visa",
+        "Origin / influence": "LLM-chosen string, optional",
+        "Disposition": "Acts on (partial update if not None)"
+      },
+      {
+        "Field": "input.args.issuing_country",
+        "Tool": "update_visa",
+        "Origin / influence": "LLM-chosen string, optional",
+        "Disposition": "Acts on (partial update if not None)"
+      },
+      {
+        "Field": "input.args.issue_date",
+        "Tool": "update_visa",
+        "Origin / influence": "LLM-chosen string, optional",
+        "Disposition": "Acts on (partial update if not None; no validation)"
+      },
+      {
+        "Field": "input.args.expiry_date",
+        "Tool": "update_visa",
+        "Origin / influence": "LLM-chosen string, optional",
+        "Disposition": "Acts on (partial update if not None; no validation)"
+      },
+      {
+        "Field": "input.args.user_id",
+        "Tool": "get_visa",
+        "Origin / influence": "LLM-chosen integer",
+        "Disposition": "Acts on (selects the row)"
+      },
+      {
+        "Field": "input.args.user_id",
+        "Tool": "set_emergency_contact",
+        "Origin / influence": "LLM-chosen integer",
+        "Disposition": "Acts on (upsert key; existence-checked)"
+      },
+      {
+        "Field": "input.args.name",
+        "Tool": "set_emergency_contact",
+        "Origin / influence": "LLM-chosen string",
+        "Disposition": "Acts on (upserted)"
+      },
+      {
+        "Field": "input.args.relationship",
+        "Tool": "set_emergency_contact",
+        "Origin / influence": "LLM-chosen string",
+        "Disposition": "Acts on (validated against RELATIONSHIPS enum)"
+      },
+      {
+        "Field": "input.args.phone",
+        "Tool": "set_emergency_contact",
+        "Origin / influence": "LLM-chosen string",
+        "Disposition": "Acts on (upserted, no format validation)"
+      },
+      {
+        "Field": "input.args.email",
+        "Tool": "set_emergency_contact",
+        "Origin / influence": "LLM-chosen string, optional",
+        "Disposition": "Acts on (upserted, no validation)"
+      },
+      {
+        "Field": "input.args.street_address",
+        "Tool": "set_emergency_contact",
+        "Origin / influence": "LLM-chosen string, optional",
+        "Disposition": "Acts on (upserted; no same-area-as-employee check in code despite guidance.txt's rule, and no 'area' field exists to check against)"
+      },
+      {
+        "Field": "input.args.city",
+        "Tool": "set_emergency_contact",
+        "Origin / influence": "LLM-chosen string, optional",
+        "Disposition": "Acts on (upserted, no cross-check)"
+      },
+      {
+        "Field": "input.args.country",
+        "Tool": "set_emergency_contact",
+        "Origin / influence": "LLM-chosen string, optional",
+        "Disposition": "Acts on (upserted, no cross-check against employee.country_code)"
+      },
+      {
+        "Field": "input.args.postal_code",
+        "Tool": "set_emergency_contact",
+        "Origin / influence": "LLM-chosen string, optional",
+        "Disposition": "Acts on (upserted, no validation)"
+      },
+      {
+        "Field": "input.args.user_id",
+        "Tool": "update_emergency_contact",
+        "Origin / influence": "LLM-chosen integer",
+        "Disposition": "Acts on (identifies row; existence-checked)"
+      },
+      {
+        "Field": "input.args.name",
+        "Tool": "update_emergency_contact",
+        "Origin / influence": "LLM-chosen string, optional",
+        "Disposition": "Acts on (partial update if not None)"
+      },
+      {
+        "Field": "input.args.relationship",
+        "Tool": "update_emergency_contact",
+        "Origin / influence": "LLM-chosen string, optional",
+        "Disposition": "Acts on (validated if provided)"
+      },
+      {
+        "Field": "input.args.phone",
+        "Tool": "update_emergency_contact",
+        "Origin / influence": "LLM-chosen string, optional",
+        "Disposition": "Acts on (partial update if not None)"
+      },
+      {
+        "Field": "input.args.email",
+        "Tool": "update_emergency_contact",
+        "Origin / influence": "LLM-chosen string, optional",
+        "Disposition": "Acts on (partial update if not None)"
+      },
+      {
+        "Field": "input.args.street_address",
+        "Tool": "update_emergency_contact",
+        "Origin / influence": "LLM-chosen string, optional",
+        "Disposition": "Acts on (partial update if not None)"
+      },
+      {
+        "Field": "input.args.city",
+        "Tool": "update_emergency_contact",
+        "Origin / influence": "LLM-chosen string, optional",
+        "Disposition": "Acts on (partial update if not None)"
+      },
+      {
+        "Field": "input.args.country",
+        "Tool": "update_emergency_contact",
+        "Origin / influence": "LLM-chosen string, optional",
+        "Disposition": "Acts on (partial update if not None)"
+      },
+      {
+        "Field": "input.args.postal_code",
+        "Tool": "update_emergency_contact",
+        "Origin / influence": "LLM-chosen string, optional",
+        "Disposition": "Acts on (partial update if not None)"
+      },
+      {
+        "Field": "input.args.user_id",
+        "Tool": "get_emergency_contact",
+        "Origin / influence": "LLM-chosen integer",
+        "Disposition": "Acts on (selects the row)"
+      },
+      {
+        "Field": "input.args.user_id",
+        "Tool": "set_bank_account",
+        "Origin / influence": "LLM-chosen integer",
+        "Disposition": "Acts on (upsert key; existence-checked)"
+      },
+      {
+        "Field": "input.args.bank_name",
+        "Tool": "set_bank_account",
+        "Origin / influence": "LLM-chosen string",
+        "Disposition": "Acts on (upserted)"
+      },
+      {
+        "Field": "input.args.account_number",
+        "Tool": "set_bank_account",
+        "Origin / influence": "LLM-chosen string",
+        "Disposition": "Acts on (upserted, no format validation)"
+      },
+      {
+        "Field": "input.args.routing_number",
+        "Tool": "set_bank_account",
+        "Origin / influence": "LLM-chosen string, optional",
+        "Disposition": "Acts on (upserted)"
+      },
+      {
+        "Field": "input.args.iban",
+        "Tool": "set_bank_account",
+        "Origin / influence": "LLM-chosen string, optional",
+        "Disposition": "Acts on (upserted)"
+      },
+      {
+        "Field": "input.args.currency",
+        "Tool": "set_bank_account",
+        "Origin / influence": "LLM-chosen string, optional",
+        "Disposition": "Acts on (upserted)"
+      },
+      {
+        "Field": "input.args.user_id",
+        "Tool": "update_bank_account",
+        "Origin / influence": "LLM-chosen integer",
+        "Disposition": "Acts on (identifies row; existence-checked)"
+      },
+      {
+        "Field": "input.args.bank_name",
+        "Tool": "update_bank_account",
+        "Origin / influence": "LLM-chosen string, optional",
+        "Disposition": "Acts on (partial update if not None)"
+      },
+      {
+        "Field": "input.args.account_number",
+        "Tool": "update_bank_account",
+        "Origin / influence": "LLM-chosen string, optional",
+        "Disposition": "Acts on (partial update if not None)"
+      },
+      {
+        "Field": "input.args.routing_number",
+        "Tool": "update_bank_account",
+        "Origin / influence": "LLM-chosen string, optional",
+        "Disposition": "Acts on (partial update if not None)"
+      },
+      {
+        "Field": "input.args.iban",
+        "Tool": "update_bank_account",
+        "Origin / influence": "LLM-chosen string, optional",
+        "Disposition": "Acts on (partial update if not None)"
+      },
+      {
+        "Field": "input.args.currency",
+        "Tool": "update_bank_account",
+        "Origin / influence": "LLM-chosen string, optional",
+        "Disposition": "Acts on (partial update if not None)"
+      },
+      {
+        "Field": "input.args.user_id",
+        "Tool": "get_bank_account",
+        "Origin / influence": "LLM-chosen integer",
+        "Disposition": "Acts on (selects the row)"
+      },
+      {
+        "Field": "input.args.user_id",
+        "Tool": "set_leave_allotment",
+        "Origin / influence": "LLM-chosen integer",
+        "Disposition": "Acts on (existence-checked; upsert key)"
+      },
+      {
+        "Field": "input.args.leave_type",
+        "Tool": "set_leave_allotment",
+        "Origin / influence": "LLM-chosen string",
+        "Disposition": "Acts on (validated against LEAVE_TYPES enum)"
+      },
+      {
+        "Field": "input.args.annual_days",
+        "Tool": "set_leave_allotment",
+        "Origin / influence": "LLM-chosen integer, optional",
+        "Disposition": "Acts on (upserted verbatim, no bound checking)"
+      },
+      {
+        "Field": "input.args.user_id",
+        "Tool": "get_leave_allotments",
+        "Origin / influence": "LLM-chosen integer",
+        "Disposition": "Acts on (existence-checked; filters the query)"
+      },
+      {
+        "Field": "input.args.user_id",
+        "Tool": "create_time_off_request",
+        "Origin / influence": "LLM-chosen integer",
+        "Disposition": "Acts on (existence-checked; inserted as the request owner -- no cross-check that this equals the acting subject's user_id, despite guidance.txt's 'only for themselves' rule)"
+      },
+      {
+        "Field": "input.args.leave_type",
+        "Tool": "create_time_off_request",
+        "Origin / influence": "LLM-chosen string",
+        "Disposition": "Acts on (validated against LEAVE_TYPES enum)"
+      },
+      {
+        "Field": "input.args.start_date",
+        "Tool": "create_time_off_request",
+        "Origin / influence": "LLM-chosen string",
+        "Disposition": "Acts on (parsed; end_date>=start_date enforced; no 90-day-span check in code despite guidance.txt's rule)"
+      },
+      {
+        "Field": "input.args.end_date",
+        "Tool": "create_time_off_request",
+        "Origin / influence": "LLM-chosen string",
+        "Disposition": "Acts on (parsed; end_date>=start_date enforced; no 90-day-span check in code)"
+      },
+      {
+        "Field": "input.args.reason",
+        "Tool": "create_time_off_request",
+        "Origin / influence": "LLM-chosen string, optional",
+        "Disposition": "Acts on (inserted verbatim, not re-parsed elsewhere)"
+      },
+      {
+        "Field": "input.args.request_id",
+        "Tool": "update_time_off_status",
+        "Origin / influence": "LLM-chosen integer",
+        "Disposition": "Acts on (identifies row; existence-checked)"
+      },
+      {
+        "Field": "input.args.status",
+        "Tool": "update_time_off_status",
+        "Origin / influence": "LLM-chosen string",
+        "Disposition": "Acts on (validated against STATUSES enum; no role-based restriction on which status values a caller may set, despite guidance.txt's HR/manager/requester status rule)"
+      },
+      {
+        "Field": "input.args.request_id",
+        "Tool": "get_time_off_request",
+        "Origin / influence": "LLM-chosen integer",
+        "Disposition": "Acts on (selects the row)"
+      },
+      {
+        "Field": "input.args.user_id",
+        "Tool": "list_time_off_requests",
+        "Origin / influence": "LLM-chosen integer, optional",
+        "Disposition": "Acts on (SQL filter if not None)"
+      },
+      {
+        "Field": "input.args.status",
+        "Tool": "list_time_off_requests",
+        "Origin / influence": "LLM-chosen string, optional",
+        "Disposition": "Acts on (SQL filter if not None)"
+      },
+      {
+        "Field": "input.args.user_id",
+        "Tool": "get_leave_balance",
+        "Origin / influence": "LLM-chosen integer",
+        "Disposition": "Acts on (looks up employee and country_code, drives allotment/usage query)"
+      },
+      {
+        "Field": "input.args.year",
+        "Tool": "get_leave_balance",
+        "Origin / influence": "LLM-chosen integer",
+        "Disposition": "Acts on (bounds the date range of the balance calculation)"
+      },
+      {
+        "Field": "input.args.country_code",
+        "Tool": "add_holiday",
+        "Origin / influence": "LLM-chosen string",
+        "Disposition": "Acts on (inserted)"
+      },
+      {
+        "Field": "input.args.holiday_date",
+        "Tool": "add_holiday",
+        "Origin / influence": "LLM-chosen string",
+        "Disposition": "Acts on (parsed via parse_date; inserted; UNIQUE with country_code)"
+      },
+      {
+        "Field": "input.args.name",
+        "Tool": "add_holiday",
+        "Origin / influence": "LLM-chosen string",
+        "Disposition": "Acts on (inserted)"
+      },
+      {
+        "Field": "input.args.country_code",
+        "Tool": "list_holidays",
+        "Origin / influence": "LLM-chosen string",
+        "Disposition": "Acts on (SQL filter)"
+      },
+      {
+        "Field": "input.args.year",
+        "Tool": "list_holidays",
+        "Origin / influence": "LLM-chosen integer, optional",
+        "Disposition": "Acts on (SQL range filter if not None)"
+      },
+      {
+        "Field": "input.args.holiday_id",
+        "Tool": "delete_holiday",
+        "Origin / influence": "LLM-chosen integer",
+        "Disposition": "Acts on (deletes the row; no confirmation-state argument exists despite guidance.txt's confirm-before-write rule)"
+      }
+    ],
+    "Prompt Inputs": [
+      {
+        "Field or data": "SYSTEM_PROMPT (fixed constant)",
+        "Source": "agent.py source code",
+        "Consumer": "LangGraph ReAct agent (both /chat paths) and llm_with_tools",
+        "Trust / influence": "Trusted, static; defines tool-call conventions and leave-type/status enums but contains no access-control instructions"
+      },
+      {
+        "Field or data": "user_profile (agent.py) / system_variables",
+        "Source": "Caller-supplied JSON field on the /chat and /extract_tool_call request bodies in agent.py; arbitrary keys, not restricted to system_vars.json's schema",
+        "Consumer": "build_system_prompt(), which appends every key/value pair verbatim as prompt text consumed by the LLM",
+        "Trust / influence": "Untrusted and unvalidated -- any caller of agent.py's HTTP API can inject arbitrary claimed 'system variables' (e.g. a fabricated department: HR) into the prompt with no cross-check against an authoritative identity source; this is a prompt-boundary control, not a tool-argument or verified subject-context control, and must not be treated as equivalent to system_vars.json"
+      },
+      {
+        "Field or data": "message / question (free text)",
+        "Source": "HTTP request body (web.py's /chat, agent.py's /chat and /extract_tool_call)",
+        "Consumer": "LLM as the user turn; may include guidance-relevant facts such as a baby's birth date/name for Paternity leave approval (per guidance.txt) or a delete-confirmation phrase",
+        "Trust / influence": "Untrusted; the LLM alone decides how conversational content maps to tool arguments -- no code path extracts or independently verifies these facts"
+      },
+      {
+        "Field or data": "Conversation history (_messages / result['messages'])",
+        "Source": "Accumulated prior turns held in-memory by web.py (single shared list) or passed by the caller (agent.py's REPL)",
+        "Consumer": "LLM on every subsequent turn",
+        "Trust / influence": "Untrusted, cumulative; web.py's single-conversation state model means all callers of one running instance share the same history"
+      }
+    ],
+    "External Data": [
+      {
+        "Data": "None found",
+        "Source": "N/A",
+        "Verification / integrity": "N/A",
+        "Consumer": "N/A"
+      }
+    ],
+    "Enforcement Points": [
+      {
+        "Layer": "MCP transport (server.py, before dispatch to the api/* implementation)",
+        "Current": "None",
+        "Available (OPA-interceptable)": "Every tool call's exact tool name plus its declared input.args.* (all captured above) are structured and available before the api/* call executes; a pre-execution Rego decision could gate on any combination of these plus input.extensions.subject.* once subject context is reliably plumbed in",
+        "Blind spots": "Ownership/role predicates that guidance.txt expresses in terms of returned data (e.g. 'direct reports', 'their manager') require a prior read (get_employee/get_direct_reports) whose result is not itself a declared input.args or subject field at decision time for a later call -- a pre-execution policy cannot see it unless the caller re-supplies it as an argument"
+      },
+      {
+        "Layer": "HTTP entrypoint (agent.py's user_profile / system_variables interpolation)",
+        "Current": "None",
+        "Available (OPA-interceptable)": "None -- this channel feeds free text into the prompt rather than a structured, declared field, so it is not itself OPA-policy-expressible as a subject-context source; a fix would be to stop treating caller-supplied profile data as authoritative and instead source input.extensions.subject.* from a verified channel",
+        "Blind spots": "A caller can claim any department/organization/user_id via user_profile with no verification; this is a genuine blind spot distinct from the (currently also unwired) system_vars.json path"
+      },
+      {
+        "Layer": "Conversation-derived facts (Paternity birth date/name; delete-confirmation phrase; write confirmation generally)",
+        "Current": "None",
+        "Available (OPA-interceptable)": "None as currently structured -- guidance.txt explicitly ties these to 'conversation history' / an exact confirmation phrase, which is prompt/conversation content, not a declared tool argument or subject field",
+        "Blind spots": "True blind spot: no tool argument or subject field captures confirmation state, the birth-date/name pair, or the delete-confirmation phrase; a pre-execution policy has no structured signal for these rules unless the tool schemas are extended to accept them as explicit arguments"
+      },
+      {
+        "Layer": "Data-integrity rules already implemented in api/*.py (enum validation, date parsing, FK existence)",
+        "Current": "Input-shape/domain validation inside the tool implementation (validate_enum, parse_date, require)",
+        "Available (OPA-interceptable)": "The same input.args.* used by this validation (e.g. organization, leave_type, status, relationship, the date fields) are fully declared and could equally be checked pre-execution by policy, but today the check lives inside the implementation, not at a policy layer",
+        "Blind spots": "None for the fields actually validated in code; but several guidance.txt data-integrity rules (salary > 0, email domain matches organization, issue_date < expiry_date, 6-month expiry minimum, home-address same-country, 90-day request span, same-area emergency contact) have no corresponding validation anywhere in api/*.py despite being declared purely in terms of already-declared tool arguments -- these are enforceable pre-execution today but are currently enforced nowhere"
+      }
+    ],
+    "Undeclared Fields": [
+      {
+        "Field": "blacklist / persona-non-grata status",
+        "Referenced by guidance rule #": "Personal-Record Update Rules: 'An employee who is on the blacklist (persona non grata list) may not update their passport information.'",
+        "Declared by": "Declared nowhere -- no such column exists in schema.sql, no such tool argument exists in tool_definitions.json, and no such field exists in system_vars.json",
+        "Consequence": "This rule cannot be expressed as a pre-execution OPA decision against any currently declared structured input; it would require a new tool argument or subject field to be added before it is enforceable"
+      },
+      {
+        "Field": "manager_id / 'direct report' and 'direct manager' relationship",
+        "Referenced by guidance rule #": "Data Access ('A Manager may view only their direct reports'), Data Access ('salary may be updated ... by that employee's direct manager'), Time Off and Leave (direct-manager viewing and approval rules)",
+        "Declared by": "Declared as a tool-returned data field (employees.manager_id, returned by get_employee/list_employees/get_direct_reports/get_manager) and as an input.args.* field only on add_employee/update_employee (where it sets the value, not queries it) -- it is not a runtime subject-context field (system_vars.json has no manager_id or reports list for the acting user)",
+        "Consequence": "A pre-execution policy deciding a call against, say, get_bank_account or update_time_off_status cannot determine 'is the acting user the target's direct manager' from input.args.* or input.extensions.subject.* alone; the relationship exists only as data returned by a separate prior tool call. This is 'declared by another tool's output', not by the acting subject's own declared context, and is a structural gap between guidance intent and enforceable inputs."
+      },
+      {
+        "Field": "employee 'area' (for emergency-contact same-area matching)",
+        "Referenced by guidance rule #": "Personal-Record Update Rules: 'An employee's emergency contact must reside in the same area as the employee.'",
+        "Declared by": "Declared nowhere as 'area' -- the closest declared fields are employees.country_code (tool argument on add_employee/update_employee) and employees.home_address (free-text string); emergency_contacts has its own separate country/city/postal_code/street_address fields with no schema-level link enforcing equality to the employee's",
+        "Consequence": "The rule is ambiguous against the current schema (no defined 'area' granularity) and not enforced anywhere in api/personal.py; a policy could only approximate it (e.g. country match) without a guidance clarification of what 'area' means"
+      },
+      {
+        "Field": "write-confirmation state ('yes' / exact delete-confirmation phrase)",
+        "Referenced by guidance rule #": "Database Writes and Confirmation (both bullets)",
+        "Declared by": "Declared nowhere as a structured field -- guidance.txt itself frames this as conversational behavior ('the agent must first list the details... and obtain the user's explicit confirmation'), and no tool argument or subject field carries a confirmation flag",
+        "Consequence": "Not pre-execution-OPA-expressible against any current declared input; enforcing it would require either a new confirmed:bool-style tool argument or treating it as a prompt/agent-behavior control outside this workflow's structured-input scope"
+      },
+      {
+        "Field": "Paternity leave birth-date and baby's-name conversation facts",
+        "Referenced by guidance rule #": "Time Off and Leave: 'A Paternity leave request may be approved only if the requester has provided both the baby's birth date and the baby's name in their chat messages to the agent.'",
+        "Declared by": "Declared nowhere as a structured field -- guidance.txt explicitly scopes this to conversation history, and no tool argument on create_time_off_request or update_time_off_status carries these values",
+        "Consequence": "Not expressible as a pre-execution structured-input decision without a schema change (e.g. adding these as explicit arguments); currently a true blind spot consistent with the shared workflow's rule to keep conversation-derived controls distinct from tool-argument controls"
+      },
+      {
+        "Field": "Booking / flight passenger count / frequent-flyer points / 'regular' membership",
+        "Referenced by guidance rule #": "Booking: 'A customer with a regular membership may not book a flight for more than three passengers unless they own at least 200 frequent flyer points.'",
+        "Declared by": "Declared nowhere in this agent's tool_definitions.json, system_vars.json, or schema.sql -- there is no booking, flight, passenger, membership, or frequent-flyer concept anywhere in the employee-hub source tree",
+        "Consequence": "This guidance.txt rule appears to be out-of-domain content unrelated to the Enterprise Employee Hub (possibly carried over from a different example's guidance file); it cannot be mapped to any tool or subject field in this agent and should be flagged as a guidance-file inconsistency rather than encoded"
+      },
+      {
+        "Field": "organization (subject-context enum) vs organization (tool-argument enum)",
+        "Referenced by guidance rule #": "Actors and Identity ('organization -- one of IBM Corporation, Red Hat, Kyndryl') and Data Integrity ('IBM Corporation -> @ibm.com, Red Hat -> @redhat.com, Kyndryl -> @kyndryl.com')",
+        "Declared by": "Declared twice with incompatible value sets: system_vars.json declares {IBM Corporation, Red Hat, Kyndryl}; api/util.py's ORGANIZATIONS enum (enforced on add_employee/update_employee's organization tool argument) declares {IBM, IBM partner, Red Hat} -- Kyndryl is not a valid tool-argument value and 'IBM partner' is not a valid subject-context value",
+        "Consequence": "Any guidance rule that assumes these two 'organization' notions are interchangeable (e.g. the email-domain rule, which is phrased using the subject-context enum's spelling) cannot be mechanically applied to the employees.organization tool argument without a value-mapping decision; this is a genuine schema mismatch between the two declared sources, not a missing field, and should be called out explicitly rather than silently reconciled"
+      }
+    ]
+  },
+  "handoff": {
+    "Status": "PASS",
+    "Artifact schema": "architecture-v2",
+    "Summary": "Inspected 13 implementation files (agent.py, server.py, web.py, db.py, schema.sql, api/__init__.py [empty], api/util.py, api/employees.py, api/org.py, api/departments.py, api/personal.py, api/leave.py, api/holidays_api.py) plus a UI-only skim of ui/index.html, within the 20-file budget and at most two hops from any tool. All 32 tools declared in tool_definitions.json have a confirmed one-to-one @mcp.tool() registration in server.py with matching signatures and a traced implementation in api/*.py -- no missing, extra, or incompatible tool declarations found (no Unknown/dynamic wrappers either). 7 layers recorded (client/UI, two HTTP entrypoints, MCP transport, tool implementation, persistence, and the confirmed-absent enforcement layer). 4 runtime subject fields from system_vars.json recorded, all currently unwired into any actual request path (a separate, unvalidated user_profile channel exists in agent.py). Tool Arguments table enumerates all 97 input.args.* occurrences across the 32 tools with disposition determined from the api/*.py function bodies (all resolve to 'Acts on'; none found Echoed/Ignored/Unclear). 4 Prompt Inputs and an empty External Data table (no outbound HTTP/external-service calls found anywhere in the tree). Enforcement Points records the current total absence of authorization, the OPA-interceptable structured surface (tool name + input.args.*, and input.extensions.subject.* once wired), and three categories of true blind spot (returned-data relationships, conversation-only facts, and confirmation state). Undeclared Fields records 7 guidance-visibility gaps from a full sweep of guidance.txt against the declared tool/subject schema: blacklist status (declared nowhere), manager/direct-report relationship (declared only as tool-returned data, not subject context), employee 'area' (undefined/nowhere), write-confirmation state (nowhere, conversational by design), Paternity birth-date/name facts (nowhere, conversational by design), an out-of-domain Booking/flight rule unrelated to any tool in this agent, and a value-set mismatch between the subject-context 'organization' enum and the tool-argument 'organization' enum. No proven tool mismatch was found, so status is PASS; the recorded gaps are guidance-visibility and cross-schema findings for later phases, not architecture-phase failures."
+  }
+}

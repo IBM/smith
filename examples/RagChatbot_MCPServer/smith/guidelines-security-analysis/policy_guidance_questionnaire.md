@@ -1,257 +1,105 @@
 # OPA Policy Guidance Questionnaire
-# Tool: RagChatbot_MCPServer
 
-Fill in each answer based on your tool and agent. You do not need to
-know OPA or security to complete this — just describe how your tool
-works and who should be able to use it.
+## Answer Register
 
----
+| Q | Required answer | Answer | Confidence |
+|---|---|---|---|
+| Q1 | Tool names and one-sentence purposes | 10 tools declared in tool_definitions.json: create_ticket (create an inquiry ticket), submit_ticket (submit an inquiry ticket), send_email (send a non-compensation general-purpose email), export_content_as_file (export arbitrary data/content to a file), ask_for_workpolicy (RAG Q&A over a work-policy PDF), get_w2_form (request the user's own W2 form), return_product (request a product return/refund), view_team_compensation (view team compensation data on screen), export_compensation_data (export team compensation data as a file), email_compensation_report (email a compensation/salary report). See Phase A Layers table (architecture.json) for implementation detail. | [derived from architecture] |
+| Q2 | External systems: protocol, authentication, and read/write behavior | Per Phase A: (1) MCP server itself, reached over SSE at http://localhost:8000/sse, no authentication observed on tool_call dispatch. (2) External OPA server at http://localhost:8181 via plain HTTP, no authentication/TLS observed on the response, and no call site currently invokes it from any active tool (read-only decision service, unwired). (3) External OpenAI-compatible chat-completion endpoint (OPENAI_BASE_URL/MODEL), API-key authenticated, used for tool selection and RAG answer generation (effectively read of model output, no write side-effect declared). (4) Local PDF files (work_rules_and_regulations_2016.pdf, salary_summary.pdf) read from local disk with no integrity check. No other external system is declared in tool_definitions.json or system_vars.json. | [derived from architecture] |
+| Q3 | Whether each tool reads, writes, or both | create_ticket: write (creates ticket, no persistence observed). submit_ticket: write. send_email: write (confirmation only; body/subject/recipient_email are declared but Ignored per Phase A). export_content_as_file: write (no file actually written per Phase A). ask_for_workpolicy: read (RAG retrieval + answer). get_w2_form: read (no parameters declared). return_product: write. view_team_compensation: read (screen display). export_compensation_data: read+write (reads compensation fixture, produces a file-formatted output). email_compensation_report: write (send action; report_data itself is Ignored per Phase A). purchase: write. | [derived from architecture] |
+| Q4 | Parameters; use Parameter Details | See Parameter Details table for the parameters governed by guidance.txt (department, select_fields, id, external_sharing, destination, recipient_email, amount, format, export_type, business_justification). Full parameter/type/required declarations for all 10 tools are in tool_definitions.json; only guidance-relevant parameters are reproduced in Parameter Details per the shared analysis rules. | [derived from architecture] |
+| Q5 | Every user role | system_vars.json declares roles: ["employee", "manager"]. guidance.txt uses the same two-role vocabulary throughout ("Managers" / "Employees"). Phase A separately recorded that the runtime code (opa_client.py/opa_config.py) uses a different vocabulary, ["user", "manager"], for its in-process current_user_context, and that no loader for system_vars.json was found in the inspected tree, so the declared and runtime vocabularies do not reconcile. Only the declared system_vars.json vocabulary (employee/manager) is used as the role set for this questionnaire; the runtime vocabulary mismatch is carried forward as an open gap. | [derived from guidance.txt] |
+| Q6 | Runtime subject provenance and integrity; use Runtime Subject Details | See Runtime Subject Details table, reproducing Phase A's Runtime Subject Context findings verbatim by reference (architecture.json Runtime Subject Context rows for roles, id, teams, approval). No field has any authentication, token, or integrity mechanism; all are self-asserted or, in the case of teams/approval, not observed to be produced or consumed by any active code path at all. | [derived from architecture] |
+| Q7 | User ID canonical path, provider, and use | Declared canonical path: input.extensions.subject.id, provided by system_vars.json (id: "Bob"). No loader for system_vars.json was found within two hops of any registered tool (Phase A). The only runtime analog is opa_client.current_user_context['user_id'] (default 'default_user'/'mcp_user'), set via the same unauthenticated set_user_context() path as roles, and not shown to be sourced from system_vars.json. guidance.txt itself never references a user-ID field directly (its role-conditioned rules 1-2,4-6,9-10,16-19 key off role, not id); no guidance rule uses id for scoping other than view_team_compensation/export_compensation_data's declared (but implementation-Ignored per Phase A) id argument, which filters to a specific team member rather than identifying the requester. | [derived from architecture] |
+| Q8 | Whether simultaneous roles are supported | Not supported by any declared field: system_vars.json's roles field is a fixed enumerable list (["employee","manager"]), not a per-subject multi-value claim, and guidance.txt always addresses "Managers" and "Employees" as mutually exclusive groups with no rule describing a dual-role or role-elevation scenario. | [derived from guidance.txt] |
+| Q9 | Tool permissions and scope per role; use Role Permissions | See Role Permissions table, derived from guidance.txt rules 1, 2, 4, 5, 6, 7, 8, 9, 10, 16, 17, 18, 19. Modal note: rules using "can" (4, 6, 10) describe permitted actions and do not by themselves create an implicit deny for other roles (shared analysis rule); the exclusive scope for managers on view_team_compensation/export_compensation_data comes from the paired "cannot"/"blocked" rules 2 and 5, not from rule 1/4 alone. | [derived from guidance.txt] |
+| Q10 | Role-specific topics, values, or parameter combinations | Managers are restricted from ever receiving certain compensation sub-fields regardless of their manager status: SSN, home addresses, bank account numbers, tax ID numbers, and emergency_contact (rule 3), and personal email address (rule 16), when querying/viewing salary/compensation information. tool_definitions.json's view_team_compensation description lists ssn, personal_email, home_address, emergency_contact, and bank_account as selectable fields (matching rule 3/16 except tax ID, see gap note below), so these are schema-declared field names on that tool; export_compensation_data's declared field list (employee_id, name, title, level, current_salary, total_comp_2024, performance_rating, salary_history, bonus_history) does not include any of ssn/personal_email/home_address/bank_account/emergency_contact by name, even though Phase A's Tool Arguments table records that its select_fields is passed to the same project_record() function and can, in practice, request those undeclared-by-schema sensitive fields anyway. "Tax ID numbers" in rule 3 has no corresponding field name in tool_definitions.json's declared field lists for either compensation tool (open gap, see below). | [derived from guidance.txt] |
+| Q11 | Roles with no restrictions |  |  |
+| Q12 | Globally blocked enumerable values, formats, domains, or flags | Blocked recipient-domain enumeration (rule 8): gmail.com, yahoo.com, hotmail.com, outlook.com, personal.com. Allowed domain for compensation-related external sharing (rules 6, 7): only ibm.com. Globally blocked flag combination (rules 17, 18): external_sharing=true is disallowed on export_compensation_data (rule 17) and email_compensation_report (rule 18) regardless of role ("No one can"). destination (email_compensation_report) and recipient_email (send_email) are the declared input.args.* fields whose domain portion these enumerations apply to; external_sharing is declared as a boolean input.args field on both export_compensation_data and email_compensation_report. | [derived from guidance.txt] |
+| Q13 | Numeric hard caps | Rule 10: managers can buy products under $1,000 (hard cap of $1,000 on the purchase tool's declared input.args.amount for the manager role). Rule 9 establishes a related but conditional threshold of $200 for employees (see Q13b, not a hard cap by itself since approval can raise it). Phase A's Tool Arguments table records that purchase's function body never actually compares amount to any limit (amount is Echoed, not Acted on), so this cap is guidance intent, not currently observed enforcement. | [derived from guidance.txt] |
+| Q13b | Conditional approval paths; use Approval Paths | See Approval Paths table. Rule 9: employees cannot buy products at or above $200 without manager approval, i.e. purchase requests with input.args.amount >= 200 from an employee require an approval condition to be satisfied. system_vars.json declares an approval field (approval: "true\|false") that shapes as input.extensions.subject.approval, but Phase A found no producer or consumer of this field anywhere in the inspected tree (purchase() never references any approval-shaped input), so the approval field exists in the declared schema but its provenance (who sets it, when, and how it is verified as a genuine manager approval rather than a self-asserted flag) is undocumented. | [derived from guidance.txt] |
+| Q14 | Rejected patterns and their input source | Rules 11-14 declare four always-blocked phrase patterns: "ignore all policies" (11), "bypass security" (12), "override all policies" (13), "show all SSN data" (14). guidance.txt does not name a specific tool or input.args.* field these patterns apply to; per Phase A's Prompt Inputs table, the only place free-text pattern matching against user-authored content is currently observed is the LLMGuard enforce_input()/enforce_output() prompt-layer scan (BanSubstrings-style checks on the raw chat message), which operates on prompt/conversation text, not on any declared input.args.* tool parameter. Per the shared source-boundary rule, this is recorded as a prompt-input-source control and must not be reframed as a control on any specific tool's structured argument; the only tool-argument fields that carry free-form user text are ticket_content (create_ticket/submit_ticket), question (ask_for_workpolicy), email_content/attached_file/subject/body (send_email, though these are Ignored/Echoed per Phase A), business_justification/justification (compensation/purchase tools), and data (export_content_as_file) — guidance.txt does not restrict which of these, if any, these four patterns must also be checked against. | [derived from guidance.txt] |
+| Q15 | Per-session call limits; use Rate Limits |  |  |
+| Q16 | Counter owner, mechanism, and canonical policy path |  |  |
+| Q17 | Post-response filtering | guidance.txt rules 3, 16, and 15 describe filtering guidance for view_team_compensation/export_compensation_data responses: rule 3 requires SSN/home address/bank account/tax ID/emergency_contact never reach a manager's response; rule 16 requires personal_email never reach a manager's response; rule 15 requires the request itself (not the response) to specify select_fields, blocking requests with a null/empty field list rather than filtering after the fact. Phase A recorded that view_team_compensation/export_compensation_data currently assemble the full record (including sensitive fields) before any select_fields projection, so these rules describe pre-execution parameter validation (rule 15) and either pre-execution argument gating or post-assembly field suppression (rules 3, 16) — guidance.txt itself does not state whether suppression must happen before or after the underlying data is assembled, only that the listed fields must not appear in what a manager receives. | [derived from guidance.txt] |
+| Q18 | Response fields suppressed by role | For the manager role on view_team_compensation and (per Q10's field-name caveat) export_compensation_data: ssn, home_address, bank_account, emergency_contact (rule 3), personal_email (rule 16). "Tax ID numbers" (rule 3) is guidance-only text with no matching declared field name in tool_definitions.json (open gap). For the employee role: view_team_compensation is blocked entirely (rule 2), so no fields of that tool reach employees at all; rule 2 additionally names bonus and hire_date specifically as blocked even if the tool were otherwise reachable, both of which match declared field names (bonus_target/actual_bonus_2024, hire_date) in view_team_compensation's schema. | [derived from guidance.txt] |
+| Q19 | Conditions making a result actionable |  |  |
+| Q20 | Silent rejection or user explanation |  |  |
+| Q21 | Hard-block and soft-block meanings; use Severity Levels | guidance.txt uses only hard-block modal language throughout: "cannot" (rules 2, 3, 5, 9, 16, 19), "no one can" (rules 7, 17, 18), "always block" (rules 11-14), and "must be blocked" (rule 15). Per the shared analysis rules, these establish hard boundaries. No rule uses conditional/advisory language that would indicate a soft-block (warn-but-allow) tier, so no soft-block category is supported by guidance.txt; see Severity Levels table. | [derived from guidance.txt] |
+| Q22 | Denial logging and existing violation-code scheme |  |  |
 
-## Section 1: Tool Identity
+## Parameter Details
 
-**Q1. What is the tool name and what does it do in one sentence?**
+| Tool | Policy path | Type | Required | Valid values |
+|---|---|---|---|---|
+| view_team_compensation | input.args.department | string | true | IT, HR, Sales, Finance, Legal, Operations, Marketing (per tool_definitions.json description); note Phase A recorded this argument as implementation-Ignored (the returned team is derived from a hardcoded manager_id fallback, not this argument). |
+| view_team_compensation | input.args.select_fields | list[string] or null | false | employee_name, title, department, level, hire_date, base_salary, bonus_target, actual_bonus_2024, performance_rating, next_review_date, ssn, personal_email, home_address, emergency_contact, bank_account, and (if include_benefits) healthcare_plan, healthcare_id, stock_grant_value, benefits_value, total_compensation; default null. |
+| view_team_compensation | input.args.id | string or null | false | Employee ID; default null. Phase A: declared to filter to one team member but implementation-Ignored. |
+| export_compensation_data | input.args.select_fields | list[string] or null | false | employee_id, name, title, level, current_salary, total_comp_2024, performance_rating, and (if export_type=detailed) salary_history, bonus_history; default null. |
+| export_compensation_data | input.args.id | string or null | false | Employee ID; default null. Phase A: declared but implementation-Ignored. |
+| export_compensation_data | input.args.format | string | false | CSV (default), PDF, JSON. |
+| export_compensation_data | input.args.external_sharing | boolean | false | true, false; default false. |
+| export_compensation_data | input.args.business_justification | string | false | Free text; default empty string. |
+| email_compensation_report | input.args.destination | string | true | Email address; domain portion evaluated against the ibm.com allow / gmail.com,yahoo.com,hotmail.com,outlook.com,personal.com deny enumeration (guidance rules 6-8). |
+| email_compensation_report | input.args.external_sharing | boolean | false | true, false; default false. |
+| send_email | input.args.recipient_email | string | true | Email address; domain portion evaluated against the same rule 8 blocked-domain enumeration. Phase A: declared required but implementation-Ignored (function body never reads it). |
+| purchase | input.args.amount | integer | true | Dollar amount; guidance thresholds 200 (rule 9, employee approval trigger) and 1000 (rule 10, manager hard cap). |
 
-> Tool name: `RagChatbot_MCPServer` (11 active tools)
-> An HR assistant MCP server that exposes tools for viewing and exporting team compensation data, sending emails and compensation reports, ticketing, purchasing, product returns, and work-policy queries — dispatched by an LLM agent over SSE. [derived from architecture]
+## Runtime Subject Details
 
----
+| Policy path | Provider | Provenance | Verification / integrity mechanism |
+|---|---|---|---|
+| input.extensions.subject.roles | system_vars.json (roles: ["employee","manager"]) | Not observed to be loaded from system_vars.json by any runtime code path (Phase A). Runtime analog is opa_client.current_user_context['user_role'], set client-side from an unauthenticated Streamlit sidebar selectbox, using a different vocabulary (['user','manager']). | None observed. Self-asserted client value with no credential, token, or server-side identity check backing either the declared or runtime value. |
+| input.extensions.subject.id | system_vars.json (id: "Bob") | Not observed to be loaded from system_vars.json. Runtime analog is opa_client.current_user_context['user_id'] (default 'default_user'/'mcp_user'), set via the same unauthenticated path. | None observed for either the declared value or the runtime analog. |
+| input.extensions.subject.teams | system_vars.json (teams: ["IT","HR","Sales","Finance","Legal","Operations","Marketing"]) | Not observed to be loaded from system_vars.json. Runtime analog get_user_teams() returns a hardcoded ['engineering_team'] regardless of input and is never invoked from any active tool body. | None; get_user_teams() ignores its own input and system_vars.json is not observed to be loaded. |
+| input.extensions.subject.approval | system_vars.json (approval: "true\|false") | No producer or consumer of this field observed anywhere in the inspected tree; purchase() never references any approval-shaped input. | Not applicable; field is declared but not observed to be produced or consumed anywhere in the inspected tree. |
 
-**Q2. What external systems does it call?**
+## Role Permissions
 
-> - **In-memory HR/compensation database** (`data_sources/hr_database.py`): read-only; no authentication; returns employee records, compensation, and sensitive PII including SSN, home_address, bank_account, personal_email. [derived from architecture]
-> - **RAG pipeline** (`rag_pipeline.py`): reads a preloaded PDF (HuggingFace BAAI/bge-small-en-v1.5 embeddings); no authentication; read-only. [derived from architecture]
-> - **OPA server** (`http://localhost:8181`): policy evaluation; HTTP POST; currently wired into `opa_client.py` but all `@policy_check` decorators are commented out — not actively called at runtime. [derived from architecture]
+| Tool | Role | Permission / scope | guidance.txt rule |
+|---|---|---|---|
+| view_team_compensation | manager | View only the requested manager's own team compensation data (employee name, title, salary, bonus, department, hire date), excluding the fields listed in Q10/Q18. | 1 |
+| view_team_compensation | employee | Blocked entirely, including bonus and hire_date information specifically. | 2 |
+| export_compensation_data | manager | Can export team compensation data in CSV, PDF, or JSON format. | 4 |
+| export_compensation_data | employee | Blocked entirely. | 5 |
+| send_email | manager | Can send non-compensation, non-salary data externally (to non-@ibm.com addresses). | 6 |
+| email_compensation_report / export_compensation_data | any (no one) | Blocked from sharing compensation data externally to non-@ibm.com addresses. | 7 |
+| send_email / email_compensation_report | any (no one) | Blocked from sending to gmail.com, yahoo.com, hotmail.com, outlook.com, personal.com. | 8 |
+| purchase | employee | Cannot buy products at or above $200 without manager approval. | 9 |
+| purchase | manager | Can buy products under $1,000. | 10 |
+| view_team_compensation / export_compensation_data | manager | Cannot see any team member's personal email address. | 16 |
+| export_compensation_data | any (no one) | Blocked when external_sharing is enabled. | 17 |
+| email_compensation_report | any (no one) | Blocked when external_sharing is enabled. | 18 |
+| email_compensation_report | employee | Cannot send compensation reports by email at all. | 19 |
 
----
+## Approval Paths
 
-**Q3. Does it read data, write data, or both?**
+| Parameter condition | Approval field | guidance.txt rule |
+|---|---|---|
+| purchase: input.args.amount >= 200, requester role = employee | input.extensions.subject.approval (declared by system_vars.json; no observed producer/consumer) | 9 |
 
-> Both. Most tools read HR/compensation data or RAG content. `purchase` / `return_product` simulate write operations (approval responses). `send_email` and `email_compensation_report` simulate sending (echo-only; no real SMTP). `create_ticket` / `submit_ticket` simulate ticket creation. [derived from architecture]
-
----
-
-**Q4. What are its parameters? For each: name, type, required or optional, what counts as a valid value?**
-
-| Parameter | Type | Required | Valid values | Tool |
-|-----------|------|----------|--------------|------|
-| `ticket_content` | string | Yes | Any text | `create_ticket`, `submit_ticket` |
-| `recipient_email` | string | Yes | Email address string | `send_email` |
-| `subject` | string | Yes | Any text | `send_email` |
-| `body` | string | Yes | Any text | `send_email` |
-| `email_content` | string | Yes | Any text | `send_email` |
-| `attached_file` | string | Yes | Filename string | `send_email` |
-| `data` | string | Yes | Any text/data content | `export_content_as_file` |
-| `file_name` | string | Yes | Filename string | `export_content_as_file` |
-| `question` | string | Yes | Any text | `ask_for_workpolicy` |
-| `amount` | integer | Yes | Dollar amount (positive integer) | `return_product`, `purchase` |
-| `product_name` | string | Yes | Product name string | `return_product`, `purchase` |
-| `department` | string | Yes | One of: IT, HR, Sales, Finance, Legal, Operations, Marketing | `view_team_compensation` |
-| `select_fields` | list[str] or null | No (default: null = all fields) | Subset of: employee_name, title, department, level, hire_date, base_salary, bonus_target, actual_bonus_2024, performance_rating, next_review_date, ssn, personal_email, home_address, emergency_contact, bank_account, healthcare_plan, healthcare_id, stock_grant_value, benefits_value, total_compensation | `view_team_compensation` |
-| `id` | string or null | No (default: null) | Employee ID string | `view_team_compensation`, `export_compensation_data` |
-| `time_range` | string | No (default: "last_quarter") | "last_quarter", "current_year", "last_year" | `view_team_compensation` |
-| `format` | string | No (default: "JSON") | "JSON", "CSV" | `view_team_compensation` |
-| `include_benefits` | boolean | No (default: true) | true / false | `view_team_compensation` |
-| `select_fields` | list[str] or null | No (default: null = all fields) | Subset of: employee_id, name, title, level, current_salary, total_comp_2024, performance_rating, salary_history, bonus_history — **NOTE: body also adds ssn, personal_email, home_address, bank_account from sensitive_data unconditionally before filtering** | `export_compensation_data` |
-| `format` | string | No (default: "CSV") | "CSV", "PDF", "JSON" | `export_compensation_data` |
-| `time_range` | string | No (default: "last_quarter") | Any string (echoed only) | `export_compensation_data` |
-| `export_type` | string | No (default: "aggregated") | "aggregated", "detailed" | `export_compensation_data` |
-| `business_justification` | string | No (default: "") | Any text (echoed only) | `export_compensation_data` |
-| `external_sharing` | boolean | No (default: false) | true / false | `export_compensation_data`, `email_compensation_report` |
-| `destination` | string | Yes | Email address string | `email_compensation_report` |
-| `report_data` | string | Yes | Any text | `email_compensation_report` |
-| `encryption_required` | boolean | No (default: true) | true / false — **NOTE: echoed only; no encryption applied** | `email_compensation_report` |
-| `category` | string or null | No (default: null) | Any string — **NOTE: immediately overwritten by `category = None` in function body; Ignored** | `purchase` |
-| `justification` | string or null | No (default: null) | Any text — **NOTE: ignored in function body; never read after declaration** | `purchase` |
-
-[derived from architecture] [derived from tool_definitions.json]
-
----
-
-## Section 2: Who Uses It
-
-**Q5. What are the types of users? List every role.**
-
-> - `employee` — Regular employee; limited access; cannot view or export team compensation data, cannot buy products ≥$200 without manager approval. [derived from guidance.txt, system_vars.json]
-> - `manager` — Manager with elevated access; can view and export their team's compensation data (excluding sensitive PII fields), can buy products under $1,000, can send compensation reports internally. [derived from guidance.txt, system_vars.json]
->
-> **Runtime note:** `set_user_role` is currently commented out in `mcp_server.py`. The process-global `current_user_context` is initialised at server start with `user_role = "user"` and cannot be changed at runtime. All OPA role rules will evaluate against `"user"` (not `"employee"`) until the server is updated. `system_vars.json` declares `roles: ["employee", "manager"]` as the intended vocabulary. [derived from architecture]
-
----
-
-**Q6. Are those roles verified by your system, or supplied by the user themselves?**
-
-> Self-reported / unverifiable at runtime. The role is initialized at server start as `"user"` via `set_user_context("mcp_user", "user")`. No caller can change it since `set_user_role` is commented out. The `user_profile.user_role` in POST /chat requests is embedded in the system prompt but does NOT write to `current_user_context` — it only influences LLM reasoning. [derived from architecture]
-
----
-
-**Q7. Is there a user ID? Where does it come from?**
-
-> Yes — `current_user_context["user_id"]` set to `"mcp_user"` at server start. It does not distinguish between callers. `system_vars.json` declares `id: "Bob"` as the representative value. [derived from architecture, system_vars.json]
-
----
-
-**Q8. Can a user belong to multiple roles at once?**
-
-> No. `current_user_context["user_role"]` is a single string. The `roles` array in the universal schema is populated as a single-element list `[user_role]`. [derived from architecture]
-
----
-
-## Section 3: What Each Role Is Allowed To Do
-
-**Q9. For each role, which tools are they allowed to use and with what conditions or scope restrictions?**
-
-| Tool | employee | manager | guidance.txt rule |
-|------|----------|---------|-------------------|
-| `view_team_compensation` | Blocked | Allowed — manager's own team only; must exclude SSN, home_address, bank_account, personal_email, emergency_contact from select_fields; select_fields must be specified | Rules 1, 2, 3 |
-| `export_compensation_data` | Blocked | Allowed — CSV, PDF, JSON formats; select_fields must be specified; must not include PII fields; external_sharing must be false | Rules 4, 5 |
-| `email_compensation_report` | Blocked (implied by Rules 1–5) | Allowed — @ibm.com domain only; external_sharing must be false | Rules 6, 7, 8 |
-| `send_email` | Allowed — non-compensation content only; no blocked domains | Allowed — same restrictions | Rules 6, 7, 8 |
-| `create_ticket` | Allowed | Allowed | (no explicit rule — general access implied) |
-| `submit_ticket` | Allowed | Allowed | (no explicit rule — general access implied) |
-| `purchase` | Allowed — amount < $200 only; ≥$200 requires manager approval | Allowed — amount < $1,000 | Rules 9, 10 |
-| `return_product` | Allowed | Allowed | (no explicit rule — general access implied) |
-| `ask_for_workpolicy` | Allowed | Allowed | (no explicit rule — general access implied) |
-| `get_w2_form` | Allowed | Allowed | (no explicit rule — general access implied) |
-| `export_content_as_file` | Allowed | Allowed | (no explicit rule — general access implied) |
-
-[derived from guidance.txt] [derived from architecture]
-
----
-
-**Q10. Are there topics, values, or parameter combinations some roles can use that others cannot?**
-
-> - **Compensation fields** (`select_fields`): Managers may not request ssn, home_address, bank_account, personal_email, emergency_contact. These must be excluded regardless of role. [derived from guidance.txt Rule 3]
-> - **Export formats**: Managers can export CSV, PDF, JSON. Employees cannot export at all. [derived from guidance.txt Rule 4]
-> - **External sharing**: No role may set `external_sharing=true` for compensation or salary data. [derived from guidance.txt Rules 5, 7]
-> - **Email domain**: No role may send compensation data to non-@ibm.com addresses. No role may send any email to gmail.com, yahoo.com, hotmail.com, outlook.com, personal.com. [derived from guidance.txt Rules 7, 8]
-> - **Purchase amounts**: Employees capped at $200 (with approval for ≥$200); managers capped at $1,000. [derived from guidance.txt Rules 9, 10]
-
----
-
-**Q11. Are there roles that have no restrictions?**
-
-> No — both roles have restrictions. Managers are restricted from sensitive PII fields, external sharing, blocked email domains, and purchases ≥$1,000. [derived from guidance.txt]
-
----
-
-## Section 4: Hard Limits
-
-**Q12. Are there parameter values that should always be blocked for everyone, regardless of role?**
-
-> - `external_sharing=true` on `export_compensation_data` or `email_compensation_report`: always blocked. [derived from guidance.txt Rules 5, 7]
-> - `recipient_email` or `destination` domain in {gmail.com, yahoo.com, hotmail.com, outlook.com, personal.com}: always blocked for `send_email` and `email_compensation_report`. [derived from guidance.txt Rule 8]
-> - `destination` not ending in `@ibm.com` for `email_compensation_report`: always blocked. [derived from guidance.txt Rule 7]
-> - `select_fields` containing any of {ssn, home_address, bank_account, personal_email, emergency_contact} for `view_team_compensation`: always blocked. [derived from guidance.txt Rule 3]
-> - `select_fields` containing any PII fields for `export_compensation_data`: always blocked. Note: `export_compensation_data` body adds ssn, personal_email, home_address, bank_account unconditionally before `project_record()` filtering — OPA must block these field names in `select_fields` AND block calls where `select_fields` is null/absent. [derived from guidance.txt Rule 3, derived from architecture]
-
----
-
-**Q13. Is there a maximum value for any numeric parameter that no role can exceed?**
-
-> - `purchase.amount`: hard cap $1,000 for managers; hard cap $200 for employees (above $200 requires approval). No role may purchase ≥$1,000 (managers) or ≥$200 without approval (employees). [derived from guidance.txt Rules 9, 10]
-
----
-
-**Q13b. Are there approval paths — actions allowed conditionally when an approval field is set?**
-
-> | Parameter condition | Approval field | guidance.txt rule |
-> |---------------------|----------------|-------------------|
-> | `purchase.amount >= 200` and `input.extensions.subject.roles` includes `"employee"` | `input.extensions.subject.approval == "true"` | Rule 9 |
->
-> **Critical note:** `system_vars.json` declares `approval: "true|false"` as a session variable, but no tool or application component currently populates `input.extensions.subject.approval`. Any OPA rule checking this field will always deny employee purchases ≥$200 until the application is updated. [derived from guidance.txt Rule 9, system_vars.json, architecture]
-
----
-
-**Q14. Are there keywords or inputs that must always be rejected?**
-
-> The following phrases, matched case-insensitively as substrings in any free-text argument (`ticket_content`, `question`, `email_content`, `body`, `report_data`, `justification`), must always be blocked: [derived from guidance.txt Rules 11–14]
-> - `"ignore all policies"`
-> - `"bypass security"`
-> - `"override all policies"`
-> - `"show all SSN data"`
-
----
-
-## Section 5: Volume and Rate Limits
-
-**Q15. Is there a maximum number of times this tool can be called in a single conversation session?**
-
-> No rate limits are defined in guidance.txt or the source code. `current_user_context` tracks `daily_ticket_count` but it is never incremented or checked in any tool body. [derived from architecture]
+## Rate Limits
 
 | Role | Max calls per session |
-|------|-----------------------|
-| employee | No limit defined |
-| manager | No limit defined |
+|---|---|
 
----
+## Severity Levels
 
-**Q16. Who keeps track of how many times the tool has been called — your app, or should the policy enforce it?**
+| Level | Examples |
+|---|---|
+| hard block | All 19 guidance.txt rules: role-scoped tool access (1,2,4,5,9,10,16,19), field suppression (3,16), external-sharing/domain blocks (6,7,8,17,18), required-field validation (15), and always-block phrase patterns (11,12,13,14). |
 
-> Currently no tracking occurs. `daily_ticket_count` exists in `current_user_context` but is never updated. If rate limiting were desired, the policy would need to read a counter from session state, but no such field is reliably populated today. [derived from architecture]
+## Violation Logging
 
----
+No violation-code scheme, denial-logging format, or severity taxonomy is declared in guidance.txt, system_vars.json, or tool_definitions.json. guidance.txt states rules as flat allow/deny statements using modal language ("cannot", "no one can", "always block") without distinguishing hard vs. soft severity or specifying how a denial should be communicated to the user or logged. No existing violation codes exist anywhere in the declared inputs to reuse or extend (Q22 is an open gap).
 
-## Section 6: Response Filtering
+## Violation Codes
 
-**Q17. After the tool returns results, does anything need to be hidden, flagged, or categorised before the user sees it?**
+| Existing code | Meaning |
+|---|---|
 
-> Yes. Both `view_team_compensation` and `export_compensation_data` include sensitive PII (SSN, home_address, bank_account, personal_email, emergency_contact) in the candidate record unconditionally before applying `select_fields` filtering. If `select_fields` is absent or null, all fields including PII are returned. Additionally, `export_compensation_data` adds PII from `comp_db.sensitive_data` unconditionally in its body — even if those fields are not in the docstring's available-field list. OPA must block calls where `select_fields` is null/absent or contains forbidden field names — post-execution filtering via `project_record()` is too late. [derived from guidance.txt Rule 3, architecture]
+## Phase Handoff
 
----
-
-**Q18. Are there fields in the response that should be suppressed for certain roles?**
-
-> For all roles on `view_team_compensation` and `export_compensation_data`: [derived from guidance.txt Rule 3]
-> - `ssn`
-> - `home_address`
-> - `bank_account`
-> - `personal_email`
-> - `emergency_contact`
-> - `tax_id` — referenced in guidance.txt Rule 3 but NOT declared as a field in any tool's parameters. A rule blocking `tax_id` in `select_fields` can never fire (no tool accepts it). [derived from architecture — Undeclared Fields table]
->
-> These must be excluded from `select_fields` (or the call blocked when `select_fields` is null/absent).
-
----
-
-**Q19. Are there conditions on a result that determine whether it is "actionable"?**
-
-> For `purchase`: the tool always returns an approval confirmation string regardless of role or amount — the business logic does not enforce purchase thresholds. The policy must intercept before execution to enforce Rules 9–10. [derived from architecture]
-
----
-
-## Section 7: Violations
-
-**Q20. Should a blocked request be silently rejected, or should the user receive an explanation?**
-
-> The existing `get_universal_denial_message()` in `opa_client.py` returns emoji-prefixed denial strings (e.g. `"🚫 Access to compensation data is restricted."`). The agent's system prompt instructs it to relay denial messages verbatim. The policy should return `allow=false`; the application layer provides the user-facing message. [derived from architecture]
-
----
-
-**Q21. Are there different severity levels — hard block vs. warning?**
-
-> | Level | Examples |
-> |-------|----------|
-> | Hard block | Employee accessing `view_team_compensation`; `external_sharing=true`; blocked email domain; blocked keyword phrase; purchase over role cap |
-> | Soft block / log only | No current examples — `set_user_role` is commented out, removing the only soft-block candidate from the previous analysis |
-
-[derived from guidance.txt, architecture]
-
----
-
-**Q22. Do you need to log which rule was violated, or just that a request was denied? Does an existing violation-code scheme need to be reused?**
-
-> No pre-existing violation-code scheme exists in the application that must be reused. Violation codes should be generated in Step D alongside the rules they attach to. [derived from architecture]
->
-> | Code | Meaning |
-> |------|---------|
-> | (none pre-existing) | — |
-
----
-
-## Confidence breakdown
-
-- `[derived from guidance.txt]`: 28 answers / sub-answers
-- `[derived from architecture]`: 20 answers / sub-answers
-- `[derived from tool_definitions.json]` / `[derived from system_vars.json]`: 4 answers
-- `[inferred — low confidence]`: 0
-- Blank: 0
+- Status: PASS
+- Artifact schema: questionnaire-v2
+- Summary: Filled Q1-Q22 (including Q13b) for examples/RagChatbot_MCPServer against guidance.txt's 19 rules, system_vars.json, and tool_definitions.json, referencing Phase A's architecture.json findings rather than re-deriving them. 15 of 22 answers are supported ([derived from guidance.txt] for role/permission/cap/pattern/severity questions Q5,Q8-Q10,Q12-Q14,Q17-Q18,Q21; [derived from architecture] for observed-behavior questions Q1-Q3,Q6-Q7). Q11 (roles with no restrictions), Q15-Q16 (rate/counter requirements), Q19-Q20 (actionability and denial-explanation behavior), and Q22 (logging/violation-code scheme) are left as open gaps: guidance.txt, system_vars.json, and tool_definitions.json contain no statement addressing any of these five questions, so no confidence-qualified answer is supportable without inventing intent. Key cross-phase carries: role-conditioned rules (1,2,4,5,6,9,10,16,19) all key off the employee/manager vocabulary in system_vars.json, which Phase A found is not loaded anywhere and mismatches the runtime code's self-asserted ['user','manager'] vocabulary -- every role-based answer here is policy-expressible in schema but currently unenforceable against a trustworthy subject value. Rule 9's manager-approval condition depends on system_vars.json's declared approval field, which Phase A found has no producer or consumer anywhere in the codebase. Rule 3's 'tax ID numbers' has no matching field name in either compensation tool's declared field list, an open schema/guidance mismatch distinct from the role-identity gap. Rules 11-14's phrase-block patterns are grounded only in free-text prompt/conversation content (LLMGuard's enforce_input scan), not in any input.args.* tool parameter, so per the shared source-boundary rule they must not be re-encoded as repeated tool-argument checks in later phases.

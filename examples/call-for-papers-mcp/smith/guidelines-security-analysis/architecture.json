@@ -1,0 +1,99 @@
+{
+  "schema": "architecture-v2",
+  "status": "PASS",
+  "title": "Architecture Analysis",
+  "sections": {
+    "Run Context": "Authoritative inputs: TARGET_AGENT_PATH=examples/call-for-papers-mcp; GUIDANCE_FILE=smith/guidance.txt; SYSTEM_VAR_FILE=smith/system_vars.json; TOOL_DEFINITIONS_FILE=smith/tool_definitions.json (manually-maintained; live MCP refresh failed due to a missing Python dependency in the example server, treated as authoritative per workflow contract). Source files inspected: agent.py (FastAPI HTTP layer + LangGraph ReAct agent + MCP client wiring), server.py (FastMCP tool registration, stdio transport), app.py (WikiCFPScraper implementation + getEvents business logic). requirements.txt and smith/mcp_tool_summary.md reviewed for corroborating context. No test, cache, or generated-analysis files were needed to resolve tool behavior; zero unresolved paths remain.",
+    "Trust Boundaries": "(1) HTTP client -> agent.py /chat and /extract_tool_call endpoints: caller-supplied `question` and `user_profile` (arbitrary dict) cross into the process untrusted; `user_profile` is interpolated verbatim into the LLM system prompt by build_system_prompt with no schema validation, so any subject/system-var claims are unauthenticated and self-asserted by the caller. (2) LLM agent -> MCP server (server.py) over stdio: the LLM decides tool name and arguments (keywords, topic, limit); this is the natural pre-execution enforcement boundary since it is structured and fully visible before app.py executes. (3) MCP tool handler (server.py) -> app.py getEvents: server.py drops the `topic` argument entirely when calling getEvents(keywords, limit) — topic never crosses this boundary despite being declared/required in the tool schema. (4) app.py -> external WikiCFP service over plain HTTP: unauthenticated, unverified scraped HTML re-enters the trust boundary as tool output returned to the LLM/user.",
+    "Data Flow": "Request: HTTP caller -> agent.py (/chat: question + optional user_profile folded into system prompt text; /extract_tool_call: single non-executing LLM call that only extracts intended tool_name/arguments, does not invoke WikiCFP) -> LangGraph react agent selects `get_events` tool with args {keywords, topic, limit} -> MCP client (stdio) -> server.py get_events(keywords, topic, limit) -> calls app.getEvents(keywords, limit) [topic silently dropped] -> WikiCFPScraper.search_conferences issues GET to http://www.wikicfp.com/cfp/servlet/tool.search?q=<keywords>&year=t. Response: raw HTML -> BeautifulSoup parse -> list of conference dicts -> sliced to `limit` -> {status, count, events} returned up through server.py -> MCP client -> LangGraph agent -> final LLM message -> ChatResponse to HTTP caller."
+  },
+  "columns": {
+    "Layers": [
+      "Layer",
+      "File",
+      "Role",
+      "Inputs",
+      "Outputs",
+      "Current enforcement"
+    ],
+    "Runtime Subject Context": [
+      "Field",
+      "Provider",
+      "Provenance",
+      "Verification / integrity",
+      "OPA-visible?"
+    ],
+    "Tool Arguments": [
+      "Field",
+      "Tool",
+      "Origin / influence",
+      "Disposition"
+    ],
+    "Prompt Inputs": [
+      "Field or data",
+      "Source",
+      "Consumer",
+      "Trust / influence"
+    ],
+    "External Data": [
+      "Data",
+      "Source",
+      "Verification / integrity",
+      "Consumer"
+    ],
+    "Enforcement Points": [
+      "Layer",
+      "Current",
+      "Available (OPA-interceptable)",
+      "Blind spots"
+    ],
+    "Undeclared Fields": [
+      "Field",
+      "Referenced by guidance rule #",
+      "Declared by",
+      "Consequence"
+    ]
+  },
+  "tables": {
+    "Layers": [
+      {"Layer": "Agent/client", "File": "agent.py", "Role": "FastAPI HTTP endpoints (/chat, /extract_tool_call, /health); builds LLM system prompt from caller-supplied user_profile; runs LangGraph create_react_agent that selects and invokes MCP tools; also exposes a non-executing tool-call extraction path", "Inputs": "HTTP request body (question, user_profile)", "Outputs": "ChatResponse text / ExtractToolCallResponse(tool_name, arguments)", "Current enforcement": "None"},
+      {"Layer": "MCP", "File": "server.py", "Role": "FastMCP tool registration over stdio transport; declares get_events(keywords, topic, limit) and forwards to app.getEvents", "Inputs": "Tool-call arguments from the LLM (keywords, topic, limit)", "Outputs": "Dict returned by app.getEvents", "Current enforcement": "None"},
+      {"Layer": "Tool implementation", "File": "app.py", "Role": "WikiCFPScraper + getEvents(): builds HTTP GET to WikiCFP, parses HTML response, truncates results to limit", "Inputs": "keywords, limit (topic not received here)", "Outputs": "{status, count, events}", "Current enforcement": "None"},
+      {"Layer": "External service", "File": "app.py (WikiCFPScraper.search_conferences)", "Role": "Outbound HTTP GET to http://www.wikicfp.com/cfp/servlet/tool.search with query params q=keywords, year='t' (hardcoded)", "Inputs": "keywords", "Outputs": "Raw HTML page", "Current enforcement": "None"}
+    ],
+    "Runtime Subject Context": [
+      {"Field": "input.extensions.subject.user_role", "Provider": "system_vars.json (declared)", "Provenance": "Not read by any code path; only reaches the process if a caller supplies it inside the free-form user_profile dict to /chat, where it is stringified into the LLM system prompt", "Verification / integrity": "None — no schema validation, no signature, caller-asserted", "OPA-visible?": "No (never placed in a structured input.extensions.subject.* field by any code)"},
+      {"Field": "input.extensions.subject.dissertation_area", "Provider": "system_vars.json (declared)", "Provenance": "Not read by any code path; same caller-asserted user_profile path as user_role if used at all", "Verification / integrity": "None", "OPA-visible?": "No"},
+      {"Field": "input.extensions.subject.research_area", "Provider": "system_vars.json (declared)", "Provenance": "Not read by any code path", "Verification / integrity": "None", "OPA-visible?": "No"},
+      {"Field": "input.extensions.subject.queries_this_session", "Provider": "system_vars.json (declared)", "Provenance": "Not read, tracked, or incremented anywhere in agent.py/server.py/app.py; no session-count state exists in the implementation", "Verification / integrity": "None", "OPA-visible?": "No"},
+      {"Field": "input.extensions.subject.user_name", "Provider": "system_vars.json (declared)", "Provenance": "Not read by any code path; only reaches the process if included in caller-supplied user_profile", "Verification / integrity": "None", "OPA-visible?": "No"}
+    ],
+    "Tool Arguments": [
+      {"Field": "input.args.keywords", "Tool": "get_events", "Origin / influence": "LLM-chosen free-text search term, passed through server.py directly into app.getEvents(keywords, limit) and then into WikiCFPScraper.search_conferences as the `q` query parameter", "Disposition": "Acts on"},
+      {"Field": "input.args.topic", "Tool": "get_events", "Origin / influence": "Declared as a required string parameter in both server.py's function signature and tool_definitions.json; server.py's tool body calls `getEvents(keywords, limit)` — topic is never forwarded, and app.py's getEvents has no topic parameter at all", "Disposition": "Ignored"},
+      {"Field": "input.args.limit", "Tool": "get_events", "Origin / influence": "LLM-chosen integer (default 10), passed through server.py into app.getEvents(keywords, limit); used to slice the result list via conferences[:limit]", "Disposition": "Acts on"}
+    ],
+    "Prompt Inputs": [
+      {"Field or data": "question", "Source": "HTTP caller (ChatRequest.question)", "Consumer": "agent.py: LangGraph react agent as the user message", "Trust / influence": "Directly drives tool selection and arguments (keywords, topic, limit) via the LLM"},
+      {"Field or data": "user_profile", "Source": "HTTP caller (ChatRequest.user_profile, arbitrary dict)", "Consumer": "agent.py build_system_prompt(): stringified key/value lines appended to the system prompt", "Trust / influence": "Caller-asserted, unvalidated; only advisory text for the LLM — no code path enforces any constraint derived from it, so it is trust input only insofar as the LLM chooses to honor it"}
+    ],
+    "External Data": [
+      {"Data": "WikiCFP search results HTML (conference name, description, dates, location, deadline, link)", "Source": "http://www.wikicfp.com/cfp/servlet/tool.search (plain HTTP GET, fixed host)", "Verification / integrity": "None — no TLS, no response signature/checksum, no allow-listing beyond the hardcoded base_url/search_url constants", "Consumer": "app.py _parse_conference_pair/_parse_conference_table build the events list, which is returned as tool output to the MCP client, the LLM, and ultimately the HTTP caller"}
+    ],
+    "Enforcement Points": [
+      {"Layer": "MCP tool boundary (server.py get_events, before calling app.getEvents)", "Current": "None implemented", "Available (OPA-interceptable)": "keywords, topic, limit are all structured, fully visible tool arguments at this boundary before any external call is made — an OPA policy call inserted here could evaluate topic membership, limit bounds/role caps, and role/guest gating using input.args.* and input.extensions.subject.* (if subject fields were actually threaded through as structured data instead of free text)", "Blind spots": "topic is dropped before reaching app.py, so even if it were policy-checked at the MCP boundary, nothing downstream re-derives or re-validates it; queries_this_session has no server-side counter, so per-session query-count limits cannot be enforced without the caller supplying a running count as a genuine structured system variable"},
+      {"Layer": "HTTP ingress (agent.py /chat, /extract_tool_call)", "Current": "None implemented", "Available (OPA-interceptable)": "user_profile is a structured dict at this boundary and could be validated/whitelisted before being folded into the prompt or passed onward as input.extensions.subject.*", "Blind spots": "Currently user_profile is free-form and unauthenticated; the LLM, not code, decides whether to honor any embedded constraint, so prompt-text-only propagation is a true blind spot until subject fields are carried as structured, verifiable data"},
+      {"Layer": "External call (app.py WikiCFPScraper)", "Current": "None implemented", "Available (OPA-interceptable)": "Not OPA-interceptable in a meaningful sense beyond the pre-execution tool boundary above — this layer performs the already-authorized network call", "Blind spots": "Response content is unauthenticated scraped HTML; no verification of WikiCFP content integrity before it is surfaced to the LLM/user"}
+    ],
+    "Undeclared Fields": [
+      {"Field": "dissertation_area", "Referenced by guidance rule #": "PhD Student Narrow-Scope Rule (guidance.txt lines 38-46)", "Declared by": "Declared nowhere in the governed tool schema (get_events has no such argument); declared only in system_vars.json as a subject field, but no code path reads system_vars.json or threads it into input.extensions.subject at runtime", "Consequence": "The per-student topic-narrowing rule cannot be enforced today: the policy has no verified runtime source for dissertation_area, and guidance.txt explicitly warns that substituting the shared research_area list would silently defeat the narrowing"},
+      {"Field": "queries_this_session", "Referenced by guidance rule #": "5-searches-per-session cap (guidance.txt lines 21-25)", "Declared by": "Declared nowhere in the governed tool schema; declared only in system_vars.json, with no code that increments or supplies a truthful running count", "Consequence": "Guidance itself notes this rule is enforceable only if the agent supplies the running count as a system variable; with the current static/unpopulated value this rule cannot be enforced by a stateless policy"},
+      {"Field": "user_role", "Referenced by guidance rule #": "Role gating for get_events / limit caps (guidance.txt lines 15-19)", "Declared by": "Declared nowhere in the governed tool schema; declared in system_vars.json as a list of possible roles (not a resolved single role) with no code that resolves or forwards the caller's actual role into input.extensions.subject.user_role", "Consequence": "Faculty/phd_student/guest gating and the associated limit caps (15 vs 10) cannot be enforced until the runtime subject's actual role is threaded through as a structured, verifiable field distinct from the enumerated possibilities in system_vars.json"}
+    ]
+  },
+  "handoff": {
+    "Status": "PASS",
+    "Artifact schema": "architecture-v2",
+    "Summary": "Sources: agent.py, server.py, app.py (3 implementation files, 0 unresolved paths). Tools: 1 declared (get_events) — implementation matches tool_definitions.json in name and required/optional signature (keywords required, topic required, limit optional default 10); every declared argument (keywords, topic, limit) has an implementation-derived disposition. Layers: 4 (agent/client, MCP, tool implementation, external service) — no runtime context/enforcement layer exists in code today. Runtime subject fields: 5 declared in system_vars.json (user_role, dissertation_area, research_area, queries_this_session, user_name); none are read by any code path or exposed as OPA-visible input.extensions.subject.* fields — all are effectively undeclared-at-runtime despite being declared in the system-vars file. Undeclared fields relative to the governed schema: 3 guidance dependencies (dissertation_area, queries_this_session, user_role) have no verified runtime path into the tool schema or subject context. Key gap: the `topic` argument is required by the tool schema and used for policy-level scoping intent, but server.py silently drops it before calling app.getEvents, so it reaches the MCP boundary but never the implementation — classify as Ignored, not proof of a schema mismatch (tool_definitions.json and server.py agree on the declared signature). No enforcement exists anywhere in the current implementation; the only viable pre-execution enforcement point is the MCP tool boundary in server.py, which has full visibility into keywords/topic/limit but no verified way today to obtain user_role, dissertation_area, or queries_this_session as trustworthy structured subject data."
+  }
+}
