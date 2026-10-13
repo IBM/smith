@@ -1,0 +1,78 @@
+{
+  "vectors": [
+    {
+      "category": "type_confusion",
+      "direction": "guidance_deny_policy_allow",
+      "guidance_rule": "Only employees with `view_ssn` permission can view SSNs in compensation records. SSNs must be redacted if the HR does not have view_ssn.",
+      "rules_involved": [
+        "deny[msg] if { input.name == \"get_compensation\"; args.include_ssn == true; not \"view_ssn\" in subject.permissions }"
+      ],
+      "field": "input.args.include_ssn",
+      "reason": "The check `args.include_ssn == true` only matches a boolean true; sending the string \"true\" causes the comparison to fail, bypassing the SSN permission guard.",
+      "exploit_strategy": "Send a get_compensation request with include_ssn set to the string \"true\" instead of boolean true. The deny rule never fires, so an HR employee without view_ssn permission can retrieve SSNs.",
+      "severity": "high"
+    },
+    {
+      "category": "keyword_evasion",
+      "direction": "guidance_deny_policy_allow",
+      "guidance_rule": "Employees cannot send SSNs through email. Email containing SSNs must be blocked.",
+      "rules_involved": [
+        "deny[msg] if { input.name == \"send_email\"; regex.match(ssn_pattern, object.get(args, \"subject\", \"\")) }",
+        "deny[msg] if { input.name == \"send_email\"; regex.match(ssn_pattern, object.get(args, \"body\", \"\")) }"
+      ],
+      "field": "input.args.body / input.args.subject",
+      "reason": "The SSN regex `\\d{3}-\\d{2}-\\d{4}` only matches the canonical dash-separated format; SSNs written with spaces (123 45 6789), dots (123.45.6789), or no separators (123456789) are not matched and pass through.",
+      "exploit_strategy": "Send a send_email request where the body contains an SSN formatted without dashes, e.g. '123 45 6789' or '123456789'. The regex does not match, so the deny rule never fires and the email is allowed.",
+      "severity": "high"
+    },
+    {
+      "category": "omitted_field",
+      "direction": "guidance_deny_policy_allow",
+      "guidance_rule": "Engineers can only read internal repos. Security team member can search both internal and external repo.",
+      "rules_involved": [
+        "deny[msg] if { input.name == \"search_repos\"; \"engineer\" in subject.roles; not \"security\" in subject.roles; args.visibility != \"internal\" }"
+      ],
+      "field": "input.args.visibility",
+      "reason": "If args.visibility is omitted entirely, `object.get(input, \"args\", {})` returns an empty map, so `args.visibility` is undefined. In Rego, `undefined != \"internal\"` is itself undefined (not true), so the deny rule does not fire and an engineer can search repos without specifying visibility.",
+      "exploit_strategy": "Send a search_repos request as an engineer without including the visibility field. The deny rule's condition `args.visibility != \"internal\"` is undefined and the rule does not fire, allowing the call.",
+      "severity": "medium"
+    },
+    {
+      "category": "keyword_evasion",
+      "direction": "guidance_deny_policy_allow",
+      "guidance_rule": "Engineers can only read internal repos. Security team member can search both internal and external repo.",
+      "rules_involved": [
+        "deny[msg] if { input.name == \"search_repos\"; \"engineer\" in subject.roles; not \"security\" in subject.roles; args.visibility != \"internal\" }"
+      ],
+      "field": "input.args.visibility",
+      "reason": "The visibility check uses exact string equality (`!= \"internal\"`). A value like \"Internal\", \"INTERNAL\", or \" internal\" would not equal \"internal\" and would trigger the deny — but more critically, the guidance also restricts engineers from searching \"public\" repos, yet the deny rule only blocks non-\"internal\" values for engineers who are NOT also in security. An engineer who is also in the security role has no visibility restriction at all, which may be intended; however the guidance says security can search internal AND external, implying public is also allowed for security but the policy imposes no restriction on security visibility at all, which is consistent. The real gap is that the string comparison is case-sensitive and could be evaded with alternate casing.",
+      "exploit_strategy": "Send a search_repos request as an engineer with visibility set to \"Internal\" (capital I). The deny rule checks `args.visibility != \"internal\"` which is true (\"Internal\" != \"internal\"), so the deny fires — this is actually a guidance_allow_policy_deny direction for legitimate mixed-case input, but more practically an attacker could use a value the tool accepts that isn't exactly \"internal\".",
+      "severity": "low"
+    },
+    {
+      "category": "omitted_field",
+      "direction": "guidance_deny_policy_allow",
+      "guidance_rule": "Only HR employee can access compensation records (e.g., salary)",
+      "rules_involved": [
+        "deny[msg] if { input.name == \"get_compensation\"; not \"hr\" in subject.roles }"
+      ],
+      "field": "input.extensions.subject.roles",
+      "reason": "If subject.roles is omitted or undefined, `not \"hr\" in subject.roles` evaluates to true (hr is not in an undefined/empty set), correctly firing the deny. However, subject fields are set by a trusted upstream layer so this is not attacker-controllable — noting for completeness but not a real bypass.",
+      "exploit_strategy": "N/A — subject fields are not caller-controllable.",
+      "severity": "low"
+    },
+    {
+      "category": "malformed_value",
+      "direction": "guidance_deny_policy_allow",
+      "guidance_rule": "Employees cannot send SSNs through email. Email containing SSNs must be blocked.",
+      "rules_involved": [
+        "deny[msg] if { input.name == \"send_email\"; regex.match(ssn_pattern, object.get(args, \"subject\", \"\")) }",
+        "deny[msg] if { input.name == \"send_email\"; regex.match(ssn_pattern, object.get(args, \"body\", \"\")) }"
+      ],
+      "field": "input.args.body",
+      "reason": "regex.match in OPA matches the entire string by default only if anchored; without anchors the pattern is searched as a substring match, which is correct. However, an SSN embedded in a larger string with Unicode look-alike digits (e.g., fullwidth digits ０１２-３４-５６７８) would not match the `\\d` character class and slip through.",
+      "exploit_strategy": "Embed an SSN using Unicode fullwidth digit characters (e.g., '１２３-４５-６７８９') in the email body. The regex `\\d{3}-\\d{2}-\\d{4}` does not match Unicode digits in OPA's RE2 engine, so the deny rule does not fire.",
+      "severity": "medium"
+    }
+  ]
+}

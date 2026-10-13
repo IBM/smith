@@ -7,11 +7,12 @@
             "subject": {
                 "claims": {},
                 "roles": [
-                    "manager"
+                    "employee"
                 ],
-                "teams": [
+                "user_team": [
                     "Finance"
-                ]
+                ],
+                "id": "Bob"
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -21,7 +22,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can I see the salaries for HR team members using view_team_compensation tool with department HR and select_fields base_salary?",
+                "input": "I want to check the bonus amounts for everyone in the Finance department. Please display employee_name and actual_bonus_2024.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,9 +33,10 @@
             }
         },
         "args": {
-            "department": "HR",
+            "department": "Finance",
             "select_fields": [
-                "base_salary"
+                "employee_name",
+                "actual_bonus_2024"
             ]
         }
     }

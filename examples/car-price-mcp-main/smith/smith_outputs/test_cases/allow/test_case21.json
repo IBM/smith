@@ -6,10 +6,10 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Bob",
                 "user_role": [
                     "journalist"
-                ]
+                ],
+                "user_name": "Bob"
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I want to search car prices for Toyota brand for my market analysis",
+                "input": "I'm researching vehicle pricing for a story. Can you search for car prices for the brand Toyota?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

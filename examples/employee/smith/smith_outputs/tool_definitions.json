@@ -1,0 +1,48 @@
+{
+  "tools": [
+    {
+      "name": "add_department",
+      "description": "Add a department (unique name). Returns the department dict.",
+      "parameters": [
+        {
+          "name": "name",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "description",
+          "type": "any",
+          "required": false,
+          "default": null
+        }
+      ],
+      "input_schema": {
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Description"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "add_departmentArguments",
+        "type": "object"
+      }
+    }
+  ],
+  "source": "python server.py",
+  "transport": "stdio"
+}

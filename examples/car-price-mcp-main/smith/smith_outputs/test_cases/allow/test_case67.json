@@ -6,7 +6,6 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Bob",
                 "user_role": [
                     "analyst"
                 ]
@@ -19,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I want to fetch all motorcycles from the vehicle database",
+                "input": "I want to look up truck brands in the FIPE database. Call get_vehicles_by_type with vehicle_type=\"caminhoes\".",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +29,7 @@
             }
         },
         "args": {
-            "vehicle_type": "motos"
+            "vehicle_type": "caminhoes"
         }
     }
 }

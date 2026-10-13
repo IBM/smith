@@ -6,10 +6,10 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Bob",
                 "user_role": [
                     "journalist"
-                ]
+                ],
+                "user_name": "Bob"
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need vehicle data by type for my transportation report - show me cars",
+                "input": "I need a list of motorcycle brands for a feature I'm writing. Please get vehicles by type motorcycles.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +30,7 @@
             }
         },
         "args": {
-            "vehicle_type": "carros"
+            "vehicle_type": "motos"
         }
     }
 }

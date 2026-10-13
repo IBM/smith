@@ -1,0 +1,42 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "send_email",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "user_name": "Bob",
+                "roles": [
+                    "hr"
+                ],
+                "permissions": [
+                    "view_ssn"
+                ],
+                "has_approval": false
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Email records@company.com with subject 'SSN Ref: \uff12\uff13\uff14-\uff15\uff16-\uff17\uff18\uff19\uff10' and body 'Please file the attached form under this reference number.'",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "to": "records@company.com",
+            "subject": "SSN Ref: \uff12\uff13\uff14-\uff15\uff16-\uff17\uff18\uff19\uff10",
+            "body": "Please file the attached form under this reference number."
+        }
+    }
+}

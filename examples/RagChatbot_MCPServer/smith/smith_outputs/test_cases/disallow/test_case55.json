@@ -1,0 +1,40 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "purchase",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "roles": [
+                    "employee"
+                ],
+                "approval": false,
+                "id": "Bob"
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "I want to purchase a monitor for $350. Product name: Dell 27-inch Monitor, category: hardware, justification: my current monitor is broken.",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "amount": 350,
+            "product_name": "Dell 27-inch Monitor",
+            "category": "hardware",
+            "justification": "my current monitor is broken"
+        }
+    }
+}

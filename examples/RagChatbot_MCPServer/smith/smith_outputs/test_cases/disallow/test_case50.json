@@ -1,0 +1,43 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "send_email",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "roles": [
+                    "manager"
+                ],
+                "user_team": [
+                    "Operations"
+                ],
+                "id": "Bob"
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Please draft an email to robert.brown@outlook.com. Subject: 'Project Kickoff', body: 'Hi Robert, we are kicking off the new project next Monday. Please be prepared to join the call.' No attachment.",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "recipient_email": "robert.brown@outlook.com",
+            "subject": "Project Kickoff",
+            "body": "Hi Robert, we are kicking off the new project next Monday. Please be prepared to join the call.",
+            "email_content": "Hi Robert, we are kicking off the new project next Monday. Please be prepared to join the call.",
+            "attached_file": ""
+        }
+    }
+}

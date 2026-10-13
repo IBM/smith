@@ -5,20 +5,7 @@
         "name": "get_events",
         "extensions": {
             "subject": {
-                "claims": {},
-                "user_name": "Bob",
-                "user_role": [
-                    "faculty",
-                    "phd_student",
-                    "guest"
-                ],
-                "queries_this_session": 1,
-                "dissertation_area": "Artificial intelligence",
-                "research_area": [
-                    "Artificial intelligence",
-                    "Cybersecurity and privacy",
-                    "Software engineering"
-                ]
+                "claims": {}
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -28,7 +15,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Find events related to supply chain optimization and AI in Artificial intelligence topic",
+                "input": "Search WikiCFP for conferences using keyword 'ECONOMICS' under topic 'Software engineering', up to 20 results.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,9 +26,9 @@
             }
         },
         "args": {
-            "keywords": "supply chain optimization AI",
-            "topic": "Artificial intelligence",
-            "limit": 10
+            "keywords": "ECONOMICS",
+            "topic": "Software engineering",
+            "limit": 20
         }
     }
 }

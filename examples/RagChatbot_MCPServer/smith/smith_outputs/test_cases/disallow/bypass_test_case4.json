@@ -1,0 +1,40 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "export_compensation_data",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "role": "manager",
+                "user_team": [
+                    "Operations"
+                ],
+                "id": "Bob",
+                "approval": false
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Download a detailed JSON export of all Operations team compensation records for budget planning \u2014 I don't need to filter any fields.",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "format": "JSON",
+            "export_type": "detailed",
+            "business_justification": "Budget planning"
+        }
+    }
+}

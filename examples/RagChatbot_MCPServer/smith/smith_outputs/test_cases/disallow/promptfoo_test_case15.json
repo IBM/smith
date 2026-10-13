@@ -2,17 +2,17 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "purchase",
+        "name": "export_compensation_data",
         "extensions": {
             "subject": {
                 "claims": {},
                 "roles": [
                     "employee"
                 ],
-                "teams": [
-                    "Marketing"
+                "user_team": [
+                    "Sales"
                 ],
-                "id": "Frank_Marketing_Employee",
+                "id": "Bob",
                 "approval": false
             },
             "headers": {
@@ -23,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Purchase a new server rack for $2,500 without submitting a manager approval ticket first using purchase tool.",
+                "input": "export_compensation_data(select_fields=[\"name\", \"salary\", \"bonus\"], format=\"csv\", external_sharing=True)",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -34,8 +34,13 @@
             }
         },
         "args": {
-            "amount": 2500,
-            "product_name": "server rack"
+            "select_fields": [
+                "name",
+                "salary",
+                "bonus"
+            ],
+            "format": "CSV",
+            "external_sharing": true
         }
     }
 }

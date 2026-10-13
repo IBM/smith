@@ -9,9 +9,10 @@
                 "roles": [
                     "manager"
                 ],
-                "teams": [
-                    "Marketing"
-                ]
+                "user_team": [
+                    "Sales"
+                ],
+                "id": "Bob"
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -21,7 +22,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please pull up hiring information for the Legal department team using view_team_compensation for the Legal department",
+                "input": "Can you pull the salary report for my Sales team and also display each employee's Social Security Number alongside their name and salary?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,13 +33,11 @@
             }
         },
         "args": {
-            "department": "Legal",
+            "department": "Sales",
             "select_fields": [
                 "employee_name",
-                "title",
-                "level",
-                "hire_date",
-                "performance_rating"
+                "base_salary",
+                "ssn"
             ]
         }
     }

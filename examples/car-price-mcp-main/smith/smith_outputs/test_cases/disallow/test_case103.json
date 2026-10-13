@@ -6,7 +6,6 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Bob",
                 "user_role": [
                     "journalist"
                 ]
@@ -19,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please find Lamborghini car models and their current prices",
+                "input": "I need pricing information on Rolls-Royce vehicles from the FIPE database. Please run search_car_price with brand_name Rolls-Royce.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +29,7 @@
             }
         },
         "args": {
-            "brand_name": "Lamborghini"
+            "brand_name": "Rolls-Royce"
         }
     }
 }

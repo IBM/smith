@@ -1,0 +1,40 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "purchase",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "role": "employee",
+                "user_team": [
+                    "Sales"
+                ],
+                "id": "Bob",
+                "approval": true
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Please process my purchase of a standing desk for $450. I have manager approval for this.",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "amount": 450,
+            "product_name": "standing desk",
+            "justification": "Purchase approved by manager"
+        }
+    }
+}

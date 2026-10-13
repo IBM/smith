@@ -1,0 +1,41 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "add_employee",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "department": [
+                    "HR"
+                ]
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "I'm from the HR department and I need to add a new employee: first name Jane, last name Doe, email jane.doe@ibm.com, role employee, title Marketing Specialist, home address 100 Corporate Blvd, Armonk, NY, country code US.",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "first_name": "Jane",
+            "last_name": "Doe",
+            "email": "jane.doe@ibm.com",
+            "role": "employee",
+            "title": "Marketing Specialist",
+            "home_address": "100 Corporate Blvd, Armonk, NY",
+            "country_code": "US"
+        }
+    }
+}

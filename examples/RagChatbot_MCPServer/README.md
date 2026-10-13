@@ -10,54 +10,73 @@ An HR chatbot agent with MCP tools for team compensation management, ticketing, 
 | `export_compensation_data` | Export compensation data as CSV, PDF, or JSON file |
 | `email_compensation_report` | Email compensation/salary reports to a recipient |
 | `send_email` | Send general-purpose emails (non-compensation content) |
+| `export_content_as_file` | Export supplied content under a file name |
 | `create_ticket` | Create an inquiry ticket |
 | `submit_ticket` | Submit an inquiry ticket |
+| `get_w2_form` | Explain how to request a W-2 form |
 | `purchase` | Process purchase requests with approval workflows |
 | `return_product` | Request a product return |
 | `ask_for_workpolicy` | Query working policy/regulation information |
 
 ## Starting the Agent
 
-Prerequisites: Ollama running locally with the model pulled, and the MCP server running via SSE.
+Prerequisites:
 
 ```bash
+bash scripts/clean.sh # optional: remove generated results and clear assets/policy.rego
 cd examples/RagChatbot_MCPServer/
-ollama pull qwen3.5
 pip install -r requirements.txt
 ```
 
-Start the MCP server (in a separate terminal with the same .venv):
+Make sure the `.env` in the Smith skill directory points to this example (the paths below are relative to that directory):
+
+```dotenv
+## Target agent setup
+TARGET_AGENT_PATH=examples/RagChatbot_MCPServer/
+GUIDANCE_FILE=examples/RagChatbot_MCPServer/smith/guidance.txt
+SYSTEM_VAR_FILE=examples/RagChatbot_MCPServer/smith/system_vars.json
+PROMPTFOO_CONFIG_FILE=examples/RagChatbot_MCPServer/smith/promptfooconfig.yaml
+PROMPTFOO_OUTPUT_FILE=examples/RagChatbot_MCPServer/smith/redteam.yaml
+
+## Target agent model setup
+INFERENCE_MODEL=aws/claude-haiku-4-5
+INFERENCE_BASE_URL=${OPENAI_BASE_URL}
+INFERENCE_API_KEY=${OPENAI_API_KEY}
+
+## Target agent MCP setup
+MCP_TRANSPORT=sse
+MCP_URL=http://localhost:8000/sse
+```
+
+Start the MCP server in a separate terminal with the same virtual environment:
+
 ```bash
 python mcp_server.py
 ```
 
-Start the agent:
+Start the agent from `examples/RagChatbot_MCPServer`:
+
 ```bash
 uvicorn fast_server:app --host 0.0.0.0 --port 9000
 ```
 
 The agent exposes:
+
 - `POST /chat` — full agentic chat (executes tools via MCP)
 - `POST /extract_tool_call` — extracts intended tool call without executing it
 
-This example uses SSE transport — the agent connects to the MCP server at `http://localhost:8000/sse`.
-
-Default configuration (in `.env`):
-- Agent URL: `http://localhost:9000`
-- MCP transport: `sse`
-- MCP URL: `http://localhost:8000/sse`
+The agent connects to the MCP server at `http://localhost:8000/sse`. 
 
 ## Smith Files (`smith/` directory)
 
 | File | Description |
 |------|-------------|
-| `guidance.txt` | Natural language policy rules — defines role-based access (manager/employee), compensation data restrictions, email controls, purchase limits, and security blocks. Source of truth for policy generation. |
+| `guidance.txt` | Natural language policy rules defining role-based access (manager/employee), compensation data restrictions, email controls, purchase limits, and security blocks. This file is the source of truth for policy generation. |
 | `system_vars.json` | System variables available in the agent session (roles, teams, id, approval). Maps to `input.extensions.subject.*` in the OPA policy. |
 | `promptfooconfig.yaml` | Promptfoo configuration for red-team test generation against this agent. Can be auto-generated with `smith --flag generate_promptfoo_config` (LLM + deterministic — review output before use). |
-| `test_cases/` | Generated test cases split into `allow/` and `disallow/` folders for policy testing. Some cases may be misclassified — use cross-validation to identify and fix them. |
 | `smith_outputs/` | Intermediate results generated when running Smith (see below). |
 
-### `smith/smith_outputs/` (generated artifacts)
+### `smith/smith_outputs/` (for reproducibility: generated artifacts)
 
 | File | Description |
 |------|-------------|
@@ -65,24 +84,17 @@ Default configuration (in `.env`):
 | `policy_generated.rego` | The OPA policy generated from guidance. |
 | `policy_revised.rego` | The policy after refinement (patching, formatting, deduplication). |
 | `bypass_report.json` | Guidance-vs-policy divergences found by `smith --flag bypass_case_generation`. |
+| `test_cases/` | Saved generated test cases in `allow/` and `disallow/` folders. |
 
-
-## Smith CLI Commands
-
-Make sure your `.env` points to this example:
-```
-TARGET_AGENT_PATH=examples/RagChatbot_MCPServer/
-GUIDANCE_FILE=examples/RagChatbot_MCPServer/smith/guidance.txt
-SYSTEM_VAR_FILE=examples/RagChatbot_MCPServer/smith/system_vars.json
-PROMPTFOO_CONFIG_FILE=examples/RagChatbot_MCPServer/smith/promptfooconfig.yaml
-PROMPTFOO_OUTPUT_FILE=examples/RagChatbot_MCPServer/smith/redteam.yaml
-MCP_TRANSPORT=sse
-MCP_URL=http://localhost:8000/sse
-```
 
 ## How to Test Smith (End-to-End Workflow)
 
-#### Optional: Security-Grounded Guidance Analysis
+Run the Smith CLI commands below from the Smith skill directory.
+
+### Step 1: Generate Policy and Test Cases
+
+
+<!-- #### Optional: Security-Grounded Guidance Analysis (experimental, only supports claude code, skip in this example)
 
 Before generating a policy, you can run the standalone security-grounded guidance analysis to produce an OWASP-mapped threat model and enforcement guidance for this MCP server. This four-step workflow produces guidance only; it never generates or modifies Rego or an OPA policy. It follows `SKILL.md`'s "Security-Grounded Guidance Analysis" entry.
 
@@ -101,46 +113,66 @@ The agent asks whether to run **Gated** (pause after each step) or **Autonomous*
 
 When Step D finds missing OPA-enforceable rules, it also proposes `smith/guidance_updated.txt`; otherwise that file is not created. After the analysis, you may separately ask the agent to merge the proposal into `smith/guidance.txt`. The agent then asks separately whether to start Policy Creation—merging does not create a policy.
 
+This example already ships with completed artifacts under `smith/guidelines-security-analysis/` from a prior run — inspect them if you want to see what the workflow produces before running it yourself. -->
+
 #### Step 1.1: Generate Policy
 
-Ask your coding agent to use skill Smith to generate an OPA policy from the guidance file.
+Ask your coding assistant to use the Smith skill to generate an OPA policy from the guidance file:
+
+> Prompt: /smith generate an opa policy for the target agent
 
 #### Step 1.2: Generate Test Cases
 
-To generate test cases, there are three options:
+There are three ways to generate or reuse test cases:
 
-1. You can ask smith to generate test cases after it finishes policy generation.
+1. After generating the policy, Smith will ask whether you want to generate test cases or use existing ones. Follow its suggestions to refresh the Promptfoo config, generate both kinds of test cases, and translate them. Test case evaluation is optional.
 
-2. You can generate test cases via CLI when smith is generating the policy:
+2. You can generate test cases via CLI:
 
 ```bash
-smith --flag generate_promptfoo_config # optional: auto-generate promptfoo config (LLM + deterministic — review before use)
-smith --flag test_generation          # guidance-targeted cases
-smith --flag bypass_case_generation    # optional: policy-bypass cases (requires an existing, non-empty policy)
-smith --flag test_case_evaluation      # optional, does not affect results
-smith --flag test_case_translation     # shared; translates all cases, skipping any already translated
+smith --flag generate_promptfoo_config # optional: generate a config if Promptfoo is enabled and this agent does not have one
+smith --flag test_generation --mode fresh # required: generate guidance-targeted cases
+smith --flag bypass_case_generation    # optional: generate policy-bypass cases (requires an existing, non-empty policy)
+smith --flag test_case_evaluation      # optional: create a visualization of test cases; this does not affect results
+smith --flag test_case_translation     # required: translate all cases, skipping those already translated
 ```
 
-3. You can reuse existing test cases (skip the test case generation). For this example, we have generated test cases located in `./smith/test_cases/` for reuse. To use them, copy them to `references/test_cases/` and overwrite existing test cases.
+3. You can follow Smith's suggestion to reuse existing test cases and skip generation and translation. Each example includes generated test cases in `./smith/smith_outputs/test_cases/`. Copy them to `references/test_cases/` to reuse them.
 
 ### Step 2: Test the Policy
 
 Run policy testing (via CLI or ask Smith):
 
-```bash
-smith --flag policy_testing
-```
+- Smith: Follow Smith's suggestions and approve policy testing.
 
-### Step 2.5: Cross-Validation (if needed)
+- CLI:
 
-- **If 0 test cases or 100% failure** — the policy has structural/syntax issues. Ask Smith to cross-validate the policy (it will follow `opa_policy/policy_cross_validation/policy_cross_validation.md`).
-- **If mixed pass/fail** — some test case labels may be wrong. Ask Smith to cross-validate test cases before running refinement loop (it should follow `test_generation/cross_validate.md`). This step can be time consuming depending on number of failed test cases.
+    ```bash
+    smith --flag policy_testing
+    ```
+
+### Step 2.1: Cross-Validation
+
+- **If there are 0 test cases or a 100% failure rate** — the policy may have structural or syntax issues. Ask Smith to cross-validate the policy (it will follow `opa_policy/policy_cross_validation/policy_cross_validation.md`).
+- **If some tests pass and others fail** — some test case labels may be wrong. Ask Smith to cross-validate the test cases before running the refinement loop (it should follow `test_generation/cross_validate.md`). This step can take time, depending on the number of failed test cases.
 
 ### Step 3: Improve the Policy
 
-If Smith identifies failed test cases, ask it to:
-1. **Fix failed test cases** — patch the policy to handle cases that should be denied but are currently allowed
-2. **Remove duplication** — eliminate redundant rules with overlapping logic
-3. **Fix formatting issues** — resolve Regal lint warnings and `opa fmt` differences
+### Step 3.1: Introduce Policy Defects (Optional, for testing only)
 
-Smith follows its refinement workflow: patch → regal format → deduplication, running tests after each change.
+If testing shows that the generated policy is already correct and complete, you can replace the current policy with `smith/smith_outputs/policy_generated.rego` (replace `./assets/policy.rego`) and run policy testing again.
+
+### Step 3.2: Patch the Policy
+
+If any test cases fail, follow Smith's suggestions:
+
+**Fix failed test cases** — patch the policy to handle cases that should be denied but are currently allowed.
+
+### Step 3.3: Lint the Policy
+
+**Fix formatting issues** — resolve Regal lint warnings and `opa fmt` differences.
+
+
+### Step 3.4: Remove Duplicate Rules
+
+**Remove duplication** — eliminate redundant rules with overlapping logic.

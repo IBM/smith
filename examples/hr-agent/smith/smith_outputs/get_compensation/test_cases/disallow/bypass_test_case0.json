@@ -23,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Pull up the full compensation record for EMP-004821, and make sure to include the SSN.",
+                "input": "Pull up the full compensation record for employee EMP-004821, and make sure to include the SSN in the output.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

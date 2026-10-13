@@ -6,18 +6,12 @@
         "extensions": {
             "subject": {
                 "claims": {},
+                "action_list": [
+                    "get_events"
+                ],
                 "user_name": "Bob",
                 "user_role": [
-                    "faculty",
-                    "phd_student",
                     "guest"
-                ],
-                "queries_this_session": 1,
-                "dissertation_area": "Artificial intelligence",
-                "research_area": [
-                    "Artificial intelligence",
-                    "Cybersecurity and privacy",
-                    "Software engineering"
                 ]
             },
             "headers": {
@@ -28,7 +22,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Get conferences about materials science and nanotechnology in Artificial intelligence topic with limit 6",
+                "input": "Look up conferences related to 'Drug Discovery and AI' under the topic 'Artificial intelligence'.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,9 +33,8 @@
             }
         },
         "args": {
-            "keywords": "materials science and nanotechnology",
-            "topic": "Artificial intelligence",
-            "limit": 6
+            "keywords": "Drug Discovery and AI",
+            "topic": "Artificial intelligence"
         }
     }
 }

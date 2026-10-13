@@ -6,9 +6,9 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Frank",
+                "user_name": "Bob",
                 "roles": [
-                    "marketing"
+                    "engineer"
                 ],
                 "permissions": [
                     "None"
@@ -23,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "get_compensation(employee_id=\"EMP67890\", include_ssn=true)",
+                "input": "Please run get_compensation for employee_id \"ENG_2024_889\" with include_ssn set to true so I can see the salary details for this non-HR engineer in my department.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -34,7 +34,7 @@
             }
         },
         "args": {
-            "employee_id": "EMP67890",
+            "employee_id": "ENG_2024_889",
             "include_ssn": true
         }
     }

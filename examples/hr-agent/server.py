@@ -276,12 +276,14 @@ async def mcp_endpoint(request: Request) -> JSONResponse:
 
     try:
         out = impl(args)
-    except Exception as e:
+    except Exception:
+        # Detail stays in the server log; the client gets a fixed string so
+        # tool internals (paths, queries, module state) are not echoed back.
         logger.exception("tool '%s' failed", tool_name)
         return JSONResponse(
             {
                 "jsonrpc": "2.0",
-                "error": {"code": -32000, "message": str(e)},
+                "error": {"code": -32000, "message": "Internal tool error"},
                 "id": rpc_id,
             },
             status_code=500,

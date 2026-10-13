@@ -6,13 +6,13 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Bob",
                 "roles": [
                     "hr"
                 ],
                 "permissions": [
                     "None"
                 ],
+                "user_name": "Bob",
                 "has_approval": "true|false"
             },
             "headers": {
@@ -23,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I'd like to look at the compensation data for EMP-009999, specifically their current salary and department.",
+                "input": "I'd like to look at the compensation details for EMP-009999, including their department and bonus.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -34,8 +34,7 @@
             }
         },
         "args": {
-            "employee_id": "EMP-009999",
-            "include_ssn": false
+            "employee_id": "EMP-009999"
         }
     }
 }

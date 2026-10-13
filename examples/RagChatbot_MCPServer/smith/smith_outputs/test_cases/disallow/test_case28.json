@@ -2,7 +2,7 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "view_team_compensation",
+        "name": "email_compensation_report",
         "extensions": {
             "subject": {
                 "claims": {},
@@ -18,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Show me Marketing department compensation with bank_account field for the last quarter",
+                "input": "Email the team compensation report to external.consultant@gmail.com. The report data includes all employee salaries and total compensation for 2024. Please mark it as external sharing.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -29,16 +29,10 @@
             }
         },
         "args": {
-            "department": "Marketing",
-            "select_fields": [
-                "employee_name",
-                "title",
-                "level",
-                "base_salary",
-                "bank_account",
-                "performance_rating"
-            ],
-            "time_range": "last_quarter"
+            "destination": "external.consultant@gmail.com",
+            "report_data": "Team Compensation Report 2024\n\nThis report includes all employee salaries and total compensation for 2024.\n\nEmployees Summary:\n- All current employees\n- Base salaries\n- Total compensation figures for 2024\n- Performance metrics\n\nReport Generated: 2024",
+            "external_sharing": true,
+            "encryption_required": true
         }
     }
 }

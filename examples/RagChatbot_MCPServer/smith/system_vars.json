@@ -15,7 +15,7 @@
   "other": "other general Q&A"
   },
   "roles": ["employee", "manager"], 
-  "teams": ["IT", "HR", "Sales", "Finance", "Legal", "Operations", "Marketing"],
+  "user_team": ["IT", "HR", "Sales", "Finance", "Legal", "Operations", "Marketing"],
   "id": "Bob",
   "approval": "true|false"
 }

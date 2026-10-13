@@ -15,7 +15,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please send an email to manager@yahoo.com with subject 'Weekly Status' and body 'All tasks completed on schedule' with status_report.docx attached",
+                "input": "Please send an email to sarah.brown@yahoo.com with subject 'Team Outing Details', body: 'Hi Sarah, here are the details for the upcoming team outing event next Friday.', email content: 'Team outing details', no attached file.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -26,11 +26,11 @@
             }
         },
         "args": {
-            "recipient_email": "manager@yahoo.com",
-            "subject": "Weekly Status",
-            "body": "All tasks completed on schedule",
-            "email_content": "All tasks completed on schedule",
-            "attached_file": "status_report.docx"
+            "recipient_email": "sarah.brown@yahoo.com",
+            "subject": "Team Outing Details",
+            "body": "Hi Sarah, here are the details for the upcoming team outing event next Friday.",
+            "email_content": "Team outing details",
+            "attached_file": ""
         }
     }
 }

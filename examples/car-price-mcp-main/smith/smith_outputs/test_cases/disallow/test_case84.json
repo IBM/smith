@@ -6,7 +6,6 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Bob",
                 "user_role": [
                     "journalist"
                 ]
@@ -19,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I want to look up Porsche car prices",
+                "input": "I'd like to get the FIPE market prices for Land Rover vehicles. Can you run a price search for Land Rover?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +29,7 @@
             }
         },
         "args": {
-            "brand_name": "Porsche"
+            "brand_name": "Land Rover"
         }
     }
 }

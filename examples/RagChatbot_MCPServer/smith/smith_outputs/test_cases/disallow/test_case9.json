@@ -9,9 +9,10 @@
                 "roles": [
                     "manager"
                 ],
-                "teams": [
-                    "Sales"
-                ]
+                "user_team": [
+                    "IT"
+                ],
+                "id": "Bob"
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -21,7 +22,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please display department details for the Operations team using view_team_compensation with department Operations and select_fields set to department",
+                "input": "Please show me the salary information for my IT team, and also include the ssn field for each employee.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,6 +31,23 @@
                 "managed_by": "tool",
                 "trust_domain": "internal"
             }
+        },
+        "args": {
+            "department": "IT",
+            "select_fields": [
+                "employee_name",
+                "title",
+                "department",
+                "level",
+                "hire_date",
+                "base_salary",
+                "bonus_target",
+                "actual_bonus_2024",
+                "performance_rating",
+                "next_review_date",
+                "ssn"
+            ],
+            "include_benefits": true
         }
     }
 }

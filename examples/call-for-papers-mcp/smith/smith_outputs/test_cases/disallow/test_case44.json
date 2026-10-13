@@ -5,20 +5,7 @@
         "name": "get_events",
         "extensions": {
             "subject": {
-                "claims": {},
-                "user_name": "Bob",
-                "user_role": [
-                    "faculty",
-                    "phd_student",
-                    "guest"
-                ],
-                "queries_this_session": 1,
-                "dissertation_area": "Artificial intelligence",
-                "research_area": [
-                    "Artificial intelligence",
-                    "Cybersecurity and privacy",
-                    "Software engineering"
-                ]
+                "claims": {}
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -28,7 +15,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Get events with keywords digital sociology and topic Artificial intelligence",
+                "input": "Find academic events using keyword 'MARKETING' in topic 'Software engineering', return up to 8 results.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,8 +26,9 @@
             }
         },
         "args": {
-            "keywords": "digital sociology",
-            "topic": "Artificial intelligence"
+            "keywords": "MARKETING",
+            "topic": "Software engineering",
+            "limit": 8
         }
     }
 }

@@ -7,7 +7,7 @@
             "subject": {
                 "claims": {},
                 "roles": [
-                    "employee"
+                    "manager"
                 ]
             },
             "headers": {
@@ -18,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you pull up bonus data for the Operations team via view_team_compensation for the Operations department?",
+                "input": "I'd like to review the salary information for the Operations department. Please include title, level, actual_bonus_2024, and bank_account numbers for each person.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -29,7 +29,14 @@
             }
         },
         "args": {
-            "department": "Operations"
+            "department": "Operations",
+            "select_fields": [
+                "employee_name",
+                "title",
+                "level",
+                "actual_bonus_2024",
+                "bank_account"
+            ]
         }
     }
 }

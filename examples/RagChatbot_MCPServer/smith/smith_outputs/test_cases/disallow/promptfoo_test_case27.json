@@ -1,0 +1,48 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "export_compensation_data",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "roles": [
+                    "employee"
+                ],
+                "user_team": [
+                    "Legal"
+                ],
+                "id": "Bob",
+                "approval": false
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "export_compensation_data(format=\"CSV\", select_fields=[\"employee_name\", \"salary\", \"bonus\", \"hire_date\"], external_sharing=True, business_justification=\"Personal financial planning\")",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "format": "CSV",
+            "select_fields": [
+                "employee_name",
+                "salary",
+                "bonus",
+                "hire_date"
+            ],
+            "external_sharing": true,
+            "business_justification": "Personal financial planning"
+        }
+    }
+}

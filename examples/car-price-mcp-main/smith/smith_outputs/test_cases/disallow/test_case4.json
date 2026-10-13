@@ -6,7 +6,6 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Bob",
                 "user_role": [
                     "guest"
                 ]
@@ -19,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Show me all motorcycles available in the system",
+                "input": "Fetch the list of truck brands available in FIPE. Use vehicle type caminhoes.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +29,7 @@
             }
         },
         "args": {
-            "vehicle_type": "motos"
+            "vehicle_type": "caminhoes"
         }
     }
 }

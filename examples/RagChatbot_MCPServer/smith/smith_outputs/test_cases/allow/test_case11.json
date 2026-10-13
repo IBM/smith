@@ -2,15 +2,12 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "view_team_compensation",
+        "name": "export_compensation_data",
         "extensions": {
             "subject": {
                 "claims": {},
                 "roles": [
                     "manager"
-                ],
-                "teams": [
-                    "HR"
                 ]
             },
             "headers": {
@@ -21,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you show me when my HR team employees were hired? Please use view_team_compensation for the HR department",
+                "input": "Export the team compensation data as a JSON file. I need it for integration with our analytics tool.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,10 +29,8 @@
             }
         },
         "args": {
-            "department": "HR",
-            "select_fields": [
-                "hire_date"
-            ]
+            "format": "JSON",
+            "business_justification": "Integration with analytics tool for data analysis"
         }
     }
 }

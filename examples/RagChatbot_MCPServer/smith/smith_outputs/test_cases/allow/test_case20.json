@@ -1,0 +1,40 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "purchase",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "roles": [
+                    "employee"
+                ],
+                "approval": true,
+                "id": "Bob"
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Please purchase a software license for $500. Product name: Adobe Creative Suite, category: software, justification: required for design tasks, manager has approved this purchase.",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "amount": 500,
+            "product_name": "Adobe Creative Suite",
+            "category": "software",
+            "justification": "required for design tasks, manager has approved this purchase"
+        }
+    }
+}

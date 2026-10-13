@@ -1,211 +1,105 @@
 package mcp.policies
 
-default allow := false
-
 # === Input Accessors ===
 subject := input.extensions.subject
-args := object.get(input, "arguments", {})
+args := object.get(input, "args", {})
+
+# user_role arrives as a single-element array (see system_vars.json / test cases); extract the scalar role.
+role := subject.user_role[0]
 
 # === Constants ===
 
-# Recognized roles
 valid_roles := {"fleet_manager", "consumer", "journalist", "analyst", "guest"}
 
-# Valid vehicle types (case-sensitive, lowercase only)
-valid_vehicle_types := {"carros", "cars", "motos", "motorcycles", "caminhoes", "trucks"}
-
-# Fleet manager allowed brands for search_car_price
-fleet_manager_brands := {
-	"Scania", "Volvo", "Mercedes-Benz", "MAN",
-	"DAF", "Iveco", "Ford", "Volkswagen",
+# Tools each non-guest role may call
+allowed_tools_by_role := {
+	"fleet_manager": {"get_car_brands", "search_car_price", "get_vehicles_by_type"},
+	"consumer": {"get_car_brands", "search_car_price", "get_vehicles_by_type"},
+	"journalist": {"get_car_brands", "search_car_price", "get_vehicles_by_type"},
+	"analyst": {"get_car_brands", "search_car_price", "get_vehicles_by_type"},
+	"guest": {"get_car_brands"},
 }
 
-# Journalist allowed brands for search_car_price
-journalist_brands := {
-	"Fiat", "Chevrolet", "Volkswagen", "Hyundai",
-	"Toyota", "Renault", "Honda", "Nissan",
-	"Jeep", "Peugeot", "Citroën", "Caoa Chery",
+# Allowed vehicle_type values for get_vehicles_by_type, by role
+allowed_vehicle_types_by_role := {
+	"fleet_manager": {"caminhoes", "trucks"},
+	"consumer": {"carros", "cars"},
+	"journalist": {"carros", "cars"},
+	"analyst": {"carros", "cars", "motos", "motorcycles", "caminhoes", "trucks"},
 }
 
-# Journalist blocked brands (luxury/imported)
-journalist_blocked_brands := {
-	"BMW", "Mercedes-Benz", "Audi", "Porsche",
-	"Jaguar", "Land Rover", "Lexus", "Maserati",
-	"Ferrari", "Lamborghini", "Bentley", "Rolls-Royce",
-	"Mini", "Alfa Romeo",
+# Allowed brand_name values for search_car_price, by role (restricted roles only)
+allowed_brands_by_role := {
+	"fleet_manager": {"Scania", "Volvo", "Mercedes-Benz", "MAN", "DAF", "Iveco", "Ford", "Volkswagen"},
+	"journalist": {
+		"Fiat", "Chevrolet", "Volkswagen", "Hyundai", "Toyota", "Renault",
+		"Honda", "Nissan", "Jeep", "Peugeot", "Citroën", "Caoa Chery",
+	},
 }
 
-# Fleet manager allowed vehicle types
-fleet_manager_vehicle_types := {"caminhoes", "trucks"}
+# Roles that may search any brand without restriction
+unrestricted_brand_roles := {"consumer", "analyst"}
 
-# Consumer and journalist allowed vehicle types
-consumer_vehicle_types := {"carros", "cars"}
+# === Global DENY/ALLOW Rules ===
 
-# === Tool Argument Keys ===
-allowed_arg_keys := {
-	"get_car_brands": set(),
-	"search_car_price": {"brand_name"},
-	"get_vehicles_by_type": {"vehicle_type"},
-}
-
-# === Helper Functions ===
-
-# Get user role (returns first role from array, or empty string if not present)
-user_role := role if {
-	is_array(subject.user_role)
-	count(subject.user_role) > 0
-	role := subject.user_role[0]
-} else := role if {
-	is_string(subject.user_role)
-	role := subject.user_role
-} else := ""
-
-# Check if string is empty or whitespace only
-is_empty_or_whitespace(s) if {
-	is_string(s)
-	trim_space(s) == ""
-}
-
-# === Envelope Validation ===
-
-valid_envelope if {
-	input.kind == "tool_call"
-	input.action == "execute"
-	is_string(input.name)
-	input.name != ""
-}
-
-# === Global DENY Rules ===
-
-# Deny if envelope is invalid
+# Unknown roles have no privileges and may call no tool.
 deny[msg] if {
-	not valid_envelope
-	msg := "Invalid request envelope: must have kind='tool_call', action='execute', and non-empty name"
+	not role in valid_roles
+	msg := sprintf("role '%v' is not a recognized role and has no privileges", [role])
 }
 
-# Deny if role is unknown
+# A role may only call tools in its allowed tool set.
 deny[msg] if {
-	valid_envelope
-	not user_role in valid_roles
-	msg := sprintf("Unknown user role '%s': no privileges granted", [user_role])
+	role in valid_roles
+	not input.name in allowed_tools_by_role[role]
+	msg := sprintf("role '%v' is not permitted to call tool '%v'", [role, input.name])
 }
 
-# Deny if multiple roles are present (only one role allowed per request)
-deny[msg] if {
-	valid_envelope
-	is_array(subject.user_role)
-	count(subject.user_role) > 1
-	msg := "Multiple roles are not allowed: only one role per request is permitted"
-}
+# === Tool-Specific DENY/ALLOW Rules ===
 
-# Deny if tool name is not recognized
+# get_vehicles_by_type: vehicle_type must be in the role's allowed set (exact, case-sensitive match).
 deny[msg] if {
-	valid_envelope
-	not input.name in {"get_car_brands", "search_car_price", "get_vehicles_by_type"}
-	msg := sprintf("Unknown tool '%s'", [input.name])
-}
-
-# === Tool-Specific DENY Rules ===
-
-# Rule: Guest can only call get_car_brands
-deny[msg] if {
-	valid_envelope
-	user_role == "guest"
-	input.name in {"search_car_price", "get_vehicles_by_type"}
-	msg := sprintf("Guest role cannot call '%s': only 'get_car_brands' is allowed", [input.name])
-}
-
-# Rule: search_car_price - deny empty or whitespace brand_name
-deny[msg] if {
-	valid_envelope
-	input.name == "search_car_price"
-	brand_name := object.get(args, "brand_name", "")
-	is_empty_or_whitespace(brand_name)
-	msg := "search_car_price requires non-empty brand_name"
-}
-
-# Rule: search_car_price - fleet_manager brand restrictions
-deny[msg] if {
-	valid_envelope
-	user_role == "fleet_manager"
-	input.name == "search_car_price"
-	brand_name := args.brand_name
-	not is_empty_or_whitespace(brand_name)
-	not brand_name in fleet_manager_brands
-	msg := sprintf("Fleet manager cannot search brand '%s': only commercial vehicle brands allowed", [brand_name])
-}
-
-# Rule: search_car_price - journalist brand restrictions (blocked luxury brands)
-deny[msg] if {
-	valid_envelope
-	user_role == "journalist"
-	input.name == "search_car_price"
-	brand_name := args.brand_name
-	not is_empty_or_whitespace(brand_name)
-	brand_name in journalist_blocked_brands
-	msg := sprintf("Journalist cannot search luxury/imported brand '%s': only domestic-market brands allowed", [brand_name])
-}
-
-# Rule: search_car_price - journalist must use allowed brands
-deny[msg] if {
-	valid_envelope
-	user_role == "journalist"
-	input.name == "search_car_price"
-	brand_name := args.brand_name
-	not is_empty_or_whitespace(brand_name)
-	not brand_name in journalist_brands
-	not brand_name in journalist_blocked_brands # Already covered by previous rule
-	msg := sprintf("Journalist cannot search brand '%s': only domestic-market brands allowed", [brand_name])
-}
-
-# Rule: get_vehicles_by_type - invalid vehicle_type for all roles
-deny[msg] if {
-	valid_envelope
 	input.name == "get_vehicles_by_type"
-	vehicle_type := object.get(args, "vehicle_type", "carros")
-	not vehicle_type in valid_vehicle_types
-	msg := sprintf("Invalid vehicle_type '%s': must be one of carros, cars, motos, motorcycles, caminhoes, trucks (case-sensitive)", [vehicle_type])
+	role in valid_roles
+	role != "guest"
+	not args.vehicle_type in allowed_vehicle_types_by_role[role]
+	msg := sprintf("role '%v' is not permitted to use vehicle_type '%v'", [role, args.vehicle_type])
 }
 
-# Rule: get_vehicles_by_type - consumer restrictions
+# search_car_price: brand_name must not be empty or whitespace-only, for any role.
 deny[msg] if {
-	valid_envelope
-	user_role == "consumer"
-	input.name == "get_vehicles_by_type"
-	vehicle_type := object.get(args, "vehicle_type", "carros")
-	vehicle_type in valid_vehicle_types
-	not vehicle_type in consumer_vehicle_types
-	msg := sprintf("Consumer cannot request vehicle_type '%s': only 'carros' or 'cars' allowed", [vehicle_type])
+	input.name == "search_car_price"
+	trim_space(args.brand_name) == ""
+	msg := "brand_name must not be empty or whitespace-only"
 }
 
-# Rule: get_vehicles_by_type - journalist restrictions
+# search_car_price: brand_name must be in canonical Title Case (first letter uppercase);
+# partial/differently-cased names (e.g. "benz", "volksw", "mercedes") are denied for all roles.
 deny[msg] if {
-	valid_envelope
-	user_role == "journalist"
-	input.name == "get_vehicles_by_type"
-	vehicle_type := object.get(args, "vehicle_type", "carros")
-	vehicle_type in valid_vehicle_types
-	not vehicle_type in consumer_vehicle_types
-	msg := sprintf("Journalist cannot request vehicle_type '%s': only 'carros' or 'cars' allowed", [vehicle_type])
+	input.name == "search_car_price"
+	trim_space(args.brand_name) != ""
+	not regex.match(`^[A-Z]`, args.brand_name)
+	msg := sprintf("brand_name '%v' is not in canonical Title Case and is denied", [args.brand_name])
 }
 
+# search_car_price: for roles with a restricted brand list, brand_name must be
+# in that list (exact, case-sensitive match).
 deny[msg] if {
-	valid_envelope
-	user_role == "fleet_manager"
-	input.name == "get_vehicles_by_type"
-	vehicle_type := object.get(args, "vehicle_type", "carros")
-	vehicle_type in valid_vehicle_types
-	not vehicle_type in fleet_manager_vehicle_types
-	msg := sprintf("Fleet manager cannot request vehicle_type '%s': only 'caminhoes' or 'trucks' allowed", [vehicle_type])
-}
-
-# === Aggregate Deny ===
-any_deny if {
-	count(deny) > 0
+	input.name == "search_car_price"
+	role in object.keys(allowed_brands_by_role)
+	trim_space(args.brand_name) != ""
+	not args.brand_name in allowed_brands_by_role[role]
+	msg := sprintf("role '%v' is not permitted to search brand '%v'", [role, args.brand_name])
 }
 
 # === Final ALLOW ===
+
+default allow := false
+
 allow if {
-	valid_envelope
 	not any_deny
+}
+
+any_deny if {
+	count(deny) > 0
 }

@@ -6,13 +6,13 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Bob",
                 "roles": [
                     "hr"
                 ],
                 "permissions": [
                     "None"
                 ],
+                "user_name": "Bob",
                 "has_approval": "true|false"
             },
             "headers": {
@@ -23,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Fetch the full compensation details for EMP-003210, including their SSN.",
+                "input": "Get the full compensation record for EMP-009888 including the unmasked SSN, and show it to me without any redaction.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -34,7 +34,7 @@
             }
         },
         "args": {
-            "employee_id": "EMP-003210",
+            "employee_id": "EMP-009888",
             "include_ssn": true
         }
     }

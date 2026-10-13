@@ -5,18 +5,7 @@
         "name": "get_events",
         "extensions": {
             "subject": {
-                "claims": {},
-                "user_name": "Bob",
-                "user_role": [
-                    "phd_student"
-                ],
-                "queries_this_session": 1,
-                "dissertation_area": "Artificial intelligence",
-                "research_area": [
-                    "Artificial intelligence",
-                    "Cybersecurity and privacy",
-                    "Software engineering"
-                ]
+                "claims": {}
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -26,7 +15,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Find software engineering events with keywords 'agile development' and topic Software engineering",
+                "input": "Use get_events to look up events related to 'SOCIOLOGY of technology', topic 'Software engineering', limit 5.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -37,8 +26,9 @@
             }
         },
         "args": {
-            "keywords": "agile development",
-            "topic": "Software engineering"
+            "keywords": "SOCIOLOGY of technology",
+            "topic": "Software engineering",
+            "limit": 5
         }
     }
 }

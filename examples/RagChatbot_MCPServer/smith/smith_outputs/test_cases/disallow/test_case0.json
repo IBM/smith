@@ -7,11 +7,12 @@
             "subject": {
                 "claims": {},
                 "roles": [
-                    "manager"
+                    "employee"
                 ],
-                "teams": [
+                "user_team": [
                     "IT"
-                ]
+                ],
+                "id": "Bob"
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -21,7 +22,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I want to see employee names for the Sales team using view_team_compensation tool with department Sales and select_fields employee_name",
+                "input": "Can you show me the compensation data for the IT department? I want to see salaries and bonuses for the team.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,9 +33,14 @@
             }
         },
         "args": {
-            "department": "Sales",
+            "department": "IT",
             "select_fields": [
-                "employee_name"
+                "employee_name",
+                "title",
+                "base_salary",
+                "bonus_target",
+                "actual_bonus_2024",
+                "performance_rating"
             ]
         }
     }

@@ -73,6 +73,6 @@
   },
   "user_name": "Bob",
   "user_id": 1,
-    "department": ["Corporate Leadership", "Engineering", "Product", "HR", "Finance"],
-    "organization": ["IBM Corporation", "Red Hat", "Kyndryl"]
+  "department": ["Corporate Leadership", "Engineering", "Product", "HR", "Finance"],
+  "organization": ["IBM Corporation", "Red Hat", "Kyndryl"]
 }

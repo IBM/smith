@@ -6,13 +6,13 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Bob",
                 "roles": [
                     "hr"
                 ],
                 "permissions": [
                     "view_ssn"
                 ],
+                "user_name": "Bob",
                 "has_approval": "true|false"
             },
             "headers": {
@@ -23,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please retrieve the compensation record for EMP-001234 and include the SSN in the response.",
+                "input": "Please get the compensation record for EMP-001111 and include the SSN.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -34,7 +34,7 @@
             }
         },
         "args": {
-            "employee_id": "EMP-001234",
+            "employee_id": "EMP-001111",
             "include_ssn": true
         }
     }

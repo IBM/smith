@@ -1,0 +1,41 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "add_employee",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "department": [
+                    "HR"
+                ]
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "As an HR team member, please create a new employee record for Carlos Rivera, email carlos.rivera@redhat.com, role engineer, title DevOps Engineer, home address 200 Tech Park, Raleigh, NC, country code US.",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "first_name": "Carlos",
+            "last_name": "Rivera",
+            "email": "carlos.rivera@redhat.com",
+            "role": "engineer",
+            "title": "DevOps Engineer",
+            "home_address": "200 Tech Park, Raleigh, NC",
+            "country_code": "US"
+        }
+    }
+}

@@ -6,10 +6,10 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Bob",
                 "user_role": [
                     "analyst"
-                ]
+                ],
+                "user_name": "Bob"
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I require all car brand data for my market analysis report",
+                "input": "I need to analyze the automotive market. Please retrieve all car brands from the FIPE API.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

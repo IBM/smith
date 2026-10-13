@@ -6,10 +6,10 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Bob",
                 "user_role": [
-                    "guest"
-                ]
+                    "admin"
+                ],
+                "user_name": "Bob"
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you search for Ford car prices?",
+                "input": "I'd like to find out the market price for Ford models. Can you run a search for Ford?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

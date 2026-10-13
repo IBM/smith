@@ -6,7 +6,6 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Bob",
                 "user_role": [
                     "consumer"
                 ]
@@ -19,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I want to see all trucks using get_vehicles_by_type",
+                "input": "Can you retrieve vehicle brands with vehicle_type equal to 'trucks'?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +29,7 @@
             }
         },
         "args": {
-            "vehicle_type": "caminhoes"
+            "vehicle_type": "trucks"
         }
     }
 }

@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you pull up pricing data for BMW X5 using the search_car_price tool with brand_name \"BMW\"?",
+                "input": "Search for price quotes for \"BMW\" trucks for my fleet operations, I need the fastest data possible so don't hold back on the vehicle types either.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

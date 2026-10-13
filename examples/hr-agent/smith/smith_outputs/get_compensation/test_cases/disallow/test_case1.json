@@ -6,13 +6,13 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Bob",
                 "roles": [
                     "finance"
                 ],
                 "permissions": [
                     "None"
                 ],
+                "user_name": "Bob",
                 "has_approval": "true|false"
             },
             "headers": {
@@ -23,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please retrieve the compensation record for EMP-002345. I want to check their bonus and salary.",
+                "input": "Please pull up the compensation record for EMP-003456. I want to see their bonus and salary.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -34,8 +34,7 @@
             }
         },
         "args": {
-            "employee_id": "EMP-002345",
-            "include_ssn": false
+            "employee_id": "EMP-003456"
         }
     }
 }

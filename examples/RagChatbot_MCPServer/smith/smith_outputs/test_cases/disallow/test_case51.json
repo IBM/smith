@@ -5,7 +5,14 @@
         "name": "send_email",
         "extensions": {
             "subject": {
-                "claims": {}
+                "claims": {},
+                "roles": [
+                    "employee"
+                ],
+                "user_team": [
+                    "Marketing"
+                ],
+                "id": "Bob"
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -15,7 +22,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please draft and send an email to team.lead@personal.com with subject 'Budget Review' and body 'The Q4 budget review is scheduled for next week.' Include email content 'Please prepare your department reports' and attach 'budget_template.docx'",
+                "input": "I need to send a quick note to lisa.chen@outlook.com. Subject: 'Campaign Update', body: 'Hi Lisa, the marketing campaign is progressing well. I will share more details soon.' No file attached.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -24,6 +31,13 @@
                 "managed_by": "tool",
                 "trust_domain": "internal"
             }
+        },
+        "args": {
+            "recipient_email": "lisa.chen@outlook.com",
+            "subject": "Campaign Update",
+            "body": "Hi Lisa, the marketing campaign is progressing well. I will share more details soon.",
+            "email_content": "Hi Lisa, the marketing campaign is progressing well. I will share more details soon.",
+            "attached_file": ""
         }
     }
 }

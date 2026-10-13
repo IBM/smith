@@ -5,20 +5,7 @@
         "name": "get_events",
         "extensions": {
             "subject": {
-                "claims": {},
-                "user_name": "Bob",
-                "user_role": [
-                    "faculty",
-                    "phd_student",
-                    "guest"
-                ],
-                "queries_this_session": 1,
-                "dissertation_area": "Artificial intelligence",
-                "research_area": [
-                    "Artificial intelligence",
-                    "Cybersecurity and privacy",
-                    "Software engineering"
-                ]
+                "claims": {}
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -28,7 +15,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Find conferences about education and machine learning with topic Artificial intelligence and limit 5",
+                "input": "Find events with keywords 'behavioral Economics and AI' in topic 'Artificial intelligence', limit 7.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,9 +26,9 @@
             }
         },
         "args": {
-            "keywords": "education machine learning",
+            "keywords": "behavioral Economics and AI",
             "topic": "Artificial intelligence",
-            "limit": 5
+            "limit": 7
         }
     }
 }

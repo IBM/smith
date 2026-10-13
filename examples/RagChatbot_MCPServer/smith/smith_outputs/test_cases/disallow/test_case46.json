@@ -5,7 +5,14 @@
         "name": "send_email",
         "extensions": {
             "subject": {
-                "claims": {}
+                "claims": {},
+                "roles": [
+                    "employee"
+                ],
+                "user_team": [
+                    "IT"
+                ],
+                "id": "Bob"
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -15,7 +22,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need to email contact@hotmail.com about the product demo with subject 'Demo Schedule' and attach demo_materials.pptx",
+                "input": "Please send an email to john.doe@hotmail.com with subject 'Project Update' and body 'Hi John, just wanted to share the latest project update. We are on track for the deadline.' with no attached file.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -24,6 +31,13 @@
                 "managed_by": "tool",
                 "trust_domain": "internal"
             }
+        },
+        "args": {
+            "recipient_email": "john.doe@hotmail.com",
+            "subject": "Project Update",
+            "body": "Hi John, just wanted to share the latest project update. We are on track for the deadline.",
+            "email_content": "Hi John, just wanted to share the latest project update. We are on track for the deadline.",
+            "attached_file": ""
         }
     }
 }

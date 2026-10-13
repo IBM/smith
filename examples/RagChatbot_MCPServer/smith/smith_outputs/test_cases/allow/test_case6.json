@@ -2,15 +2,12 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "view_team_compensation",
+        "name": "export_compensation_data",
         "extensions": {
             "subject": {
                 "claims": {},
                 "roles": [
                     "manager"
-                ],
-                "teams": [
-                    "Marketing"
                 ]
             },
             "headers": {
@@ -21,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need to check bonus information for my Marketing team using view_team_compensation tool with department Marketing and select_fields actual_bonus_2024",
+                "input": "Save the HR team's salary and compensation information as a CSV file. Business justification: preparing for Q4 compensation review cycle.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,10 +29,10 @@
             }
         },
         "args": {
-            "department": "Marketing",
-            "select_fields": [
-                "actual_bonus_2024"
-            ]
+            "format": "CSV",
+            "department": "HR",
+            "business_justification": "preparing for Q4 compensation review cycle",
+            "time_range": "current_year"
         }
     }
 }

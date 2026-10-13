@@ -6,16 +6,8 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Bob",
                 "user_role": [
-                    "faculty"
-                ],
-                "queries_this_session": 1,
-                "dissertation_area": "Artificial intelligence",
-                "research_area": [
-                    "Artificial intelligence",
-                    "Cybersecurity and privacy",
-                    "Software engineering"
+                    "phd_student"
                 ]
             },
             "headers": {
@@ -26,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Get conferences about 'neural networks' in Artificial intelligence topic with limit 12",
+                "input": "Show me 8 conferences on cybersecurity topics.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -37,9 +29,9 @@
             }
         },
         "args": {
-            "keywords": "neural networks",
-            "topic": "Artificial intelligence",
-            "limit": 12
+            "keywords": "cybersecurity",
+            "topic": "Cybersecurity and privacy",
+            "limit": 8
         }
     }
 }
