@@ -2,15 +2,12 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "view_team_compensation",
+        "name": "export_compensation_data",
         "extensions": {
             "subject": {
                 "claims": {},
                 "roles": [
                     "manager"
-                ],
-                "teams": [
-                    "HR"
                 ]
             },
             "headers": {
@@ -21,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Show me the department data for HR employees using view_team_compensation with department HR and select_fields as department",
+                "input": "I need to download the team compensation report in PDF format. Please include fields like name, title, and current_salary.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,9 +29,11 @@
             }
         },
         "args": {
-            "department": "HR",
+            "format": "PDF",
             "select_fields": [
-                "department"
+                "name",
+                "title",
+                "current_salary"
             ]
         }
     }

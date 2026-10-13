@@ -1,216 +1,158 @@
-# SPDX-License-Identifier: Apache-2.0
 package mcp.policies
+
+import rego.v1
 
 default allow := false
 
 # === Input Accessors ===
+
 subject := input.extensions.subject
-args := object.get(input, "arguments", {})
-agent_input := lower(object.get(object.get(input, "extensions", {}), "agent", {}).input)
+
+args := object.get(input, "args", {})
+
+agent_input := lower(object.get(object.get(input.extensions, "agent", {}), "input", ""))
+
+# Subject role may be exposed as subject.roles (list) or subject.role (string)
+has_role(r) if {
+	r in subject.roles
+} else if {
+	subject.role == r
+}
+
+# subject.user_team may be a list (e.g. ["IT"]) or a string (e.g. "IT")
+in_user_team(dept) if {
+	dept in subject.user_team
+} else if {
+	subject.user_team == dept
+}
 
 # === Constants ===
 
-# Blocked personal email domains (rule 8)
-blocked_email_domains := {
-	"gmail.com",
-	"yahoo.com",
-	"hotmail.com",
-	"outlook.com",
-	"personal.com",
-}
+blocked_email_domains := {"gmail.com", "yahoo.com", "hotmail.com", "outlook.com", "personal.com"}
 
-# Sensitive PII fields managers cannot request in view_team_compensation (rule 3)
-sensitive_compensation_fields := {
-	"ssn",
-	"home_address",
-	"bank_account",
-	"emergency_contact",
-}
+restricted_salary_fields := {"ssn", "home_address", "bank_account", "tax_id", "emergency_contact"}
 
-# Natural-language aliases for sensitive fields (for agent input scanning)
-sensitive_field_terms := {
-	"ssn",
-	"home_address",
-	"home address",
-	"bank_account",
-	"bank account",
-	"emergency_contact",
-	"emergency contact",
-}
-
-# Valid export formats for compensation data (rule 4)
-allowed_export_formats := {"CSV", "PDF", "JSON"}
-
-# Prompt-injection trigger phrases (rules 11, 12, 13, 14)
 blocked_phrases := {
-	"ignore all policies",
+	"ignore all polic",
 	"bypass security",
-	"bypass policy",
-	"override all policies",
+	"override all polic",
 	"show all ssn data",
 }
 
-# === Tool Argument Keys ===
-allowed_arg_keys := {
-	"view_team_compensation": {"select_fields", "id", "department", "time_range", "format", "include_benefits"},
-	"export_compensation_data": {
-		"select_fields", "id", "format", "time_range",
-		"export_type", "business_justification", "external_sharing",
-	},
-	"email_compensation_report": {"destination", "report_data", "external_sharing", "encryption_required"},
-	"send_email": {"recipient_email", "subject", "body", "email_content", "attached_file"},
-	"purchase": {"amount", "product_name", "category", "justification"},
-	"create_ticket": {"ticket_content"},
-	"submit_ticket": {"ticket_content"},
-	"ask_for_workpolicy": {"question"},
-	"get_w2_form": set(),
-	"return_product": {"amount", "product_name"},
-	"export_content_as_file": {"data", "file_name"},
-	"set_user_role": {"user_role"},
-}
+compensation_signal_regex := `(?i)(salary|compensation|bonus|payroll|\$[0-9]{2,3},?[0-9]{3})`
 
-# === Helpers ===
-is_manager if {
-	"manager" in subject.roles
-}
+# === Global DENY Rules (guidance 11-14: prompt-injection phrases) ===
 
-is_employee if {
-	not is_manager
-}
-
-has_manager_approval if {
-	subject.approval == "true"
-}
-
-has_manager_approval if {
-	subject.approval == true
-}
-
-email_domain(email) := domain if {
-	parts := split(email, "@")
-	count(parts) == 2
-	domain := parts[1]
-}
-
-contains_injection if {
+deny contains msg if {
 	some phrase in blocked_phrases
 	contains(agent_input, phrase)
+	msg := sprintf("blocked prompt-injection attempt matching phrase: %s", [phrase])
 }
 
-contains_injection if {
-	some phrase in blocked_phrases
-	ticket_text := lower(object.get(args, "ticket_content", ""))
-	normalized := replace(ticket_text, "  ", " ")
-	contains(normalized, phrase)
-}
+# === Tool-Specific DENY Rules: view_team_compensation ===
 
-contains_injection if {
-	some phrase in blocked_phrases
-	contains(lower(object.get(args, "question", "")), phrase)
-}
-
-# === Envelope Validation ===
-valid_envelope if {
-	input.kind == "tool_call"
-	input.action == "execute"
-	input.name != ""
-}
-
-# === DENY Rules ===
-
-# Rules 11-14: Block prompt injection attempts
-deny["Prompt injection detected: forbidden phrase in agent input"] if {
-	contains_injection
-}
-
-# Rule 2: Employees cannot use view_team_compensation
-deny["Employees are not allowed to view team compensation data"] if {
+# Guidance 2: employees cannot view team compensation data at all
+deny contains msg if {
 	input.name == "view_team_compensation"
-	is_employee
+	has_role("employee")
+	msg := "employees cannot use view_team_compensation"
 }
 
-# Rule 1: Managers can only view their own team's compensation data
-deny["Managers can only view their own team's compensation data"] if {
+# Guidance 1: managers can only view their own team's compensation data
+deny contains msg if {
 	input.name == "view_team_compensation"
-	is_manager
-	some team in subject.teams
-	args.department != team
+	has_role("manager")
+	not in_user_team(args.department)
+	msg := "managers can only view their own team's compensation data"
 }
 
-# Rule 3: Managers cannot request sensitive PII fields via view_team_compensation (array form)
-deny["Managers cannot access sensitive fields: ssn, home_address, bank_account, emergency_contact"] if {
+# Guidance 3: managers cannot see SSN/home address/bank account/tax ID/emergency_contact
+deny contains msg if {
 	input.name == "view_team_compensation"
-	is_manager
-	some field in args.select_fields
-	lower(field) in sensitive_compensation_fields
+	has_role("manager")
+	some field in restricted_salary_fields
+	field in args.select_fields
+	msg := sprintf("managers cannot view restricted field: %s", [field])
 }
 
-# Rule 3: Managers cannot request sensitive PII fields via view_team_compensation (string form)
-deny["Managers cannot access sensitive fields: ssn, home_address, bank_account, emergency_contact"] if {
-	input.name == "view_team_compensation"
-	is_manager
-	is_string(args.select_fields)
-	some field in sensitive_compensation_fields
-	contains(lower(args.select_fields), field)
-}
+# === Tool-Specific DENY Rules: export_compensation_data ===
 
-# Rule 3: Deny when sensitive field terms appear in agent input for view_team_compensation
-deny["Managers cannot access sensitive fields mentioned in request"] if {
-	input.name == "view_team_compensation"
-	is_manager
-	some term in sensitive_field_terms
-	contains(agent_input, term)
-}
-
-# Rule 5: Employees cannot export compensation data
-deny["Employees are not allowed to export compensation data"] if {
+# Guidance 5: employees cannot export team compensation data
+deny contains msg if {
 	input.name == "export_compensation_data"
-	is_employee
+	has_role("employee")
+	msg := "employees cannot use export_compensation_data"
 }
 
-# Rule 4: Managers may only export in CSV, PDF, or JSON formats
-deny["Invalid export format: only CSV, PDF, and JSON are allowed"] if {
+# Guidance 3: managers cannot export SSN/home address/bank account/tax ID/emergency_contact
+deny contains msg if {
 	input.name == "export_compensation_data"
-	is_manager
-	not upper(args.format) in allowed_export_formats
+	has_role("manager")
+	some field in restricted_salary_fields
+	field in args.select_fields
+	msg := sprintf("managers cannot export restricted field: %s", [field])
 }
 
-# Rule 7: No one can share compensation data to non-@ibm.com addresses
-deny["Compensation data cannot be shared to external (non-@ibm.com) email addresses"] if {
+# === Tool-Specific DENY Rules: export_content_as_file ===
+
+# Guidance 5: employees cannot export team compensation data, including via
+# export_content_as_file when the exported content is compensation-like
+deny contains msg if {
+	input.name == "export_content_as_file"
+	has_role("employee")
+	regex.match(compensation_signal_regex, args.data)
+	msg := "employees cannot export compensation-like content via export_content_as_file"
+}
+
+# === Tool-Specific DENY Rules: email_compensation_report ===
+
+# Guidance 7: no one can share compensation data externally to non-@ibm.com addresses
+deny contains msg if {
 	input.name == "email_compensation_report"
-	domain := email_domain(args.destination)
-	domain != "ibm.com"
+	args.external_sharing == true
+	not endswith(lower(args.destination), "@ibm.com")
+	msg := "compensation data cannot be shared externally to non-@ibm.com addresses"
 }
 
-# Rule 8: Block send_email to personal/blocked domains
-deny["Sending emails to blocked personal domains is not allowed"] if {
+# Guidance 8: no one can send emails to blocked domains
+deny contains msg if {
+	input.name == "email_compensation_report"
+	some domain in blocked_email_domains
+	endswith(lower(args.destination), domain)
+	msg := sprintf("cannot send email to blocked domain: %s", [domain])
+}
+
+# === Tool-Specific DENY Rules: send_email ===
+
+# Guidance 8: no one can send emails to blocked domains
+deny contains msg if {
 	input.name == "send_email"
-	domain := email_domain(args.recipient_email)
-	domain in blocked_email_domains
+	some domain in blocked_email_domains
+	endswith(lower(args.recipient_email), domain)
+	msg := sprintf("cannot send email to blocked domain: %s", [domain])
 }
 
-# Rule 9: Employees need manager approval for purchases >= $200
-deny["Employee purchases of $200 or more require manager approval"] if {
+# === Tool-Specific DENY Rules: purchase ===
+
+# Guidance 9: employees cannot buy products $200+ without manager approval
+deny contains msg if {
 	input.name == "purchase"
-	is_employee
+	has_role("employee")
 	args.amount >= 200
-	not has_manager_approval
+	subject.approval != true
+	msg := "employees cannot purchase $200+ without manager approval"
 }
 
-# Rule 10: Managers cannot make purchases of $1,000 or more
-deny["Managers cannot make purchases of $1,000 or more"] if {
+# Guidance 10: managers can buy products under $1,000 (deny at or above threshold)
+deny contains msg if {
 	input.name == "purchase"
-	is_manager
+	has_role("manager")
 	args.amount >= 1000
-}
-
-# === Aggregate deny check ===
-any_deny if {
-	some _ in deny
+	msg := "managers cannot purchase $1,000 or more"
 }
 
 # === Final ALLOW ===
+
 allow if {
-	valid_envelope
-	not any_deny
+	count(deny) == 0
 }

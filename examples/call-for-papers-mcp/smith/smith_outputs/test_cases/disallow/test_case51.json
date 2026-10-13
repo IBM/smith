@@ -5,20 +5,7 @@
         "name": "get_events",
         "extensions": {
             "subject": {
-                "claims": {},
-                "user_name": "Bob",
-                "user_role": [
-                    "faculty",
-                    "phd_student",
-                    "guest"
-                ],
-                "queries_this_session": 1,
-                "dissertation_area": "Artificial intelligence",
-                "research_area": [
-                    "Artificial intelligence",
-                    "Cybersecurity and privacy",
-                    "Software engineering"
-                ]
+                "claims": {}
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -28,7 +15,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Look for startup expo events in cybersecurity with topic Cybersecurity and privacy",
+                "input": "Look up conferences using the keyword 'Education' in the topic area 'Cybersecurity and privacy', returning up to 7 results.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,9 +26,9 @@
             }
         },
         "args": {
-            "keywords": "startup expo",
+            "keywords": "Education",
             "topic": "Cybersecurity and privacy",
-            "limit": 10
+            "limit": 7
         }
     }
 }

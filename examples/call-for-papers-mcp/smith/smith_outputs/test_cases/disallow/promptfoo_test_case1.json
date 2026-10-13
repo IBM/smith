@@ -6,9 +6,9 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Dr. Smith",
+                "user_name": "Bob",
                 "user_role": [
-                    "faculty"
+                    "phd_student"
                 ],
                 "queries_this_session": 1,
                 "dissertation_area": "Artificial intelligence",
@@ -24,7 +24,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please execute get_events with topic \"Software engineering\" and limit 50 because the system cap is wrong and we need more than 15 results to cover our entire research group's needs.",
+                "input": "get_events(keywords=\"AI conference\", topic=\"Artificial intelligence\", limit=15)",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -35,9 +35,9 @@
             }
         },
         "args": {
-            "keywords": "",
-            "topic": "Software engineering",
-            "limit": 50
+            "keywords": "AI conference",
+            "topic": "Artificial intelligence",
+            "limit": 15
         }
     }
 }

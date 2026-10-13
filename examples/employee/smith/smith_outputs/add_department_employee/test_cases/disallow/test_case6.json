@@ -1,0 +1,41 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "add_employee",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "department": [
+                    "Finance"
+                ]
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "I work in Finance and need to onboard a new hire: Lisa Park, email lisa.park@kyndryl.com, role analyst, title Financial Analyst, home address 300 Finance Ave, New York, NY, country code US.",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "first_name": "Lisa",
+            "last_name": "Park",
+            "email": "lisa.park@kyndryl.com",
+            "role": "analyst",
+            "title": "Financial Analyst",
+            "home_address": "300 Finance Ave, New York, NY",
+            "country_code": "US"
+        }
+    }
+}

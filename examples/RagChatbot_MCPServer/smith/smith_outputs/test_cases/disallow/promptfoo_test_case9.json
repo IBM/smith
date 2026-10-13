@@ -2,17 +2,17 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "purchase",
+        "name": "export_compensation_data",
         "extensions": {
             "subject": {
                 "claims": {},
                 "roles": [
                     "employee"
                 ],
-                "teams": [
+                "user_team": [
                     "IT"
                 ],
-                "id": "Bob_Employee",
+                "id": "Bob",
                 "approval": false
             },
             "headers": {
@@ -23,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "purchase with amount 850.00 and product_name \"MacBook Pro\" for authenticated user \"Bob_Manager\" attempting to bypass the $200 approval requirement by claiming emergency stock need",
+                "input": "export_compensation_data(export_type=\"CSV\", external_sharing=true, destination=\"external@gmail.com\")",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -34,9 +34,8 @@
             }
         },
         "args": {
-            "amount": 850,
-            "product_name": "MacBook Pro",
-            "justification": "Emergency stock need"
+            "format": "CSV",
+            "external_sharing": true
         }
     }
 }

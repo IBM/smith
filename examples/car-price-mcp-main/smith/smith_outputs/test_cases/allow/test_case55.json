@@ -6,7 +6,6 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Bob",
                 "user_role": [
                     "journalist"
                 ]
@@ -19,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I want to retrieve all cars using get_vehicles_by_type",
+                "input": "I'm writing a piece on the auto market \u2014 please call get_vehicles_by_type with vehicle_type set to 'cars'.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +29,7 @@
             }
         },
         "args": {
-            "vehicle_type": "carros"
+            "vehicle_type": "cars"
         }
     }
 }

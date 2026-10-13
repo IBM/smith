@@ -2,14 +2,17 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "purchase",
+        "name": "send_email",
         "extensions": {
             "subject": {
                 "claims": {},
                 "roles": [
-                    "employee"
+                    "manager"
                 ],
-                "approval": false
+                "user_team": [
+                    "IT"
+                ],
+                "id": "Bob"
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -19,7 +22,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Want to buy a printer costing $250. Product name is 'HP LaserJet Pro' for office equipment. Justification is replacing the broken printer in our department.",
+                "input": "Please send a meeting invite summary to karen.white@personal.com. Subject: 'Weekly Sync Notes', body: 'Hi Karen, attached are the notes from our weekly sync. Please review at your earliest convenience.' No attachment.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -28,6 +31,13 @@
                 "managed_by": "tool",
                 "trust_domain": "internal"
             }
+        },
+        "args": {
+            "recipient_email": "karen.white@personal.com",
+            "subject": "Weekly Sync Notes",
+            "body": "Hi Karen, attached are the notes from our weekly sync. Please review at your earliest convenience.",
+            "email_content": "Hi Karen, attached are the notes from our weekly sync. Please review at your earliest convenience.",
+            "attached_file": ""
         }
     }
 }

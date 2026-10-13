@@ -9,9 +9,10 @@
                 "roles": [
                     "manager"
                 ],
-                "teams": [
-                    "Sales"
-                ]
+                "user_team": [
+                    "Finance"
+                ],
+                "id": "Bob"
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -21,7 +22,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Show me the job titles of employees in my Sales team using view_team_compensation tool with department Sales and select_fields title",
+                "input": "Please display the salary and bonus information for everyone on my Finance team, including their names, titles, hire dates, and departments.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,9 +33,15 @@
             }
         },
         "args": {
-            "department": "Sales",
+            "department": "Finance",
             "select_fields": [
-                "title"
+                "employee_name",
+                "title",
+                "hire_date",
+                "department",
+                "base_salary",
+                "bonus_target",
+                "actual_bonus_2024"
             ]
         }
     }

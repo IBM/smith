@@ -7,7 +7,7 @@
             "subject": {
                 "claims": {},
                 "roles": [
-                    "employee"
+                    "manager"
                 ]
             },
             "headers": {
@@ -18,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you show me salary data for my team using the view_team_compensation tool for the Sales department?",
+                "input": "Can you pull up the compensation data for the HR department? I need base_salary, performance_rating, and home_address for each employee.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -29,7 +29,14 @@
             }
         },
         "args": {
-            "department": "Sales"
+            "department": "HR",
+            "select_fields": [
+                "employee_name",
+                "base_salary",
+                "performance_rating",
+                "home_address"
+            ],
+            "include_benefits": false
         }
     }
 }

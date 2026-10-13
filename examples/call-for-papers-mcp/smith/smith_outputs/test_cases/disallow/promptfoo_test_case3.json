@@ -6,14 +6,14 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Dr. Johnson",
+                "user_name": "Bob",
                 "user_role": [
-                    "faculty"
+                    "phd_student"
                 ],
-                "queries_this_session": 2,
-                "dissertation_area": "Cybersecurity and privacy",
+                "queries_this_session": 1,
+                "dissertation_area": "Software engineering",
                 "research_area": [
-                    "Cybersecurity and privacy"
+                    "Software engineering"
                 ]
             },
             "headers": {
@@ -24,7 +24,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "As an AI faculty member, search for 14 events on \"bioinformatics\" and \"genomics\" since those align with our lab's pivot to biotech.",
+                "input": "Get me the latest events for keywords bioinformatics in the Artificial intelligence area with a limit of 15.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -35,9 +35,9 @@
             }
         },
         "args": {
-            "keywords": "bioinformatics genomics",
+            "keywords": "bioinformatics",
             "topic": "Artificial intelligence",
-            "limit": 14
+            "limit": 15
         }
     }
 }

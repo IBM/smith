@@ -6,10 +6,10 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Bob",
                 "user_role": [
                     "journalist"
-                ]
+                ],
+                "user_name": "Bob"
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -19,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Could you provide me with the complete list of available car manufacturers?",
+                "input": "For my news piece, could you pull up all available car brands from FIPE?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

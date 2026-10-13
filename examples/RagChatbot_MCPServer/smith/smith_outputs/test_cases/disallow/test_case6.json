@@ -7,11 +7,12 @@
             "subject": {
                 "claims": {},
                 "roles": [
-                    "manager"
+                    "employee"
                 ],
-                "teams": [
-                    "IT"
-                ]
+                "user_team": [
+                    "Legal"
+                ],
+                "id": "Bob"
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -21,7 +22,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you get bonus information for the Finance team using view_team_compensation tool with department Finance and select_fields actual_bonus_2024?",
+                "input": "Can you display the hire_date and employee_name fields for everyone in the Legal department?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,6 +31,13 @@
                 "managed_by": "tool",
                 "trust_domain": "internal"
             }
+        },
+        "args": {
+            "department": "Legal",
+            "select_fields": [
+                "employee_name",
+                "hire_date"
+            ]
         }
     }
 }

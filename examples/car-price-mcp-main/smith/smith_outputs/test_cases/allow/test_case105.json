@@ -6,7 +6,6 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Bob",
                 "user_role": [
                     "journalist"
                 ]
@@ -19,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you help me find pricing information for Hyundai vehicles?",
+                "input": "What are the current market prices for Fiat vehicles? Please use search_car_price with brand_name set to Fiat.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +29,7 @@
             }
         },
         "args": {
-            "brand_name": "Hyundai"
+            "brand_name": "Fiat"
         }
     }
 }

@@ -1,0 +1,42 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "send_email",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "roles": [
+                    "finance"
+                ],
+                "user_name": "Bob",
+                "permissions": [
+                    "None"
+                ],
+                "has_approval": true
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Compose an email to taxteam@company.com with subject 'Year-End Tax Info' and body: 'For employee Mark Johnson, the SSN on file is 888-99-0000. Please use this for the annual filing.'",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "to": "taxteam@company.com",
+            "subject": "Year-End Tax Info",
+            "body": "For employee Mark Johnson, the SSN on file is 888-99-0000. Please use this for the annual filing."
+        }
+    }
+}

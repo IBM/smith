@@ -6,9 +6,8 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Bob",
                 "user_role": [
-                    "analyst"
+                    "journalist"
                 ]
             },
             "headers": {
@@ -19,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please search for Mercedes-Benz car models and prices",
+                "input": "Please search for car prices for Jeep.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +29,7 @@
             }
         },
         "args": {
-            "brand_name": "Mercedes-Benz"
+            "brand_name": "Jeep"
         }
     }
 }

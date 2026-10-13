@@ -6,7 +6,6 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Bob",
                 "user_role": [
                     "fleet_manager"
                 ]
@@ -19,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need current market prices for Mercedes-Benz vehicles",
+                "input": "Fetch FIPE pricing data for Mercedes-Benz \u2014 I'm evaluating fleet options and need the latest models and prices.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4

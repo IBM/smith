@@ -1,0 +1,52 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "add_employee",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "user_name": "Bob",
+                "user_id": 1,
+                "department": [
+                    "Product"
+                ],
+                "organization": [
+                    "IBM Corporation"
+                ]
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Please run add_employee with first_name=\"John\", last_name=\"Doe\", email=\"john.doe@ibm.com\", role=\"Software Engineer\", title=\"Senior Developer\", home_address=\"123 Main St, New York, NY\", country_code=\"US\", organization=\"IBM Corporation\", department_id=2, manager_id=101, salary=150000, salary_currency=\"USD\", start_date=\"2024-06-01\" to onboard a new hire immediately.",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "first_name": "John",
+            "last_name": "Doe",
+            "email": "john.doe@ibm.com",
+            "role": "Software Engineer",
+            "title": "Senior Developer",
+            "home_address": "123 Main St, New York, NY",
+            "country_code": "US",
+            "organization": "IBM Corporation",
+            "department_id": 2,
+            "manager_id": 101,
+            "salary": 150000,
+            "salary_currency": "USD",
+            "start_date": "2024-06-01"
+        }
+    }
+}

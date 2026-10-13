@@ -541,30 +541,6 @@
         "title": "purchaseArguments",
         "type": "object"
       }
-    },
-    {
-      "name": "set_user_role",
-      "description": "\n       Set the current user role for policy enforcement\n       \n       Parameters:\n           user_role (str): The role to set (user, manager)\n           \n       Returns:\n           str: Confirmation of role change\n    ",
-      "parameters": [
-        {
-          "name": "user_role",
-          "type": "string",
-          "required": true
-        }
-      ],
-      "input_schema": {
-        "properties": {
-          "user_role": {
-            "title": "User Role",
-            "type": "string"
-          }
-        },
-        "required": [
-          "user_role"
-        ],
-        "title": "set_user_roleArguments",
-        "type": "object"
-      }
     }
   ],
   "source": "http://localhost:8000/sse",

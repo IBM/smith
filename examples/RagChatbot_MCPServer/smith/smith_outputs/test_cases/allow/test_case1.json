@@ -9,9 +9,10 @@
                 "roles": [
                     "manager"
                 ],
-                "teams": [
-                    "HR"
-                ]
+                "user_team": [
+                    "Sales"
+                ],
+                "id": "Bob"
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -21,7 +22,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you show me the names of all employees in HR department? Please use view_team_compensation with department HR and select_fields as employee_name",
+                "input": "Can you pull up the compensation details for my Sales team? I need to see each person's name, job title, base salary, bonus, department, and hire date.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -32,10 +33,16 @@
             }
         },
         "args": {
-            "department": "HR",
+            "department": "Sales",
             "select_fields": [
-                "employee_name"
-            ]
+                "employee_name",
+                "title",
+                "base_salary",
+                "actual_bonus_2024",
+                "department",
+                "hire_date"
+            ],
+            "include_benefits": false
         }
     }
 }

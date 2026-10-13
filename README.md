@@ -13,18 +13,18 @@ An open skill for AI code agents that supports security-grounded guidance analys
 
 Smith is a skill (plugin) for AI code agents that manages the full lifecycle of [Open Policy Agent (OPA)](https://www.openpolicyagent.org/) policies (more types of policies will be supported). It enables agents to:
 
-- **Analyze** MCP servers and guidance through an OWASP-mapped threat model and enforcement review without modifying a policy.
+- **Analyze** MCP servers and guidance through an OWASP-mapped threat model and enforcement review without modifying a policy (experimental and in progress).
 - **Create** OPA policies from natural language guidance and an agent description.
-- **Generate** both synthetic legitimate and adversarial test cases using LLM-based fuzzing and existing red-teaming tools, plus
-policy-bypass cases that target divergences between the guidance and the current policy.
+- **Generate** synthetic legitimate and adversarial test cases using LLM-based fuzzing and existing red-teaming tools, as well as policy-bypass cases that target divergences between the guidance and the current policy.
 - **Test** policies against generated and custom test suites.
-- **Refine** policies automatically through iterative feedback loops (patches for failed test cases, linting, etc.).
+- **Refine** policies automatically through iterative feedback loops that patch policy rules in response to failed test cases, lint the policy, and remove duplicate rules.
 
 ```
 Guidance (NLP) + Agent Description
-   → [optional] Security-Grounded Guidance Analysis (A → B → C → D)
+   → [optional, experimental] Security-Grounded Guidance Analysis 
    → [separate human approval] Policy Creation
-   → Test Generation → Policy Testing ⇄ Policy Refinement
+   → Test Case Generation 
+   → Policy Testing ⇄ Policy Refinement
 ```
 
 ## What Smith Needs from You
@@ -38,11 +38,15 @@ Guidance (NLP) + Agent Description
 
 ## Deployment
 
-Place the entire `smith` folder under the `skills/` or `plugin/` directory of your code agent (Claude Code, Bob, Aider, etc.). The coding agent automatically recognizes Smith as an open skill.
+1. Place the entire `smith` folder under the `skills/` or `plugin/` directory of your code agent (Claude Code, Bob, Aider, etc.). 
 
-For more details of how to use skills in different coding agents, see [Bob](https://bob.ibm.com/docs/ide/features/skills), [Claude](https://code.claude.com/docs/en/skills), and [Aider](https://aiderdesk.hotovo.com/docs/features/skills).
+   For example, if your project is in `/my_project`, Smith goes to `/my_project/.claude/skills/`.
 
-## Install
+2. Start your coding agent from `/my_project`, for example, with `claude --model "your model"`. We used `claude-sonnet-5` for testing.
+
+For instructions on using skills with different coding agents, see [Bob](https://bob.ibm.com/docs/ide/features/skills), [Claude](https://code.claude.com/docs/en/skills), and [Aider](https://aiderdesk.hotovo.com/docs/features/skills).
+
+## Installation
 
 ### Prerequisites
 
@@ -52,7 +56,7 @@ For more details of how to use skills in different coding agents, see [Bob](http
 - [ARES](https://github.com/IBM/ares) (red-teaming framework) — **optional**
 - [Promptfoo](https://www.promptfoo.dev/) (red-teaming framework) — **optional**
 
-Which red-teaming tools to use is controlled by the `ATTACK_TOOLS` environment variable (see [Configuration](#configuration)). Set to `none` to skip red-teaming entirely.
+The `ATTACK_TOOLS` environment variable selects the red-teaming tools (see [Configuration](#configuration)). Set it to `none` to skip red-teaming. The default is `ATTACK_TOOLS=promptfoo`.
 
 **1. Python environment**
 
@@ -61,7 +65,7 @@ python -m venv .venv
 source .venv/bin/activate
 ```
 
-**2. ARES** (optional red-teaming framework). Installs into `src/smith/test_generation/ares/` with its own `.venv`, which is the layout the test-generation pipeline expects (`src/smith/test_generation/attack.py` invokes `ares/.venv/bin/ares`):
+**2. ARES** (optional red-teaming tool). Install it into `src/smith/test_generation/ares/` with its own `.venv`. The test-generation pipeline expects this layout because `src/smith/test_generation/attack.py` invokes `ares/.venv/bin/ares`:
 
 ```bash
 cd src/smith/test_generation/ares
@@ -81,7 +85,7 @@ cd ../../../../
 source .venv/bin/activate
 ```
 
-**3. Promptfoo** (optional red-teaming framework).
+**3. Promptfoo** (optional red-teaming tool)
 
 ```bash
 npm install -g promptfoo
@@ -107,6 +111,28 @@ uv pip install -e .   # or: pip install -e .
 
 This installs the `smith` CLI command.
 
+
+### Configuration
+
+```bash
+cd ..
+cp .env_template .env
+```
+
+Fill in **every** placeholder value in `.env` before running Smith. The most important variables:
+
+| Variable | Description |
+|----------|-------------|
+| `BASE_URL` | Absolute path to your skill folder, **with a trailing slash**, e.g. `/path/.bob/skills/smith/` |
+| `OPENAI_API_KEY` | API key for your LLM provider |
+| `OPENAI_BASE_URL` | Base URL for LLM API endpoint |
+| `MODEL_SONNET` | Model used across the pipelines (e.g., `aws/claude-sonnet-4-6` by default) |
+| `INFERENCE_MODEL` | Model name for the target agent's LLM (e.g., `qwen3.5:latest` for Ollama, or a RITS model name) |
+| `ATTACK_TOOLS` | Comma-separated list of red-teaming tools to run during test generation. Valid values: `ares`, `promptfoo`, `ares,promptfoo`, `none`. Default: `promptfoo` |
+| `ARES_HOME` | Absolute path to the ARES installation directory (e.g., `/path/to/smith/src/smith/test_generation/ares`). Only required when `ATTACK_TOOLS` includes `ares` |
+
+See `.env_template` for the full list.
+
 ### Running the tests
 
 ```bash
@@ -124,75 +150,17 @@ If a pipeline stage just simply reads variables from .env or start an online ser
 The separate `make test` target is the OPA policy scorecard, which scores the current
 policy against your generated test cases rather than testing Smith itself.
 
-### Configuration
+## Start Smith with Agent Examples
 
-```bash
-cd ..
-cp .env_template .env
-```
-
-Fill in **every** placeholder value in `.env` before running Smith. The most important variables:
-
-| Variable | Description |
-|----------|-------------|
-| `BASE_URL` | Absolute path to your skill folder, **with a trailing slash**, e.g. `/path/.bob/skills/smith/` |
-| `OPENAI_API_KEY` | API key for your LLM provider |
-| `OPENAI_BASE_URL` | Base URL for LLM API endpoint |
-| `MODEL_SONNET` | Model used across the pipelines (e.g., `GCP/claude-4-sonnet` by default) |
-| `AGENT_URL` | URL of the target agent server (must expose `/chat` and `/extract_tool_call`); default `http://localhost:9000` |
-| `INFERENCE_MODEL` | Model name for the target agent's LLM (e.g., `qwen3.5:latest` for Ollama, or a RITS model name) |
-| `INFERENCE_BASE_URL` | Base URL for the agent's LLM API (e.g., `http://localhost:11434/v1` for Ollama) |
-| `INFERENCE_API_KEY` | API key for the agent's LLM (use `ollama` for local Ollama) |
-| `OLLAMA_BASE_URL` | Base URL for promptfoo's native ollama provider during red-team generation (no `/v1` suffix); default `http://localhost:11434` |
-| `MCP_TRANSPORT` | MCP transport type: `sse` or `stdio` |
-| `MCP_URL` | MCP server URL (SSE transport only); default `http://localhost:8000/sse` |
-| `MCP_COMMAND` / `MCP_ARGS` / `MCP_CWD` | MCP launch command, args, and working dir (**stdio transport only** — see the commented examples in `.env_template`) |
-| `TARGET_AGENT_PATH` | Relative path to the target MCP server directory, e.g., `examples/RagChatbot_MCPServer/` for the HR agent |
-| `GUIDANCE_FILE` | Path to the policy guidance file, e.g., `examples/RagChatbot_MCPServer/smith/guidance.txt` |
-| `SYSTEM_VAR_FILE` | Path to the system-variables JSON (e.g., `examples/<agent>/smith/system_vars.json`). **Required** — test generation fails without it |
-| `PROMPTFOO_CONFIG_FILE` / `PROMPTFOO_OUTPUT_FILE` | Promptfoo red-team config and generated output paths |
-| `ATTACK_TOOLS` | Comma-separated list of red-teaming tools to run during test generation. Valid values: `ares`, `promptfoo`, `ares,promptfoo`, `none`. Default: `ares,promptfoo` |
-| `ARES_HOME` | Absolute path to the ARES installation directory (e.g., `/path/to/smith/src/smith/test_generation/ares`). Only required when `ATTACK_TOOLS` includes `ares` |
-
-See `.env_template` for the full list, including model sampling (`TEMP`, `TOP_P`), test-case evaluation thresholds, and refinement/clustering parameters.
-
-### Start the target agent and MCP server
-
-Detailed instructions for each agent example can be found in the `examples/<agent>/README.md`.
-
-Smith uses a target agent for workflows that call `/chat` or
-`/extract_tool_call`, and it connects to the MCP server when extracting tool
-definitions. Start only the processes required by the command you are running;
-for example, `get_current_agent` is a configuration lookup, while
-`get_mcp_parameter` requires the configured MCP server to be reachable.
+To start Smith with an agent example, follow the [HR Agent setup guide](examples/hr-agent/README.md). Other examples have their own `examples/<agent>/README.md`.
 
 Example layouts vary: an MCP server may use Python, JavaScript, or TypeScript;
 may run over stdio, HTTP, or SSE; and may use entrypoint names such as
 `server.py`, `mcp_server.py`, or `index.js`. Some targets also contain an agent
 or UI, while standalone MCP servers may not. Follow the selected example's
-README rather than assuming fixed filenames. Using `call-for-papers-mcp` as a
-concrete example:
+README rather than assuming fixed filenames. 
 
-```bash
-cd examples/call-for-papers-mcp
-pip install -r requirements.txt
-
-# Start the agent server on the port AGENT_URL points to (default 9000).
-uvicorn agent:app --port 9000
-```
-
-This example's agent **spawns its MCP server itself over stdio** (`agent.py` launches `python server.py`), so you do not start the MCP server separately. Match `.env` accordingly:
-
-```
-MCP_TRANSPORT=stdio
-MCP_COMMAND=python
-MCP_ARGS=server.py
-MCP_CWD=examples/call-for-papers-mcp
-```
-
-For an SSE-based MCP server instead, set `MCP_TRANSPORT=sse` and `MCP_URL=http://localhost:8000/sse`, and start that server on its own. Check each example's own `README.md` for specifics.
-
-## How It Works
+## How Smith Works
 
 Smith operates as an agent skill with a CLI backend. The AI agent reads instructions from `SKILL.md` and orchestrates the appropriate workflows by invoking the `smith` CLI or following embedded markdown guides.
 
@@ -216,9 +184,6 @@ Smith operates as an agent skill with a CLI backend. The AI agent reads instruct
 └────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-Bypass cases are generated from the current policy (a `Policy Creation` output) rather than the guidance alone, so they close the loop back into `Test Case Generation`.
-
-
 ## Core Concepts
 
 ### Policy Creation
@@ -231,22 +196,22 @@ Create OPA policies from natural language specifications. The agent follows `opa
 - `system_vars.json` — system/session variables (e.g., roles, teams), maps to `input.extensions.subject.*`
 - `test_case_template.json` (in `./references/`) — defines the OPA input envelope structure
 
-**Output**: OPA policy saved to `<TARGET_AGENT_PATH>/smith/policy_generated.rego`
+**Output**: OPA policy saved to `./assets/policy.rego`
 
 The policy only references data available from tool arguments and system variables. If a guidance rule requires context not available in either, it is logged as a suggestion rather than added to the policy.
 
-### Security-Grounded Guidance Analysis
+### Security-Grounded Guidance Analysis (Experimental)
 
-A separate, standalone workflow that grounds guidance in an OWASP-mapped threat model. It produces guidance only and never generates, modifies, or writes Rego or an OPA policy. Use it when you want an OWASP review of the guidance itself, to threat-model an MCP server, to produce enforcement guidance for a new tool, or to run any individual analysis stage. Policy Creation remains a separate workflow and starts only after an explicit human-approved handoff. The agent follows `opa_policy/guidelines-security-analysis/guidelines-security-analysis.md`, which runs in this order:
+A separate, standalone workflow that grounds guidance in an OWASP-mapped threat model. It produces guidance only and never generates, modifies, or writes Rego or an OPA policy. Use it when you want an OWASP review of the guidance itself, to threat-model an MCP server, to produce enforcement guidance for a new tool, or to run any individual analysis stage. This process follows `opa_policy/guidelines-security-analysis/guidelines-security-analysis.md`, which runs in this order:
 
 1. **Step A — Architecture Analysis** → `architecture.md`. Uses the configured target and extracted tool definitions to discover only source files that implement relevant roles, regardless of filename, language, or MCP transport. It then describes the layers actually present, with trust boundaries, data flow, and available enforcement points. UI-only, test, dependency, and generated files are skipped unless they participate in tool invocation or enforcement.
 2. **Step B — Policy Guidance Questionnaire** → `policy_guidance_questionnaire.md`. Turns `guidance.txt` plus the architecture into a compact answer register covering roles, hard limits, rate limits, and response filtering, with confidence tags on every answer.
 3. **Step C — Threat Model** → `threat_model.md`. Evaluates all 10 OWASP Top 10 for Agentic AI Security categories (ASI01–ASI10) against the architecture and questionnaire, producing deduplicated threat and scenario-coverage tables backed by a shared evidence index. It queries only the catalog fields used for threat discovery.
 4. **Step D — Enforcement Mapping** → `owasp_policy_guidelines.md` and, only when missing rules are found, `guidance_updated.txt`. Maps stable threat IDs to the layer that can enforce them (OPA vs. Agent / Tool implementation / Infra), loading only mitigation fields for relevant OWASP categories and avoiding repeated threat prose. It normalizes candidate and existing rules per tool, suppresses duplicate or subsumed decisions, and emits only novel or additive OPA-enforceable rules. Non-OPA-enforceable findings and wording-only clarifications are recorded in the Gap Register table inside `owasp_policy_guidelines.md`, NOT in `guidance_updated.txt`. When no new rules are proposed, `guidance_updated.txt` is not created.
 
-Each step is a separate, resumable job with its own model context. In **Gated** mode, Smith pauses after each phase checkpoint; in **Isolated autonomous** mode, it starts the next phase in a fresh worker context after the checkpoint passes. If isolated workers are unavailable, Smith stops after one phase so the next phase can begin in a new invocation. Existing successful artifacts are reused rather than regenerated. The four analysis artifacts live under `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/`; when generated, the proposed `guidance_updated.txt` addendum lives beside the configured `GUIDANCE_FILE`.
+Each step is a separate, resumable job with its own model context. In **Gated** mode, Smith pauses after each phase checkpoint; in **Isolated autonomous** mode, it starts the next phase in a fresh worker context after the checkpoint passes. The four analysis artifacts live under `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/`; when generated, the proposed `guidance_updated.txt` addendum lives beside the configured `GUIDANCE_FILE`.
 
-After the analysis is complete, the human may separately ask the agent to validate and append `guidance_updated.txt` to `guidance.txt`, preserving the existing file byte-for-byte. The agent then asks separately whether to start Policy Creation; merging guidance does not generate a policy or imply approval to do so.
+After the analysis is complete, the human may separately ask the agent to move `guidance_updated.txt` to `guidance.txt` and start policy creation. 
 
 ### Test Case Generation
 
@@ -264,13 +229,13 @@ If you use Promptfoo for red-teaming, you can auto-generate the `promptfooconfig
 smith --flag generate_promptfoo_config
 ```
 
-This generates `purpose`, `contexts`, and `policy` text from your guidance and system variables, and appends tool parameter definitions to `testGenerationInstructions` so Promptfoo generates prompts with concrete values for all required parameters. Generation is LLM + deterministic — always review the output before running red-team tests.
+This generates `purpose`, `contexts`, and `policy` text from your guidance and system variables, and appends tool parameter definitions to `testGenerationInstructions` so Promptfoo generates prompts with concrete values for all required parameters. Generation combines LLM output with deterministic steps. Review the output before running red-team tests.
 
 #### Guidance-targeted generation
 
 ```bash
 # CLI commands used for test case generation
-smith --flag test_generation
+smith --flag test_generation --mode fresh
 ```
 
 Add `--mode update` to regenerate only the test cases whose guidance changed since the last run, instead of rebuilding the whole suite:
@@ -285,7 +250,7 @@ This runs the following stages:
 
 1. **Decomposition** — Break guidance into testable atomic conditions
 2. **Variable Extraction** — Identify system/mutable variables and their domains
-3. **Grey Condition Extraction** — Identify ambiguous boundary conditions, user needs to approve guidances from grey condition extraction and then merge them to clean space
+3. **Grey Condition Extraction** — Identify ambiguous boundary conditions. The user approves guidance proposed during this stage before it is merged into the clean guidance.
 4. **Legitimate and Adversarial Case Generation** — Create benign (allow and disallow) inputs that should pass the policy. Create adversarial inputs using ARES and Promptfoo. Finally, combine into structured test cases
 
 All results are stored in `./references/test_cases/`.
@@ -297,9 +262,9 @@ All results are stored in `./references/test_cases/`.
 smith --flag bypass_case_generation
 ```
 
-Instead of generating from the guidance alone, this analyzes the **current policy against the guidance** to find where they diverge (e.g. a rule that omits an existence check, a numeric comparison with no type assertion, a substring match a malformed value slips past), then synthesizes adversarial cases that exercise each divergence:
+This stage compares the **current policy with the guidance** to find divergences, such as a missing existence check, a numeric comparison without a type assertion, or a substring match that lets a malformed value slip through. It then synthesizes adversarial cases for each divergence:
 
-1. **Detect** — Compare the full Rego policy to the guidance and classifies each divergence by mechanism (`omitted_field`, `type_confusion`, `malformed_value`, `keyword_evasion`). If the model returns malformed JSON, the call is retried (up to `MAX_BYPASS_PARSE_ATTEMPTS`, default 3) before giving up with an empty report.
+1. **Detect** — Compare the full Rego policy to the guidance and classify each divergence by mechanism (`omitted_field`, `type_confusion`, `malformed_value`, `keyword_evasion`). If the model returns malformed JSON, the call is retried (up to `MAX_BYPASS_PARSE_ATTEMPTS`, default 3) before giving up with an empty report.
 2. **Synthesize** — Turn each divergence into concrete abstract cases.
 3. **Convert** — Write them into `./references/test_cases/{allow,disallow}/` with a `bypass_test_case` prefix.
 
@@ -315,7 +280,7 @@ smith --flag test_case_evaluation
 This runs three steps:
 
 1. **Classify promptfoo cases** — Match each promptfoo red-team case to a specific guidance rule. Uses local embedding similarity (sentence-transformers) to retrieve top-N candidate guidances, then an LLM selects the most relevant one from the candidates.
-2. **Validate labels** — Verify that each test case's assigned label (allow/disallow) is correct using a three-tier approach, each tier assigns a confidence score:
+2. **Validate labels** — Verify each test case's assigned label (allow/disallow) using a three-tier approach. Each tier assigns a confidence score:
    - **Tier 1 (Rule-based)** — Fast pattern matching for clear-cut cases (e.g., bypass keywords)
    - **Tier 2 (Embedding + NLI)** — Semantic similarity check; cases with high confidence and label agreement are resolved, others are escalated
    - **Tier 3 (LLM Judge)** — Cases with low confidence or label disagreement from Tier 2 are judged by an LLM
@@ -341,7 +306,7 @@ Calls the agent's `/extract_tool_call` endpoint to extract tool names and argume
 
 - Cases where the returned tool name doesn't match the expected one are flagged as mismatches and removed
 - Cases labeled as "other" (general questions that don't invoke any tool) are moved to `./references/test_cases/malicious/` for future guardrail features
-- Cases that already carry an `arguments` block are skipped, so translation is re-runnable. After adding bypass cases you can re-run it to translate only the new cases instead of re-translating the whole corpus
+- Cases that already carry an `arguments` block are skipped, so translation is re-runnable. After adding bypass cases, you can rerun it to translate only the new cases instead of retranslating the whole corpus
 
 ### Policy Testing
 
@@ -371,8 +336,8 @@ smith --flag apply_cross_validate    # apply approved corrections
 Iterative improvement workflow:
 
 1. **Red Feedback** — Cluster failed malicious inputs and patch policy rules, following `opa_policy/policy_patch/policy_patch.md`
-2. **Regal Formatting** — Lint and format policy with [Regal](https://github.com/StyraInc/regal). It follows `opa_policy/policy_regal/policy_regal.md`
-3. **Duplication Removal** — Detect and remove redundant rules via graph analysis, LLM review, and voting. It follows `opa_policy/policy_duplication/policy_duplication.md`
+2. **Regal Formatting** — Lint and format the policy with [Regal](https://github.com/StyraInc/regal), following `opa_policy/policy_regal/policy_regal.md`
+3. **Duplication Removal** — Detect and remove redundant rules through graph analysis, LLM review, and voting, following `opa_policy/policy_duplication/policy_duplication.md`
 
 ```bash
 # CLI commands used in the refinement loop
@@ -405,8 +370,6 @@ smith/
 │   ├── policy_agent/        # OPA policy analysis and refinement
 │   ├── policy_generation/   # MCP tool extraction and policy generation
 │   ├── test_generation/     # Test case generation and translation pipeline
-│   │   ├── classify_promptfoo_tool.py  # LLM-based tool classification for promptfoo cases
-│   │   └── generate_promptfoo_config.py # Auto-generate promptfoo redteam config
 │   ├── test_case_evaluation/ # Label validation and report generation
 │   ├── policy_testing/      # OPA scorecard harness (score_card.sh, coverage)
 │   └── tools/               # Developer utilities (explorer UI, license headers)

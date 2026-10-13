@@ -2,13 +2,14 @@
     "input": {
         "kind": "tool_call",
         "action": "execute",
-        "name": "send_email",
+        "name": "purchase",
         "extensions": {
             "subject": {
                 "claims": {},
                 "roles": [
                     "manager"
-                ]
+                ],
+                "id": "Bob"
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -18,7 +19,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Send the project timeline to client@external.com with subject 'Project Update' and body 'Here is our latest project status' with content 'Project milestones and deliverables' and attach the file 'timeline.pdf'",
+                "input": "Please process a purchase for a project management software subscription at $600. Product name: Asana Business Plan, category: software, justification: needed for team project tracking.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -29,11 +30,10 @@
             }
         },
         "args": {
-            "recipient_email": "client@external.com",
-            "subject": "Project Update",
-            "body": "Here is our latest project status",
-            "email_content": "Project milestones and deliverables",
-            "attached_file": "timeline.pdf"
+            "amount": 600,
+            "product_name": "Asana Business Plan",
+            "category": "software",
+            "justification": "needed for team project tracking"
         }
     }
 }

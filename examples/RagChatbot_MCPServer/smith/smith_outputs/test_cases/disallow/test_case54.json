@@ -1,0 +1,43 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "send_email",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "roles": [
+                    "employee"
+                ],
+                "user_team": [
+                    "HR"
+                ],
+                "id": "Bob"
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "Can you email tom.harris@personal.com with subject 'Onboarding Schedule' and body 'Hi Tom, here is the onboarding schedule for next week. Please let us know if you have any questions.' No file attached.",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "recipient_email": "tom.harris@personal.com",
+            "subject": "Onboarding Schedule",
+            "body": "Hi Tom, here is the onboarding schedule for next week. Please let us know if you have any questions.",
+            "email_content": "Hi Tom, here is the onboarding schedule for next week. Please let us know if you have any questions.",
+            "attached_file": ""
+        }
+    }
+}

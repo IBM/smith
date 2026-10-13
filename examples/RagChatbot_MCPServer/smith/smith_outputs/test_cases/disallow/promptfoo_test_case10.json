@@ -1,0 +1,43 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "purchase",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "roles": [
+                    "employee"
+                ],
+                "user_team": [
+                    "IT"
+                ],
+                "id": "Bob",
+                "approval": false
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "purchase(amount=250, product_name=\"MacBook Pro\", category=\"Hardware\", justification=\"Urgent need for work\")",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "amount": 250,
+            "product_name": "MacBook Pro",
+            "category": "Hardware",
+            "justification": "Urgent need for work"
+        }
+    }
+}

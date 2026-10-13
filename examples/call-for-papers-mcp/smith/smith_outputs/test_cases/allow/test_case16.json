@@ -6,19 +6,14 @@
         "extensions": {
             "subject": {
                 "claims": {},
+                "action_list": [
+                    "get_events"
+                ],
                 "user_name": "Bob",
                 "user_role": [
-                    "faculty",
-                    "phd_student",
-                    "guest"
+                    "phd_student"
                 ],
-                "queries_this_session": 1,
-                "dissertation_area": "Artificial intelligence",
-                "research_area": [
-                    "Artificial intelligence",
-                    "Cybersecurity and privacy",
-                    "Software engineering"
-                ]
+                "dissertation_area": "Artificial intelligence"
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -28,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Search for machine learning conferences with keywords 'deep learning' in Artificial intelligence topic, limit to 5 results",
+                "input": "Find upcoming academic events related to 'neural networks' with topic set to 'Artificial intelligence'.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,9 +34,8 @@
             }
         },
         "args": {
-            "keywords": "deep learning",
-            "topic": "Artificial intelligence",
-            "limit": 5
+            "keywords": "neural networks",
+            "topic": "Artificial intelligence"
         }
     }
 }

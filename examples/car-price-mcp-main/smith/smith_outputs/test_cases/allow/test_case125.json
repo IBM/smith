@@ -6,9 +6,8 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Bob",
                 "user_role": [
-                    "analyst"
+                    "journalist"
                 ]
             },
             "headers": {
@@ -19,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "I need to search for Toyota car prices and models",
+                "input": "I'm covering the automotive market and need FIPE pricing data for Nissan. Can you fetch that?",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +29,7 @@
             }
         },
         "args": {
-            "brand_name": "Toyota"
+            "brand_name": "Nissan"
         }
     }
 }

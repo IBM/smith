@@ -37,51 +37,6 @@
       }
     },
     {
-      "name": "display_compensation",
-      "description": "Display a compensation summary for the employee (band only, no salary).",
-      "parameters": [
-        {
-          "name": "employee_id",
-          "type": "string",
-          "required": true
-        }
-      ],
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "employee_id": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "employee_id"
-        ]
-      }
-    },
-    {
-      "name": "get_directory",
-      "description": "Get the employee directory listing.",
-      "parameters": [
-        {
-          "name": "department",
-          "type": "string",
-          "required": false,
-          "description": "Optional department filter",
-          "default": ""
-        }
-      ],
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "department": {
-            "type": "string",
-            "description": "Optional department filter",
-            "default": ""
-          }
-        }
-      }
-    },
-    {
       "name": "send_email",
       "description": "Send an email (simulated).",
       "parameters": [
@@ -169,7 +124,7 @@
     },
     {
       "name": "adjust_compensation",
-      "description": "Adjust (raise) an employee's compensation by a given dollar amount.",
+      "description": "Adjust an employee's salary by a dollar amount (a raise). Adjustments over $10,000 require the requester's manager to approve out-of-band before they apply \u2014 the gateway handles that; you just make the call and relay the outcome.",
       "parameters": [
         {
           "name": "employee_id",
@@ -181,7 +136,7 @@
           "name": "amount",
           "type": "integer",
           "required": true,
-          "description": "Dollar amount to add to the employee's salary (positive raise)."
+          "description": "Dollar amount to add to the salary (e.g. 25000)."
         }
       ],
       "input_schema": {
@@ -193,7 +148,7 @@
           },
           "amount": {
             "type": "integer",
-            "description": "Dollar amount to add to the employee's salary (positive raise)."
+            "description": "Dollar amount to add to the salary (e.g. 25000)."
           }
         },
         "required": [

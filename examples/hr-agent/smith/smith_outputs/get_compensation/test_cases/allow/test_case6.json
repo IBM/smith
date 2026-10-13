@@ -6,13 +6,13 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Bob",
                 "roles": [
                     "hr"
                 ],
                 "permissions": [
                     "None"
                 ],
+                "user_name": "Bob",
                 "has_approval": "true|false"
             },
             "headers": {
@@ -23,7 +23,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Please retrieve the compensation record for EMP-001234. The SSN should be redacted before showing it to me.",
+                "input": "Please pull up the compensation record for EMP-007777. The SSN should be redacted in the output.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -34,7 +34,7 @@
             }
         },
         "args": {
-            "employee_id": "EMP-001234",
+            "employee_id": "EMP-007777",
             "include_ssn": false
         }
     }

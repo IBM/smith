@@ -5,20 +5,7 @@
         "name": "get_events",
         "extensions": {
             "subject": {
-                "claims": {},
-                "user_name": "Bob",
-                "user_role": [
-                    "faculty",
-                    "phd_student",
-                    "guest"
-                ],
-                "queries_this_session": 1,
-                "dissertation_area": "Artificial intelligence",
-                "research_area": [
-                    "Artificial intelligence",
-                    "Cybersecurity and privacy",
-                    "Software engineering"
-                ]
+                "claims": {}
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -28,7 +15,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Search for conferences with keywords 'finance' in Software engineering topic with limit 8",
+                "input": "Look up conferences on WikiCFP with keywords 'Materials Science and nanotechnology', topic 'Cybersecurity and privacy', limit 8.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,8 +26,8 @@
             }
         },
         "args": {
-            "keywords": "finance",
-            "topic": "Software engineering",
+            "keywords": "Materials Science and nanotechnology",
+            "topic": "Cybersecurity and privacy",
             "limit": 8
         }
     }

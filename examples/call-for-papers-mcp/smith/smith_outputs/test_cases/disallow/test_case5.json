@@ -6,16 +6,8 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Bob",
                 "user_role": [
-                    "phd_student"
-                ],
-                "queries_this_session": 1,
-                "dissertation_area": "Artificial intelligence",
-                "research_area": [
-                    "Artificial intelligence",
-                    "Cybersecurity and privacy",
-                    "Software engineering"
+                    "faculty"
                 ]
             },
             "headers": {
@@ -26,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Get events about 'code analysis' in Software engineering topic, maximum 12 results",
+                "input": "Search for conferences on artificial intelligence and return 20 results please.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -37,9 +29,9 @@
             }
         },
         "args": {
-            "keywords": "code analysis",
-            "topic": "Software engineering",
-            "limit": 12
+            "keywords": "artificial intelligence",
+            "topic": "Artificial intelligence",
+            "limit": 20
         }
     }
 }

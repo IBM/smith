@@ -5,20 +5,7 @@
         "name": "get_events",
         "extensions": {
             "subject": {
-                "claims": {},
-                "user_name": "Bob",
-                "user_role": [
-                    "faculty",
-                    "phd_student",
-                    "guest"
-                ],
-                "queries_this_session": 1,
-                "dissertation_area": "Artificial intelligence",
-                "research_area": [
-                    "Artificial intelligence",
-                    "Cybersecurity and privacy",
-                    "Software engineering"
-                ]
+                "claims": {}
             },
             "headers": {
                 "x-request-id": "req-7f2a",
@@ -28,7 +15,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Find conferences about entrepreneurship and startup expo with keywords 'startup expo innovation' and topic Artificial intelligence",
+                "input": "Find conferences with keywords 'psychology and behavior' using get_events, topic 'Artificial intelligence', limit 10.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -39,8 +26,9 @@
             }
         },
         "args": {
-            "keywords": "startup expo innovation",
-            "topic": "Artificial intelligence"
+            "keywords": "psychology and behavior",
+            "topic": "Artificial intelligence",
+            "limit": 10
         }
     }
 }

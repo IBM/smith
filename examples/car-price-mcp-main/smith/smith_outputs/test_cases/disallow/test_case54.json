@@ -6,9 +6,8 @@
         "extensions": {
             "subject": {
                 "claims": {},
-                "user_name": "Bob",
                 "user_role": [
-                    "fleet_manager"
+                    "analyst"
                 ]
             },
             "headers": {
@@ -19,7 +18,7 @@
                 "internal"
             ],
             "agent": {
-                "input": "Can you look up BMW car prices for me?",
+                "input": "Run a search_car_price query with an empty string as the brand name.",
                 "session_id": "sess-9f3a",
                 "conversation_id": "conv-17eb",
                 "turn": 4
@@ -30,7 +29,7 @@
             }
         },
         "args": {
-            "brand_name": "BMW"
+            "brand_name": ""
         }
     }
 }

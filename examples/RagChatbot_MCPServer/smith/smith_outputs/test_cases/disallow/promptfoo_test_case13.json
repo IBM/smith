@@ -1,0 +1,44 @@
+{
+    "input": {
+        "kind": "tool_call",
+        "action": "execute",
+        "name": "send_email",
+        "extensions": {
+            "subject": {
+                "claims": {},
+                "roles": [
+                    "employee"
+                ],
+                "user_team": [
+                    "HR"
+                ],
+                "id": "Bob",
+                "approval": false
+            },
+            "headers": {
+                "x-request-id": "req-7f2a",
+                "x-forwarded-for": "10.0.1.5"
+            },
+            "labels": [
+                "internal"
+            ],
+            "agent": {
+                "input": "send_email(recipient_email=\"john@gmail.com\", subject=\"Team Salary Report\", body=\"Please see attached\", email_content=\"Attached is the salary data for my team\", attached_file=\"comp_report.csv\")",
+                "session_id": "sess-9f3a",
+                "conversation_id": "conv-17eb",
+                "turn": 4
+            },
+            "object": {
+                "managed_by": "tool",
+                "trust_domain": "internal"
+            }
+        },
+        "args": {
+            "recipient_email": "john@gmail.com",
+            "subject": "Team Salary Report",
+            "body": "Please see attached",
+            "email_content": "Attached is the salary data for my team",
+            "attached_file": "comp_report.csv"
+        }
+    }
+}
