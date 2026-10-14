@@ -21,12 +21,13 @@ from .config import (
     STEPS,
     STEPS_BY_NUM,
     UNKNOWN_CMD,
+    standalone_mcp_script,
 )
 from .console import out
 from .examples import choose as choose_example
 from .pipeline import Pipeline
 from .runner import Runner
-from .services import Services, docker_available
+from .services import Services, docker_available, port_open
 from .trace import session_id
 
 
@@ -155,7 +156,8 @@ def resolve_carry(root: Path, value: str, this_run: Path) -> Path | None:
     return path
 
 
-def preflight(root: Path) -> None:
+def preflight(root: Path, example: str, steps: list[int], *,
+              dry_run: bool = False) -> None:
     out.info("Preflight checks")
     fatal = False
 
@@ -197,8 +199,6 @@ def preflight(root: Path) -> None:
         if "promptfoo" in attack and not shutil.which("promptfoo"):
             out.warn("ATTACK_TOOLS includes promptfoo but its CLI is not on "
                      "PATH.")
-            out.warn("Adversarial coverage will be reduced — a later 'all tests "
-                     "passed' would reflect")
             out.warn("legitimate cases only, not resistance to red-teaming.")
     else:
         out.warn(f"ATTACK_TOOLS={attack or 'unset'} — no adversarial coverage "
@@ -207,6 +207,18 @@ def preflight(root: Path) -> None:
     out.ok(f"agent port: {AGENT_PORT} (from AGENT_URL)")
     out.ok(f"MCP port: {MCP_PORT} (from MCP_URL)")
     out.ok(f"OPA health: {OPA_HEALTH_URL}")
+    if not dry_run:
+        required_ports = [(AGENT_PORT, "target agent")]
+        if standalone_mcp_script(example):
+            required_ports.append((MCP_PORT, "MCP server"))
+        if any(num >= 4 for num in steps):
+            # make test publishes OPA on host port 8181, regardless of OPA_URL.
+            required_ports.append((8181, "OPA"))
+        for port, service in required_ports:
+            if port_open(port):
+                out.err(f"Port {port} is already in use ({service}); stop the "
+                        "existing service before running this evaluation.")
+                fatal = True
     if fatal:
         raise SystemExit(1)
 
@@ -222,13 +234,18 @@ def verify_skill(dry_run: bool) -> None:
     if dry_run:
         return
 
-    proc = subprocess.run(
-        ["claude", "-p", "/smith", "--permission-mode", "plan"],
-        cwd=PARENT, capture_output=True, text=True,
-    )
+    try:
+        proc = subprocess.run(
+            ["claude", "-p", "/smith", "--permission-mode", "plan"],
+            cwd=PARENT, capture_output=True, text=True, timeout=60,
+        )
+    except subprocess.TimeoutExpired:
+        out.err("Timed out checking whether '/smith' resolves in headless mode.")
+        raise SystemExit(1) from None
     combined = (proc.stdout or "") + (proc.stderr or "")
-    if UNKNOWN_CMD.search(combined):
-        out.err(f"'/smith' does not resolve when claude runs in {PARENT}:")
+    if proc.returncode != 0 or not combined.strip() or UNKNOWN_CMD.search(combined):
+        out.err(f"Could not verify '/smith' when claude runs in {PARENT} "
+                f"(exit code {proc.returncode}):")
         out.block("\n".join(combined.splitlines()[:30]))
         out.err("Claude Code looks for .claude/skills/<name>/SKILL.md under "
                 "its cwd.")
@@ -277,7 +294,7 @@ def main(argv: list[str] | None = None) -> int:
     out.ok(f"logs: {log_dir}")
 
     example = choose_example(root, args.example)
-    preflight(root)
+    preflight(root, example, steps, dry_run=args.dry_run)
     verify_skill(args.dry_run)
 
     services = Services(root, log_dir, dry_run=args.dry_run,

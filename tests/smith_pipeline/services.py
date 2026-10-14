@@ -99,10 +99,7 @@ class Services:
 
     # -- MCP ----------------------------------------------------------------
     def start_mcp(self, example: str) -> bool:
-        """Start a standalone MCP server if this example needs one.
-
-        Must run before the agent: an SSE example's agent connects on startup.
-        """
+        """Start a standalone MCP server if this example needs one."""
         script = standalone_mcp_script(example)
         if not script:
             return True  # stdio example: the agent launches its own server
@@ -111,8 +108,9 @@ class Services:
             out.warn(f"examples/{example}/{script} not found — no MCP server.")
             return True
         if port_open(MCP_PORT):
-            out.warn(f"Port {MCP_PORT} already in use — assuming MCP is running.")
-            return True
+            out.err(f"Port {MCP_PORT} became occupied before the MCP server "
+                    "could start; stop the existing service and retry.")
+            return False
 
         out.info(f"Starting MCP server: examples/{example}/{script} "
                  f"(SSE on :{MCP_PORT})")
@@ -124,13 +122,13 @@ class Services:
                                "mcp_server.log")
         # SSE streams, so a plain fetch would hang: wait for the port instead.
         for _ in range(MCP_START_TIMEOUT):
-            if port_open(MCP_PORT):
-                out.ok(f"MCP server (:{MCP_PORT}) is listening")
-                return True
             if self.mcp.poll() is not None:
                 out.err("MCP server exited — see logs/mcp_server.log")
                 self._tail("mcp_server.log")
                 return False
+            if port_open(MCP_PORT):
+                out.ok(f"MCP server (:{MCP_PORT}) is listening")
+                return True
             time.sleep(1)
         out.err(f"MCP server did not open :{MCP_PORT} in time")
         return False
@@ -147,11 +145,9 @@ class Services:
                      "will not work.")
             return True
         if port_open(AGENT_PORT):
-            out.warn(f"Port {AGENT_PORT} already in use — assuming the agent "
-                     "is already running.")
-            out.warn(f"(If it belongs to another example: lsof -ti:{AGENT_PORT} "
-                     "| xargs kill)")
-            return True
+            out.err(f"Port {AGENT_PORT} became occupied before the target "
+                    "agent could start; stop the existing service and retry.")
+            return False
 
         out.info(f"Starting target agent: examples/{example} "
                  f"(uvicorn {module} on :{AGENT_PORT})")
@@ -166,16 +162,16 @@ class Services:
             d, "agent.log",
         )
         for _ in range(AGENT_START_TIMEOUT):
+            if self.agent.poll() is not None:
+                out.err("Agent failed to start — see logs/agent.log")
+                self._tail("agent.log")
+                return False
             if http_ok(AGENT_HEALTH_URL):
                 out.ok(f"agent (:{AGENT_PORT}) is up")
                 return True
             if port_open(AGENT_PORT):
                 out.ok(f"agent (:{AGENT_PORT}) is listening")
                 return True
-            if self.agent.poll() is not None:
-                out.err("Agent failed to start — see logs/agent.log")
-                self._tail("agent.log")
-                return False
             time.sleep(1)
         out.err(f"Agent did not answer on :{AGENT_PORT} in time")
         self._tail("agent.log")

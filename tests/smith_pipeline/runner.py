@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import os
+import selectors
 import signal
 import subprocess
 import time
@@ -23,7 +24,10 @@ from .trace import live_line, render_file, session_id, usage_totals
 
 
 _CSV_INTS = ("input_tokens", "output_tokens", "cache_read_tokens",
-             "cache_creation_tokens", "total_tokens", "turns", "seconds")
+             "cache_creation_tokens", "total_tokens", "turns", "seconds",
+             # `ok` round-trips too, so a carried row keeps the knowledge that
+             # its step failed rather than being silently promoted to a pass.
+             "ok")
 
 
 def read_usage_csv(path: Path) -> list[dict[str, float | int | str]]:
@@ -37,10 +41,15 @@ def read_usage_csv(path: Path) -> list[dict[str, float | int | str]]:
     for raw in _csv.DictReader(text.splitlines()):
         row: dict[str, float | int | str] = {}
         for key in _CSV_INTS:
+            # A CSV written before `ok` was round-tripped has no such column;
+            # treat those rows as passes rather than silently failing them.
+            default = 1 if key == "ok" else 0
             try:
-                row[key] = int(raw.get(key) or 0)
+                raw_value = raw.get(key)
+                row[key] = (default if raw_value in (None, "")
+                            else int(raw_value))
             except ValueError:
-                row[key] = 0
+                row[key] = default
         try:
             row["cost_usd"] = float(raw.get("cost_usd") or 0.0)
         except ValueError:
@@ -153,14 +162,29 @@ class Runner:
         """Copy the child's stdout to `fh`, echoing progress as it arrives. Without this a step shows nothing until it exits"""
         deadline = time.monotonic() + self.timeout
         assert proc.stdout is not None
-        for raw in proc.stdout:
-            fh.write(raw)
-            fh.flush()
-            if time.monotonic() > deadline:
-                raise subprocess.TimeoutExpired(proc.args, self.timeout)
-            if line := live_line(raw.decode("utf-8", errors="replace")):
+        pending = b""
+        with selectors.DefaultSelector() as selector:
+            selector.register(proc.stdout, selectors.EVENT_READ)
+            while True:
+                remaining = deadline - time.monotonic()
+                if remaining <= 0 or not selector.select(timeout=remaining):
+                    raise subprocess.TimeoutExpired(proc.args, self.timeout)
+                chunk = os.read(proc.stdout.fileno(), 65536)
+                if not chunk:
+                    break
+                fh.write(chunk)
+                fh.flush()
+                pending += chunk
+                *lines, pending = pending.split(b"\n")
+                for raw in lines:
+                    if line := live_line(raw.decode("utf-8", errors="replace")):
+                        out.say(f"  {out.dim}|{out.off} {line}")
+        if pending:
+            if line := live_line(pending.decode("utf-8", errors="replace")):
                 out.say(f"  {out.dim}|{out.off} {line}")
-        remaining = max(1.0, deadline - time.monotonic())
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            raise subprocess.TimeoutExpired(proc.args, self.timeout)
         return proc.wait(timeout=remaining)
 
     # -- verdict ------------------------------------------------------------
@@ -319,7 +343,9 @@ class Runner:
                 row["cache_creation_tokens"])
             tot_cost = max(tot_cost, float(row["cost_usd"]))
             tot_time += int(row["seconds"])
-            label = f"{row['step']} {row['name']}"[:32] + "  (carried)"
+            mark = "  (carried)" if int(row.get("ok", 1)) else \
+                   "  (carried, failed)"
+            label = f"{row['step']} {row['name']}"[:32] + mark
             out.say(f"  {out.dim}{label:<34}{int(row['input_tokens']):>10,}"
                     f"{int(row['output_tokens']):>9,}"
                     f"{int(row['cache_read_tokens']):>11,}"
@@ -332,7 +358,8 @@ class Runner:
                 f"{int(row['output_tokens'])},{int(row['cache_read_tokens'])},"
                 f"{int(row['cache_creation_tokens'])},"
                 f"{int(row['total_tokens'])},{int(row['turns'])},"
-                f"{float(row['cost_usd']):.6f},{int(row['seconds'])},1"
+                f"{float(row['cost_usd']):.6f},{int(row['seconds'])},"
+                f"{int(row.get('ok', 1))}"
             )
 
         for step, r in rows:

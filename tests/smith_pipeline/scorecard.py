@@ -12,14 +12,9 @@ TOTAL_RE = re.compile(r"^Total:\s+(\d+)", re.M)
 
 @dataclass(frozen=True)
 class Scorecard:
-    scored: int
-    """Number of test cases OPA actually evaluated."""
-
-    failures: int
-    """Failing cases, or -1 when no failures file exists (testing never ran)."""
-
-    summary: str
-    """Raw scorecard_summary.txt, for display."""
+    scored: int # Number of test cases OPA actually evaluated
+    failures: int # Failing cases, or -1 when no failures file exists
+    summary: str # Raw scorecard_summary.txt, for display.
 
     @property
     def ran(self) -> bool:

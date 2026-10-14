@@ -1,12 +1,6 @@
 # Copyright 2026 Smith authors
 # SPDX-License-Identifier: Apache-2.0
-"""Rendering Claude Code's stream-json event feed into a readable transcript.
-
-With tracing on (the default) each step writes two files:
-
-    step4-policy-testing.trace.jsonl   the raw event stream
-    step4-policy-testing.log           this module's rendering of it
-"""
+"""Rendering Claude Code's stream-json event feed into a readable transcript."""
 from __future__ import annotations
 
 import json
@@ -188,11 +182,7 @@ def usage_totals(path: Path) -> dict[str, float | int]:
             continue
         if ev.get("type") != "result":
             continue
-        # NOTE: `total_cost_usd` is the SESSION total, not this step's. When
-        # steps are chained with --resume, each one reports the cost of the
-        # whole conversation so far, so these must never be summed across
-        # steps: the last step's figure already is the total. (`usage`, just
-        # below, IS per-step.)
+        # `total_cost_usd` is the SESSION total, not this step's. When
         if (cost := ev.get("total_cost_usd")) is not None:
             totals["cost_usd"] = cost
         if (turns := ev.get("num_turns")) is not None:

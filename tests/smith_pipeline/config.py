@@ -94,21 +94,42 @@ class Step:
 
 
 STEPS: tuple[Step, ...] = (
-    Step(1, "create OPA policy", "/smith create an opa policy for target agent"),
+    Step(1, "create OPA policy",
+         "/smith create an opa policy for target agent. "
+         "Do not generate test cases."),
     Step(2, "generate test cases",
          "/smith generate test cases. Yes, regenerate the promptfoo config from "
          "the current guidance first. Generate both guidance targeted cases and "
-         "policy bypass cases."),
-    Step(3, "translate test cases", "/smith translate test cases"),
-    Step(4, "policy testing", "/smith test my policy"),
+         "policy bypass cases. "
+         "STOP once the cases are generated: do not translate them and do not "
+         "test the policy."),
+    Step(3, "translate test cases",
+         "/smith translate test cases. "
+         "STOP once translation is done: do not test the policy."),
+    Step(4, "policy testing",
+         "/smith test my policy. "
+         "STOP after reporting the results: do not cross-validate any case or patch the policy."),
     Step(5, "cross-validate failed test cases",
-         "/smith cross validate checking test cases"),
-    Step(6, "patch failed test cases", "/smith patch the failed test cases"),
+         "/smith cross validate checking test cases. "
+         "STOP after applying the label corrections: do not patch the policy."),
+    Step(6, "patch failed test cases",
+         "/smith patch the failed test cases. "
+         "STOP once patching finishes, do not run regal or the duplication check."),
     Step(7, "regal suggestions and fixes",
-         "/smith get regal suggestions and fix the problems"),
+         "/smith get regal suggestions and fix the problems. "
+         "STOP once the lint problems are fixed: do not run the duplication "
+         "check."),
     Step(8, "duplication suggestions and fixes",
-         "/smith get duplication suggestions and fix the problems"),
-    Step(9, "final policy testing", "/smith test my policy"),
+         "/smith get duplication suggestions and fix the problems. "
+         "STOP once duplication is reduced"),
+    Step(9, "final policy testing",
+         "/smith test my policy. "),
+    # Produces guidance only. It runs last so the earlier steps measure the
+    # policy built from the author's original prose: enhancing the guidance
+    # first would change the input every other step is scored against.
+    Step(10, "enhance guidance with security analysis",
+         "/smith run the security-grounded guidance analysis for the target "
+         "agent, do not create or modify any policy."),
 )
 STEPS_BY_NUM = {s.num: s for s in STEPS}
 
