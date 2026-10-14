@@ -1,0 +1,340 @@
+{
+  "schema": "questionnaire-v2",
+  "status": "PASS",
+  "title": "OPA Policy Guidance Questionnaire",
+  "sections": {
+    "Violation Logging": "guidance.txt establishes no denial-logging requirement and no violation-code scheme for the Enterprise Employee Hub. Architecture (Phase A) confirms no logging/audit mechanism exists anywhere in the current implementation (server.py, api/*.py) beyond returning {\"error\": str(ValueError)} to the caller on data-integrity failures. No violation code is invented here per the shared rule; see Q22 and the empty Violation Codes table."
+  },
+  "columns": {
+    "Answer Register": [
+      "Q",
+      "Required answer",
+      "Answer",
+      "Confidence"
+    ],
+    "Parameter Details": [
+      "Tool",
+      "Policy path",
+      "Type",
+      "Required",
+      "Valid values"
+    ],
+    "Runtime Subject Details": [
+      "Policy path",
+      "Provider",
+      "Provenance",
+      "Verification / integrity mechanism"
+    ],
+    "Role Permissions": [
+      "Tool",
+      "Role",
+      "Permission / scope",
+      "guidance.txt rule"
+    ],
+    "Approval Paths": [
+      "Parameter condition",
+      "Approval field",
+      "guidance.txt rule"
+    ],
+    "Rate Limits": [
+      "Role",
+      "Max calls per session"
+    ],
+    "Severity Levels": [
+      "Level",
+      "Examples"
+    ],
+    "Violation Codes": [
+      "Existing code",
+      "Meaning"
+    ]
+  },
+  "tables": {
+    "Answer Register": [
+      {
+        "Q": "Q1",
+        "Required answer": "Tool names and one-sentence purposes",
+        "Answer": "32 tools declared in tool_definitions.json, one-to-one with server.py @mcp.tool() registrations (per Phase A): add_employee (create an employee record), update_employee (update any provided fields on an existing employee), get_employee (return a full employee record by user_id), list_employees (list employees filtered by department_id/manager_id/country_code, with a reduced field set), get_manager (return an employee's manager), get_direct_reports (return an employee's direct reports), get_reporting_chain (return the manager chain to the top of the org), add_department (create a department), update_department (update a department's name/description), get_department (return one department), list_departments (return all departments), set_passport (create/replace a passport record), update_passport (update provided passport fields), get_passport (return a passport record), set_visa (create/replace a visa record), update_visa (update provided visa fields), get_visa (return a visa record), set_emergency_contact (create/replace an emergency contact), update_emergency_contact (update provided emergency-contact fields), get_emergency_contact (return an emergency contact), set_bank_account (create/replace a bank account), update_bank_account (update provided bank-account fields), get_bank_account (return a bank account), set_leave_allotment (set the annual allotment for a leave type), get_leave_allotments (return all leave allotments for an employee), create_time_off_request (create a Pending time-off request), update_time_off_status (set a time-off request's status), get_time_off_request (return one time-off request), list_time_off_requests (list time-off requests filtered by user_id/status), get_leave_balance (return per-leave-type balance for a year), add_holiday (add a country holiday), list_holidays (list holidays for a country), delete_holiday (delete a holiday by id). A 33rd catch-all action, \"other\", covers general Q&A not backed by any tool.",
+        "Confidence": "[derived from architecture]"
+      },
+      {
+        "Q": "Q2",
+        "Required answer": "External systems: protocol, authentication, and read/write behavior",
+        "Answer": "None. Phase A's External Data table is empty (\"None found\") -- no outbound HTTP calls or external-service integrations exist anywhere in the inspected tree. The only backend is a local SQLite file (employee_hub.db) accessed via db.py's shared sqlite3 connection; guidance.txt itself states \"The server performs no authorization of its own,\" confirming there is no external authorization/identity system either.",
+        "Confidence": "[derived from architecture]"
+      },
+      {
+        "Q": "Q3",
+        "Required answer": "Whether each tool reads, writes, or both",
+        "Answer": "Determined by name/description, confirmed by Phase A's Tool Arguments disposition (all 'Acts on'). Write-only: add_employee, update_employee, add_department, update_department, set_passport, update_passport, set_visa, update_visa, set_emergency_contact, update_emergency_contact, set_bank_account, update_bank_account, set_leave_allotment, create_time_off_request, update_time_off_status, add_holiday, delete_holiday. Read-only: get_employee, list_employees, get_manager, get_direct_reports, get_reporting_chain, get_department, list_departments, get_passport, get_visa, get_emergency_contact, get_bank_account, get_leave_allotments, get_time_off_request, list_time_off_requests, get_leave_balance, list_holidays. No tool both reads and writes in a single call.",
+        "Confidence": "[derived from architecture]"
+      },
+      {
+        "Q": "Q4",
+        "Required answer": "Parameters; use Parameter Details",
+        "Answer": "See Parameter Details table for every declared input.args.* field per tool, its type, required/optional status, and valid values where an enumeration or format is established by guidance.txt or tool_definitions.json.",
+        "Confidence": "[derived from architecture]"
+      },
+      {
+        "Q": "Q5",
+        "Required answer": "Every user role",
+        "Answer": "guidance.txt establishes three roles: (1) Employee -- the default/base role held by every acting user, granted self-service access to their own data; (2) Manager -- a derived role held by any employee who has at least one direct report (an employee whose employees.manager_id equals the acting user's input.extensions.subject.user_id), granted access to direct reports' data in addition to their own; (3) HR -- held when input.extensions.subject.department equals \"HR\", granted the broadest access (view/edit all employees' data, add employees, administrative actions). department itself is a 5-value enum (Corporate Leadership, Engineering, Product, HR, Finance) but only the \"HR\" value carries a named role in guidance.txt; the other four department values do not grant any role-specific permission beyond the base Employee/Manager roles.",
+        "Confidence": "[derived from guidance.txt]"
+      },
+      {
+        "Q": "Q6",
+        "Required answer": "Runtime subject provenance and integrity; use Runtime Subject Details",
+        "Answer": "See Runtime Subject Details table. Per Phase A, all four system_vars.json fields (user_id, user_name, department, organization) are static demo values with no observed verification, signature, or session-lookup mechanism anywhere in agent.py, web.py, or server.py, and no current code path plumbs them into an actual request or tool call. A separate, unvalidated user_profile/system_variables channel exists in agent.py (caller-supplied JSON, interpolated verbatim into the prompt) that must not be conflated with system_vars.json's declared subject schema -- it is a prompt-boundary input, not a verified runtime-subject source.",
+        "Confidence": "[derived from architecture]"
+      },
+      {
+        "Q": "Q7",
+        "Required answer": "User ID canonical path, provider, and use",
+        "Answer": "input.extensions.subject.user_id, provided by system_vars.json (\"user_id\": 1 in the demo config), numeric, matching employees.user_id. guidance.txt uses it to define \"own data\" (target record's user_id equals the acting user's user_id, i.e. input.args.user_id == input.extensions.subject.user_id for self-service tools) and, transitively via employees.manager_id, to define the \"direct reports\" / \"direct manager\" relationship.",
+        "Confidence": "[derived from guidance.txt]"
+      },
+      {
+        "Q": "Q8",
+        "Required answer": "Whether simultaneous roles are supported",
+        "Answer": "guidance.txt does not explicitly state whether Manager and HR can be held simultaneously or how precedence resolves if both apply to the same acting user. Because HR's grant (\"HR may view and edit all employees' data\") is a strict superset of Manager's grant (direct reports' data plus own), the two are not observed to conflict in the guidance text, but no explicit combination or precedence rule is written down. Architecture confirms no code models role combination at all (no role concept exists in the implementation).",
+        "Confidence": "[inferred — low confidence]"
+      },
+      {
+        "Q": "Q9",
+        "Required answer": "Tool permissions and scope per role; use Role Permissions",
+        "Answer": "See Role Permissions table for the per-tool, per-role access and scope predicates drawn from guidance.txt's Data Access, Administrative Actions, and Time Off and Leave sections.",
+        "Confidence": "[derived from guidance.txt]"
+      },
+      {
+        "Q": "Q10",
+        "Required answer": "Role-specific topics, values, or parameter combinations",
+        "Answer": "Role-specific restrictions beyond plain view/edit scope: (1) salary on update_employee/add_employee may be set or changed only by HR or by the target employee's direct manager (input.extensions.subject.department == \"HR\" or acting user's user_id == target employees.manager_id) -- this is a field-specific restriction narrower than general Data Access; (2) update_time_off_status's status value is role-gated: HR may set input.args.status to any value; the requester's direct manager may set it only to \"Approved\" or \"Denied\"; the requesting employee may set it only to \"Pending\"; (3) add_employee, add_department, update_department, add_holiday, delete_holiday, and set_leave_allotment are restricted to HR only, regardless of any other role; (4) viewing an employee's leave allotments, time-off requests, or leave balance (get_leave_allotments, list_time_off_requests/get_time_off_request, get_leave_balance) is restricted to HR, the employee themselves, or the employee's direct manager -- narrower than general employee-data viewing.",
+        "Confidence": "[derived from guidance.txt]"
+      },
+      {
+        "Q": "Q11",
+        "Required answer": "Roles with no restrictions",
+        "Answer": "guidance.txt states the org chart (get_manager, get_direct_reports, get_reporting_chain), department listings (get_department, list_departments), and country holidays (list_holidays) \"may be viewed by any user\" -- no role restriction applies to these read tools.",
+        "Confidence": "[derived from guidance.txt]"
+      },
+      {
+        "Q": "Q12",
+        "Required answer": "Globally blocked enumerable values, formats, domains, or flags",
+        "Answer": "Enumerated/format constraints established by guidance.txt: (1) work email (input.args.email on add_employee/update_employee) must use the organization's corporate domain when organization is provided in the same call: IBM Corporation -> @ibm.com, Red Hat -> @redhat.com, Kyndryl -> @kyndryl.com (note: this domain-mapping list's organization spelling matches input.extensions.subject.organization's enum, not the input.args.organization tool-argument enum -- see the Undeclared Fields cross-schema gap recorded in Phase A; input.args.organization is validated in api/util.py against {IBM, IBM partner, Red Hat}, a different value set that does not include Kyndryl); (2) leave_type on set_leave_allotment/create_time_off_request is a fixed set per tool_definitions.json: Vacation, Sick Leave, Maternity, Paternity, Jury Duty, Unpaid; (3) status on update_time_off_status is one of Pending, Approved, Denied; (4) relationship on set_emergency_contact/update_emergency_contact is one of Spouse, Parent, Sibling, Child, Relative, Friend, Guardian, Partner (per tool_definitions.json description); (5) input.extensions.subject.department is one of Corporate Leadership, Engineering, Product, HR, Finance; (6) input.extensions.subject.organization is one of IBM Corporation, Red Hat, Kyndryl. No flags (booleans) are declared as guidance-governed enumerable values.",
+        "Confidence": "[derived from guidance.txt]"
+      },
+      {
+        "Q": "Q13",
+        "Required answer": "Numeric hard caps",
+        "Answer": "(1) A time-off request (create_time_off_request) may not span more than 90 consecutive calendar days (input.args.end_date minus input.args.start_date); (2) salary (input.args.salary on add_employee/update_employee) must be a positive amount, i.e. strictly greater than zero, when set or updated; (3) a passport/visa expiration date (input.args.expiry_date on set_passport/update_passport/set_visa/update_visa) being set or updated must be more than six months after the date of the update. A fourth numeric limit appears in guidance.txt's Booking section (\"a customer with a regular membership may not book a flight for more than three passengers unless they own at least 200 frequent flyer points\") but, per Phase A's Undeclared Fields finding, this concerns booking/flight/membership/frequent-flyer concepts that do not exist anywhere in this agent's tool_definitions.json, system_vars.json, or schema.sql -- it is out-of-domain content and is excluded from the in-scope caps above.",
+        "Confidence": "[derived from guidance.txt]"
+      },
+      {
+        "Q": "Q13b",
+        "Required answer": "Conditional approval paths; use Approval Paths",
+        "Answer": "See Approval Paths table for the two conditional-approval rules established by guidance.txt: the generic write-confirmation requirement before any create/update/delete call, and the Paternity-leave-specific conversational-fact requirement before an update_time_off_status approval.",
+        "Confidence": "[derived from guidance.txt]"
+      },
+      {
+        "Q": "Q14",
+        "Required answer": "Rejected patterns and their input source",
+        "Answer": "guidance.txt establishes exactly one literal pattern: a user deletion may proceed only after the requester provides explicit confirmation in exactly the form \"I request to delete user [USER NAME] with the following user id: [USER ID]\". Per the shared source-boundary rule, this pattern's governed input source is conversational/prompt content (the requester's chat message to the agent), not a declared input.args.* field on any delete tool -- no tool in tool_definitions.json (there is no delete_employee tool; delete_holiday takes only holiday_id) carries a confirmation-string argument. This is consistent with Phase A's Undeclared Fields finding that write-confirmation state is nowhere a structured field. No other rejected regex/pattern is stated in guidance.txt for any input.args.* field (e.g. email format beyond the domain-suffix rule in Q12, passport/visa number format, phone format, address format are all unconstrained by guidance.txt).",
+        "Confidence": "[derived from guidance.txt]"
+      },
+      {
+        "Q": "Q15",
+        "Required answer": "Per-session call limits; use Rate Limits",
+        "Answer": "guidance.txt establishes no per-session or per-role call-count limit for any tool or role. The Rate Limits table is empty.",
+        "Confidence": "[derived from guidance.txt]"
+      },
+      {
+        "Q": "Q16",
+        "Required answer": "Counter owner, mechanism, and canonical policy path",
+        "Answer": "Not applicable -- no rate/counter requirement exists in guidance.txt (see Q15), so there is no counter owner, mechanism, or canonical policy path to record. This is an explicit absence of intent, not a gap.",
+        "Confidence": "[derived from guidance.txt]"
+      },
+      {
+        "Q": "Q17",
+        "Required answer": "Post-response filtering",
+        "Answer": "guidance.txt's Data Access section, read together with tool_definitions.json, implies post-response/field-level filtering rather than only call-level blocking: list_employees's own description states its returned dicts are \"limited to user_id, first_name, last_name, role, organization, title, department_id, manager_id, and country_code (email, home_address, salary, salary_currency, and start_date are omitted)\" for every caller regardless of role -- this is a response-shape restriction on a tool that otherwise has no stated role gate (guidance.txt does not restrict who may call list_employees, only get_employee/personal-record tools by 'own data'/'direct reports'/HR). guidance.txt itself does not separately state a role-conditional field-suppression rule beyond the general 'may view only own/direct-reports/all data' scoping in Q9/Q10, i.e. the visibility restriction is expressed at the record level (which employee's record) rather than a further per-field redaction within a permitted record.",
+        "Confidence": "[derived from architecture]"
+      },
+      {
+        "Q": "Q18",
+        "Required answer": "Response fields suppressed by role",
+        "Answer": "The only role-independent field suppression established by architecture is list_employees's fixed omission of email, home_address, salary, salary_currency, and start_date from every response, per its tool_definitions.json description (applies identically to all roles, not conditioned on the caller's role). guidance.txt does not state any additional per-field suppression that varies by the caller's role within a single tool response (e.g. it does not say a Manager sees a direct report's record with certain fields hidden) -- the role scoping guidance.txt describes operates at the record-access level (Q9/Q10), not at a sub-record field level.",
+        "Confidence": "[derived from architecture]"
+      },
+      {
+        "Q": "Q19",
+        "Required answer": "Conditions making a result actionable",
+        "Answer": "guidance.txt's Agent Behavior section: the agent should make only one tool call at a time; when it makes a tool call it should not simultaneously respond to the user, and when it responds to the user it should not simultaneously make a tool call. This establishes that a tool-call result becomes actionable (i.e. eligible to drive the next agent turn) only as the sole action of that turn -- no guidance is given on further per-result actionability conditions (e.g. minimum data completeness) beyond the specific approval conditions already recorded in Q13b's Approval Paths.",
+        "Confidence": "[derived from guidance.txt]"
+      },
+      {
+        "Q": "Q20",
+        "Required answer": "Silent rejection or user explanation",
+        "Answer": "guidance.txt does not state whether a denied action should be silently rejected or explained to the user. It only prescribes pre-action behavior (listing details and obtaining confirmation before a write) and role/value/numeric restrictions on what is permitted; it is silent on the denial-communication behavior itself.",
+        "Confidence": ""
+      },
+      {
+        "Q": "Q21",
+        "Required answer": "Hard-block and soft-block meanings; use Severity Levels",
+        "Answer": "guidance.txt consistently uses hard-boundary modal language for every access, numeric, pattern, and approval restriction recorded in this questionnaire (\"only,\" \"may not,\" \"must,\" \"strictly prohibited,\" \"not allowed,\" \"only if\"), per the shared rule that these establish hard boundaries rather than exclusive allowlists' complements. No rule in guidance.txt is phrased as advisory, warn-and-continue, or otherwise soft. The Severity Levels table therefore records a single hard-block level; guidance.txt establishes no distinct soft-block category or severity gradation.",
+        "Confidence": "[derived from guidance.txt]"
+      },
+      {
+        "Q": "Q22",
+        "Required answer": "Denial logging and existing violation-code scheme",
+        "Answer": "guidance.txt establishes no denial-logging requirement. Architecture confirms no logging, audit trail, or violation-code mechanism exists anywhere in the current implementation (server.py/api/*.py return only {\"error\": str(ValueError)} for data-integrity failures, which is a caller-facing error message, not a logged violation record). No existing violation code is present to reuse or extend; per the shared rule, none is invented here. The Violation Codes table is left empty.",
+        "Confidence": "[derived from architecture]"
+      }
+    ],
+    "Parameter Details": [
+      {"Tool": "add_employee", "Policy path": "input.args.first_name", "Type": "string", "Required": "true", "Valid values": "unconstrained by guidance.txt"},
+      {"Tool": "add_employee", "Policy path": "input.args.last_name", "Type": "string", "Required": "true", "Valid values": "unconstrained by guidance.txt"},
+      {"Tool": "add_employee", "Policy path": "input.args.email", "Type": "string", "Required": "true", "Valid values": "must use the corporate domain of input.args.organization when organization is provided in the same call: IBM Corporation->@ibm.com, Red Hat->@redhat.com, Kyndryl->@kyndryl.com (guidance.txt); tool-argument organization is separately validated in implementation against {IBM, IBM partner, Red Hat}, a different enum than the domain-mapping list -- see Q12"},
+      {"Tool": "add_employee", "Policy path": "input.args.role", "Type": "string", "Required": "true", "Valid values": "unconstrained by guidance.txt"},
+      {"Tool": "add_employee", "Policy path": "input.args.title", "Type": "string", "Required": "true", "Valid values": "unconstrained by guidance.txt"},
+      {"Tool": "add_employee", "Policy path": "input.args.home_address", "Type": "string", "Required": "true", "Valid values": "unconstrained by guidance.txt"},
+      {"Tool": "add_employee", "Policy path": "input.args.country_code", "Type": "string", "Required": "true", "Valid values": "unconstrained by guidance.txt"},
+      {"Tool": "add_employee", "Policy path": "input.args.organization", "Type": "any (string or null)", "Required": "false", "Valid values": "IBM, IBM partner, Red Hat per implementation enum (Phase A); distinct from input.extensions.subject.organization's enum"},
+      {"Tool": "add_employee", "Policy path": "input.args.department_id", "Type": "any (integer or null)", "Required": "false", "Valid values": "unconstrained by guidance.txt"},
+      {"Tool": "add_employee", "Policy path": "input.args.manager_id", "Type": "any (integer or null)", "Required": "false", "Valid values": "unconstrained by guidance.txt"},
+      {"Tool": "add_employee", "Policy path": "input.args.salary", "Type": "any (number or null)", "Required": "false", "Valid values": "must be > 0 if provided (guidance.txt)"},
+      {"Tool": "add_employee", "Policy path": "input.args.salary_currency", "Type": "any (string or null)", "Required": "false", "Valid values": "unconstrained by guidance.txt"},
+      {"Tool": "add_employee", "Policy path": "input.args.start_date", "Type": "any (string or null)", "Required": "false", "Valid values": "YYYY-MM-DD (tool_definitions.json format convention)"},
+      {"Tool": "update_employee", "Policy path": "input.args.user_id", "Type": "integer", "Required": "true", "Valid values": "must equal employees.user_id of an existing employee"},
+      {"Tool": "update_employee", "Policy path": "input.args.salary", "Type": "any (number or null)", "Required": "false", "Valid values": "must be > 0 if provided (guidance.txt); settable only by HR or the target's direct manager (guidance.txt)"},
+      {"Tool": "update_employee", "Policy path": "input.args.organization", "Type": "any (string or null)", "Required": "false", "Valid values": "IBM, IBM partner, Red Hat per implementation enum; see email-domain interaction in Q12"},
+      {"Tool": "update_employee", "Policy path": "input.args.email", "Type": "any (string or null)", "Required": "false", "Valid values": "must use organization's corporate domain when organization is provided in the same call (guidance.txt)"},
+      {"Tool": "update_employee", "Policy path": "input.args.home_address", "Type": "any (string or null)", "Required": "false", "Valid values": "must remain within the employee's own current country_code; changing to a different country is not allowed through this agent (guidance.txt)"},
+      {"Tool": "get_employee", "Policy path": "input.args.user_id", "Type": "integer", "Required": "true", "Valid values": "n/a"},
+      {"Tool": "list_employees", "Policy path": "input.args.department_id", "Type": "any (integer or null)", "Required": "false", "Valid values": "n/a"},
+      {"Tool": "list_employees", "Policy path": "input.args.manager_id", "Type": "any (integer or null)", "Required": "false", "Valid values": "n/a"},
+      {"Tool": "list_employees", "Policy path": "input.args.country_code", "Type": "any (string or null)", "Required": "false", "Valid values": "n/a"},
+      {"Tool": "get_manager", "Policy path": "input.args.user_id", "Type": "integer", "Required": "true", "Valid values": "n/a"},
+      {"Tool": "get_direct_reports", "Policy path": "input.args.user_id", "Type": "integer", "Required": "true", "Valid values": "n/a"},
+      {"Tool": "get_reporting_chain", "Policy path": "input.args.user_id", "Type": "integer", "Required": "true", "Valid values": "n/a"},
+      {"Tool": "add_department", "Policy path": "input.args.name", "Type": "string", "Required": "true", "Valid values": "unique (implementation constraint)"},
+      {"Tool": "add_department", "Policy path": "input.args.description", "Type": "any (string or null)", "Required": "false", "Valid values": "unconstrained"},
+      {"Tool": "update_department", "Policy path": "input.args.department_id", "Type": "integer", "Required": "true", "Valid values": "n/a"},
+      {"Tool": "set_passport", "Policy path": "input.args.user_id", "Type": "integer", "Required": "true", "Valid values": "n/a"},
+      {"Tool": "set_passport", "Policy path": "input.args.expiry_date", "Type": "any (string or null)", "Required": "false", "Valid values": "if set, must be more than six months after the date of the update (guidance.txt); must be strictly later than input.args.issue_date when both provided in the same call (guidance.txt)"},
+      {"Tool": "set_passport", "Policy path": "input.args.issue_date", "Type": "any (string or null)", "Required": "false", "Valid values": "must be strictly earlier than input.args.expiry_date when both provided in the same call (guidance.txt)"},
+      {"Tool": "update_passport", "Policy path": "input.args.user_id", "Type": "integer", "Required": "true", "Valid values": "n/a"},
+      {"Tool": "update_passport", "Policy path": "input.args.expiry_date", "Type": "any (string or null)", "Required": "false", "Valid values": "if set/updated, must be more than six months after the date of the update (guidance.txt); blocked entirely if the target employee is on the blacklist (guidance.txt; field undeclared per Phase A)"},
+      {"Tool": "update_passport", "Policy path": "input.args.issue_date", "Type": "any (string or null)", "Required": "false", "Valid values": "must be strictly earlier than input.args.expiry_date when both provided in the same call (guidance.txt)"},
+      {"Tool": "set_visa", "Policy path": "input.args.user_id", "Type": "integer", "Required": "true", "Valid values": "n/a"},
+      {"Tool": "set_visa", "Policy path": "input.args.expiry_date", "Type": "any (string or null)", "Required": "false", "Valid values": "must be more than six months after the date of the update (guidance.txt); must be strictly later than input.args.issue_date when both provided in the same call (guidance.txt)"},
+      {"Tool": "set_visa", "Policy path": "input.args.issue_date", "Type": "any (string or null)", "Required": "false", "Valid values": "must be strictly earlier than input.args.expiry_date when both provided in the same call (guidance.txt)"},
+      {"Tool": "update_visa", "Policy path": "input.args.user_id", "Type": "integer", "Required": "true", "Valid values": "n/a"},
+      {"Tool": "update_visa", "Policy path": "input.args.expiry_date", "Type": "any (string or null)", "Required": "false", "Valid values": "must be more than six months after the date of the update (guidance.txt)"},
+      {"Tool": "update_visa", "Policy path": "input.args.issue_date", "Type": "any (string or null)", "Required": "false", "Valid values": "must be strictly earlier than input.args.expiry_date when both provided in the same call (guidance.txt)"},
+      {"Tool": "set_emergency_contact", "Policy path": "input.args.user_id", "Type": "integer", "Required": "true", "Valid values": "n/a"},
+      {"Tool": "set_emergency_contact", "Policy path": "input.args.relationship", "Type": "string", "Required": "true", "Valid values": "Spouse, Parent, Sibling, Child, Relative, Friend, Guardian, Partner (tool_definitions.json)"},
+      {"Tool": "set_emergency_contact", "Policy path": "input.args.country", "Type": "any (string or null)", "Required": "false", "Valid values": "must place the contact in the same area as the employee (guidance.txt; 'area' granularity undeclared per Phase A)"},
+      {"Tool": "set_emergency_contact", "Policy path": "input.args.city", "Type": "any (string or null)", "Required": "false", "Valid values": "must place the contact in the same area as the employee (guidance.txt; 'area' granularity undeclared per Phase A)"},
+      {"Tool": "update_emergency_contact", "Policy path": "input.args.user_id", "Type": "integer", "Required": "true", "Valid values": "n/a"},
+      {"Tool": "update_emergency_contact", "Policy path": "input.args.relationship", "Type": "any (string or null)", "Required": "false", "Valid values": "Spouse, Parent, Sibling, Child, Relative, Friend, Guardian, Partner (tool_definitions.json)"},
+      {"Tool": "set_bank_account", "Policy path": "input.args.user_id", "Type": "integer", "Required": "true", "Valid values": "n/a"},
+      {"Tool": "update_bank_account", "Policy path": "input.args.user_id", "Type": "integer", "Required": "true", "Valid values": "n/a"},
+      {"Tool": "set_leave_allotment", "Policy path": "input.args.user_id", "Type": "integer", "Required": "true", "Valid values": "n/a"},
+      {"Tool": "set_leave_allotment", "Policy path": "input.args.leave_type", "Type": "string", "Required": "true", "Valid values": "Vacation, Sick Leave, Maternity, Paternity, Jury Duty, Unpaid (tool_definitions.json)"},
+      {"Tool": "set_leave_allotment", "Policy path": "input.args.annual_days", "Type": "any (integer or null)", "Required": "false", "Valid values": "n/a; null = untracked (tool_definitions.json)"},
+      {"Tool": "get_leave_allotments", "Policy path": "input.args.user_id", "Type": "integer", "Required": "true", "Valid values": "n/a"},
+      {"Tool": "create_time_off_request", "Policy path": "input.args.user_id", "Type": "integer", "Required": "true", "Valid values": "must equal input.extensions.subject.user_id -- an employee may create a request only for themselves (guidance.txt)"},
+      {"Tool": "create_time_off_request", "Policy path": "input.args.leave_type", "Type": "string", "Required": "true", "Valid values": "Vacation, Sick Leave, Maternity, Paternity, Jury Duty, Unpaid (tool_definitions.json); requester must have sufficient available balance for the requested leave type (guidance.txt)"},
+      {"Tool": "create_time_off_request", "Policy path": "input.args.start_date", "Type": "string", "Required": "true", "Valid values": "YYYY-MM-DD; with end_date, span must not exceed 90 consecutive calendar days (guidance.txt)"},
+      {"Tool": "create_time_off_request", "Policy path": "input.args.end_date", "Type": "string", "Required": "true", "Valid values": "YYYY-MM-DD; end_date minus start_date must not exceed 90 consecutive calendar days (guidance.txt)"},
+      {"Tool": "update_time_off_status", "Policy path": "input.args.request_id", "Type": "integer", "Required": "true", "Valid values": "n/a"},
+      {"Tool": "update_time_off_status", "Policy path": "input.args.status", "Type": "string", "Required": "true", "Valid values": "Pending, Approved, Denied (tool_definitions.json); role-gated per guidance.txt -- see Role Permissions; Approved for a Paternity request additionally requires baby's birth date and name to have been provided in conversation (guidance.txt)"},
+      {"Tool": "get_time_off_request", "Policy path": "input.args.request_id", "Type": "integer", "Required": "true", "Valid values": "n/a"},
+      {"Tool": "list_time_off_requests", "Policy path": "input.args.user_id", "Type": "any (integer or null)", "Required": "false", "Valid values": "n/a"},
+      {"Tool": "list_time_off_requests", "Policy path": "input.args.status", "Type": "any (string or null)", "Required": "false", "Valid values": "Pending, Approved, Denied"},
+      {"Tool": "get_leave_balance", "Policy path": "input.args.user_id", "Type": "integer", "Required": "true", "Valid values": "n/a"},
+      {"Tool": "get_leave_balance", "Policy path": "input.args.year", "Type": "integer", "Required": "true", "Valid values": "n/a"},
+      {"Tool": "add_holiday", "Policy path": "input.args.country_code", "Type": "string", "Required": "true", "Valid values": "n/a"},
+      {"Tool": "add_holiday", "Policy path": "input.args.holiday_date", "Type": "string", "Required": "true", "Valid values": "YYYY-MM-DD"},
+      {"Tool": "list_holidays", "Policy path": "input.args.country_code", "Type": "string", "Required": "true", "Valid values": "n/a"},
+      {"Tool": "delete_holiday", "Policy path": "input.args.holiday_id", "Type": "integer", "Required": "true", "Valid values": "n/a"}
+    ],
+    "Runtime Subject Details": [
+      {
+        "Policy path": "input.extensions.subject.user_id",
+        "Provider": "system_vars.json",
+        "Provenance": "Static demo value (\"user_id\": 1); not observed wired into any request path -- agent.py's separate, unvalidated user_profile channel is a distinct, untrusted prompt-boundary input and must not be conflated with this field (Phase A)",
+        "Verification / integrity mechanism": "None observed -- no signature, session lookup, or auth-header binding anywhere in agent.py, web.py, or server.py (Phase A)"
+      },
+      {
+        "Policy path": "input.extensions.subject.user_name",
+        "Provider": "system_vars.json",
+        "Provenance": "Static demo value (\"user_name\": \"Bob\"); same caveat as user_id (Phase A)",
+        "Verification / integrity mechanism": "None observed (Phase A)"
+      },
+      {
+        "Policy path": "input.extensions.subject.department",
+        "Provider": "system_vars.json",
+        "Provenance": "Static demo value; enum Corporate Leadership, Engineering, Product, HR, Finance; guidance.txt's HR role predicate depends on this field equaling \"HR\" (Phase A)",
+        "Verification / integrity mechanism": "None observed (Phase A)"
+      },
+      {
+        "Policy path": "input.extensions.subject.organization",
+        "Provider": "system_vars.json",
+        "Provenance": "Static demo value; enum IBM Corporation, Red Hat, Kyndryl; differs from the input.args.organization tool-argument enum (IBM, IBM partner, Red Hat validated in api/util.py) -- the two organization fields are declared by different schemas with different allowed values and must not be treated as the same field despite the shared name (Phase A)",
+        "Verification / integrity mechanism": "None observed (Phase A)"
+      }
+    ],
+    "Role Permissions": [
+      {"Tool": "get_employee", "Role": "Employee", "Permission / scope": "own data only (input.args.user_id == input.extensions.subject.user_id)", "guidance.txt rule": "Data Access: \"An employee may view and edit only their own data\""},
+      {"Tool": "get_employee", "Role": "Manager", "Permission / scope": "own data plus direct reports' data (target employees.manager_id == input.extensions.subject.user_id)", "guidance.txt rule": "Data Access: \"A Manager may view only their direct reports' data, in addition to their own\""},
+      {"Tool": "get_employee", "Role": "HR", "Permission / scope": "all employees' data", "guidance.txt rule": "Data Access: \"HR may view and edit all employees' data\""},
+      {"Tool": "update_employee", "Role": "Employee", "Permission / scope": "own data only; excludes salary (see Q10)", "guidance.txt rule": "Data Access: \"An employee may view and edit only their own data\""},
+      {"Tool": "update_employee", "Role": "HR", "Permission / scope": "all employees' data, including salary", "guidance.txt rule": "Data Access: \"HR may view and edit all employees' data\"; \"An employee's salary may be updated only by HR or by that employee's direct manager\""},
+      {"Tool": "update_employee", "Role": "Manager (direct manager)", "Permission / scope": "direct report's salary field specifically", "guidance.txt rule": "Data Access: \"An employee's salary may be updated only by HR or by that employee's direct manager\""},
+      {"Tool": "add_employee", "Role": "HR", "Permission / scope": "sole role permitted to call this tool", "guidance.txt rule": "Data Access: \"Only HR may add a new employee\""},
+      {"Tool": "set_passport / update_passport / set_visa / update_visa / set_emergency_contact / update_emergency_contact / set_bank_account / update_bank_account", "Role": "Employee", "Permission / scope": "own personal records only", "guidance.txt rule": "Data Access: \"An employee may view and edit only their own data -- home address, passport, visa, emergency contact, and bank account\""},
+      {"Tool": "set_passport / update_passport / set_visa / update_visa / set_emergency_contact / update_emergency_contact / set_bank_account / update_bank_account", "Role": "Manager", "Permission / scope": "direct reports' personal records (view only, per \"view only\" wording)", "guidance.txt rule": "Data Access: \"A Manager may view only their direct reports' data, in addition to their own\""},
+      {"Tool": "set_passport / update_passport / set_visa / update_visa / set_emergency_contact / update_emergency_contact / set_bank_account / update_bank_account", "Role": "HR", "Permission / scope": "all employees' personal records", "guidance.txt rule": "Data Access: \"HR may view and edit all employees' data\""},
+      {"Tool": "add_department / update_department / add_holiday / delete_holiday / set_leave_allotment", "Role": "HR", "Permission / scope": "sole role permitted to call these tools", "guidance.txt rule": "Administrative Actions: \"Only HR may add or update a department, add or delete a country holiday, or set a leave allotment\""},
+      {"Tool": "get_department / list_departments / get_manager / get_direct_reports / get_reporting_chain / list_holidays", "Role": "any role", "Permission / scope": "unrestricted viewing", "guidance.txt rule": "Administrative Actions: \"The org chart, department listings, and country holidays may be viewed by any user\""},
+      {"Tool": "get_leave_allotments / list_time_off_requests / get_time_off_request / get_leave_balance", "Role": "Employee", "Permission / scope": "own leave data only", "guidance.txt rule": "Time Off and Leave: \"An employee's leave allotments, time-off requests, and leave balance may be viewed only by HR, the employee themselves, or the employee's direct manager\""},
+      {"Tool": "get_leave_allotments / list_time_off_requests / get_time_off_request / get_leave_balance", "Role": "Manager (direct manager)", "Permission / scope": "direct report's leave data", "guidance.txt rule": "Time Off and Leave: \"...or the employee's direct manager\""},
+      {"Tool": "get_leave_allotments / list_time_off_requests / get_time_off_request / get_leave_balance", "Role": "HR", "Permission / scope": "any employee's leave data", "guidance.txt rule": "Time Off and Leave: \"...may be viewed only by HR...\""},
+      {"Tool": "create_time_off_request", "Role": "Employee", "Permission / scope": "may create a request only for themselves (input.args.user_id == input.extensions.subject.user_id)", "guidance.txt rule": "Time Off and Leave: \"An employee may create a time-off request only for themselves\""},
+      {"Tool": "update_time_off_status", "Role": "HR", "Permission / scope": "may set input.args.status to any value", "guidance.txt rule": "Time Off and Leave: \"HR may set any status\""},
+      {"Tool": "update_time_off_status", "Role": "Manager (requester's direct manager)", "Permission / scope": "may set input.args.status only to Approved or Denied", "guidance.txt rule": "Time Off and Leave: \"the requester's direct manager may set it only to Approved or Denied\""},
+      {"Tool": "update_time_off_status", "Role": "Employee (requesting employee)", "Permission / scope": "may set input.args.status only to Pending", "guidance.txt rule": "Time Off and Leave: \"the requesting employee may set it only to Pending\""}
+    ],
+    "Approval Paths": [
+      {
+        "Parameter condition": "any create/update/delete tool call (a call that writes to or modifies the database)",
+        "Approval field": "explicit user confirmation (\"yes\") after the agent lists the action's details; no structured input.args.* field carries this state -- conversational/prompt content per the shared source-boundary rule (Phase A Undeclared Fields)",
+        "guidance.txt rule": "Database Writes and Confirmation: \"Before performing any action that writes to or modifies the database (create, update, or delete), the agent must first list the details of the action and obtain the user's explicit confirmation (\"yes\") before proceeding.\""
+      },
+      {
+        "Parameter condition": "user deletion (no delete_employee tool is declared in tool_definitions.json; guidance.txt states this rule generally)",
+        "Approval field": "exact confirmation phrase \"I request to delete user [USER NAME] with the following user id: [USER ID]\" -- conversational/prompt content, not a declared input.args.* field",
+        "guidance.txt rule": "Database Writes and Confirmation: \"A user may be deleted only after the requester provides explicit confirmation in exactly this form...\""
+      },
+      {
+        "Parameter condition": "update_time_off_status with input.args.status == \"Approved\" and the target request's leave_type == \"Paternity\"",
+        "Approval field": "baby's birth date and baby's name both present in the requester's chat messages to the agent -- conversational content, not a declared input.args.* field on create_time_off_request or update_time_off_status (Phase A Undeclared Fields)",
+        "guidance.txt rule": "Time Off and Leave: \"A Paternity leave request may be approved only if the requester has provided both the baby's birth date and the baby's name in their chat messages to the agent (i.e. these details appear in the conversation history).\""
+      }
+    ],
+    "Rate Limits": [],
+    "Severity Levels": [
+      {
+        "Level": "Hard block",
+        "Examples": "Every restriction recorded in this questionnaire is hard-block per guidance.txt's modal language (\"only,\" \"may not,\" \"must,\" \"strictly prohibited,\" \"not allowed,\" \"only if\"): e.g. non-HR calling add_employee/add_department/set_leave_allotment/add_holiday/delete_holiday; a non-owner/non-manager/non-HR viewing or editing employee or personal-record data; a user outside the IBM organization viewing IBM employee data; salary <= 0; passport/visa expiry not more than six months after the update date; home-address country change; blacklisted employee's passport update; emergency contact outside the employee's area; time-off request exceeding 90 consecutive days; insufficient leave balance for a time-off request; an employee creating a time-off request for someone else; a role setting update_time_off_status to a status it is not permitted to set; a Paternity approval without both conversational facts; a write proceeding without explicit confirmation; a deletion without the exact confirmation phrase."
+      }
+    ],
+    "Violation Codes": []
+  },
+  "handoff": {
+    "Status": "PASS",
+    "Artifact schema": "questionnaire-v2",
+    "Summary": "All 23 Answer Register rows (Q1-Q22 plus Q13b) are answered. Confidence breakdown: 15 answers [derived from guidance.txt] (Q5, Q7, Q9, Q10, Q11, Q12, Q13, Q13b, Q14, Q15, Q16, Q19, Q21, plus Q22's guidance-side finding folded into its architecture-grounded answer), 6 answers [derived from architecture] (Q1, Q2, Q3, Q4, Q6, Q17, Q18, Q22 -- architecture confirms the absence of logging/rate/external-system mechanisms where guidance.txt is silent), 1 answer [inferred — low confidence] (Q8, simultaneous-role precedence, not stated by guidance.txt or architecture), and 1 open gap (Q20, silent-rejection-vs-explanation behavior, left blank because guidance.txt and architecture are both silent and any answer would be invented). Detail tables populated: Parameter Details (63 rows spanning all 32 tools' guidance-relevant or fully-declared input.args.* fields), Runtime Subject Details (4 rows, all system_vars.json fields, carried forward from Phase A with no new provenance claims), Role Permissions (19 rows covering Employee/Manager/HR across all guidance-restricted tool groups), Approval Paths (3 rows: generic write confirmation, exact delete-confirmation phrase, Paternity-approval conversational-fact condition), Severity Levels (1 row: hard block only -- guidance.txt states no soft-block category), Rate Limits and Violation Codes left as empty arrays because guidance.txt and architecture establish neither a rate/counter requirement nor any existing violation code (none invented, per the shared rule). Consolidated open question for a future clarification round (not blocking this phase): guidance.txt leaves four points unresolved that materially affect access/matching semantics -- (1) whether Manager and HR roles combine or take precedence when both apply to one acting user (Q8), (2) whether a denied action should be communicated to the user or silently rejected (Q20), (3) what granularity defines 'same area' for the emergency-contact rule (Undeclared Fields, Phase A), and (4) how to reconcile the two incompatible 'organization' enumerations (input.extensions.subject.organization vs input.args.organization) referenced by the email-domain rule (Q12, Undeclared Fields). These are retained as open gaps rather than invented answers. Tools covered: all 32 declared tools plus the 'other' catch-all action are addressed across Q1-Q22; every guidance.txt rule in Actors and Identity, Data Access, Administrative Actions, Personal-Record Update Rules, Data Integrity, Time Off and Leave, Database Writes and Confirmation, and Agent Behavior is mapped to at least one question. The out-of-domain Booking/flight rule (Phase A Undeclared Fields) is excluded from Q13/Q9 scope as not belonging to any tool in this agent."
+  }
+}

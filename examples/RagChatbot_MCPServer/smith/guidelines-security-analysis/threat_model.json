@@ -1,0 +1,490 @@
+{
+  "schema": "threat-model-v3",
+  "status": "PASS",
+  "title": "Threat Model",
+  "sections": {},
+  "columns": {
+    "Attack Surfaces": [
+      "#",
+      "Field or Data Point",
+      "Source Layer",
+      "Provenance / influence",
+      "Enters where",
+      "Threat IDs / N/A"
+    ],
+    "Evidence Index": [
+      "ID",
+      "Source",
+      "Grounded fact"
+    ],
+    "Category Assessment": [
+      "ASI",
+      "Name",
+      "Applicability",
+      "OWASP summary",
+      "Boundary (optional)"
+    ],
+    "Threat Instances": [
+      "ID",
+      "ASI",
+      "Severity",
+      "Actor",
+      "Surface",
+      "Catalog basis",
+      "Evidence",
+      "Concrete threat"
+    ],
+    "Scenario Coverage": [
+      "ASI",
+      "Scenario",
+      "Disposition"
+    ]
+  },
+  "tables": {
+    "Attack Surfaces": [
+      {
+        "#": "#1",
+        "Field or Data Point": "input.args.select_fields",
+        "Source Layer": "MCP tool argument (view_team_compensation, export_compensation_data)",
+        "Provenance / influence": "LLM-generated optional list, forwarded by both tools into project_record(); Acted on, i.e. it can be used by the caller to explicitly request sensitive fields (ssn, personal_email, home_address, bank_account, emergency_contact) that the underlying record already contains in full.",
+        "Enters where": "MCP tool dispatch in mcp_server.py, before any field-level filtering by role.",
+        "Threat IDs / N/A": "T1, T2, T9"
+      },
+      {
+        "#": "#2",
+        "Field or Data Point": "input.args.department",
+        "Source Layer": "MCP tool argument (view_team_compensation)",
+        "Provenance / influence": "LLM-generated string, declared required but implementation-Ignored: the returned team is derived from a hardcoded manager_id fallback in current_user_context, not from this argument.",
+        "Enters where": "MCP tool dispatch in mcp_server.py.",
+        "Threat IDs / N/A": "N/A — the ignored value cannot be used to expand or redirect scope: the tool returns the same fixed team regardless of the caller-supplied department, so this argument has no observed exploitable effect distinct from the identity/select_fields gaps already captured in T1/T3."
+      },
+      {
+        "#": "#3",
+        "Field or Data Point": "input.args.id",
+        "Source Layer": "MCP tool argument (view_team_compensation, export_compensation_data)",
+        "Provenance / influence": "LLM-generated optional employee id on both tools, declared to filter to one team member but implementation-Ignored in both function bodies (same provenance and behavior on both tools).",
+        "Enters where": "MCP tool dispatch in mcp_server.py.",
+        "Threat IDs / N/A": "N/A — ignoring this argument narrows nothing an attacker wants narrowed; the full team list is always returned regardless of the value supplied, so it does not independently enable a new disclosure path beyond T1."
+      },
+      {
+        "#": "#4",
+        "Field or Data Point": "input.args.external_sharing",
+        "Source Layer": "MCP tool argument (export_compensation_data, email_compensation_report)",
+        "Provenance / influence": "LLM-generated boolean on both tools; stored/interpolated into response text or metadata but never checked or blocked despite guidance rules 17-18 (\"No one can ... with external sharing enabled\"); same provenance and behavior on both tools.",
+        "Enters where": "MCP tool dispatch in mcp_server.py.",
+        "Threat IDs / N/A": "T2"
+      },
+      {
+        "#": "#5",
+        "Field or Data Point": "input.args.destination",
+        "Source Layer": "MCP tool argument (email_compensation_report)",
+        "Provenance / influence": "LLM-generated email address; domain is parsed via destination.split('@')[1] and included in response text, but never compared against the ibm.com allow-list / gmail.com-etc. deny-list from guidance rules 6-8.",
+        "Enters where": "MCP tool dispatch in mcp_server.py.",
+        "Threat IDs / N/A": "T2"
+      },
+      {
+        "#": "#6",
+        "Field or Data Point": "input.args.recipient_email",
+        "Source Layer": "MCP tool argument (send_email)",
+        "Provenance / influence": "LLM-generated string; declared required but the function body never reads it at all, so no domain check of any kind is possible against this argument as implemented.",
+        "Enters where": "MCP tool dispatch in mcp_server.py.",
+        "Threat IDs / N/A": "T2"
+      },
+      {
+        "#": "#7",
+        "Field or Data Point": "input.args.report_data",
+        "Source Layer": "MCP tool argument (email_compensation_report)",
+        "Provenance / influence": "LLM-generated string, declared required as the actual report content, but never referenced anywhere in the function body; the response is a fixed template.",
+        "Enters where": "MCP tool dispatch in mcp_server.py.",
+        "Threat IDs / N/A": "T5"
+      },
+      {
+        "#": "#8",
+        "Field or Data Point": "input.args.business_justification",
+        "Source Layer": "MCP tool argument (export_compensation_data)",
+        "Provenance / influence": "LLM-generated free-text string; stored into export_metadata.business_justification but not validated or acted on by any control in mcp_server.py.",
+        "Enters where": "MCP tool dispatch in mcp_server.py.",
+        "Threat IDs / N/A": "T5"
+      },
+      {
+        "#": "#9",
+        "Field or Data Point": "input.args.amount, input.args.category, input.args.justification",
+        "Source Layer": "MCP tool argument (purchase)",
+        "Provenance / influence": "amount is LLM-generated and Echoed only (never compared to category_rules['budget_limit'] or the guidance $200/$1000 thresholds); category is declared but immediately overwritten (Ignored); justification is declared but never referenced (Ignored). Combined as one row: same tool, same purchase-approval-bypass behavior.",
+        "Enters where": "MCP tool dispatch in mcp_server.py.",
+        "Threat IDs / N/A": "T4"
+      },
+      {
+        "#": "#10",
+        "Field or Data Point": "input.extensions.subject.roles",
+        "Source Layer": "Runtime subject context (declared by system_vars.json; runtime analog is opa_client.current_user_context['user_role'])",
+        "Provenance / influence": "Self-asserted from an unauthenticated Streamlit sidebar selectbox; no credential, token, or server-side identity check backs either the declared system_vars.json value or the runtime value; runtime vocabulary ([\"user\",\"manager\"]) also mismatches system_vars.json's declared vocabulary ([\"employee\",\"manager\"]).",
+        "Enters where": "Client-side session state, prior to any MCP tool dispatch; would enter an OPA decision only via the unwired UniversalOPAClient shaping layer.",
+        "Threat IDs / N/A": "T3"
+      },
+      {
+        "#": "#11",
+        "Field or Data Point": "input.extensions.subject.approval",
+        "Source Layer": "Runtime subject context (declared by system_vars.json)",
+        "Provenance / influence": "Declared (approval: \"true|false\") but no producer or consumer of this field exists anywhere in the inspected tree; purchase() never references any approval-shaped input, so the guidance rule 9 manager-approval gate has no mechanism to populate or check it.",
+        "Enters where": "Would enter at MCP tool dispatch for purchase if wired; currently enters nowhere.",
+        "Threat IDs / N/A": "T4"
+      },
+      {
+        "#": "#12",
+        "Field or Data Point": "User chat message (free-text prompt input)",
+        "Source Layer": "Prompt/conversation (Streamlit st.chat_input())",
+        "Provenance / influence": "Untrusted end-user text; scanned by LLMGuard enforce_input (PromptInjection/Anonymize/BanSubstrings/Secrets/Toxicity/Language) but a hardcoded business-safe-word allowlist can override a scanner block, and text not matching the narrow hardcoded malicious-substring list passes through with only a warning even when LLMGuard itself flagged it.",
+        "Enters where": "Prompt layer, before the LLM selects a tool call; this is a prompt-source control per the shared source-boundary rule, not a tool-argument boundary.",
+        "Threat IDs / N/A": "T6"
+      },
+      {
+        "#": "#13",
+        "Field or Data Point": "Retrieved RAG PDF context (work_rules_and_regulations_2016.pdf)",
+        "Source Layer": "External/material data source (rag_pipeline.py, ask_for_workpolicy)",
+        "Provenance / influence": "Loaded from local disk with no checksum/signature verification; interpolated into the RAG prompt template's {context} slot and sent to a further LLM call inside ask_for_workpolicy itself, before the outer chat loop's enforce_output ever scans the tool's overall return string.",
+        "Enters where": "Inside the ask_for_workpolicy tool body, prior to the outer enforce_output scan.",
+        "Threat IDs / N/A": "T5"
+      },
+      {
+        "#": "#14",
+        "Field or Data Point": "Tool output text re-fed into conversation memory / deny-marker output channel",
+        "Source Layer": "Returned data (all MCP tool return strings) as consumed by the outer chat loop",
+        "Provenance / influence": "Appended as a 'tool' message after enforce_output(), then re-injected verbatim into later prompts as conversation history (up to last 10 messages) without being re-scanned; separately, enforce_output skips scanning entirely for any message beginning with the deny-emoji marker, and its BanSubstrings redaction only covers a few hardcoded example literal values, not the full fixture dataset.",
+        "Enters where": "Post-tool-execution, at the boundary between a tool's return string and the next LLM turn's system/user prompt.",
+        "Threat IDs / N/A": "T7, T8, T9"
+      },
+      {
+        "#": "#15",
+        "Field or Data Point": "input.extensions.subject.teams, input.extensions.subject.id",
+        "Source Layer": "Runtime subject context (declared by system_vars.json)",
+        "Provenance / influence": "teams: get_user_teams() ignores its own input and returns a hardcoded value regardless; id: no guidance rule keys off requester id for scoping (only the tools' own, implementation-Ignored id argument does, which is a distinct surface already covered by #3). Neither field has an active producer wired to system_vars.json.",
+        "Enters where": "Would enter at runtime subject context if wired; currently enters nowhere with observed effect.",
+        "Threat IDs / N/A": "N/A — no guidance rule or active code path consumes either field, so no concrete attack path is supported beyond the general unauthenticated-subject finding already captured at surface #10."
+      }
+    ],
+    "Evidence Index": [
+      {
+        "ID": "E1",
+        "Source": "Phase A architecture.json — Runtime Subject Context, Layers (Q5, Q6)",
+        "Grounded fact": "Requester role is self-asserted client-side via an unauthenticated Streamlit sidebar selectbox with no credential/token/server-side identity check; the runtime vocabulary ([\"user\",\"manager\"]) mismatches system_vars.json's declared vocabulary ([\"employee\",\"manager\"]), and no loader for system_vars.json was found in the inspected tree."
+      },
+      {
+        "ID": "E2",
+        "Source": "Phase A architecture.json — Enforcement Points",
+        "Grounded fact": "No decorator, middleware, or explicit call to opa_client.evaluate_policy wraps any active @mcp.tool() function; MCP tool dispatch has zero pre-execution enforcement today."
+      },
+      {
+        "ID": "E3",
+        "Source": "Phase A architecture.json — Layers (Tool implementation), Tool Arguments (Q10, Q18)",
+        "Grounded fact": "view_team_compensation and export_compensation_data unconditionally assemble records including ssn, personal_email, home_address, bank_account, emergency_contact whenever the underlying fixture has them, with only a code comment stating future policy filtering, and no such filtering exists in the function body."
+      },
+      {
+        "ID": "E4",
+        "Source": "Phase A architecture.json — Tool Arguments, Undeclared Fields",
+        "Grounded fact": "department and id on view_team_compensation, and id on export_compensation_data, are implementation-Ignored; the team actually returned is derived from a hardcoded manager_id fallback ('manager_123') in current_user_context, not from these declared scoping arguments."
+      },
+      {
+        "ID": "E5",
+        "Source": "Phase A architecture.json — Tool Arguments (Q12)",
+        "Grounded fact": "external_sharing on export_compensation_data and email_compensation_report is stored/interpolated into response text or metadata but never checked or blocked, despite guidance rules 17-18 requiring a hard block whenever it is true."
+      },
+      {
+        "ID": "E6",
+        "Source": "Phase A architecture.json — Tool Arguments (Q12, Q14)",
+        "Grounded fact": "email_compensation_report's destination domain is parsed but never compared against an allow/deny list; send_email's recipient_email is declared required but the function body never reads it at all."
+      },
+      {
+        "ID": "E7",
+        "Source": "Phase A architecture.json — Tool Arguments",
+        "Grounded fact": "email_compensation_report's report_data argument is declared required as the actual report content but never referenced anywhere in the function body; the returned confirmation text is a fixed template."
+      },
+      {
+        "ID": "E8",
+        "Source": "Phase A architecture.json — Tool Arguments; Phase B policy_guidance_questionnaire.json Q13/Q13b",
+        "Grounded fact": "purchase's amount is Echoed only (never compared to category_rules['budget_limit'] or to the guidance $200/$1000 thresholds); category is overwritten immediately after being read (Ignored); justification is declared but never referenced (Ignored)."
+      },
+      {
+        "ID": "E9",
+        "Source": "Phase B policy_guidance_questionnaire.json — Approval Paths, Runtime Subject Details (Q13b)",
+        "Grounded fact": "system_vars.json declares an approval field shaping as input.extensions.subject.approval, but no producer or consumer of this field was found anywhere in the inspected tree; purchase() never references any approval-shaped input."
+      },
+      {
+        "ID": "E10",
+        "Source": "Phase A architecture.json — Layers (External service, prompt/output guard)",
+        "Grounded fact": "LLMGuard enforce_input has a hardcoded business-safe-word allowlist that can override a scanner block, and only a narrow hardcoded malicious-substring list actually raises a blocking exception; other flagged text is allowed through with only a warning."
+      },
+      {
+        "ID": "E11",
+        "Source": "Phase A architecture.json — Layers (External service, prompt/output guard), Enforcement Points",
+        "Grounded fact": "enforce_output skips scanning entirely for any message starting with the deny-emoji marker, and its BanSubstrings redaction list only covers a few hardcoded example literal values, not the full range of fixture records in data_sources/hr_database.py."
+      },
+      {
+        "ID": "E12",
+        "Source": "Phase A architecture.json — Prompt Inputs",
+        "Grounded fact": "Conversation memory (up to the last 10 messages, including prior tool outputs that may contain real HR/compensation data disclosed earlier in the same session) is re-injected into later system prompts without being re-scanned through enforce_input."
+      },
+      {
+        "ID": "E13",
+        "Source": "Phase A architecture.json — External Data, Prompt Inputs",
+        "Grounded fact": "work_rules_and_regulations_2016.pdf is loaded from local disk with no checksum/signature verification and is interpolated into a RAG prompt template consumed by a further LLM call inside ask_for_workpolicy itself, prior to the outer chat loop's enforce_output scan of the tool's overall return string."
+      },
+      {
+        "ID": "E14",
+        "Source": "Phase B policy_guidance_questionnaire.json — Severity Levels (Q21)",
+        "Grounded fact": "guidance.txt uses only hard-block modal language throughout all 19 rules (\"cannot\", \"no one can\", \"always block\", \"must be blocked\"); no soft-block/warn-but-allow tier is supported."
+      },
+      {
+        "ID": "E15",
+        "Source": "Phase B policy_guidance_questionnaire.json — Answer Register (denial-logging, actionability, and denial-explanation rows left blank)",
+        "Grounded fact": "No violation-code scheme, denial-logging format, actionability criteria, or denial-explanation behavior is declared in guidance.txt, system_vars.json, or tool_definitions.json; the corresponding Phase B answer-register rows were left as open gaps rather than answered."
+      },
+      {
+        "ID": "E16",
+        "Source": "Phase A architecture.json — Layers (Runtime context / would-be enforcement), Enforcement Points",
+        "Grounded fact": "The OPA client/UniversalOPAClient layer (opa_client.py) is fully built (schema shaping, fail-secure fallback for role/domain/external-sharing/sensitive-field checks) but has zero call sites from any active @mcp.tool() function in mcp_server.py; it is unwired, present machinery rather than an absent-by-design control."
+      },
+      {
+        "ID": "E17",
+        "Source": "Phase A architecture.json — Tool Arguments",
+        "Grounded fact": "select_fields on both view_team_compensation and export_compensation_data is Acted on: it is passed to project_record(), which will filter the already-fully-assembled record (including sensitive fields) down to exactly the field names the caller requests, i.e. it can be used to explicitly request sensitive fields."
+      },
+      {
+        "ID": "E18",
+        "Source": "Phase B policy_guidance_questionnaire.json Q14",
+        "Grounded fact": "Guidance rules 11-14's always-blocked phrase patterns are grounded only in free-text prompt/conversation content handled by LLMGuard's enforce_input scan, not in any declared input.args.* tool parameter."
+      }
+    ],
+    "Category Assessment": [
+      {
+        "ASI": "ASI01",
+        "Name": "Agent Goal Hijack",
+        "Applicability": "Yes",
+        "OWASP summary": "Attackers manipulate an agent's objectives, task selection, or decision pathways via prompt-based manipulation, deceptive tool outputs, or poisoned external content, since the agent cannot reliably distinguish instructions from related content.",
+        "Boundary (optional)": "Bounded to this system's single LLM tool-selection loop: untrusted chat input (surface #12) and retrieved PDF content (surface #13) both reach the LLM's tool-call decision without a structured, argument-level gate at MCP dispatch (E2)."
+      },
+      {
+        "ASI": "ASI02",
+        "Name": "Tool Misuse and Exploitation",
+        "Applicability": "Yes",
+        "OWASP summary": "Agents can misuse legitimate tools due to prompt injection, misalignment, or unsafe delegation, leading to data exfiltration, tool output manipulation, or workflow hijacking, driven by how the agent chooses and applies tools.",
+        "Boundary (optional)": "Bounded to the declared MCP tool surface of this server: select_fields/external_sharing/destination/amount arguments (surfaces #1,#4,#5,#9) are all present and inspectable at dispatch but none are enforced (E2-E8), which is the dominant threat class for this system."
+      },
+      {
+        "ASI": "ASI03",
+        "Name": "Identity and Privilege Abuse",
+        "Applicability": "Yes",
+        "OWASP summary": "Exploits dynamic trust and delegation in agents to escalate access and bypass controls by manipulating role inheritance, delegation chains, or cached identity context.",
+        "Boundary (optional)": "Bounded to the single self-asserted role field (surface #10, E1): no multi-hop delegation or cross-system authorization chain exists in this codebase, so applicability is limited to direct client-side role assertion rather than delegation-chain manipulation."
+      },
+      {
+        "ASI": "ASI04",
+        "Name": "Agentic Supply Chain Vulnerabilities",
+        "Applicability": "No",
+        "OWASP summary": "Arises when agents, tools, models, or datasets sourced from third parties are malicious, compromised, or tampered with in transit, including MCP/A2A component supply chains.",
+        "Boundary (optional)": "N/A — no third-party-distributed agent, tool package, plugin, or model update mechanism was found in the inspected tree; the local PDF files (E13) are static fixtures loaded from local disk, not components obtained through a supply-chain distribution channel, so this category's substrate is absent."
+      },
+      {
+        "ASI": "ASI05",
+        "Name": "Unexpected Code Execution (RCE)",
+        "Applicability": "No",
+        "OWASP summary": "Attackers exploit code-generation features or embedded tool access to escalate agent actions into remote code execution, local misuse, or resource-exhaustion attacks on the underlying agentic infrastructure.",
+        "Boundary (optional)": "N/A — no code-generation or code-execution tool (shell, script runner, Terraform generator) is declared in tool_definitions.json, and no per-session rate limit or resource-exhaustion control point is evidenced as a modeled tool behavior (Phase B Q15-Q16 left blank rather than describing an existing resource control)."
+      },
+      {
+        "ASI": "ASI06",
+        "Name": "Memory & Context Poisoning",
+        "Applicability": "Partial",
+        "OWASP summary": "Agents rely on stored/retrievable context (conversation history, memory tools, RAG stores) that persists across turns; poisoning this context causes an agent to recall and act on manipulated data across the session or beyond.",
+        "Boundary (optional)": "Bounded to session-scoped conversation memory only (surface #14, E12): there is no persistent long-term memory store or attacker-writable vector database in this system (the RAG store is a static local PDF, not user-writable), so poisoning is limited to within-session re-injection of prior tool output, not durable cross-session poisoning."
+      },
+      {
+        "ASI": "ASI07",
+        "Name": "Insecure Inter-Agent Communication",
+        "Applicability": "No",
+        "OWASP summary": "Multi-agent systems depend on continuous communication between autonomous agents coordinating via APIs, message buses, or shared memory; weak inter-agent authentication/integrity/authorization controls let attackers intercept or forge these exchanges.",
+        "Boundary (optional)": "N/A — this is a single-agent Streamlit client + one MCP server; no A2A protocol, peer agent, or agent-to-agent message exchange exists in the inspected tree."
+      },
+      {
+        "ASI": "ASI08",
+        "Name": "Cascading Failures",
+        "Applicability": "Partial",
+        "OWASP summary": "A single fault (hallucination, malicious input, corrupted tool, or poisoned memory) propagates across autonomous agents or turns, compounding into system-wide harm because agents plan, persist, and delegate without stepwise human checks.",
+        "Boundary (optional)": "Bounded to within-session propagation only (surface #14, E12, E3): a single tool call that assembles a full sensitive record can have its output reused/re-surfaced across later turns in the same session via conversation memory; there is no multi-agent propagation path since this is a single-agent system."
+      },
+      {
+        "ASI": "ASI09",
+        "Name": "Human-Agent Trust Exploitation",
+        "Applicability": "Yes",
+        "OWASP summary": "Agents can establish strong trust with human users through natural-language fluency and perceived expertise; this trust can be exploited to influence decisions, extract information, or steer outcomes, and is amplified by weak logging/oversight of agent actions.",
+        "Boundary (optional)": "Bounded to the repudiation/untraceability sub-theme (surface #14, E11, E15): no violation-code or denial-logging scheme exists, and enforce_output skips scanning entirely for deny-marker-prefixed messages, so this system's applicability is about missing audit trail rather than observed active social-engineering-style manipulation of a human reviewer."
+      },
+      {
+        "ASI": "ASI10",
+        "Name": "Rogue Agents",
+        "Applicability": "No",
+        "OWASP summary": "Malicious or compromised agents deviate from their intended function or authorized scope within a multi-agent or human-agent ecosystem, individually appearing legitimate while their emergent behavior becomes harmful.",
+        "Boundary (optional)": "N/A — no multi-agent ecosystem, peer agent, or agent orchestration layer exists in this system; there is exactly one LLM-driven client and one MCP tool server."
+      }
+    ],
+    "Threat Instances": [
+      {
+        "ID": "T1",
+        "ASI": "ASI02",
+        "Severity": "Critical",
+        "Actor": "Caller",
+        "Surface": "#1",
+        "Catalog basis": "1",
+        "Evidence": "E1, E3, E17",
+        "Concrete threat": "Any caller — regardless of asserted role — can set input.args.select_fields on view_team_compensation or export_compensation_data to explicitly request ssn, personal_email, home_address, bank_account, or emergency_contact; project_record() honors the request against an already-fully-assembled record, and no pre-execution check exists to block this against guidance rules 2, 3, 5, or 16."
+      },
+      {
+        "ID": "T2",
+        "ASI": "ASI02",
+        "Severity": "Critical",
+        "Actor": "Caller",
+        "Surface": "#1, #4, #5, #6",
+        "Catalog basis": "2",
+        "Evidence": "E3, E5, E6, E17",
+        "Concrete threat": "A caller chains the select_fields disclosure from T1 with export_compensation_data's or email_compensation_report's external_sharing flag and destination, or with send_email's recipient_email, to move disclosed compensation data to an external, non-ibm.com address; none of external_sharing, destination's domain, or recipient_email are checked or blocked in any function body, defeating guidance rules 6, 7, 8, 17, and 18 end-to-end."
+      },
+      {
+        "ID": "T3",
+        "ASI": "ASI03",
+        "Severity": "Critical",
+        "Actor": "Caller",
+        "Surface": "#10",
+        "Catalog basis": "1",
+        "Evidence": "E1",
+        "Concrete threat": "A caller sets their client-side, unauthenticated user_role to \"manager\" (or the runtime-analog vocabulary value) to unlock view_team_compensation, export_compensation_data, and email_compensation_report — all gated to the manager role by guidance rules 1, 4, 6, and 16 — with no credential, token, or server-side check verifying the claim anywhere in the inspected tree."
+      },
+      {
+        "ID": "T4",
+        "ASI": "ASI02",
+        "Severity": "High",
+        "Actor": "Caller",
+        "Surface": "#9, #11",
+        "Catalog basis": "novel",
+        "Evidence": "E8, E9",
+        "Concrete threat": "A caller invokes purchase with amount >= 200 (or >= 1000) as an employee; because amount is Echoed only and never compared to any threshold, and input.extensions.subject.approval has no producer or consumer anywhere in the codebase, guidance rule 9's manager-approval gate and rule 10's $1,000 manager cap are both bypassed with no approval evidence required or checked."
+      },
+      {
+        "ID": "T5",
+        "ASI": "ASI01",
+        "Severity": "High",
+        "Actor": "External",
+        "Surface": "#7, #8, #13",
+        "Catalog basis": "3",
+        "Evidence": "E7, E13",
+        "Concrete threat": "Instructions hidden in retrieved PDF content (surface #13) or in free-text tool arguments that are declared but never enforced on their stated purpose (report_data, business_justification) can be misread by the LLM as legitimate operational guidance, steering it toward calling export/email tools it would not otherwise call; only the initial chat message is scanned by enforce_input, not retrieved document content or tool-argument free text."
+      },
+      {
+        "ID": "T6",
+        "ASI": "ASI01",
+        "Severity": "Medium",
+        "Actor": "Caller",
+        "Surface": "#12",
+        "Catalog basis": "2",
+        "Evidence": "E10",
+        "Concrete threat": "A caller directly instructs the chat agent to ignore its instructions and chain tool calls to perform unauthorized actions; LLMGuard's malicious-substring blocklist provides some resistance, but its hardcoded business-safe-word allowlist can override a flagged block, and non-matching injected text is still allowed through with only a warning."
+      },
+      {
+        "ID": "T7",
+        "ASI": "ASI06",
+        "Severity": "Medium",
+        "Actor": "LLM",
+        "Surface": "#14",
+        "Catalog basis": "2",
+        "Evidence": "E12",
+        "Concrete threat": "Compensation data or other sensitive tool output disclosed earlier in a session is re-injected verbatim into later prompts as conversation history without being re-scanned by enforce_input, so a later turn's reasoning (and any tool arguments the LLM generates) can be influenced by previously-disclosed sensitive content that a fresh scan would otherwise flag."
+      },
+      {
+        "ID": "T8",
+        "ASI": "ASI09",
+        "Severity": "Medium",
+        "Actor": "Caller",
+        "Surface": "#14",
+        "Catalog basis": "2",
+        "Evidence": "E11, E15",
+        "Concrete threat": "Because no violation-code or denial-logging scheme exists (Q22 gap) and enforce_output skips scanning entirely for any message beginning with the deny-emoji marker, there is no audit trail distinguishing a genuine policy denial from a bypassed or malformed one, making misuse of the tools in T1-T4 untraceable after the fact."
+      },
+      {
+        "ID": "T9",
+        "ASI": "ASI08",
+        "Severity": "Medium",
+        "Actor": "LLM",
+        "Surface": "#1, #14",
+        "Catalog basis": "2",
+        "Evidence": "E3, E12",
+        "Concrete threat": "Because view_team_compensation/export_compensation_data assemble the full sensitive record before any select_fields projection, a single tool call in a session constructs the complete sensitive payload once; that payload can then be re-surfaced or referenced across later turns via conversation memory even if a later request in the same session is nominally more restrictive, compounding exposure within the session."
+      }
+    ],
+    "Scenario Coverage": [
+      {"ASI": "ASI01", "Scenario": "1", "Disposition": "N/A — no persistent planning framework or multi-step autonomous plan exists in this system for an attacker to gradually drift; the agent's only planning artifact is per-turn tool selection, not a stored plan."},
+      {"ASI": "ASI01", "Scenario": "2", "Disposition": "T6"},
+      {"ASI": "ASI01", "Scenario": "3", "Disposition": "T5"},
+      {"ASI": "ASI01", "Scenario": "4", "Disposition": "N/A — no self-analysis/reflection loop is implemented in this codebase; the chat loop is bounded by the LLM's own tool-call turns, not an open-ended reflection cycle."},
+      {"ASI": "ASI01", "Scenario": "5", "Disposition": "N/A — no self-improvement or meta-learning mechanism exists; the LLM and tool set are static per session with no learned-weight update path in this codebase."},
+      {"ASI": "ASI02", "Scenario": "1", "Disposition": "T1"},
+      {"ASI": "ASI02", "Scenario": "2", "Disposition": "T2"},
+      {"ASI": "ASI02", "Scenario": "3", "Disposition": "N/A — no document-generation-and-mass-distribution tool exists; export_content_as_file and send_email do not actually write files or deliver mail (Phase A: both are Echoed/no-op at the I/O boundary), so mass automated distribution has no substrate here."},
+      {"ASI": "ASI02", "Scenario": "4", "Disposition": "N/A — no persistent, attacker-writable agent memory exists across sessions; conversation memory is session-scoped only (see ASI06 boundary), which is a distinct, narrower substrate already captured under T7/T9, not persistent memory poisoning."},
+      {"ASI": "ASI02", "Scenario": "5", "Disposition": "N/A — no vector database is written to at runtime; the RAG store (work_rules_and_regulations_2016.pdf) is a static, locally-loaded index rebuilt from a fixed file, not an attacker-writable vector store."},
+      {"ASI": "ASI02", "Scenario": "6", "Disposition": "T6"},
+      {"ASI": "ASI03", "Scenario": "1", "Disposition": "T3"},
+      {"ASI": "ASI03", "Scenario": "2", "Disposition": "N/A — no cross-system authorization exists to escalate across; this system has a single MCP server and a single in-process role table, not multiple corporate systems with distinct authorization scopes."},
+      {"ASI": "ASI03", "Scenario": "3", "Disposition": "N/A — no mechanism for deploying an additional agent instance that inherits credentials exists in this single-client, single-server codebase."},
+      {"ASI": "ASI03", "Scenario": "4", "Disposition": "N/A — send_email's recipient_email/subject/body are declared but implementation-Ignored (Phase A), so the tool does not actually send mail on the caller's behalf today; there is no observed mechanism for an injected prompt to cause mail to be sent under another identity."},
+      {"ASI": "ASI03", "Scenario": "5", "Disposition": "N/A — no onboarding/account-creation agent or tool exists in tool_definitions.json."},
+      {"ASI": "ASI03", "Scenario": "6", "Disposition": "N/A — no second, peer agent exists for a rogue instance to mimic; this is a single-agent system."},
+      {"ASI": "ASI03", "Scenario": "7", "Disposition": "N/A — no multi-platform authentication context exists to spoof across; role is a single self-asserted in-process value (T3 already captures its exploitation)."},
+      {"ASI": "ASI03", "Scenario": "8", "Disposition": "N/A — no per-user authentication exists at all, so there is no distinct identity to frame; every caller shares the same unauthenticated self-assertion path captured in T3, not an impersonation of a specific other authenticated user."},
+      {"ASI": "ASI03", "Scenario": "9", "Disposition": "N/A — no long-lived API token or formal agent identity (e.g. an enterprise Agent ID) is issued or stored by this system; identity is a per-session, self-asserted client value with no token artifact to steal."},
+      {"ASI": "ASI04", "Scenario": "1", "Disposition": "N/A — no third-party-distributed agent package, extension marketplace, or update channel exists for this codebase; all code is local to the inspected repository."},
+      {"ASI": "ASI04", "Scenario": "2", "Disposition": "N/A — no test/production environment separation or database-provisioning tool exists; the data sources are static in-memory Python fixtures (data_sources/hr_database.py), not a live database an agent could hallucinate or delete."},
+      {"ASI": "ASI05", "Scenario": "1", "Disposition": "N/A — no security-analysis or input-classification tool performing resource-intensive inference exists among the 10 declared tools."},
+      {"ASI": "ASI05", "Scenario": "2", "Disposition": "N/A — single-agent system; no multiple concurrent agents to trigger into simultaneous resource-intensive decision-making."},
+      {"ASI": "ASI05", "Scenario": "3", "Disposition": "N/A — the only external API dependency is the OpenAI-compatible chat endpoint; no per-session or per-tool rate limit is declared to be depleted, and Phase B's Q15-Q16 (rate limits) were left as unanswered gaps rather than describing an existing quota mechanism to attack."},
+      {"ASI": "ASI05", "Scenario": "4", "Disposition": "N/A — no explicit memory-allocation-heavy task type or memory-management code path is declared among this system's tools."},
+      {"ASI": "ASI05", "Scenario": "5", "Disposition": "N/A — no DevOps/infrastructure-as-code generation tool (e.g. Terraform) exists in tool_definitions.json."},
+      {"ASI": "ASI05", "Scenario": "6", "Disposition": "N/A — no workflow-automation engine that executes AI-generated scripts exists; all 10 tools are fixed Python functions, not dynamically generated/executed code."},
+      {"ASI": "ASI05", "Scenario": "7", "Disposition": "N/A — send_email does not actually parse or forward email via POP3 or any mail protocol; per Phase A it is Ignored/no-op at the I/O boundary, so there is no mail-exfiltration mechanism to exploit via linguistic ambiguity."},
+      {"ASI": "ASI06", "Scenario": "1", "Disposition": "N/A — no persistent, cross-session pricing or business-rule memory exists; purchase's category_rules/budget_limit are static fixture data reloaded each time, not a mutable memory an attacker can reinforce over repeated interactions."},
+      {"ASI": "ASI06", "Scenario": "2", "Disposition": "T7"},
+      {"ASI": "ASI06", "Scenario": "3", "Disposition": "N/A — no security-classification memory or detection system exists in this codebase to mistrain."},
+      {"ASI": "ASI06", "Scenario": "4", "Disposition": "N/A — no shared memory structure across multiple agents/sessions exists; conversation memory is scoped to a single Streamlit session (st.session_state.messages), not shared across callers."},
+      {"ASI": "ASI07", "Scenario": "1", "Disposition": "N/A — no A2A protocol or consent-negotiation flow exists; this is a single-agent, single-MCP-server system."},
+      {"ASI": "ASI07", "Scenario": "2", "Disposition": "N/A — no cooperating second agent exists to interpret an injected MCP response as trusted protocol context; there is one MCP client and one MCP server."},
+      {"ASI": "ASI07", "Scenario": "3", "Disposition": "N/A — no shared tool registry across multiple agents exists; tool descriptions are declared once in tool_definitions.json for the single client in this system."},
+      {"ASI": "ASI07", "Scenario": "4", "Disposition": "N/A — no multi-agent decision-making network exists for misleading inter-agent communications to steer."},
+      {"ASI": "ASI07", "Scenario": "5", "Disposition": "N/A — no inter-agent validation/consensus mechanism exists in a single-agent system."},
+      {"ASI": "ASI07", "Scenario": "6", "Disposition": "N/A — no multi-agent network exists for misinformation to cascade across."},
+      {"ASI": "ASI07", "Scenario": "7", "Disposition": "N/A — no inter-agent communication channel/protocol exists to manipulate; the only channel is the single MCP client-server SSE transport, which is a tool-dispatch boundary, not an inter-agent protocol."},
+      {"ASI": "ASI07", "Scenario": "8", "Disposition": "N/A — no multi-agent consensus/voting mechanism exists in this system."},
+      {"ASI": "ASI08", "Scenario": "1", "Disposition": "N/A — no sales-recommendation agent or long-term response memory/log accumulation mechanism exists among this system's 10 tools."},
+      {"ASI": "ASI08", "Scenario": "2", "Disposition": "T9"},
+      {"ASI": "ASI08", "Scenario": "3", "Disposition": "N/A — no medical/healthcare decision domain exists in this system."},
+      {"ASI": "ASI08", "Scenario": "4", "Disposition": "N/A — no foreign-exchange or market-rate data source or negotiation mechanism exists in this system."},
+      {"ASI": "ASI09", "Scenario": "1", "Disposition": "N/A — this system has no financial-transaction ledger or record-completeness mechanism to manipulate; purchase/return_product produce only a confirmation string with no persisted transaction record observed."},
+      {"ASI": "ASI09", "Scenario": "2", "Disposition": "T8"},
+      {"ASI": "ASI09", "Scenario": "3", "Disposition": "N/A — no regulated-compliance audit-trail requirement or mechanism is declared in guidance.txt, system_vars.json, or tool_definitions.json beyond the general logging gap already captured in T8."},
+      {"ASI": "ASI09", "Scenario": "4", "Disposition": "N/A — no human-in-the-loop review/approval interface exists in this system; guidance rule 9's approval concept has no implemented interface to manipulate (E9)."},
+      {"ASI": "ASI09", "Scenario": "5", "Disposition": "N/A — no human reviewer workload or task queue exists; this is a single-user chat interface with no batch review process to overload."},
+      {"ASI": "ASI09", "Scenario": "6", "Disposition": "N/A — no repeated human-AI trust-calibration interaction pattern is modeled in this single-session chatbot; each session is independent with no persistent trust score to erode."},
+      {"ASI": "ASI09", "Scenario": "7", "Disposition": "N/A — no vendor/bank-detail-bearing business-copilot workflow exists; purchase's vendor_catalog is a static fixture with no user-editable bank/payment-detail field for an injection to rewrite."},
+      {"ASI": "ASI09", "Scenario": "8", "Disposition": "N/A — no outbound-link-generation behavior is declared for any of this system's 10 tools; none produce URLs for the user to click."},
+      {"ASI": "ASI10", "Scenario": "1", "Disposition": "N/A — no security-monitoring multi-agent system or identity-verification agent exists; single-agent system."},
+      {"ASI": "ASI10", "Scenario": "2", "Disposition": "N/A — no interdependent-agent delegation chain exists to escalate a request across."},
+      {"ASI": "ASI10", "Scenario": "3", "Disposition": "N/A — no multi-agent task-saturation surface exists; there is a single agent processing one session's requests sequentially."},
+      {"ASI": "ASI10", "Scenario": "4", "Disposition": "N/A — no multi-agent biometric/authentication validation chain exists to exploit inconsistencies across."},
+      {"ASI": "ASI10", "Scenario": "5", "Disposition": "N/A — no financial-approval agent or inter-agent trust relationship exists for a rogue agent to impersonate."},
+      {"ASI": "ASI10", "Scenario": "6", "Disposition": "N/A — no multi-agent transaction-routing/orchestration layer exists; purchase is a single, directly-invoked tool with no fragmented-approval routing across agents."},
+      {"ASI": "ASI10", "Scenario": "7", "Disposition": "N/A — no multiple rogue agents exist in a single-agent system to coordinate flooding."},
+      {"ASI": "ASI10", "Scenario": "8", "Disposition": "N/A — no inter-agent output-consumption chain exists for a backdoor to propagate across; this system has one agent consuming its own tool outputs, not a network of agents consuming each other's reasoning."}
+    ]
+  },
+  "handoff": {
+    "Status": "PASS",
+    "Artifact schema": "threat-model-v3"
+  }
+}

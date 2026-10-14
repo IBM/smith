@@ -24,7 +24,7 @@ uvicorn[standard]==0.32.0
 # Host header injection (GHSA-4xpc-pv4p-pm3w, critical) plus an
 # internal_user API-key privilege escalation (GHSA-qrc4-49gv-mv9m, high) —
 # both patched by 1.84.0.
-litellm==1.84.0
+litellm==1.93.2
 
 # httpx for the MCP tool call (routed through the sidecar forward proxy).
 # Bumped to 0.28.1 to satisfy a2a-sdk's httpx>=0.28.1 floor.

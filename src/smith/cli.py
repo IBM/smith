@@ -7,6 +7,7 @@ import json
 import os
 import re
 import sys
+from pathlib import Path
 
 from dotenv import load_dotenv
 
@@ -56,6 +57,25 @@ from smith.test_case_evaluation.apply_cross_validate import apply_cross_validate
 from smith.test_generation.extract_tool_args import run_extract_tool_args
 
 load_dotenv()
+
+
+def _security_analysis_path(base_url: Path, env_name: str) -> Path:
+    """Read and resolve one security-analysis path from the CLI environment."""
+    value = os.getenv(env_name)
+    if not value:
+        from smith.tools.guidance_reconciliation import ReconciliationError
+
+        raise ReconciliationError(f"{env_name} is not configured")
+    path = Path(value)
+    return path if path.is_absolute() else base_url / path
+
+
+def _optional_security_analysis_path(base_url: Path, env_name: str) -> Path | None:
+    value = os.getenv(env_name)
+    if not value:
+        return None
+    path = Path(value)
+    return path if path.is_absolute() else base_url / path
 
 
 class BlueAgent:
@@ -486,13 +506,14 @@ def main():
         help="destination directory for the snapshot (for save_snapshot)",
     )
     parser.add_argument(
-        "--mode",
-        choices=("fresh", "update"),
-        default="fresh",
-        help=(
-            "test_generation regeneration mode: fresh (default, full run) or "
-            "update (regenerate only the guidance that changed since the last run)"
-        ),
+        "--phase",
+        choices=("A", "B", "C", "D"),
+        help="security-analysis phase to prepare or checkpoint",
+    )
+    parser.add_argument(
+        "--prepare",
+        action="store_true",
+        help="create the structured input template for a security-analysis phase",
     )
     args = parser.parse_args()
 
@@ -563,6 +584,101 @@ def main():
                 + os.getenv("TEST_CASE_PATH", "references/test_cases/"),
             },
         )
+        sys.exit(0)
+
+    if args.flag == "guidance_reconciliation":
+        from smith.tools.guidance_reconciliation import (
+            ReconciliationError,
+            reconcile,
+        )
+
+        try:
+            base_url = Path(os.getenv("BASE_URL") or ".").resolve()
+            target = _security_analysis_path(base_url, "TARGET_AGENT_PATH")
+            guidance = _security_analysis_path(base_url, "GUIDANCE_FILE")
+            system_vars = _security_analysis_path(base_url, "SYSTEM_VAR_FILE")
+            analysis_dir = target / "smith" / "guidelines-security-analysis"
+            print(
+                reconcile(
+                    analysis_dir / "owasp_policy_guidelines.md",
+                    target / "smith" / "tool_definitions.json",
+                    system_vars,
+                    guidance,
+                    guidance.with_name("guidance_updated.txt"),
+                )
+            )
+        except ReconciliationError as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            sys.exit(1)
+        sys.exit(0)
+
+    if args.flag == "security_analysis_checkpoint":
+        from smith.tools.guidance_reconciliation import ReconciliationError
+        from smith.tools.security_analysis_checkpoint import (
+            checkpoint_for_target,
+            prepare_for_target,
+        )
+
+        if not args.phase:
+            print(
+                "ERROR: security_analysis_checkpoint requires --phase A, B, C, or D.",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+        try:
+            base_url = Path(os.getenv("BASE_URL") or ".").resolve()
+            target = _security_analysis_path(base_url, "TARGET_AGENT_PATH")
+            guidance = _optional_security_analysis_path(base_url, "GUIDANCE_FILE")
+            if args.prepare:
+                print(prepare_for_target(args.phase, target, guidance))
+            else:
+                system_vars = _security_analysis_path(base_url, "SYSTEM_VAR_FILE")
+                print(checkpoint_for_target(args.phase, target, system_vars, guidance))
+        except ReconciliationError as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            sys.exit(1)
+        sys.exit(0)
+
+    if args.flag == "security_analysis_inspection":
+        from smith.tools.guidance_reconciliation import ReconciliationError
+        from smith.tools.security_analysis_inspection import inspect_architecture
+
+        try:
+            base_url = Path(os.getenv("BASE_URL") or ".").resolve()
+            target = _security_analysis_path(base_url, "TARGET_AGENT_PATH")
+            analysis_dir = target / "smith" / "guidelines-security-analysis"
+            print(
+                inspect_architecture(
+                    target,
+                    target / "smith" / "tool_definitions.json",
+                    analysis_dir / "architecture_inspection.json",
+                )
+            )
+        except ReconciliationError as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            sys.exit(1)
+        sys.exit(0)
+
+    if args.flag == "guidance_merge":
+        from smith.tools.guidance_merge import merge_guidance
+        from smith.tools.guidance_reconciliation import ReconciliationError
+
+        try:
+            base_url = Path(os.getenv("BASE_URL") or ".").resolve()
+            target = _security_analysis_path(base_url, "TARGET_AGENT_PATH")
+            guidance = _security_analysis_path(base_url, "GUIDANCE_FILE")
+            analysis_dir = target / "smith" / "guidelines-security-analysis"
+            print(
+                merge_guidance(
+                    guidance,
+                    guidance.with_name("guidance_updated.txt"),
+                    analysis_dir / "analysis_state.json",
+                    analysis_dir / "owasp_policy_guidelines.md",
+                )
+            )
+        except ReconciliationError as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            sys.exit(1)
         sys.exit(0)
 
     # model settings
@@ -898,7 +1014,10 @@ def main():
         "save_snapshot",
         "generate_promptfoo_config",
         "get_current_agent",
-        "reset_policy",
+        "guidance_reconciliation",
+        "security_analysis_checkpoint",
+        "security_analysis_inspection",
+        "guidance_merge",
     ]
     if args.flag and args.flag not in allowed_flags:
         print(f"ERROR: '{args.flag}' is not a valid flag.")

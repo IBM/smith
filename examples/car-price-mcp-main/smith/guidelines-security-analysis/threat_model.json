@@ -1,0 +1,638 @@
+{
+  "schema": "threat-model-v3",
+  "status": "PASS",
+  "title": "Threat Model",
+  "sections": {},
+  "columns": {
+    "Attack Surfaces": [
+      "#",
+      "Field or Data Point",
+      "Source Layer",
+      "Provenance / influence",
+      "Enters where",
+      "Threat IDs / N/A"
+    ],
+    "Evidence Index": [
+      "ID",
+      "Source",
+      "Grounded fact"
+    ],
+    "Category Assessment": [
+      "ASI",
+      "Name",
+      "Applicability",
+      "OWASP summary",
+      "Boundary (optional)"
+    ],
+    "Threat Instances": [
+      "ID",
+      "ASI",
+      "Severity",
+      "Actor",
+      "Surface",
+      "Catalog basis",
+      "Evidence",
+      "Concrete threat"
+    ],
+    "Scenario Coverage": [
+      "ASI",
+      "Scenario",
+      "Disposition"
+    ]
+  },
+  "tables": {
+    "Attack Surfaces": [
+      {
+        "#": "1",
+        "Field or Data Point": "question (HTTP body, ChatRequest.question / ExtractToolCallRequest.question)",
+        "Source Layer": "Agent/client (agent.py, Boundary 1)",
+        "Provenance / influence": "Caller-supplied, unauthenticated free-text; directly drives LLM tool selection and generated tool arguments (brand_name, vehicle_type) via natural-language interpretation",
+        "Enters where": "HTTP POST /chat and /extract_tool_call request body -> LangGraph ReAct agent 'user' message",
+        "Threat IDs / N/A": "T1, T2, T3"
+      },
+      {
+        "#": "2",
+        "Field or Data Point": "user_profile (HTTP body, free-form Dict[str, Any])",
+        "Source Layer": "Agent/client (agent.py, Boundary 1 and 2)",
+        "Provenance / influence": "Caller-supplied, unauthenticated, no schema validation; the only runtime carrier resembling subject/role data; reaches the LLM solely as interpolated prompt-text bullet points via build_system_prompt(), never as structured input.extensions.subject.* data and never validated against the 5 declared roles",
+        "Enters where": "HTTP POST /chat and /extract_tool_call request body -> system prompt text -> LLM",
+        "Threat IDs / N/A": "T4, T5"
+      },
+      {
+        "#": "3",
+        "Field or Data Point": "input.args.brand_name",
+        "Source Layer": "LLM -> MCP tool call (Boundary 3), tool search_car_price",
+        "Provenance / influence": "LLM-generated argument based on caller's question; passed through server.py (whitespace/empty check only) to app.py's case-insensitive substring brand match; guidance.txt requires Title-Case canonicalization 'before the policy check' but Phase A confirms no such step exists anywhere in code",
+        "Enters where": "server.py @mcp.tool() search_car_price wrapper -> app.py searchCarPrice(query)",
+        "Threat IDs / N/A": "T6, T7"
+      },
+      {
+        "#": "4",
+        "Field or Data Point": "input.args.vehicle_type",
+        "Source Layer": "LLM -> MCP tool call (Boundary 3), tool get_vehicles_by_type",
+        "Provenance / influence": "LLM-generated argument, optional with schema default 'carros'; server.py defaults blank input to 'carros'; app.py lower-cases and looks up a fixed type_mapping dict, silently coercing ANY unrecognized value (including miscased recognized words) to 'carros' via type_mapping.get(vehicle_type.lower(), 'carros') -- confirmed in code",
+        "Enters where": "server.py @mcp.tool() get_vehicles_by_type wrapper -> app.py getCarsByType(vehicle_type)",
+        "Threat IDs / N/A": "T8, T9"
+      },
+      {
+        "#": "5",
+        "Field or Data Point": "FIPE external API response payloads (brand/model/year/price JSON)",
+        "Source Layer": "External service (Boundary 5), app.py outbound calls",
+        "Provenance / influence": "Third-party data (parallelum.com.br) trusted verbatim after only an HTTP-200 status check and JSON parse; no signature, checksum, schema validation, or TLS pinning of content",
+        "Enters where": "app.py outbound HTTPS GET -> formatted into tool output text -> LLM final answer -> HTTP response",
+        "Threat IDs / N/A": "T10"
+      },
+      {
+        "#": "6",
+        "Field or Data Point": "/extract_tool_call introspection path (same question/user_profile inputs, different sink)",
+        "Source Layer": "Agent/client (agent.py), alternate endpoint",
+        "Provenance / influence": "Identical caller-supplied inputs as surface #1/#2 but routed to llm_with_tools.ainvoke(), returning raw tool_calls[0] (name + args) as JSON without executing app.py or the FIPE API -- a test-harness/introspection path, not production execution",
+        "Enters where": "HTTP POST /extract_tool_call -> ExtractToolCallResponse.tool_name/.arguments",
+        "Threat IDs / N/A": "N/A -- reason: this path never executes a tool or reaches app.py/FIPE (Phase A, Data Flow); the same request-side arguments it returns are already covered as attack surfaces #1-#4 at their point of actual execution. It is a distinct sink but not a distinct attack path (no additional privilege or effect beyond disclosing what the LLM would have called)."
+      }
+    ],
+    "Evidence Index": [
+      {
+        "ID": "E1",
+        "Source": "Phase A, Trust Boundaries / Runtime Subject Context",
+        "Grounded fact": "user_role and user_name are declared in system_vars.json as intended input.extensions.subject.* fields but are never read, parsed, set, or validated by app.py, agent.py, or server.py. No verified runtime carrier for user_role exists."
+      },
+      {
+        "ID": "E2",
+        "Source": "Phase A, Trust Boundaries (Boundary 1) / Prompt Inputs",
+        "Grounded fact": "agent.py's user_profile is a fully free-form, unauthenticated, caller-supplied Dict[str, Any] on /chat and /extract_tool_call, with no schema validation and no signature/token/session check."
+      },
+      {
+        "ID": "E3",
+        "Source": "Phase A, Trust Boundaries (Boundary 2) / Prompt Inputs",
+        "Grounded fact": "build_system_prompt() interpolates every user_profile key/value as bullet-point text into the LLM system prompt with the instruction 'Respect any policies or constraints implied by these variables' -- a natural-language advisory, not enforced structured data; the LLM only 'respects' it as text."
+      },
+      {
+        "ID": "E4",
+        "Source": "Phase A, Undeclared Fields (row 2) / Q14 (Phase B)",
+        "Grounded fact": "guidance.txt requires brand_name to be normalized to canonical Title Case FIPE spelling before the policy check, but no such canonicalization step exists in server.py or app.py; app.py's case-insensitive substring match is a different, business-logic-only operation."
+      },
+      {
+        "ID": "E5",
+        "Source": "Phase A, Layers (tool implementation) / Enforcement Points",
+        "Grounded fact": "app.py's getCarsByType silently coerces any unrecognized vehicle_type value (including miscased recognized words, e.g. 'Caminhoes') to 'carros' via type_mapping.get(vehicle_type.lower(), 'carros'), confirmed at the code level; guidance.txt explicitly warns policy must reject rather than rely on this fallback."
+      },
+      {
+        "ID": "E6",
+        "Source": "Policy Guidance Questionnaire (Phase B) Q9 / Role Permissions table",
+        "Grounded fact": "guidance.txt defines exclusive per-role tool allowlists as hard boundaries: guest may call only get_car_brands; an unknown/unrecognized user_role may call no tool at all, including get_car_brands."
+      },
+      {
+        "ID": "E7",
+        "Source": "Policy Guidance Questionnaire (Phase B) Q10 / Q12 / Parameter Details",
+        "Grounded fact": "guidance.txt defines role-specific vehicle_type allowlists (e.g. fleet_manager restricted to caminhoes/trucks; consumer and journalist restricted to carros/cars) and role-specific brand_name allow/deny lists (fleet_manager 8 named brands; journalist 12-brand allow list plus explicit 14-brand deny list), all matched by exact case-sensitive equality with no fuzzy matching, and states differently-cased or partial values 'are not evaluated against the lists and are denied.'"
+      },
+      {
+        "ID": "E8",
+        "Source": "Policy Guidance Questionnaire (Phase B) Q21 / Severity Levels",
+        "Grounded fact": "Every restriction in guidance.txt uses only hard-boundary modal language ('may only', 'must be denied', 'cannot'); there is no soft/advisory severity tier anywhere in guidance."
+      },
+      {
+        "ID": "E9",
+        "Source": "Phase A, Layers (external service) / Data Flow",
+        "Grounded fact": "The FIPE API response is trusted verbatim (HTTP-200 + JSON parse only, no signature/schema/TLS pinning) and is formatted directly into tool output text that becomes the LLM's final answer to the caller."
+      },
+      {
+        "ID": "E10",
+        "Source": "Policy Guidance Questionnaire (Phase B) Q13 / Q15 / Q20 / Q22",
+        "Grounded fact": "guidance.txt specifies no numeric hard caps, no rate limits, no denial-explanation behavior, and no violation-code/logging scheme anywhere; these are open gaps, not implemented controls, and are not invented in this model."
+      },
+      {
+        "ID": "E11",
+        "Source": "Phase A, Data Flow (/extract_tool_call alternate path)",
+        "Grounded fact": "/extract_tool_call returns the LLM's raw tool_calls[0] (name + args) as JSON without executing the tool, app.py, or any FIPE call -- it is an introspection/test-harness path, not a production execution path."
+      }
+    ],
+    "Category Assessment": [
+      {
+        "ASI": "ASI01",
+        "Name": "Agent Goal Hijack",
+        "Applicability": "Partial",
+        "OWASP summary": "Attackers manipulate an agent's objectives, task selection, or decision pathways via prompt-based manipulation, deceptive tool outputs, or poisoned external data, since agents cannot reliably distinguish instructions from content.",
+        "Boundary (optional)": "The system has exactly one attacker-reachable natural-language channel that plausibly redirects tool selection/arguments: the caller-controlled question and user_profile text fed into the system prompt (E2, E3). There is no RAG, no document ingestion, no agent-to-agent messaging, and no persistent memory for indirect injection to poison, and the FIPE API response never re-enters a decision boundary (E9) -- so the classic 'indirect injection via external content redirects goals' pattern does not apply. What does apply, concretely: a caller can freely write question/user_profile text designed to get the LLM to pick tool arguments (brand_name, vehicle_type) or to assert a favorable 'role' in user_profile, hoping the LLM 'respects' it (E2, E3). Because there is no verified enforcement keyed on any structured field today (E1), this is a direct, single-turn manipulation of an unauthenticated advisory channel, not the multi-step/indirect goal-drift pattern ASI01 centers on -- hence Partial rather than Yes."
+      },
+      {
+        "ASI": "ASI02",
+        "Name": "Tool Misuse and Exploitation",
+        "Applicability": "Yes",
+        "OWASP summary": "Agents misuse legitimate tools they are authorized to call -- via prompt injection, unsafe delegation, or ambiguous instructions -- to exfiltrate data, manipulate tool output, or hijack workflow, while remaining within their nominally granted privileges.",
+        "Boundary (optional)": "All 3 tools are legitimate, narrowly-scoped, read-only FIPE lookups with no delete/write/financial capability (Phase A/B, Q3), so high-impact misuse (deletion, fund transfer) is out of scope. What is in scope and evidence-grounded: guidance.txt's hard per-role parameter restrictions (vehicle_type and brand_name allowlists, E7) are guidance intent only -- server.py performs presence/whitespace checks only, and app.py's silent vehicle_type fallback (E5) and missing brand_name canonicalization (E4) mean a caller/LLM combination can cause a tool to be invoked with an argument value that guidance says must be denied, and have it silently succeed as if it were the default-permitted value, all within the tool's own legitimate call surface."
+      },
+      {
+        "ASI": "ASI03",
+        "Name": "Identity and Privilege Abuse",
+        "Applicability": "Partial",
+        "OWASP summary": "Exploits dynamic trust/delegation to escalate access or bypass controls by manipulating delegation chains, role inheritance, or cached credentials/context across interconnected systems.",
+        "Boundary (optional)": "There is no delegation chain, no agent-to-agent trust, no OAuth/token-based identity, and no credential caching anywhere in this system (Phase A: no auth on any HTTP endpoint, no session/token mechanism) -- most of ASI03's substrate (cross-system authorization exploitation, confused-deputy, TOCTOU across agents) does not exist here. The one concrete, evidence-grounded slice that does apply: user_role has no verified structured runtime source at all (E1), and the only analog (user_profile) is unauthenticated caller-supplied text (E2) -- so if any future enforcement point were to (incorrectly) treat user_profile-asserted values as a trustworthy role, that would be a caller-forgeable identity claim. Today, since nothing reads or acts on user_profile as a role (E1, E3), this is a latent design risk rather than an active privilege-escalation path, hence Partial."
+      },
+      {
+        "ASI": "ASI04",
+        "Name": "Agentic Supply Chain Vulnerabilities",
+        "Applicability": "No",
+        "OWASP summary": "Third-party agents, tools, plugins, MCP/registry servers, or update channels are malicious, compromised, or tampered with in transit, introducing unsafe code or hidden instructions into the agent's execution chain.",
+        "Boundary (optional)": "The system has a fixed, hardcoded set of 3 first-party MCP tools registered directly by server.py (no dynamic tool discovery, no external tool/plugin registry, no agent marketplace, no runtime-loaded prompt templates) and one external data dependency (the FIPE HTTP API) that is a passive read-only data source, not a tool/plugin/agent descriptor that could be swapped or poisoned at the protocol layer. No evidence in Phase A/B of any dynamically loaded component, dependency-resolution step, or third-party tool descriptor that an attacker could tamper with. Out of scope for this system."
+      },
+      {
+        "ASI": "ASI05",
+        "Name": "Unexpected Code Execution (RCE)",
+        "Applicability": "No",
+        "OWASP summary": "Agentic systems that generate and execute code (scripts, eval, deserialization, template engines) can be manipulated into unintended executable behavior via prompt injection or unsafe tool chains.",
+        "Boundary (optional)": "None of the 3 tools generate, evaluate, or execute code, shell commands, or templates; all 3 are read-only HTTP GET wrappers around a fixed external API (Phase A/B, Q3). No eval(), no code-generation feature, no deserialization of untrusted objects exists anywhere in app.py/agent.py/server.py. Out of scope for this system."
+      },
+      {
+        "ASI": "ASI06",
+        "Name": "Memory & Context Poisoning",
+        "Applicability": "No",
+        "OWASP summary": "Adversaries corrupt or seed an agent's stored/retrievable context (memory, RAG store, embeddings) so that future reasoning, planning, or tool use becomes biased, unsafe, or aids exfiltration, persisting across sessions.",
+        "Boundary (optional)": "The system has no persistent memory, no vector database, no RAG store, and no cross-session state of any kind (Phase A: each /chat call builds a fresh system prompt from the current request's user_profile only; no evidence of any stored/retrieved context surviving between requests). The FIPE API is queried fresh per-call and its response is not stored for reuse. Out of scope for this system."
+      },
+      {
+        "ASI": "ASI07",
+        "Name": "Insecure Inter-Agent Communication",
+        "OWASP summary": "Multi-agent systems depend on continuous inter-agent messaging via APIs/buses/shared memory; weak authentication, integrity, or authorization controls let attackers intercept, spoof, or manipulate agent-to-agent messages.",
+        "Applicability": "No",
+        "Boundary (optional)": "This is a single-agent system: one LangGraph ReAct agent calling its own bound MCP tools over a local stdio subprocess (Phase A, Boundary 3), with no peer agents, no A2A protocol, no message bus, and no multi-agent coordination of any kind. Out of scope for this system."
+      },
+      {
+        "ASI": "ASI08",
+        "Name": "Cascading Failures",
+        "Applicability": "No",
+        "OWASP summary": "A single fault (hallucination, malicious input, corrupted tool, poisoned memory) propagates and amplifies across multiple autonomous agents or persisted state, turning one error into system-wide impact.",
+        "Boundary (optional)": "Cascading failure requires fan-out across multiple agents, sessions, or persisted workflows; this system has one agent, no persisted state between requests, and no downstream agents to propagate a fault to (Phase A: each request is independently constructed and executed). A wrong/coerced tool argument (e.g. the vehicle_type fallback, E5) affects only that single request-response cycle, not future sessions or other agents. Out of scope for this system as currently architected."
+      },
+      {
+        "ASI": "ASI09",
+        "Name": "Human-Agent Trust Exploitation",
+        "Applicability": "No",
+        "OWASP summary": "Agents exploit anthropomorphism and human over-reliance on confident-sounding recommendations to get humans to approve high-impact actions without independent validation.",
+        "Boundary (optional)": "All 3 tools are informational, read-only price/brand lookups (Phase A/B, Q3) with no action requiring human approval, no financial transaction, and no irreversible side effect that a human is asked to confirm based on the agent's persuasive framing. The FIPE data returned is unverified (E9) but this is a data-quality/integrity concern, not an exploitation of human trust to approve a sensitive action -- there is no approval step in this system to exploit (E10: no approval paths defined). Out of scope for this system."
+      },
+      {
+        "ASI": "ASI10",
+        "Name": "Rogue Agents",
+        "Applicability": "No",
+        "OWASP summary": "Malicious or compromised agents deviate from intended function or authorized scope within multi-agent or human-agent ecosystems, individually-legitimate actions compounding into emergent harmful behavior.",
+        "Boundary (optional)": "Rogue-agent behavioral divergence requires either a multi-agent ecosystem or persistent autonomous operation across sessions for drift to accumulate; this system is a single, stateless-per-request agent with a fixed 3-tool surface and no autonomous multi-step planning beyond one request's tool call (Phase A: LangGraph ReAct loop terminates within a single /chat call). No substrate for emergent behavioral drift or agent collusion. Out of scope for this system."
+      }
+    ],
+    "Threat Instances": [
+      {
+        "ID": "T1",
+        "ASI": "ASI01",
+        "Severity": "Medium",
+        "Actor": "Caller",
+        "Surface": "#1 question",
+        "Catalog basis": "Direct Plan Injection",
+        "Evidence": "E2, E3",
+        "Concrete threat": "A caller crafts the question text to directly instruct the LLM to call search_car_price or get_vehicles_by_type with a specific brand_name/vehicle_type chosen by the caller rather than derived from a legitimate need, steering tool-argument selection through direct natural-language instruction with no structured validation gate in between (server.py only checks presence/whitespace)."
+      },
+      {
+        "ID": "T2",
+        "ASI": "ASI02",
+        "Severity": "High",
+        "Actor": "Caller",
+        "Surface": "#1 question, #4 input.args.vehicle_type",
+        "Catalog basis": "novel",
+        "Evidence": "E5, E7",
+        "Concrete threat": "A caller phrases a question that causes the LLM to pass an unrecognized or miscased vehicle_type (e.g. 'Caminhoes' or any value guidance says must be denied for that role) to get_vehicles_by_type; app.py's type_mapping.get(vehicle_type.lower(), 'carros') silently coerces it to 'carros' and returns a successful result instead of the denial guidance requires, meaning a rejected request masquerades as a permitted one at exactly the layer (app.py) any future enforcement placed after it would be blind to."
+      },
+      {
+        "ID": "T3",
+        "ASI": "ASI02",
+        "Severity": "Medium",
+        "Actor": "Caller",
+        "Surface": "#1 question, #3 input.args.brand_name",
+        "Catalog basis": "novel",
+        "Evidence": "E4, E7",
+        "Concrete threat": "A caller supplies (via question, through LLM argument generation) a brand_name in a casing other than canonical Title Case (e.g. 'mercedes-benz' instead of 'Mercedes-Benz'); since no canonicalization step exists in server.py or app.py, a future policy keyed on raw input.args.brand_name would fail to match either a role's allow list or deny list for that value, and per guidance's own default such unmatched values must be denied -- but no enforcement exists today to apply that default, so app.py's own substring match still returns a real result for the miscased brand."
+      },
+      {
+        "ID": "T4",
+        "ASI": "ASI03",
+        "Severity": "Medium",
+        "Actor": "Caller",
+        "Surface": "#2 user_profile",
+        "Catalog basis": "novel",
+        "Evidence": "E1, E2, E3",
+        "Concrete threat": "A caller populates user_profile with a fabricated role claim (e.g. {\"user_role\": \"fleet_manager\"}) hoping either the LLM's advisory prompt-text 'respect these variables' framing, or a future enforcement point that naively trusts user_profile as if it were a verified input.extensions.subject.user_role, grants it fleet_manager-level brand_name/vehicle_type access; this is caller-forgeable because Phase A confirms user_profile is unauthenticated, unvalidated, free-form caller input with no signature/session/token backing (E2) -- a legitimately supported forgeability claim, not an assumption, per the delivery evidence itself."
+      },
+      {
+        "ID": "T5",
+        "ASI": "ASI01",
+        "Severity": "Low",
+        "Actor": "Caller",
+        "Surface": "#2 user_profile",
+        "Catalog basis": "novel",
+        "Evidence": "E3",
+        "Concrete threat": "A caller injects instruction-like text into a user_profile value (not just a role claim, but arbitrary text) that build_system_prompt() interpolates verbatim into the system prompt as an 'Active System Variable', giving the caller a second, less obvious channel (beyond the question field) to inject natural-language instructions the LLM may treat as policy-relevant context."
+      },
+      {
+        "ID": "T6",
+        "ASI": "ASI02",
+        "Severity": "Low",
+        "Actor": "LLM",
+        "Surface": "#3 input.args.brand_name",
+        "Catalog basis": "novel",
+        "Evidence": "E4",
+        "Concrete threat": "The LLM itself (not a directly adversarial caller) generates a brand_name argument in a casing that does not match canonical Title Case simply through normal natural-language-to-argument translation (e.g. lower-casing a brand mentioned casually in the question), which -- absent the canonicalization guidance requires -- would fail to match either allow or deny lists in any future role-scoped policy, again defaulting (per guidance) to a denial that nothing currently enforces."
+      },
+      {
+        "ID": "T7",
+        "ASI": "ASI02",
+        "Severity": "Low",
+        "Actor": "Tool",
+        "Surface": "#3 input.args.brand_name",
+        "Catalog basis": "novel",
+        "Evidence": "E4",
+        "Concrete threat": "app.py's own business-logic substring match (query_lower in brand['nome'].lower()) is a case-insensitive, partial match against live FIPE brand names -- a different operation than the exact Title-Case equality guidance requires for the policy check -- so the tool implementation itself can resolve and return data for a brand name that would not have matched a role's canonical allow list, independent of any caller intent."
+      },
+      {
+        "ID": "T8",
+        "ASI": "ASI02",
+        "Severity": "High",
+        "Actor": "Caller",
+        "Surface": "#4 input.args.vehicle_type",
+        "Catalog basis": "novel",
+        "Evidence": "E5, E7",
+        "Concrete threat": "A guest or unknown-role caller (who per guidance must be denied get_vehicles_by_type entirely, E6/E7) or any role restricted to a narrower vehicle_type subset, submits an out-of-scope or garbage vehicle_type value; because server.py performs no role/allowlist check and app.py silently defaults any unrecognized value to 'carros' (E5), the call succeeds and returns real 'carros' data rather than being denied -- the single highest-confirmed-in-code blind spot in the system."
+      },
+      {
+        "ID": "T9",
+        "ASI": "ASI02",
+        "Severity": "High",
+        "Actor": "Caller",
+        "Surface": "#3 input.args.brand_name, #4 input.args.vehicle_type",
+        "Catalog basis": "Automated Tool Abuse",
+        "Evidence": "E1, E6, E7, E8",
+        "Concrete threat": "Because no verified user_role reaches any enforcement point (E1) and no OPA/enforcement layer exists today (Phase A, Enforcement Points), every hard boundary guidance.txt defines (guest limited to get_car_brands only; unknown role denied all tools; per-role brand_name and vehicle_type allow/deny lists, E6/E7) is currently unenforced for all 3 tools -- any caller, regardless of asserted or absent role, can invoke search_car_price or get_vehicles_by_type with any brand_name/vehicle_type value today, which is the complete, system-wide realization of guidance's hard-boundary intent (E8) being bypassed rather than a narrow parameter edge case."
+      },
+      {
+        "ID": "T10",
+        "ASI": "ASI02",
+        "Severity": "Low",
+        "Actor": "External",
+        "Surface": "#5 FIPE API response payloads",
+        "Catalog basis": "novel",
+        "Evidence": "E9",
+        "Concrete threat": "The FIPE API response content (brand/model/year/price data) is trusted verbatim with no signature, schema, or integrity check and is returned to the caller as authoritative pricing data; a compromised or spoofed upstream response would reach the end user unfiltered. This is scoped narrowly to data-integrity/trust of returned content -- guidance.txt does not govern response content (only request-side role/brand_name/vehicle_type, per Phase B Q17/Q18), so this does not constitute a goal-hijack or policy-bypass finding, only a defense-in-depth data-trust gap."
+      }
+    ],
+    "Scenario Coverage": [
+      {
+        "ASI": "ASI01",
+        "Scenario": "1",
+        "Disposition": "N/A -- reason: requires incremental, multi-turn drift across a persisted plan/session; this system builds a fresh prompt per single-turn /chat request with no persisted planning state (Phase A, Data Flow) for gradual sub-goal injection to accumulate in."
+      },
+      {
+        "ASI": "ASI01",
+        "Scenario": "2",
+        "Disposition": "T1"
+      },
+      {
+        "ASI": "ASI01",
+        "Scenario": "3",
+        "Disposition": "N/A -- reason: requires a maliciously crafted tool output feeding back into agent goal interpretation; tool outputs here are formatted FIPE data returned once at the end of the ReAct loop and consumed only as the final answer, not re-injected as new instructions the agent acts on (Phase A, Data Flow)."
+      },
+      {
+        "ASI": "ASI01",
+        "Scenario": "4",
+        "Disposition": "N/A -- reason: no self-analysis/reflection cycle exists; the LangGraph ReAct loop here is a single bounded tool-call cycle per request with no evidence of recursive self-critique."
+      },
+      {
+        "ASI": "ASI01",
+        "Scenario": "5",
+        "Disposition": "N/A -- reason: no self-improvement or learning mechanism exists in this system; the LLM and tool set are static per request."
+      },
+      {
+        "ASI": "ASI02",
+        "Scenario": "1",
+        "Disposition": "T8"
+      },
+      {
+        "ASI": "ASI02",
+        "Scenario": "2",
+        "Disposition": "N/A -- reason: requires chaining multiple distinct tools to extract and exfiltrate data via a separate channel (e.g. email); this system's 3 tools are independent read-only lookups with no messaging/exfiltration tool to chain into, and searchCarPrice's internal chained FIPE calls are business logic, not attacker-controlled chaining."
+      },
+      {
+        "ASI": "ASI02",
+        "Scenario": "3",
+        "Disposition": "T9"
+      },
+      {
+        "ASI": "ASI02",
+        "Scenario": "4",
+        "Disposition": "N/A -- reason: no persistent memory exists in this system (see ASI06 boundary) for false information to be injected into and later recalled."
+      },
+      {
+        "ASI": "ASI02",
+        "Scenario": "5",
+        "Disposition": "N/A -- reason: no vector database or embeddings store exists anywhere in this system."
+      },
+      {
+        "ASI": "ASI02",
+        "Scenario": "6",
+        "Disposition": "T1"
+      },
+      {
+        "ASI": "ASI03",
+        "Scenario": "1",
+        "Disposition": "N/A -- reason: no temporary-privilege-grant mechanism exists to invoke or retain; user_role has no runtime carrier at all (E1), so there is no privilege state to escalate, only an absent one."
+      },
+      {
+        "ASI": "ASI03",
+        "Scenario": "2",
+        "Disposition": "N/A -- reason: this system integrates with exactly one external system (the read-only FIPE API) and has no cross-system scope (e.g. HR-to-Finance) to escalate between."
+      },
+      {
+        "ASI": "ASI03",
+        "Scenario": "3",
+        "Disposition": "N/A -- reason: no multi-agent architecture exists for a rogue agent to be deployed into (see ASI10 boundary)."
+      },
+      {
+        "ASI": "ASI03",
+        "Scenario": "4",
+        "Disposition": "T4"
+      },
+      {
+        "ASI": "ASI03",
+        "Scenario": "5",
+        "Disposition": "N/A -- reason: no account-creation or onboarding capability exists among the 3 read-only tools for a spoofed identity to be used to create fraudulent accounts."
+      },
+      {
+        "ASI": "ASI03",
+        "Scenario": "6",
+        "Disposition": "N/A -- reason: requires a rogue peer agent mimicking a legitimate system agent; no multi-agent ecosystem exists in this system."
+      },
+      {
+        "ASI": "ASI03",
+        "Scenario": "7",
+        "Disposition": "N/A -- reason: requires multiple platforms/authentication contexts and external tool privilege inheritance (e.g. GitHub); this system has a single platform with no authentication contexts at all to spoof across."
+      },
+      {
+        "ASI": "ASI03",
+        "Scenario": "8",
+        "Disposition": "N/A -- reason: there is no per-user audit/attribution mechanism or identity system in this system for an attacker to misattribute actions to another user (E10: no logging/violation scheme exists)."
+      },
+      {
+        "ASI": "ASI03",
+        "Scenario": "9",
+        "Disposition": "N/A -- reason: this system's agent holds no long-lived API token, formal enterprise agent identity, or cloud-stored credential of its own to be extracted and reused; its only outbound calls are unauthenticated FIPE GET requests (Phase A, Boundary 5)."
+      },
+      {
+        "ASI": "ASI04",
+        "Scenario": "1",
+        "Disposition": "N/A -- reason: no update channel or third-party-published agent extension exists for this fixed, first-party 3-tool server (see ASI04 category boundary)."
+      },
+      {
+        "ASI": "ASI04",
+        "Scenario": "2",
+        "Disposition": "N/A -- reason: no code-generation, test-environment, or database-mutation capability exists in this read-only system (see ASI05 boundary)."
+      },
+      {
+        "ASI": "ASI05",
+        "Scenario": "1",
+        "Disposition": "N/A -- reason: no dedicated resource-intensive analysis pipeline exists to overwhelm; each tool call is a bounded, small number of chained HTTP GETs (Phase A, Data Flow: 0-3+ calls per searchCarPrice)."
+      },
+      {
+        "ASI": "ASI05",
+        "Scenario": "2",
+        "Disposition": "N/A -- reason: no multi-agent architecture exists (see ASI10 boundary)."
+      },
+      {
+        "ASI": "ASI05",
+        "Scenario": "3",
+        "Disposition": "N/A -- reason: no rate limit or quota mechanism is defined in guidance for this system to encode a defense against, and no per-call cost/quota data exists to ground a concrete finding (E10); recording as N/A rather than inventing a rate-limit threat guidance does not support."
+      },
+      {
+        "ASI": "ASI05",
+        "Scenario": "4",
+        "Disposition": "N/A -- reason: no persistent memory allocation exists in this system (see ASI06 boundary)."
+      },
+      {
+        "ASI": "ASI05",
+        "Scenario": "5",
+        "Disposition": "N/A -- reason: no Terraform/infrastructure-as-code generation or DevOps tool capability exists among the 3 read-only price-lookup tools."
+      },
+      {
+        "ASI": "ASI05",
+        "Scenario": "6",
+        "Disposition": "N/A -- reason: no workflow-automation engine or AI-generated-script execution exists in this system."
+      },
+      {
+        "ASI": "ASI05",
+        "Scenario": "7",
+        "Disposition": "N/A -- reason: scenario requires an email/exfiltration-capable tool (e.g. POP3) that this system does not have; the 3 tools have no email or exfiltration channel."
+      },
+      {
+        "ASI": "ASI06",
+        "Scenario": "1",
+        "Disposition": "N/A -- reason: no persistent memory exists in this system to reinforce a false rule into (see ASI06 category boundary)."
+      },
+      {
+        "ASI": "ASI06",
+        "Scenario": "2",
+        "Disposition": "N/A -- reason: no multi-session context accumulation exists; each /chat request is built fresh (Phase A, Data Flow)."
+      },
+      {
+        "ASI": "ASI06",
+        "Scenario": "3",
+        "Disposition": "N/A -- reason: no persistent memory or classification model exists to poison in this system."
+      },
+      {
+        "ASI": "ASI06",
+        "Scenario": "4",
+        "Disposition": "N/A -- reason: no shared memory structure exists across callers/agents in this single-agent, stateless-per-request system."
+      },
+      {
+        "ASI": "ASI07",
+        "Scenario": "1",
+        "Disposition": "N/A -- reason: no A2A exchange or inter-agent consent negotiation exists in this single-agent system (see ASI07 category boundary)."
+      },
+      {
+        "ASI": "ASI07",
+        "Scenario": "2",
+        "Disposition": "N/A -- reason: the single MCP server here is first-party and locally spawned via stdio subprocess (Phase A, Boundary 3), not a remote/third-party MCP peer whose responses could be intercepted or forged in transit; no cooperating second agent exists to misinterpret an injected response."
+      },
+      {
+        "ASI": "ASI07",
+        "Scenario": "3",
+        "Disposition": "N/A -- reason: requires a shared multi-agent tool registry and a second agent that accepts tool descriptions from it; this system's tool descriptions are fixed and consumed only by its own single agent (Phase A: tool_definitions.json, 1 agent)."
+      },
+      {
+        "ASI": "ASI07",
+        "Scenario": "4",
+        "Disposition": "N/A -- reason: requires multi-agent decision-making to influence; no such architecture exists here."
+      },
+      {
+        "ASI": "ASI07",
+        "Scenario": "5",
+        "Disposition": "N/A -- reason: requires an inter-agent consensus/validation mechanism; none exists in this single-agent system."
+      },
+      {
+        "ASI": "ASI07",
+        "Scenario": "6",
+        "Disposition": "N/A -- reason: requires a multi-agent network for false data to cascade across; this system has one agent and no peer network."
+      },
+      {
+        "ASI": "ASI07",
+        "Scenario": "7",
+        "Disposition": "N/A -- reason: requires inter-agent communication protocols to degrade; none exist in this single-agent system."
+      },
+      {
+        "ASI": "ASI07",
+        "Scenario": "8",
+        "Disposition": "N/A -- reason: requires multiple AI agents with collective decision-making; none exist in this system."
+      },
+      {
+        "ASI": "ASI08",
+        "Scenario": "1",
+        "Disposition": "N/A -- reason: requires accumulation of false data in long-term memory/logs across future interactions; no persistent memory exists (see ASI06/ASI08 category boundary)."
+      },
+      {
+        "ASI": "ASI08",
+        "Scenario": "2",
+        "Disposition": "N/A -- reason: the FIPE API endpoints called are fixed, hardcoded URL templates in app.py, not hallucinated/agent-generated endpoints (Phase A, External Data), so there is no substrate for the agent to fabricate a fictitious API call."
+      },
+      {
+        "ASI": "ASI08",
+        "Scenario": "3",
+        "Disposition": "N/A -- reason: this system has no healthcare domain, no persisted recommendation history, and no cross-interaction amplification mechanism."
+      },
+      {
+        "ASI": "ASI08",
+        "Scenario": "4",
+        "Disposition": "N/A -- reason: this system has no transaction/negotiation capability and no persisted cross-agent context for injected false data to propagate through; FIPE price data is fetched fresh per call (E9) and any inaccuracy is scoped to a single response (T10), not a cascading multi-agent effect."
+      },
+      {
+        "ASI": "ASI09",
+        "Scenario": "1",
+        "Disposition": "N/A -- reason: no financial transaction or logging-manipulable action exists in this read-only lookup system."
+      },
+      {
+        "ASI": "ASI09",
+        "Scenario": "2",
+        "Disposition": "N/A -- reason: no security-agent action or investigatory logging trail exists to obscure in this system (E10: no logging scheme exists to begin with, so there is nothing to selectively evade)."
+      },
+      {
+        "ASI": "ASI09",
+        "Scenario": "3",
+        "Disposition": "N/A -- reason: no regulated decision-making or audit-trail requirement is defined in guidance.txt for this system; absence of logging is a pre-existing open gap (E10), not a concealment attack with a concrete substrate."
+      },
+      {
+        "ASI": "ASI09",
+        "Scenario": "4",
+        "Disposition": "N/A -- reason: no human-in-the-loop approval interface exists anywhere in this system (E10: no approval paths defined) for its perception to be manipulated."
+      },
+      {
+        "ASI": "ASI09",
+        "Scenario": "5",
+        "Disposition": "N/A -- reason: no human reviewer/approval queue exists in this system to overwhelm."
+      },
+      {
+        "ASI": "ASI09",
+        "Scenario": "6",
+        "Disposition": "N/A -- reason: no AI-human interaction trust mechanism or oversight validation step exists in this system to degrade."
+      },
+      {
+        "ASI": "ASI09",
+        "Scenario": "7",
+        "Disposition": "N/A -- reason: no invoice, payment, or bank-detail data exists anywhere in this car-price lookup system."
+      },
+      {
+        "ASI": "ASI09",
+        "Scenario": "8",
+        "Disposition": "N/A -- reason: none of the 3 tools generate messages, links, or content designed to redirect the user off-system; all outputs are formatted FIPE price/brand data."
+      },
+      {
+        "ASI": "ASI10",
+        "Scenario": "1",
+        "Disposition": "N/A -- reason: no multi-agent identity-verification architecture exists in this single-agent system (see ASI10 category boundary)."
+      },
+      {
+        "ASI": "ASI10",
+        "Scenario": "2",
+        "Disposition": "N/A -- reason: no inter-agent delegation loop exists; this system has exactly one agent."
+      },
+      {
+        "ASI": "ASI10",
+        "Scenario": "3",
+        "Disposition": "N/A -- reason: no multi-agent task queue or prioritization system exists for a saturation attack to target; guidance defines no rate limit for this system to encode a defense around (E10)."
+      },
+      {
+        "ASI": "ASI10",
+        "Scenario": "4",
+        "Disposition": "N/A -- reason: no biometric/authentication-check-based multi-agent approval flow exists in this system."
+      },
+      {
+        "ASI": "ASI10",
+        "Scenario": "5",
+        "Disposition": "N/A -- reason: no financial-approval agent or inter-agent trust relationship exists to impersonate; this system has one agent and no transaction capability."
+      },
+      {
+        "ASI": "ASI10",
+        "Scenario": "6",
+        "Disposition": "N/A -- reason: no financial transaction routing or multi-agent approval fragmentation exists in this read-only price-lookup system."
+      },
+      {
+        "ASI": "ASI10",
+        "Scenario": "7",
+        "Disposition": "N/A -- reason: no multiple-agent architecture exists for rogue agents to coordinate flooding from."
+      },
+      {
+        "ASI": "ASI10",
+        "Scenario": "8",
+        "Disposition": "N/A -- reason: requires inter-agent output consumption in a multi-agent reasoning network for a backdoor to propagate through; this system has one agent consuming only its own tool outputs within a single request."
+      }
+    ]
+  },
+  "handoff": {
+    "Status": "PASS",
+    "Artifact schema": "threat-model-v3",
+    "Summary": "Category Assessment: ASI02 (Tool Misuse and Exploitation) = Yes -- the system's entire real attack substrate (silent vehicle_type fallback, missing brand_name canonicalization, and total absence of role enforcement) fits this category since all 3 tools are used within their own legitimate, granted call surface. ASI01 (Goal Hijack) and ASI03 (Identity and Privilege Abuse) = Partial -- ASI01 because the only injection channel is single-turn caller text (question/user_profile) with no indirect/multi-agent poisoning substrate; ASI03 because user_role is entirely unplumbed (a latent design gap) rather than an active escalation path today. ASI04-ASI10 = No, each with a system-specific boundary citing the concrete missing substrate (no dynamic tool/plugin loading, no code execution, no persistent memory/RAG, no multi-agent messaging, no cascading fan-out, no human-approval interface, no rogue-agent ecosystem). Threat/severity counts: 10 threat instances (T1-T10) -- 3 High (T2, T8, T9, all ASI02 realizations of the unenforced-role/silent-fallback gap), 4 Medium (T1, T3, T4, T5), 3 Low (T6, T7, T10). Actors used: Caller (7), LLM (1), Tool (1), External (1) -- no unsupported actor/surface combination was generated (e.g. no 'External' actor claim against request-side surfaces, no multi-agent actor). Surface coverage: 6 attack surfaces (#1-#6), 5 cite threats, 1 (#6, /extract_tool_call) carries an N/A -- reason disposition since it is a non-executing introspection sink already covered by surfaces #1-#4 at their execution point. Scenario coverage: all catalog attack_scenarios across ASI01-ASI10 (55 total) received exactly one disposition each -- 5 cite threat IDs (mapped to T1, T4, T8, T9, plus the ASI02 prompt-injection scenario reusing T1), the remainder are N/A -- reason citing the specific missing substrate (no multi-agent, no memory/RAG, no code execution, no financial/approval flow, etc.), none left blank or genericized. Citation verification: every threat instance cites at least one Evidence Index ID (E1-E11), every evidence ID traces to a specific Phase A/B table or questionnaire answer (re-read from analysis_state.json, not re-derived from source code), and no evidence ID was duplicated with different wording across threats. Repairs: 1 repair made during the single semantic completeness pass -- an initially drafted ASI01-linked threat instance implying external FIPE data could bias tool-selection/goal state was narrowed to a Low-severity, ASI02-scoped, 'External' actor data-integrity finding (T10) with the unsupported ASI01 catalog linkage removed, since Phase A confirms response content never re-enters a decision boundary guidance governs. No further issues were found after the repair. Open gaps carried forward from Phase A/B (not newly invented, and not resolved by this phase since threat modeling does not add enforcement): (1) user_role has no verified runtime carrier at all, blocking every role-keyed threat from ever being enforced until a structured field is plumbed (E1); (2) app.py's silent vehicle_type-to-'carros' fallback is a confirmed code-level blind spot for any enforcement placed after it (E5); (3) no brand_name canonicalization step exists, so exact-match role allow/deny lists cannot function against raw input today (E4); (4) no numeric caps, rate limits, approval paths, denial-explanation behavior, or violation-code scheme exist anywhere to encode defenses around (E10) -- left as gaps per the shared no-invention rule rather than fabricated."
+  }
+}
