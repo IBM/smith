@@ -512,7 +512,7 @@ def main():
         help=(
             "test_generation regeneration mode: fresh (default, full run) or "
             "update (regenerate only the guidance that changed since the last run)"
-        )
+        ),
     )
     parser.add_argument(
         "--phase",
