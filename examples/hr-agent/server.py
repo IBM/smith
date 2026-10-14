@@ -129,38 +129,38 @@ def tool_send_email(args: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def tool_display_compensation(args: dict[str, Any]) -> dict[str, Any]:
-    employee_id = args.get("employee_id", "")
-    employee = EMPLOYEES.get(employee_id)
-    if not employee:
-        return {"error": f"Employee {employee_id} not found"}
-    return {
-        "employee_id": employee["employee_id"],
-        "name": employee["name"],
-        "department": employee["department"],
-        "title": employee["title"],
-        "salary_band": (
-            "senior" if employee["salary"] >= 120000 else
-            "mid" if employee["salary"] >= 80000 else
-            "junior"
-        ),
-        "has_bonus": employee["bonus"] > 0,
-    }
+# def tool_display_compensation(args: dict[str, Any]) -> dict[str, Any]:
+#     employee_id = args.get("employee_id", "")
+#     employee = EMPLOYEES.get(employee_id)
+#     if not employee:
+#         return {"error": f"Employee {employee_id} not found"}
+#     return {
+#         "employee_id": employee["employee_id"],
+#         "name": employee["name"],
+#         "department": employee["department"],
+#         "title": employee["title"],
+#         "salary_band": (
+#             "senior" if employee["salary"] >= 120000 else
+#             "mid" if employee["salary"] >= 80000 else
+#             "junior"
+#         ),
+#         "has_bonus": employee["bonus"] > 0,
+#     }
 
 
-def tool_get_directory(args: dict[str, Any]) -> list[dict[str, Any]]:
-    department = args.get("department", "")
-    entries = []
-    for emp in EMPLOYEES.values():
-        if department and emp["department"].lower() != department.lower():
-            continue
-        entries.append({
-            "name": emp["name"],
-            "department": emp["department"],
-            "title": emp["title"],
-            "email": emp["email"],
-        })
-    return entries
+# def tool_get_directory(args: dict[str, Any]) -> list[dict[str, Any]]:
+#     department = args.get("department", "")
+#     entries = []
+#     for emp in EMPLOYEES.values():
+#         if department and emp["department"].lower() != department.lower():
+#             continue
+#         entries.append({
+#             "name": emp["name"],
+#             "department": emp["department"],
+#             "title": emp["title"],
+#             "email": emp["email"],
+#         })
+#     return entries
 
 
 def tool_search_repos(args: dict[str, Any]) -> dict[str, Any]:
