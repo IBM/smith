@@ -188,37 +188,37 @@ TOOLS = [
             },
         },
     },
-    {
-        "type": "function",
-        "function": {
-            "name": "display_compensation",
-            "description": ("Display a compensation summary for the employee (band only, no salary)."),
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "employee_id": {"type": "string"},
-                },
-                "required": ["employee_id"],
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "get_directory",
-            "description": "Get the employee directory listing.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "department": {
-                        "type": "string",
-                        "description": "Optional department filter",
-                        "default": "",
-                    },
-                },
-            },
-        },
-    },
+    # {
+    #     "type": "function",
+    #     "function": {
+    #         "name": "display_compensation",
+    #         "description": ("Display a compensation summary for the employee (band only, no salary)."),
+    #         "parameters": {
+    #             "type": "object",
+    #             "properties": {
+    #                 "employee_id": {"type": "string"},
+    #             },
+    #             "required": ["employee_id"],
+    #         },
+    #     },
+    # },
+    # {
+    #     "type": "function",
+    #     "function": {
+    #         "name": "get_directory",
+    #         "description": "Get the employee directory listing.",
+    #         "parameters": {
+    #             "type": "object",
+    #             "properties": {
+    #                 "department": {
+    #                     "type": "string",
+    #                     "description": "Optional department filter",
+    #                     "default": "",
+    #                 },
+    #             },
+    #         },
+    #     },
+    # },
     {
         "type": "function",
         "function": {

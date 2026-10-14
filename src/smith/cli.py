@@ -506,6 +506,15 @@ def main():
         help="destination directory for the snapshot (for save_snapshot)",
     )
     parser.add_argument(
+        "--mode",
+        choices=("fresh", "update"),
+        default="fresh",
+        help=(
+            "test_generation regeneration mode: fresh (default, full run) or "
+            "update (regenerate only the guidance that changed since the last run)"
+        ),
+    )
+    parser.add_argument(
         "--phase",
         choices=("A", "B", "C", "D"),
         help="security-analysis phase to prepare or checkpoint",
