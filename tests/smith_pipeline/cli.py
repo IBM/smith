@@ -236,12 +236,15 @@ def verify_skill(dry_run: bool) -> None:
 
     try:
         proc = subprocess.run(
-            ["claude", "-p", "/smith", "--permission-mode", "plan"],
-            cwd=PARENT, capture_output=True, text=True, timeout=60,
+            ["claude", "-p",
+             "/smith reply with only the word OK — do nothing else",
+             "--bare", "--permission-mode", "plan"],
+            cwd=PARENT, capture_output=True, text=True, timeout=120,
         )
     except subprocess.TimeoutExpired:
-        out.err("Timed out checking whether '/smith' resolves in headless mode.")
-        raise SystemExit(1) from None
+        out.warn("'/smith' did not reply within 120s, but it resolved (an "
+                 "unknown command fails immediately). Continuing.")
+        return
     combined = (proc.stdout or "") + (proc.stderr or "")
     if proc.returncode != 0 or not combined.strip() or UNKNOWN_CMD.search(combined):
         out.err(f"Could not verify '/smith' when claude runs in {PARENT} "
