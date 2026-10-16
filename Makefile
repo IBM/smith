@@ -128,7 +128,7 @@ test: opaserver/stop opaserver/start
 # -----------------------------------------------------------------------------
 .PHONY: unit
 unit:
-	@$(TEST_PYTHON) -m pytest tests/integration tests/test_smith_pipeline.py -m unit \
+	@$(TEST_PYTHON) -m pytest tests/integration -m unit \
 	  --disable-socket --allow-unix-socket -ra \
 	  $(if $(COV),--cov=smith --cov-branch --cov-report=term-missing --cov-report=xml)
 
