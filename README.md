@@ -14,15 +14,21 @@ An open skill for AI code agents that supports security-grounded guidance analys
 Smith is a skill (plugin) for AI code agents that manages the full lifecycle of [Open Policy Agent (OPA)](https://www.openpolicyagent.org/) policies (more types of policies will be supported). It enables agents to:
 
 - **Analyze** MCP servers and guidance through an OWASP-mapped threat model and enforcement review without modifying a policy (experimental and in progress).
+- **Analyze** MCP servers and guidance through an OWASP-mapped threat model and enforcement review without modifying a policy (experimental and in progress).
 - **Create** OPA policies from natural language guidance and an agent description.
 - **Generate** synthetic legitimate and adversarial test cases using LLM-based fuzzing and existing red-teaming tools, as well as policy-bypass cases that target divergences between the guidance and the current policy.
+- **Generate** synthetic legitimate and adversarial test cases using LLM-based fuzzing and existing red-teaming tools, as well as policy-bypass cases that target divergences between the guidance and the current policy.
 - **Test** policies against generated and custom test suites.
+- **Refine** policies automatically through iterative feedback loops that patch policy rules in response to failed test cases, lint the policy, and remove duplicate rules.
 - **Refine** policies automatically through iterative feedback loops that patch policy rules in response to failed test cases, lint the policy, and remove duplicate rules.
 
 ```
 Guidance (NLP) + Agent Description
    → [optional, experimental] Security-Grounded Guidance Analysis 
+   → [optional, experimental] Security-Grounded Guidance Analysis 
    → [separate human approval] Policy Creation
+   → Test Case Generation 
+   → Policy Testing ⇄ Policy Refinement
    → Test Case Generation 
    → Policy Testing ⇄ Policy Refinement
 ```
@@ -45,6 +51,13 @@ Guidance (NLP) + Agent Description
 2. Start your coding agent from `/my_project`, for example, with `claude --model "your model"`. We used `claude-sonnet-5` for testing.
 
 For instructions on using skills with different coding agents, see [Bob](https://bob.ibm.com/docs/ide/features/skills), [Claude](https://code.claude.com/docs/en/skills), and [Aider](https://aiderdesk.hotovo.com/docs/features/skills).
+1. Place the entire `smith` folder under the `skills/` or `plugin/` directory of your code agent (Claude Code, Bob, Aider, etc.). 
+
+   For example, if your project is in `/my_project`, Smith goes to `/my_project/.claude/skills/`.
+
+2. Start your coding agent from `/my_project`, for example, with `claude --model "your model"`. We used `claude-sonnet-5` for testing.
+
+For instructions on using skills with different coding agents, see [Bob](https://bob.ibm.com/docs/ide/features/skills), [Claude](https://code.claude.com/docs/en/skills), and [Aider](https://aiderdesk.hotovo.com/docs/features/skills).
 
 ## Installation
 
@@ -57,6 +70,7 @@ For instructions on using skills with different coding agents, see [Bob](https:/
 - [Promptfoo](https://www.promptfoo.dev/) (red-teaming framework) — **optional**
 
 The `ATTACK_TOOLS` environment variable selects the red-teaming tools (see [Configuration](#configuration)). Set it to `none` to skip red-teaming. The default is `ATTACK_TOOLS=promptfoo`.
+The `ATTACK_TOOLS` environment variable selects the red-teaming tools (see [Configuration](#configuration)). Set it to `none` to skip red-teaming. The default is `ATTACK_TOOLS=promptfoo`.
 
 **1. Python environment**
 
@@ -65,6 +79,7 @@ python -m venv .venv
 source .venv/bin/activate
 ```
 
+**2. ARES** (optional red-teaming tool). Install it into `src/smith/test_generation/ares/` with its own `.venv`. The test-generation pipeline expects this layout because `src/smith/test_generation/attack.py` invokes `ares/.venv/bin/ares`:
 **2. ARES** (optional red-teaming tool). Install it into `src/smith/test_generation/ares/` with its own `.venv`. The test-generation pipeline expects this layout because `src/smith/test_generation/attack.py` invokes `ares/.venv/bin/ares`:
 
 ```bash
@@ -85,6 +100,7 @@ cd ../../../../
 source .venv/bin/activate
 ```
 
+**3. Promptfoo** (optional red-teaming tool)
 **3. Promptfoo** (optional red-teaming tool)
 
 ```bash
@@ -133,6 +149,28 @@ Fill in **every** placeholder value in `.env` before running Smith. The most imp
 
 See `.env_template` for the full list.
 
+
+### Configuration
+
+```bash
+cd ..
+cp .env_template .env
+```
+
+Fill in **every** placeholder value in `.env` before running Smith. The most important variables:
+
+| Variable | Description |
+|----------|-------------|
+| `BASE_URL` | Absolute path to your skill folder, **with a trailing slash**, e.g. `/path/.bob/skills/smith/` |
+| `OPENAI_API_KEY` | API key for your LLM provider |
+| `OPENAI_BASE_URL` | Base URL for LLM API endpoint |
+| `MODEL_SONNET` | Model used across the pipelines (e.g., `aws/claude-sonnet-4-6` by default) |
+| `INFERENCE_MODEL` | Model name for the target agent's LLM (e.g., `qwen3.5:latest` for Ollama, or a RITS model name) |
+| `ATTACK_TOOLS` | Comma-separated list of red-teaming tools to run during test generation. Valid values: `ares`, `promptfoo`, `ares,promptfoo`, `none`. Default: `promptfoo` |
+| `ARES_HOME` | Absolute path to the ARES installation directory (e.g., `/path/to/smith/src/smith/test_generation/ares`). Only required when `ATTACK_TOOLS` includes `ares` |
+
+See `.env_template` for the full list.
+
 ### Running the tests
 
 ```bash
@@ -153,11 +191,17 @@ policy against your generated test cases rather than testing Smith itself.
 ## Start Smith with Agent Examples
 
 To start Smith with an agent example, follow the [HR Agent setup guide](examples/hr-agent/README.md). Other examples have their own `examples/<agent>/README.md`.
+## Start Smith with Agent Examples
+
+To start Smith with an agent example, follow the [HR Agent setup guide](examples/hr-agent/README.md). Other examples have their own `examples/<agent>/README.md`.
 
 Example layouts vary: an MCP server may use Python, JavaScript, or TypeScript;
 may run over stdio, HTTP, or SSE; and may use entrypoint names such as
 `server.py`, `mcp_server.py`, or `index.js`. Some targets also contain an agent
 or UI, while standalone MCP servers may not. Follow the selected example's
+README rather than assuming fixed filenames. 
+
+## How Smith Works
 README rather than assuming fixed filenames. 
 
 ## How Smith Works
@@ -197,11 +241,14 @@ Create OPA policies from natural language specifications. The agent follows `opa
 - `test_case_template.json` (in `./references/`) — defines the OPA input envelope structure
 
 **Output**: OPA policy saved to `./assets/policy.rego`
+**Output**: OPA policy saved to `./assets/policy.rego`
 
 The policy only references data available from tool arguments and system variables. If a guidance rule requires context not available in either, it is logged as a suggestion rather than added to the policy.
 
 ### Security-Grounded Guidance Analysis (Experimental)
+### Security-Grounded Guidance Analysis (Experimental)
 
+A separate, standalone workflow that grounds guidance in an OWASP-mapped threat model. It produces guidance only and never generates, modifies, or writes Rego or an OPA policy. Use it when you want an OWASP review of the guidance itself, to threat-model an MCP server, to produce enforcement guidance for a new tool, or to run any individual analysis stage. This process follows `opa_policy/guidelines-security-analysis/guidelines-security-analysis.md`, which runs in this order:
 A separate, standalone workflow that grounds guidance in an OWASP-mapped threat model. It produces guidance only and never generates, modifies, or writes Rego or an OPA policy. Use it when you want an OWASP review of the guidance itself, to threat-model an MCP server, to produce enforcement guidance for a new tool, or to run any individual analysis stage. This process follows `opa_policy/guidelines-security-analysis/guidelines-security-analysis.md`, which runs in this order:
 
 1. **Step A — Architecture Analysis** → `architecture.md`. Uses the configured target and extracted tool definitions to discover only source files that implement relevant roles, regardless of filename, language, or MCP transport. It then describes the layers actually present, with trust boundaries, data flow, and available enforcement points. UI-only, test, dependency, and generated files are skipped unless they participate in tool invocation or enforcement.
@@ -211,6 +258,7 @@ A separate, standalone workflow that grounds guidance in an OWASP-mapped threat 
 
 Run the workflow through the Smith skill in your active assistant session. The assistant presents each non-deterministic phase's evidence and conclusions where you can inspect, interrupt, or correct them; Smith does not launch a hidden assistant subprocess or grant automatic edit approval. Deterministic preparation, inspection, validation, and checkpointing remain CLI operations. The four analysis artifacts live under `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/`; when generated, the proposed `guidance_updated.txt` addendum lives beside the configured `GUIDANCE_FILE`.
 
+Each step is a separate, resumable job with its own model context. In **Gated** mode, Smith pauses after each phase checkpoint; in **Isolated autonomous** mode, it starts the next phase in a fresh worker context after the checkpoint passes. The four analysis artifacts live under `<TARGET_AGENT_PATH>/smith/guidelines-security-analysis/`; when generated, the proposed `guidance_updated.txt` addendum lives beside the configured `GUIDANCE_FILE`.
 Each phase runs `smith --flag security_analysis_checkpoint --phase <A|B|C|D>` to validate its artifact and update one compact `analysis_state.json`. The state contains reusable tables, handoffs, and artifact hashes, avoiding repeated full-artifact reads. Step D additionally runs the read-only `guidance_reconciliation` check. After explicit human approval, `smith --flag guidance_merge` validates the target-specific addendum format, duplicates, and the current Phase D hash before atomically merging and removing the pending addendum.
 
 After the analysis is complete, the human may separately ask the agent to move `guidance_updated.txt` to `guidance.txt` and start policy creation. 
@@ -231,6 +279,7 @@ If you use Promptfoo for red-teaming, you can auto-generate the `promptfooconfig
 smith --flag generate_promptfoo_config
 ```
 
+This generates `purpose`, `contexts`, and `policy` text from your guidance and system variables, and appends tool parameter definitions to `testGenerationInstructions` so Promptfoo generates prompts with concrete values for all required parameters. Generation combines LLM output with deterministic steps. Review the output before running red-team tests.
 This generates `purpose`, `contexts`, and `policy` text from your guidance and system variables, and appends tool parameter definitions to `testGenerationInstructions` so Promptfoo generates prompts with concrete values for all required parameters. Generation combines LLM output with deterministic steps. Review the output before running red-team tests.
 
 #### Guidance-targeted generation
@@ -309,6 +358,7 @@ Calls the agent's `/extract_tool_call` endpoint to extract tool names and argume
 - Cases where the returned tool name doesn't match the expected one are flagged as mismatches and removed
 - Cases labeled as "other" (general questions that don't invoke any tool) are moved to `./references/test_cases/malicious/` for future guardrail features
 - Cases that already carry an `arguments` block are skipped, so translation is re-runnable. After adding bypass cases, you can rerun it to translate only the new cases instead of retranslating the whole corpus
+- Cases that already carry an `arguments` block are skipped, so translation is re-runnable. After adding bypass cases, you can rerun it to translate only the new cases instead of retranslating the whole corpus
 
 ### Policy Testing
 
@@ -338,6 +388,8 @@ smith --flag apply_cross_validate    # apply approved corrections
 Iterative improvement workflow:
 
 1. **Red Feedback** — Cluster failed malicious inputs and patch policy rules, following `opa_policy/policy_patch/policy_patch.md`
+2. **Regal Formatting** — Lint and format the policy with [Regal](https://github.com/StyraInc/regal), following `opa_policy/policy_regal/policy_regal.md`
+3. **Duplication Removal** — Detect and remove redundant rules through graph analysis, LLM review, and voting, following `opa_policy/policy_duplication/policy_duplication.md`
 2. **Regal Formatting** — Lint and format the policy with [Regal](https://github.com/StyraInc/regal), following `opa_policy/policy_regal/policy_regal.md`
 3. **Duplication Removal** — Detect and remove redundant rules through graph analysis, LLM review, and voting, following `opa_policy/policy_duplication/policy_duplication.md`
 
