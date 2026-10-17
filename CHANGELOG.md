@@ -14,6 +14,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 > - **Security**: in case of vulnerabilities.
 
 ## [Unreleased]
+
+## [0.2.0] - 2026-10-17
 ### Security
 
 - Removed the unused, vulnerable NLTK dependency and updated vulnerable locked dependencies to patched release lines: cryptography 50+, Pillow 12.3, pip 26.2+, setuptools 83+, and PyTorch 2.13.
@@ -29,7 +31,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Isolated Security-Grounded Guidance Analysis phases now require an explicit
   resolved-path envelope, preserve that context in `architecture.md`, and
   reject addendum rules whose runtime data is not confirmed OPA-visible.
-- Test-case translation no longer crashes the whole `test_generation` run when a generated case supplies `null` for a numeric system variable. `_convert_var` (`src/smith/test_generation/convert_test_case.py`) previously called `int(None)`/`float(None)`, raising `TypeError` and aborting the pipeline after all the expensive generation work had completed (seen with adversarial Promptfoo cases that omit an integer field like `queries_this_session`). It now returns `None` for a null value, leaving the field absent for OPA.
 - Repeated `generate_promptfoo_config` runs no longer append duplicate tool-parameter blocks to `testGenerationInstructions`. De-duplication only recognised the `[smith:tool-parameters]` marker, so a block written before that marker existed was treated as user-authored prose and kept, with a second block appended after it — leaving stale tool names in the instructions. The block's opening line now serves as a fallback anchor, and is shared with the builder so the two cannot drift apart.
 - Tier-3 label validation no longer aborts the entire loop on a single LLM error. Transient failures now fall back for that case and continue; the loop only aborts after N consecutive failures (default 5, configurable via `run_validation`) indicating the LLM is genuinely unavailable. On abort, the remaining un-evaluated cases are still recorded as uncertain so validation metrics no longer silently shrink.
 - OPA scorecard no longer silently scores request failures as "deny". Added a curl timeout and exit-code checking; failed requests are logged to `errors.txt` and excluded from TP/FP/TN/FN counts.
@@ -110,6 +111,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   repair passes, and deduplication of equivalent threat instances.
 - Clarified Security-Grounded Guidance Analysis as a standalone four-step guidance-only workflow, with guidance merging and policy creation requiring separate approval.
 - Updated the minimum supported versions of `mcp`, `networkx`, `sentence-transformers`, `pip-audit`, and `build`, and upgraded the CI Python/uv setup actions to v7.
+- Raised the minimum supported versions of `openai` (>=3.26.0, a major-version jump), `numpy` (>=2.4.6), `tqdm` (>=4.70.1), and the `black` (26.10.0) and `ruff` (0.17.0) dev tools.
 - Made ARES and Promptfoo optional dependencies — either tool can be used independently or skipped entirely.
 - Cross-validation now focuses on arguments and subject fields only, improving accuracy. "Remove" decision category in cross-validation for ambiguous/invalid test cases. Cross-validation now also discards failed adversarial probes instead of relabeling them: for bypass and promptfoo cases, any audit verdict other than `keep` is collapsed to `remove` (with a marker appended to the reason), since their intent is malicious and a failed probe should not pollute the ordinary case set.
 - Cluster indexing uses sequential numbers; noise group appears as the last numbered cluster instead of `-1`.
@@ -158,6 +160,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Runtime configuration driven entirely from `.env` (see `.env_template`); target-agent selection via `TARGET_AGENT_PATH`, `GUIDANCE_FILE`, `SYSTEM_VAR_FILE`, `MCP_*`, and `AGENT_URL`.
 - Example target agents under `examples/`, each carrying its Smith inputs (`guidance.txt`, `tool_definitions.json`, `system_vars.json`).
 
-[Unreleased]: https://github.com/IBM/smith/compare/0.1.1...HEAD
+[Unreleased]: https://github.com/IBM/smith/compare/0.2.0...HEAD
+[0.2.0]: https://github.com/IBM/smith/compare/0.1.1...0.2.0
 [0.1.1]: https://github.com/IBM/smith/compare/0.1.0...0.1.1
 [0.1.0]: https://github.com/IBM/smith/releases/tag/0.1.0
