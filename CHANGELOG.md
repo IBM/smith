@@ -14,113 +14,58 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 > - **Security**: in case of vulnerabilities.
 
 ## [Unreleased]
+
+## [0.2.0] - 2026-10-17
+
 ### Security
 
-- Removed the unused, vulnerable NLTK dependency and updated vulnerable locked dependencies to patched release lines: cryptography 50+, Pillow 12.3, pip 26.2+, setuptools 83+, and PyTorch 2.13.
-
-### Fixed
-
-- `apply_cross_validate` no longer silently overwrites an existing case when a moved file's `cv_` name is already taken. Both buckets routinely hold the same index, so a case moving to `allow/cv_test_case5.json` could land on one an earlier run had already moved there — `shutil.move` overwrote it without a word, losing a test case. The destination is now checked first: the run warns and writes `cv_test_case5_2.json` instead.
-- ARES attack cases now carry the guidance line they descend from, so they are recorded in the guidance map alongside their parent case. Previously `merge_with_ares` dropped the `guidance` field, leaving ARES cases untraceable and therefore un-prunable by an incremental run.
-- `attack` now reads ARES's generate output as JSON Lines. ARES ≥ 0.2.2 writes those files one object per line (via `jsonlines`) while keeping the `.json` extension, so `json.load` failed with `Extra data: line 2 column 1`. Both the JSONL and the older single-array shape are accepted.
-- ARES's Qwen connector now pins `device: cpu` instead of `auto`, which resolved to MPS on Apple Silicon and segfaulted while loading the model weights (exit 139, no traceback), leaving the run with no attack files. Switch back to `auto` on a CUDA machine.
-- Test-case translation no longer crashes the whole `test_generation` run when a generated case supplies `null` for a numeric system variable. `_convert_var` (`src/smith/test_generation/convert_test_case.py`) previously called `int(None)`/`float(None)`, raising `TypeError` and aborting the pipeline after all the expensive generation work had completed (seen with adversarial Promptfoo cases that omit an integer field like `queries_this_session`). It now returns `None` for a null value, leaving the field absent for OPA.
-- Fixed handling of `null` system variables in test-case translation (`src/smith/test_generation/convert_test_case.py`). A null previously reached `_convert_var`, where `int(None)`/`float(None)` raised `TypeError` and aborted the whole `test_generation` run after all the expensive generation work had completed; a null that survived was written to the case as a JSON `null`, which OPA treats differently from a missing field, so the case tested the wrong policy outcome. Null variables are now handled in `_fill_template` before any coercion: the field is omitted (clearing any placeholder the case template ships), or set to `[]` for a list-typed variable.
-- Isolated Security-Grounded Guidance Analysis phases now require an explicit
-  resolved-path envelope, preserve that context in `architecture.md`, and
-  reject addendum rules whose runtime data is not confirmed OPA-visible.
-- Test-case translation no longer crashes the whole `test_generation` run when a generated case supplies `null` for a numeric system variable. `_convert_var` (`src/smith/test_generation/convert_test_case.py`) previously called `int(None)`/`float(None)`, raising `TypeError` and aborting the pipeline after all the expensive generation work had completed (seen with adversarial Promptfoo cases that omit an integer field like `queries_this_session`). It now returns `None` for a null value, leaving the field absent for OPA.
-- Repeated `generate_promptfoo_config` runs no longer append duplicate tool-parameter blocks to `testGenerationInstructions`. De-duplication only recognised the `[smith:tool-parameters]` marker, so a block written before that marker existed was treated as user-authored prose and kept, with a second block appended after it — leaving stale tool names in the instructions. The block's opening line now serves as a fallback anchor, and is shared with the builder so the two cannot drift apart.
-- Tier-3 label validation no longer aborts the entire loop on a single LLM error. Transient failures now fall back for that case and continue; the loop only aborts after N consecutive failures (default 5, configurable via `run_validation`) indicating the LLM is genuinely unavailable. On abort, the remaining un-evaluated cases are still recorded as uncertain so validation metrics no longer silently shrink.
-- OPA scorecard no longer silently scores request failures as "deny". Added a curl timeout and exit-code checking; failed requests are logged to `errors.txt` and excluded from TP/FP/TN/FN counts.
-- Invalid `ATTACK_TOOLS` values now fail with an actionable error instead of silently disabling red-teaming, and the CLI prints which attack tools are enabled vs skipped.
-- Attack-case readers no longer crash with `FileNotFoundError` when an attack file was never created (e.g. `ATTACK_TOOLS` differed between the generation and evaluation runs). `classify_promptfoo_cases`, `merge_with_ares`, and `merge_with_promptfoo` now guard on the file existing before reading it and skip gracefully with a log message when it is absent.
-- ARES cases now inherit their parent test case's confidence score, verdict, and predicted label in the evaluation report instead of showing a blank confidence. An ARES case is a jailbreak-transformed variant of a parent `disallow` case, so it carries the parent's `ValidationResult` (matched by the parent's `user_input`) rather than being independently re-validated.
-- Updated SKILL.md documentation to reflect "all test deny" instead of "all test failed".
-- Updated car-price and call-for-papers examples' Promptfoo configuration with missing system variables.
-- `opa_policy_creation.md` Step 7: changed `cp` to `mv` for the generated policy file.
-- Include target tool parameters in the LLM prompt so generated test cases include concrete parameter values: src/smith/test_generation/case_generation.py
+- Removed the unused NLTK dependency and bumped cryptography, Pillow, pip, setuptools and PyTorch to patched versions ([#61]).
+- Bumped anyio to fix CVE-2026-63374 ([#83]) and fixed CodeQL alerts ([#103]).
+- Bumped pyjwt, urllib3, litellm and langgraph-sdk, in Smith and the example agents ([#88], [#89], [#90], [#91], [#99], [#101]).
 
 ### Added
 
-- **Parallel test-case generation**: the four batched stages of `smith --flag test_generation` (decomposition, grey space, variable extraction, case generation) now dispatch their batches concurrently instead of one at a time, controlled by the new `GENERATION_CONCURRENCY` variable. 
-- **Incremental test-case generation** (`smith --flag test_generation --mode update`): regenerates only the test cases whose guidance changed, instead of rebuilding the whole suite. `--mode fresh` (the default) keeps the previous generation behaviour.
-  - New module `src/smith/test_generation/guidance_map.py`: the guidance diff, the guidance → test-case mapping, snapshot IO, filename-index allocation, and the update orchestration.
-  - Three new artifacts under `references/`, configurable via `GUIDANCE_MAP_FILE`, `GUIDANCE_SNAPSHOT_FILE` and `GUIDANCE_RAW_SNAPSHOT_FILE`: a map of each guidance line to the case files it produced, plus snapshots of the flattened and raw guidance the run generated from.
-  - **Fresh mode** clears `references/test_cases/` and rebuilds the map from scratch, so a smaller run cannot leave higher-numbered cases behind for the scorecard to keep counting. Re-run `bypass_case_generation` and `apply_cross_validate` afterwards if you were relying on their output.
-  - **Update mode** resolves to one of four outcomes:
-    - *no change* — stops without calling the model and leaves every artifact alone;
-    - *deletions only* — removes the affected cases and their mapping entries, advances the snapshots, and skips regeneration;
-    - *edits* — removes the affected cases, then regenerates and appends replacements;
-    - *additions* — generates and appends, leaving existing cases untouched.
-    Deletions, edits and additions can all occur in the same run.
-  - New cases are **appended** after the existing ones, so untouched guidance keeps its case files byte-for-byte. Only the changed guidance reaches decomposition, variable extraction and case generation, so an edit costs a few lines' worth of LLM calls rather than a full run.
-  - Diffing happens **after** flattening, since the flattened text is what the pipeline decomposes. Update mode asks the flatten step to *edit* its previous output rather than rewrite it — handing it the computed source diff instead of two documents to compare — so untouched rules keep their exact wording. Reformatting guidance (renumbering, reordering, bullet style, blank lines) is not a content change and regenerates nothing.
-  - **Promptfoo** cases are removed and regenerated whenever the guidance changed at all, since they red-team the agent as a whole and are not attributable to individual guidance lines. A run that finds no change leaves them alone.
-  - **ARES** attack cases are pruned selectively: each one now records the guidance line its parent case came from, so an update run deletes the attacks belonging to changed guidance and regenerates from the changed prompts (ARES's input is rebuilt from the current `test_cases.json`).
-  - `apply_cross_validate` reports the files it moves and removes to the guidance map, so the guidance → test-case relation keeps pointing at files that exist.
-- Test generation now offers to regenerate the promptfoo config for the user (`smith --flag generate_promptfoo_config`) instead of just reminding them to do it themselves. Asked only when promptfoo is enabled.
-- `smith --flag bypass_case_generation` now clears the previous bypass cases before generating. Bypass cases target the policy-vs-guidance divergence as a whole rather than individual guidance lines, so every run rebuilds the set and numbering restarts at 0 — without the clear, a shorter run left the old higher-numbered cases behind for the scorecard to keep counting. The promptfoo and bypass cleaners also match the names later stages give a case (cross-validation's `cv_` prefix and its `_2`/`_3` collision suffix).
-- **Parallel test-case translation**: `smith --flag test_case_translation` can now send its `/extract_tool_call` requests concurrently, controlled by the new `TRANSLATION_CONCURRENCY` variable (`-1`, the default, keeps today's one-at-a-time behavior for local models; raising it cuts wall-clock when the target agent runs an online model). `.env_template` also gains an online-model option for the agent that reuses the existing `OPENAI_BASE_URL`/`OPENAI_API_KEY` gateway.
-- **CPEX policy translation** (`smith --flag cpex_translate`): translates a generated OPA policy into a CPEX-compatible input shape and writes a `*_cpex.rego` copy next to the original.
-- **Integration test suite** (`tests/integration/`, run via `make integration`): one test per pipeline stage, driving the real `smith` CLI against frozen fixtures. 
-- **Test suite** (`tests/integration/`): two lanes selected by pytest marker, one pair of modules (`test_<flag>_unit.py` + `test_<flag>_integration.py`) per pipeline stage. `make unit` is offline with external boundaries faked, and is now part of `make ci`; `make integration` drives the real `smith` CLI against real services and skips cleanly when a dependency is absent. `tests/integration/TESTING_GUIDE.md` documents how to add a stage's tests.
-- **Policy-bypass test-case generation** (`smith --flag bypass_case_generation`): a new pipeline that analyzes the current policy against the guidance to find divergences, then synthesizes adversarial cases targeting each gap.
-  - New package `src/smith/policy_agent/policy_analysis/bypass/`: `analyze_bypass.py` (`detect_bypass_vectors`), `synthesize_cases.py` (`synthesize_bypass_cases`), `schema.py` (`BypassVector`/`BypassReport`).
-  - `cli.py`: new `generate_bypass_cases()` function and the `bypass_case_generation` flag (detect → synthesize → convert), guarded against a missing/empty policy.
-  - `convert_test_case.py`: new `convert_bypass_case()` routes bypass cases into `disallow/` or `allow/` with a `bypass_test_case` prefix.
-  - `.env_template`: new vars `BYPASS_CASE_FILE` and `BYPASS_REPORT_DIR`.
-  - `test_generation.md` rewritten to ask up front which cases to generate. User can choose general test cases (legitimate allow, disallow, ares, promptfoo), or/and bypass test cases.
-- **`ATTACK_TOOLS`** environment variable to select which red-teaming tools to run (`ares`, `promptfoo`, `ares,promptfoo`, or `none`).
-- **Promptfoo Improvements**
-  - Integrated Promptfoo policy plugin for generating malicious test cases from guidances, with translation support for string-typed variables.
-  - Promptfoo config auto-generation (`smith --flag generate_promptfoo_config`): generates or updates a Promptfoo redteam configuration file from guidance and system variables, with a customizable template (`PROMPTFOO_CONFIG_TEMPLATE`). Also appends tool parameter definitions to `testGenerationInstructions` so Promptfoo generates prompts that include concrete values for all required parameters.
-  - LLM-based tool classification for promptfoo cases**: during test generation, promptfoo cases are now classified to a target tool name via a single LLM call against the MCP tool definitions, removing the hardcoded "Promptfoo" placeholder. This steps aims to make test translation apply the same tool-name mismatch check to all cases uniformly.
-- **Tools**
-  - `smith --flag reset_policy`: empties `assets/policy.rego` (and removes its CPEX-translated sibling, if any) before generating a new policy for a different target agent. Replaces the old `scripts/clean_generated.sh`, which is removed.
-  - Artifact snapshots (`smith --flag save_snapshot --dest <dir>`): copies a run's key artifacts — policy, its `_cpex` variant, guidance, tool definitions, promptfoo config, and translated test cases — flat into a destination directory. Missing sources are skipped with a warning rather than failing the snapshot.
-
-- **Added agent examples**
-  - Added an employee hub agent example. 
-  - Added an HR agent example (`examples/hr-agent/`), the reference example for **CPEX support**: it demonstrates the per-tool policy workflow end to end, generating a Rego policy and its CPEX-translated `policy_cpex.rego` per tool under `smith/smith_outputs/{get_compensation,search_repo,send_email}/`. `policy-opa-2.yaml` then deploys those as an in-process OPA PDP on a policy gateway, one package per tool route (`data.compensation.allow`, `data.search_repo.allow`, `data.send_email.allow`). Includes a `README.md` walking through the Guidance Classifier and the full workflow. The agent speaks both A2A and the Smith HTTP shim (`/chat`, `/extract_tool_call`), and serves its tool definitions at `GET /tool_definitions` (`MCP_TRANSPORT=http`, no MCP server needed).
-- **CPEX policy translation** (`smith --flag cpex_translate`): translates a generated OPA policy into a CPEX-compatible input shape and writes a `*_cpex.rego` copy next to the original.
-- **Guidance Classifier UI** (`smith --flag classify_guidance`): maps each line of a guidance document to the tool call it constrains, then combines the selected lines into the guidance for the targeted tool(s). Serves on port 8110; the uploaded document is never modified. `src/smith/tools/guidance_classifier_server.py` + `classify_guidance_lines.py` + `guidance_classifier.html`.
-- **Policy Explorer UI bridge**: `src/smith/tools/explorer_server.py` serves an interactive HTML view of the policy alongside IR (intermediate representation) data for visual inspection.
-- **Session config for IR and selected tools** (`SESSION_CONFIG_FILE`, default `references/session_config.json`): when working with IR-generated specs via the Policy Explorer UI, the explorer writes this file with `use_ir` and `selected_tools`. During test generation, `translate_case` filters out test cases whose target tool is not in `selected_tools`.
+- **Security-Grounded Guidance Analysis**: a four-step workflow (architecture, questionnaire, threat model, enforcement mapping) that derives security guidelines from the OWASP Agentic Top 10 ([#44]). Phases are resumable with validated handoffs, and guidance reconciliation and merge are gated ([#75], [#76]).
+- **Incremental test generation** (`test_generation --mode update`): regenerates only the cases whose guidance changed, tracked in a guidance → case map ([#71]).
+- **Parallel generation and translation**: `GENERATION_CONCURRENCY` ([#86]) and `TRANSLATION_CONCURRENCY`, plus online-model support for the target agent ([#74]).
+- **Bypass test cases** (`bypass_case_generation`): adversarial cases for gaps between the policy and the guidance ([#27]).
+- **Promptfoo**: policy-plugin red-teaming, `generate_promptfoo_config`, and LLM tool classification of its cases ([#15], [#39]). `ATTACK_TOOLS` selects which red-teaming tools run ([#15]).
+- **CPEX translation** (`cpex_translate`) ([#39]).
+- **Tools**: `reset_policy` ([#71]), `save_snapshot`, the Guidance Classifier UI, the Policy Explorer bridge and `SESSION_CONFIG_FILE` ([#39]).
+- **Examples**: employee hub agent ([#34]) and HR agent ([#39]).
+- **Tests**: unit and integration suites per pipeline stage, via `make unit` and `make integration` ([#45], [#92]).
+- **Docs**: Hugo documentation site ([#15]) and `CONTRIBUTING.md` ([#63]).
 
 ### Changed
 
-- Enforcement Mapping now normalizes candidate and existing guidance rules,
-  validates multi-tool rules per tool, and emits only novel or additive
-  decisions after semantic duplicate, subsumption, and conflict checks.
-- Enforcement Mapping now records unresolved Q21 severity tiering in the Gap
-  Register as a human decision instead of inferring enforcement behavior.
-- Batched Architecture Analysis discovery and selected-file reads, and grouped
-  unresolved questionnaire items into one clarification round to reduce
-  workflow latency without narrowing coverage.
-- Consolidated shared security-analysis path, missing-input, write-scope, and
-  phase-stop constraints into one worker contract instead of repeating them in
-  every phase guide.
-- Reduced generated-artifact amplification with compact questionnaire,
-  architecture, global scenario-coverage, evidence, threat, and enforcement
-  tables; downstream phases reuse stable IDs, filtered JSON projections, and a
-  single validation matrix instead of repeating source or validation prose.
-- Security-Grounded Guidance Analysis now runs Steps A-D as resumable,
-  isolated-context phases with compact artifact handoffs, bounded discovery and
-  repair passes, and deduplication of equivalent threat instances.
-- Clarified Security-Grounded Guidance Analysis as a standalone four-step guidance-only workflow, with guidance merging and policy creation requiring separate approval.
-- Updated the minimum supported versions of `mcp`, `networkx`, `sentence-transformers`, `pip-audit`, and `build`, and upgraded the CI Python/uv setup actions to v7.
-- Made ARES and Promptfoo optional dependencies — either tool can be used independently or skipped entirely.
-- Cross-validation now focuses on arguments and subject fields only, improving accuracy. "Remove" decision category in cross-validation for ambiguous/invalid test cases. Cross-validation now also discards failed adversarial probes instead of relabeling them: for bypass and promptfoo cases, any audit verdict other than `keep` is collapsed to `remove` (with a marker appended to the reason), since their intent is malicious and a failed probe should not pollute the ordinary case set.
-- Cluster indexing uses sequential numbers; noise group appears as the last numbered cluster instead of `-1`.
-- Renamed the target-agent LLM environment variables (`RITS_*`) to `INFERENCE_MODEL`/`INFERENCE_BASE_URL`/`INFERENCE_API_KEY` across `.env_template`, examples, and documentation. `OLLAMA_BASE_URL` (no `/v1` suffix) is now reserved solely for promptfoo's native ollama provider, resolving the previous duplicate-variable collision.
-- Updated example configurations (call-for-papers, car-price, RagChatbot) with revised system variables and regenerated smith outputs.
-- Converted Promptfoo test cases now live in `references/test_cases/disallow/` (removed separate `promptfoo_malicious/` folder).
-- `test_case_translation` skips cases that already carry an `arguments` block (already translated), making translation re-runnable and avoiding a full-corpus re-translation when only newly-added bypass cases need it.
-- Reset `assets/policy.rego` to empty as a fresh starting point for policy creation.
-- `get_tool_definitions()` helper in `cli.py` to deduplicate MCP tool extraction across `test_generation`, `bypass_case_generation`, and `get_mcp_parameter` flags.
-- `make ci` is now `lint + license-check + unit` (was `lint + lint-policy + license-check`). `make lint-policy` is no longer in the gate and has no CI job, so run it locally when changing a `.rego` file. 
+- Policy input `arguments` is now `args` in the guides, for CPEX compatibility ([#45]).
+- Default agent port in Promptfoo configs is now 9000 (was 8000) ([#45]).
+- Removed the top-k setting from LLM calls, since AWS models accept only temperature or top-k ([#45]).
+- Renamed `RITS_*` variables to `INFERENCE_*`; `OLLAMA_BASE_URL` is now only for Promptfoo ([#15]).
+- ARES and Promptfoo are optional ([#15]).
+- Cross-validation checks only arguments and subject fields, adds a `remove` verdict, and discards failed adversarial probes ([#15], [#27]).
+- Cluster indexing is sequential; the noise group is last instead of `-1` ([#15]).
+- Promptfoo cases are written to `references/test_cases/disallow/` ([#15]).
+- `test_case_translation` skips already-translated cases ([#27]).
+- `bypass_case_generation` clears earlier bypass cases first ([#71]).
+- `make ci` is now lint + license-check + unit; `make lint-policy` is no longer in the gate ([#45]).
+- Security-analysis guides are leaner: one shared worker contract and compact artifacts ([#59], [#75], [#76]).
+- README points to the HR agent; example outputs and `.env_template` defaults refreshed ([#92]).
+- Raised minimum dependency versions: `mcp`, `networkx`, `sentence-transformers`, `pip-audit`, `build` and the CI setup actions ([#61]); `openai` (>=3.26.0, major bump), `numpy`, `tqdm`, `black`, `ruff` ([#107], [#108], [#109], [#110], [#111]); and `python-dotenv`, `pydantic`, `typer`, `twine`, `pytest-socket`, `matplotlib`, `pandas`, `requests`, `pydot` ([#64]–[#68], [#94]–[#98]).
 
+### Fixed
+
+- `apply_cross_validate` no longer overwrites an existing case on a `cv_` name collision ([#71]).
+- ARES: reads JSON Lines output, pins the Qwen connector to `device: cpu` (MPS segfault), and passes guidance through to attack cases ([#71]); cases inherit the parent's confidence in the report ([#27]).
+- A `null` numeric system variable no longer aborts `test_generation` ([#45]).
+- `generate_promptfoo_config` no longer appends duplicate tool-parameter blocks ([#45]).
+- Fixed AST graph indices carrying over between calls, and added missing `.env_template` variables ([#45]).
+- Tier-3 label validation continues past a single LLM error ([#15]).
+- The OPA scorecard excludes failed requests instead of scoring them as deny ([#15]).
+- An invalid `ATTACK_TOOLS` value now errors instead of silently disabling red-teaming ([#15]).
+- Missing attack files no longer crash the readers ([#27]).
+- Test-case prompts include target tool parameters ([#15]).
+- Security-analysis phases require a resolved-path envelope and reject rules on data OPA cannot see ([#76]).
 
 ## [0.1.1] - 2026-06-29
 - Repackaged `scripts/` into an installable `smith` Python package using a `src/`
@@ -158,6 +103,46 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Runtime configuration driven entirely from `.env` (see `.env_template`); target-agent selection via `TARGET_AGENT_PATH`, `GUIDANCE_FILE`, `SYSTEM_VAR_FILE`, `MCP_*`, and `AGENT_URL`.
 - Example target agents under `examples/`, each carrying its Smith inputs (`guidance.txt`, `tool_definitions.json`, `system_vars.json`).
 
-[Unreleased]: https://github.com/IBM/smith/compare/0.1.1...HEAD
+[Unreleased]: https://github.com/IBM/smith/compare/0.2.0...HEAD
+[0.2.0]: https://github.com/IBM/smith/compare/0.1.1...0.2.0
 [0.1.1]: https://github.com/IBM/smith/compare/0.1.0...0.1.1
 [0.1.0]: https://github.com/IBM/smith/releases/tag/0.1.0
+
+[#15]: https://github.com/IBM/smith/pull/15
+[#27]: https://github.com/IBM/smith/pull/27
+[#34]: https://github.com/IBM/smith/pull/34
+[#39]: https://github.com/IBM/smith/pull/39
+[#44]: https://github.com/IBM/smith/pull/44
+[#45]: https://github.com/IBM/smith/pull/45
+[#59]: https://github.com/IBM/smith/pull/59
+[#61]: https://github.com/IBM/smith/pull/61
+[#63]: https://github.com/IBM/smith/pull/63
+[#64]: https://github.com/IBM/smith/pull/64
+[#65]: https://github.com/IBM/smith/pull/65
+[#66]: https://github.com/IBM/smith/pull/66
+[#67]: https://github.com/IBM/smith/pull/67
+[#68]: https://github.com/IBM/smith/pull/68
+[#71]: https://github.com/IBM/smith/pull/71
+[#74]: https://github.com/IBM/smith/pull/74
+[#75]: https://github.com/IBM/smith/pull/75
+[#76]: https://github.com/IBM/smith/pull/76
+[#83]: https://github.com/IBM/smith/pull/83
+[#86]: https://github.com/IBM/smith/pull/86
+[#88]: https://github.com/IBM/smith/pull/88
+[#89]: https://github.com/IBM/smith/pull/89
+[#90]: https://github.com/IBM/smith/pull/90
+[#91]: https://github.com/IBM/smith/pull/91
+[#92]: https://github.com/IBM/smith/pull/92
+[#94]: https://github.com/IBM/smith/pull/94
+[#95]: https://github.com/IBM/smith/pull/95
+[#96]: https://github.com/IBM/smith/pull/96
+[#97]: https://github.com/IBM/smith/pull/97
+[#98]: https://github.com/IBM/smith/pull/98
+[#99]: https://github.com/IBM/smith/pull/99
+[#101]: https://github.com/IBM/smith/pull/101
+[#103]: https://github.com/IBM/smith/pull/103
+[#107]: https://github.com/IBM/smith/pull/107
+[#108]: https://github.com/IBM/smith/pull/108
+[#109]: https://github.com/IBM/smith/pull/109
+[#110]: https://github.com/IBM/smith/pull/110
+[#111]: https://github.com/IBM/smith/pull/111
