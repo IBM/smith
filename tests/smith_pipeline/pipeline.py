@@ -5,7 +5,7 @@ from __future__ import annotations
 import subprocess
 from pathlib import Path
 
-from . import scorecard
+from . import reports, scorecard
 from .config import STEPS_BY_NUM, overlay_for
 from .console import out
 from .runner import Runner
@@ -112,6 +112,24 @@ class Pipeline:
             return None
         return card
 
+    # -- per-stage evaluation tables ----------------------------------------
+    def show_stage_report(self, step_name: str) -> None:
+        """Print the evaluation table this stage produces, if it has one.
+
+        The tables come from `smith_evaluation_plan.md`; each is emitted by
+        the step whose artifacts it counts, so a run can be transcribed
+        without re-deriving anything afterwards.
+        """
+        if self.dry_run:
+            return
+        table = {
+            "generate test cases": reports.show_suite,
+            "translate test cases": reports.show_translation,
+            "cross-validate failed test cases": reports.show_cross_validation,
+        }.get(step_name)
+        if table:
+            table(self.root, self.log_dir)
+
     # -- the workflow -------------------------------------------------------
     def run(self) -> int:
         # Order matters: an SSE example's agent connects to MCP on startup.
@@ -130,9 +148,13 @@ class Pipeline:
                          directory / "score_test_failures.txt")
                 before = {path: (path.stat().st_mtime_ns if path.is_file()
                                  else None) for path in files}
-            result = self.runner.run(STEPS_BY_NUM[num])
+            step = STEPS_BY_NUM[num]
+            result = self.runner.run(step)
             if not result.ok:
                 return 1
+            # Keyed on the step's name, not its number, so inserting a step
+            # cannot silently attach a table to the wrong stage.
+            self.show_stage_report(step.name)
             if num == 4:
                 if self.validate_scorecard(before) is None:
                     return 1

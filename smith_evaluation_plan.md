@@ -6,15 +6,14 @@ metrics that RQ promises.
 
 | RQ | Question | Limitation | Section |
 |----|----------|-----------|---------|
-| RQ1 | Does the security analysis stage add requirements the guidance never contained? | I | [Security enhancement](#rq1--security-enhancement) |
-| RQ2 | Does Smith produce a valid initial policy from the guidance? | I | [Policy creation](#rq2--policy-creation) |
-| RQ3 | Does Smith generate a useful suite of legitimate and adversarial cases? | II | [Test case generation](#rq3--test-case-generation) |
-| RQ4 | Are the generated labels correct enough to serve as ground truth? | II | [Label validation](#rq4--label-validation) |
-| RQ5 | Does refinement improve the policy without regressing or bloating it? | III | [Refinement loop](#rq5--refinement-loop) |
-| RQ6 | Is the automation cheap enough to be practical? | — | [Cost](#rq6--cost) |
+| RQ1 | Does Smith produce a valid initial policy from the guidance? | I | [Policy creation](#rq2--policy-creation) |
+| RQ2 | Does Smith generate a useful suite of legitimate and adversarial cases? | II | [Test case generation](#rq3--test-case-generation) |
+| RQ3 | Are the generated labels correct enough to serve as ground truth? | II | [Label validation](#rq4--label-validation) |
+| RQ4 | Does refinement improve the policy without regressing or bloating it? | III | [Refinement loop](#rq5--refinement-loop) |
+| RQ5 | Is the automation cheap enough to be practical? | — | [Cost](#rq6--cost) |
+| RQ6 | Does the security analysis stage add requirements the guidance never contained? | I | [Security enhancement](#rq1--security-enhancement) |
 
-**Dependency order.** RQ4 produce the validated suite that RQ2 and RQ5 are
-scored against.
+**Dependency order.** RQ3 produce the validated suite that RQ1 and RQ4 are scored against.
 
 ## Evaluation Setup
 
@@ -69,42 +68,9 @@ reported per model setting.
 
 ---
 
-## RQ1 — Security enhancement
 
-*Does the security analysis stage add correct requirements the guidance never contained?*
 
-**Claim under test.** Limitation I asserts that guidance is a product document rather
-than a threat model, so requirements originating in security standards are absent by construction. The stage is worth running only if the requirements it proposes are new
-rather than restatements of what the prose already said.
-
-**Steps**
-- Run the guidelines security analysis per agent.
-- Record guidance length before and after the stage.
-- For each agent, identify the requirement its prose was missing.
-
-**Table (guidance growth)**
-
-| Agent | Guidance lines (before) | Guidance lines (after) | Added | 
-|-------|------------------------:|-----------------------:|------:|
-| `A1` | 13 | — | — |
-| `A2` | 5 | — | — | 
-| `A3` | 79 | — | — |
-| `A4` | 45 | — | — | 
-| `A5` | 49 | — | — |
-
-**Case studies.** One per agent, naming the overlooked requirement and its threat
-class, since the informative result is *which* class the author was blind to, not how many lines were added.
-
-- A1 —
-- A2 — expected: `adjust_compensation` is an unguarded write, as G1-G5 govern only
-  reads. (This is the case `motivation.tex` uses.)
-- A3 —
-- A4 —
-- A5 —
-
----
-
-## RQ2 — Policy creation
+## RQ1 — Policy creation
 
 *Does Smith produce a valid initial policy from the guidance?*
 
@@ -123,14 +89,14 @@ rule, so validity and faithfulness are separate failures and are measured separa
 | Agent | opa fmt passes | Auto-fix iterations | TP | TN | FP | FN | Coverage | Policy lines |
 |-------|:--------------:|--------------------:|---:|---:|---:|---:|---------:|-------------:|
 | `A1` | | | | | | | | |
-| `A2` | | | | | | | | |
+| `A2` | Y | 0 | | | | | | |
 | `A3` | | | | | | | | |
 | `A4` | | | | | | | | |
 | `A5` | | | | | | | | |
 
 ---
 
-## RQ3 — Test case generation
+## RQ2 — Test case generation
 
 *Does Smith generate a useful suite of legitimate and adversarial cases?*
 
@@ -160,7 +126,7 @@ of the generated suite, for each model setting.
 
 ---
 
-## RQ4 — Label validation
+## RQ3 — Label validation
 
 *Are the generated labels correct enough to serve as ground truth?*
 
@@ -181,13 +147,13 @@ its own labels.
 
 **Table (filtering funnel and accuracy)**
 
-| Agent | Initial generated | Removed (tool-name mismatch) | Removed/corrected (cross-validation) | Final | Accuracy | Sample size |
-|-------|------------------:|-----------------------------:|-------------------------------------:|------:|---------:|------------:|
-| `A1` | | | | | | |
-| `A2` | | | | | | |
-| `A3` | | | | | | |
-| `A4` | | | | | | |
-| `A5` | | | | | | |
+| Agent | Initial generated | Removed (tool-name mismatch) | Removed/corrected (cross-validation) | Final | Accuracy |
+|-------|------------------:|-----------------------------:|-------------------------------------:|------:|---------:|
+| `A1` | | | | | | 
+| `A2` | | | | | | 
+| `A3` | | | | | | 
+| `A4` | | | | | | 
+| `A5` | | | | | | 
 
 Accuracy is reported on the final suite under manual verification of the sampled
 subset, because cross-validation uses an LLM to check LLM-generated labels and the
@@ -195,7 +161,7 @@ manual sample is what bounds that circularity.
 
 ---
 
-## RQ5 — Refinement loop
+## RQ4 — Refinement loop
 
 *Does refinement improve the policy without regressing or bloating it?*
 
@@ -250,7 +216,7 @@ broken the policy regardless of how much cleaner the result looks.
 
 ---
 
-## RQ6 — Cost
+## RQ5 — Cost
 
 *Is the automation cheap enough to be practical, and where is the cost concentrated?*
 
@@ -270,5 +236,43 @@ and capability trade off against each other.
 | `A4` | | | | | | | | |
 | `A5` | | | | | | | | |
 
+
 The expected result, that test generation dominates as the only stage scaling with
 guidance line count, is worth confirming rather than assuming.
+
+---
+
+## RQ6 — Security enhancement
+
+*Does the security analysis stage add correct requirements the guidance never contained?*
+
+**Claim under test.** Limitation I asserts that guidance is a product document rather
+than a threat model, so requirements originating in security standards are absent by construction. The stage is worth running only if the requirements it proposes are new
+rather than restatements of what the prose already said.
+
+**Steps**
+- Run the guidelines security analysis per agent.
+- Record guidance length before and after the stage.
+- For each agent, identify the requirement its prose was missing.
+
+**Table (guidance growth)**
+
+| Agent | Guidance lines (before) | Guidance lines (after) | Added | 
+|-------|------------------------:|-----------------------:|------:|
+| `A1` | 13 | — | — |
+| `A2` | 5 | — | — | 
+| `A3` | 79 | — | — |
+| `A4` | 45 | — | — | 
+| `A5` | 49 | — | — |
+
+**Case studies.** One per agent, naming the overlooked requirement and its threat
+class, since the informative result is *which* class the author was blind to, not how many lines were added.
+
+- A1 —
+- A2 — expected: `adjust_compensation` is an unguarded write, as G1-G5 govern only
+  reads. (This is the case `motivation.tex` uses.)
+- A3 —
+- A4 —
+- A5 —
+
+---

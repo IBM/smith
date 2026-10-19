@@ -8,6 +8,7 @@ __all__ = [
     "console",
     "examples",
     "pipeline",
+    "reports",
     "runner",
     "scorecard",
     "services",
