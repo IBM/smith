@@ -56,7 +56,7 @@ def classify_promptfoo_tool(
     tools = tool_definitions.get("tools", [])
     tool_list_text = "\n".join(f"- {t['name']}: {t['description']}" for t in tools)
 
-    http_client = httpx.Client(verify=False, timeout=300.0)
+    http_client = httpx.Client(timeout=300.0)
     client = OpenAI(api_key=api_key, base_url=openai_base_url, http_client=http_client)
 
     print(f"Classifying {len(cases_to_classify)} promptfoo cases to tool names...")

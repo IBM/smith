@@ -125,7 +125,7 @@ Output example:
         return f"\nTarget tool parameters (generate user_input with concrete values for these parameters):\n{json.dumps(relevant, indent=2)}\n"
 
     # Initialize OpenAI client
-    http_client = httpx.Client(verify=False, timeout=300.0)
+    http_client = httpx.Client(timeout=300.0)
     client = OpenAI(api_key=api_key, base_url=openai_base_url, http_client=http_client)
 
     if batch_processing and isinstance(guidances, list):

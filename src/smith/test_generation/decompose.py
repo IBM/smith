@@ -114,7 +114,7 @@ def flatten_guidance(
         reproduced byte-for-byte, with the changes above applied.
         """
     # Initialize OpenAI client
-    http_client = httpx.Client(verify=False, timeout=300.0)
+    http_client = httpx.Client(timeout=300.0)
     client = OpenAI(api_key=api_key, base_url=openai_base_url, http_client=http_client)
 
     if prior_flattened is not None and raw_diff:
@@ -261,7 +261,7 @@ def decompose_guidance(
     ]
     """
 
-    http_client = httpx.Client(verify=False, timeout=300.0)
+    http_client = httpx.Client(timeout=300.0)
     client = OpenAI(api_key=api_key, base_url=openai_base_url, http_client=http_client)
 
     guidance_lines = remove_empty_line(guidances_str.split("\n"))

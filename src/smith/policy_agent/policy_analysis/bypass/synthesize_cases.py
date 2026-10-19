@@ -86,7 +86,7 @@ System variables (candidates / shapes):
 Output a JSON array of test-case objects. Output only JSON — no Markdown, no explanations.
 """
 
-    http_client = httpx.Client(verify=False, timeout=300.0)
+    http_client = httpx.Client(timeout=300.0)
     client = OpenAI(api_key=api_key, base_url=openai_base_url, http_client=http_client)
 
     print(f"Synthesizing bypass cases from {len(vectors)} vector(s)...")

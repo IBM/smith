@@ -151,7 +151,7 @@ def _extract_vars_from_system_vars(system_vars):
 
 def _call_llm(api_key, openai_base_url, model, temp, top_p, system_prompt, user_prompt):
     """Call the LLM and return parsed JSON."""
-    http_client = httpx.Client(verify=False, timeout=300.0)
+    http_client = httpx.Client(timeout=300.0)
     client = OpenAI(api_key=api_key, base_url=openai_base_url, http_client=http_client)
 
     response = client.chat.completions.create(

@@ -393,6 +393,8 @@ Contributions are welcome. Please see [CONTRIBUTING.md](CONTRIBUTING.md) for det
 Please report security vulnerabilities privately — see [SECURITY.md](SECURITY.md).
 Do not open public issues for security reports.
 
+IBM Smith is an experimental, pre-production tool for automating access control policies in development environments. 
+
 ## Code of Conduct
 
 This project follows the [Contributor Covenant](CODE_OF_CONDUCT.md). By

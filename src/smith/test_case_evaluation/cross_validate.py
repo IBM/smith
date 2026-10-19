@@ -162,7 +162,7 @@ def cross_validate_failed_cases(
     with open(system_var_file, "r") as f:
         system_vars = f.read()
 
-    http_client = httpx.Client(verify=False, timeout=300.0)
+    http_client = httpx.Client(timeout=300.0)
     client = OpenAI(api_key=api_key, base_url=openai_base_url, http_client=http_client)
 
     results = []
