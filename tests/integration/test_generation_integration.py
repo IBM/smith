@@ -61,7 +61,7 @@ from pathlib import Path
 
 import pytest
 
-from helpers import load_json
+from helpers import STDIO_MCP, load_json
 
 pytestmark = pytest.mark.integration
 
@@ -131,6 +131,9 @@ def completed_run():
             [sys.executable, "-m", "smith.cli", "--flag", "test_generation"],
             cwd=str(env.base),
             env=env.override(
+                # The flag extracts tool definitions; stdio is the transport
+                # this test can satisfy on its own.
+                **STDIO_MCP,
                 GUIDANCE_FILE=f"references/{crafted_guidance.name}",
                 # ARES omitted: it needs a separate install plus its plugins.
                 ATTACK_TOOLS="promptfoo",

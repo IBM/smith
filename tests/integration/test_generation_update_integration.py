@@ -49,7 +49,7 @@ from pathlib import Path
 
 import pytest
 
-from helpers import SmithEnv, which
+from helpers import STDIO_MCP, SmithEnv, which
 
 pytestmark = pytest.mark.integration
 
@@ -76,6 +76,9 @@ def run_flag(env, *extra_args, guidance_name, **overrides):
         [sys.executable, "-m", "smith.cli", "--flag", "test_generation", *extra_args],
         cwd=str(env.base),
         env=env.override(
+            # The flag extracts tool definitions; stdio is the transport this
+            # test can satisfy on its own.
+            **STDIO_MCP,
             GUIDANCE_FILE=f"references/{guidance_name}",
             ATTACK_TOOLS="none",
             **overrides,
