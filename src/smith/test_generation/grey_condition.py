@@ -107,6 +107,7 @@ Guidance items: {str(batch_dict)}
                     {"role": "user", "content": user_instruction},
                 ],
                 temperature=temp,
+                max_tokens=30000,
             )
 
             llm_output = response.choices[0].message.content.strip()
@@ -120,11 +121,22 @@ Guidance items: {str(batch_dict)}
 
         # Flatten in batch order so the output matches a serial run.
         all_results = []
+        dropped = 0
         for batch_results in run_batches(
             batches, _grey_batch, "grey space", generation_concurrency
         ):
             if batch_results:
                 all_results.extend(batch_results)
+            else:
+                # run_batches already printed the cause; what it cannot say is
+                # how much of the stage's output went missing, which is what
+                # decides whether this run's cases are usable.
+                dropped += 1
+        if dropped:
+            print(
+                f"WARNING: {dropped}/{len(batches)} grey space batches produced "
+                "nothing; their guidance has no grey-space cases in this run."
+            )
 
         with open(output_file_grey_guidances, "w") as f:
             json.dump(all_results, f, indent=4)
@@ -143,6 +155,7 @@ Guidance items: {str(guidances)}
                 {"role": "user", "content": user_instruction},
             ],
             temperature=temp,
+            max_tokens=30000,
         )
 
         llm_output = response.choices[0].message.content.strip()
@@ -159,6 +172,13 @@ Guidance items: {str(guidances)}
         except json.JSONDecodeError as e:
             print("Error parsing LLM output:", e)
             print("LLM output was:", llm_output)
+            print(
+                "WARNING: no grey guidance was produced from this run; "
+                f"writing an empty {output_file_grey_guidances}. Downstream "
+                "stages will run without grey-space cases."
+            )
+            with open(output_file_grey_guidances, "w") as f:
+                json.dump([], f, indent=4)
 
     return guidances
 

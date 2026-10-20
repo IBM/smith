@@ -146,6 +146,7 @@ Guidance items: {str(batch)}
                     {"role": "user", "content": user_instruction},
                 ],
                 temperature=temp,
+                max_tokens=30000,
             )
             llm_output = response.choices[0].message.content.strip()
             match = re.search(r"```json\s*(.*?)```", llm_output, re.DOTALL)
@@ -182,6 +183,7 @@ Guidance items: {str(guidances)}
                 {"role": "user", "content": user_instruction},
             ],
             temperature=temp,
+            max_tokens=30000,
         )
 
         llm_output = response.choices[0].message.content.strip()
