@@ -79,7 +79,7 @@ def variable_extraction(
         if key not in ("action_list", "action_description")
     }
 
-    http_client = httpx.Client(timeout=300.0)
+    http_client = httpx.Client(timeout=100.0)
     client = OpenAI(api_key=api_key, base_url=openai_base_url, http_client=http_client)
 
     if batch_processing and isinstance(guidances, list) and len(guidances) > batch_size:

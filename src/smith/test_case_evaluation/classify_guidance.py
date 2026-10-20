@@ -41,7 +41,7 @@ def get_top_n_candidates(case_embedding, guidance_embeddings, guidances, top_n=3
 def llm_pick_guidance(
     api_key, openai_base_url, model, temp, top_p, user_input, candidates
 ):
-    http_client = httpx.Client(timeout=300.0)
+    http_client = httpx.Client(timeout=100.0)
     client = OpenAI(api_key=api_key, base_url=openai_base_url, http_client=http_client)
 
     candidate_text = "\n".join(

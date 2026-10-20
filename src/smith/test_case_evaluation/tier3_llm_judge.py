@@ -70,7 +70,7 @@ class LLMJudge:
         temp: float = 0.2,
         top_p: float = 0.9,
     ):
-        http_client = httpx.Client(timeout=300.0)
+        http_client = httpx.Client(timeout=100.0)
         self.client = OpenAI(
             api_key=api_key, base_url=openai_base_url, http_client=http_client
         )

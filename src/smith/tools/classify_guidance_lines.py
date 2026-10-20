@@ -51,7 +51,7 @@ def load_tool_list(tool_definitions):
 
 
 def _make_client(api_key, openai_base_url):
-    http_client = httpx.Client(timeout=300.0)
+    http_client = httpx.Client(timeout=100.0)
     return OpenAI(api_key=api_key, base_url=openai_base_url, http_client=http_client)
 
 
