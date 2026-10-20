@@ -4,7 +4,6 @@
 import os
 import json
 import re
-import time
 import httpx
 from openai import OpenAI
 from dotenv import load_dotenv
@@ -122,7 +121,6 @@ def flatten_guidance(
         print("Sending guidance changes for incremental flatten...")
     else:
         print("Sending guidance for flatten...")
-    _t_llm = time.perf_counter()
     response = client.chat.completions.create(
         model=model,
         messages=[
@@ -131,28 +129,11 @@ def flatten_guidance(
         ],
         temperature=temp,
     )
-    _llm_elapsed = time.perf_counter() - _t_llm
 
     llm_output = response.choices[0].message.content.strip()
-    _u = getattr(response, "usage", None)
-    print(
-        f"  [TIMING] flatten llm={_llm_elapsed:7.2f}s "
-        f"prompt_tok={getattr(_u, 'prompt_tokens', '?')} "
-        f"completion_tok={getattr(_u, 'completion_tokens', '?')} "
-        f"out_chars={len(llm_output)}",
-        flush=True,
-    )
     print("flatten results saved to " + output_file_flatten)
-    _t_write = time.perf_counter()
     with open(output_file_flatten, "w") as f:
         f.write(str(llm_output))
-        f.flush()
-        os.fsync(f.fileno())
-    print(
-        f"  [TIMING] flatten write={(time.perf_counter() - _t_write) * 1000:7.1f}ms "
-        f"bytes={os.path.getsize(output_file_flatten)}",
-        flush=True,
-    )
     return llm_output
 
 
@@ -298,7 +279,6 @@ def decompose_guidance(
     Explaination for actions: {system_variables['action_description']}
     Guidances: {batch_guidances}
     """
-            _t_llm = time.perf_counter()
             response = client.chat.completions.create(
                 model=model,
                 messages=[
@@ -307,20 +287,11 @@ def decompose_guidance(
                 ],
                 temperature=temp,
             )
-            _llm_elapsed = time.perf_counter() - _t_llm
 
             llm_output = response.choices[0].message.content.strip()
             match = re.search(r"```json\s*(.*?)```", llm_output, re.DOTALL)
             if match:
                 llm_output = match.group(1).strip()
-            _u = getattr(response, "usage", None)
-            print(
-                f"  [TIMING] decompose batch llm={_llm_elapsed:7.2f}s "
-                f"prompt_tok={getattr(_u, 'prompt_tokens', '?')} "
-                f"completion_tok={getattr(_u, 'completion_tokens', '?')} "
-                f"out_chars={len(llm_output)}",
-                flush=True,
-            )
             batch_results = json.loads(llm_output)
             if not isinstance(batch_results, list):
                 batch_results = [batch_results]
@@ -348,18 +319,8 @@ def decompose_guidance(
             if records:
                 all_results.extend(records)
 
-        _t_write = time.perf_counter()
         with open(output_file_decompose, "w") as f:
             json.dump(all_results, f, indent=4)
-            f.flush()
-            os.fsync(f.fileno())
-        print(
-            f"  [TIMING] decompose write(batched)="
-            f"{(time.perf_counter() - _t_write) * 1000:7.1f}ms "
-            f"bytes={os.path.getsize(output_file_decompose)} "
-            f"records={len(all_results)}",
-            flush=True,
-        )
         return all_results
 
     else:
@@ -369,7 +330,6 @@ def decompose_guidance(
     Guidances: {guidances_str}
     """
         print("Sending guidance for decomposition...")
-        _t_llm = time.perf_counter()
         response = client.chat.completions.create(
             model=model,
             messages=[
@@ -378,21 +338,12 @@ def decompose_guidance(
             ],
             temperature=temp,
         )
-        _llm_elapsed = time.perf_counter() - _t_llm
 
         llm_output = response.choices[0].message.content.strip()
 
         match = re.search(r"```json\s*(.*?)```", llm_output, re.DOTALL)
         if match:
             llm_output = match.group(1).strip()
-        _u = getattr(response, "usage", None)
-        print(
-            f"  [TIMING] decompose SERIAL llm={_llm_elapsed:7.2f}s "
-            f"prompt_tok={getattr(_u, 'prompt_tokens', '?')} "
-            f"completion_tok={getattr(_u, 'completion_tokens', '?')} "
-            f"out_chars={len(llm_output)}",
-            flush=True,
-        )
         try:
             issues_list = json.loads(llm_output)
             guidances = remove_empty_line(guidances_str.split("\n"))
@@ -409,18 +360,8 @@ def decompose_guidance(
                     "disallow_conditions"
                 ]
 
-            _t_write = time.perf_counter()
             with open(output_file_decompose, "w") as f:
                 json.dump(guidances, f, indent=4)
-                f.flush()
-                os.fsync(f.fileno())
-            print(
-                f"  [TIMING] decompose write="
-                f"{(time.perf_counter() - _t_write) * 1000:7.1f}ms "
-                f"bytes={os.path.getsize(output_file_decompose)} "
-                f"records={len(guidances)}",
-                flush=True,
-            )
 
         except json.JSONDecodeError as e:
             print("Error parsing LLM output:", e)
