@@ -125,7 +125,7 @@ Output example:
         return f"\nTarget tool parameters (generate user_input with concrete values for these parameters):\n{json.dumps(relevant, indent=2)}\n"
 
     # Initialize OpenAI client
-    http_client = httpx.Client(verify=False, timeout=300.0)
+    http_client = httpx.Client(timeout=100.0)
     client = OpenAI(api_key=api_key, base_url=openai_base_url, http_client=http_client)
 
     if batch_processing and isinstance(guidances, list):
@@ -146,6 +146,7 @@ Guidance items: {str(batch)}
                     {"role": "user", "content": user_instruction},
                 ],
                 temperature=temp,
+                max_tokens=30000,
             )
             llm_output = response.choices[0].message.content.strip()
             match = re.search(r"```json\s*(.*?)```", llm_output, re.DOTALL)
@@ -182,6 +183,7 @@ Guidance items: {str(guidances)}
                 {"role": "user", "content": user_instruction},
             ],
             temperature=temp,
+            max_tokens=30000,
         )
 
         llm_output = response.choices[0].message.content.strip()
