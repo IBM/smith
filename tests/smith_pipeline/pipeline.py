@@ -68,10 +68,8 @@ class Pipeline:
     def show_scorecard(self, header: str) -> scorecard.Scorecard:
         """Print the policy-testing scorecard. Returned for callers that want it."""
         card = scorecard.read(self.root)
-        out.hdr(header)
-        if card.summary.strip():
-            out.block(card.summary)
-        else:
+        reports.show_policy_score(self.root, self.log_dir, header)
+        if not card.summary.strip():
             out.warn("No scorecard at references/scorecard/"
                      "scorecard_summary.txt")
         return card
@@ -114,12 +112,7 @@ class Pipeline:
 
     # -- per-stage evaluation tables ----------------------------------------
     def show_stage_report(self, step_name: str) -> None:
-        """Print the evaluation table this stage produces, if it has one.
-
-        The tables come from `smith_evaluation_plan.md`; each is emitted by
-        the step whose artifacts it counts, so a run can be transcribed
-        without re-deriving anything afterwards.
-        """
+        """Print the evaluation table this stage produces, if it has one."""
         if self.dry_run:
             return
         table = {
@@ -129,6 +122,45 @@ class Pipeline:
         }.get(step_name)
         if table:
             table(self.root, self.log_dir)
+
+    # -- patching measurement ------------------------------------------------
+    def cluster_results_path(self) -> Path:
+        """Where red_suggestion writes its clusters, per the CLI's own layout."""
+        return (self.root / "assets" / "opa" / "outputs"
+                / "cluster_results.txt")
+
+    def run_flags(self, when: str, *flags: str) -> None:
+        """Run `smith --flag <f>` for each flag, logging each one separately."""
+        python = self.root / ".venv" / "bin" / "python"
+        interpreter = str(python) if python.exists() else "python3"
+        for flag in flags:
+            log = self.log_dir / f"measure-{when}-{flag}.log"
+            with log.open("wb") as fh:
+                rc = subprocess.run(
+                    [interpreter, "-m", "smith.cli", "--flag", flag],
+                    cwd=str(self.root), stdout=fh,
+                    stderr=subprocess.STDOUT,
+                ).returncode
+            if rc != 0:
+                out.warn(f"{flag} failed while measuring '{when}' — "
+                         f"see {log.name}")
+
+    def measure_lint(self, when: str):
+        """Re-run the regal analysis now and count what it reports."""
+        self.run_flags(when, "regal_suggestion")
+        return reports.read_lint(
+            self.root / "assets" / "opa" / "outputs" / "regal_suggestion.txt")
+
+    def measure_duplication(self, when: str):
+        """Re-run the duplication analysis now and count what it reports."""
+        self.run_flags(when, "duplication_suggestion")
+        return reports.read_duplication(self.root)
+
+    def measure_failures(self, when: str):
+        """Re-score the policy and re-cluster its failures, right now."""
+        self.run_flags(when, "policy_testing", "red_suggestion")
+        return (reports.read_clusters(self.cluster_results_path()),
+                reports.read_policy_score(self.root))
 
     # -- the workflow -------------------------------------------------------
     def run(self) -> int:
@@ -149,9 +181,37 @@ class Pipeline:
                 before = {path: (path.stat().st_mtime_ns if path.is_file()
                                  else None) for path in files}
             step = STEPS_BY_NUM[num]
+            # Step 6 is measured by re-running the testing/clustering pair on
+            # each side of it, so the baseline must be taken before patching
+            # has a chance to change the policy.
+            measured = None
+            if not self.dry_run and num in (6, 7, 8):
+                measure, what = {
+                    6: (self.measure_failures,
+                        "policy_testing + red_suggestion"),
+                    7: (self.measure_lint, "regal_suggestion"),
+                    8: (self.measure_duplication,
+                        "duplication_suggestion"),
+                }[num]
+                out.info(f"Measuring before step {num} ({what})")
+                measured = measure("before")
             result = self.runner.run(step)
             if not result.ok:
                 return 1
+            if measured is not None:
+                out.info(f"Measuring after step {num}")
+                if num == 6:
+                    after = self.measure_failures("after")
+                    reports.show_patch_effect(
+                        measured[0], after[0], measured[1], after[1],
+                        self.log_dir)
+                elif num == 7:
+                    reports.show_lint_effect(
+                        measured, self.measure_lint("after"), self.log_dir)
+                else:
+                    reports.show_duplication_effect(
+                        measured, self.measure_duplication("after"),
+                        self.log_dir)
             # Keyed on the step's name, not its number, so inserting a step
             # cannot silently attach a table to the wrong stage.
             self.show_stage_report(step.name)
