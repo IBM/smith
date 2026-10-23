@@ -130,6 +130,17 @@ STEPS: tuple[Step, ...] = (
     Step(10, "enhance guidance with security analysis",
          "/smith run the security-grounded guidance analysis for the target "
          "agent, do not create or modify any policy."),
+    # Produces a deliberately broken policy for exercising the refinement
+    # workflow. It runs last, and writes only to <TARGET_AGENT_PATH>/smith/,
+    # so nothing it emits can affect the steps scored above. SKILL.md has no
+    # route to this guide, so the prompt names the file directly.
+    Step(11, "introduce policy defects",
+         "/smith follow ./opa_policy/policy_defect/policy_defect.md to create "
+         "a defective version of the policy. The defective policy must NOT "
+         "contain any labels, comments or annotations marking the defects — no "
+         "DEFECT, DUPLICATE, ADDITIONAL or ISOLATED markers anywhere in the "
+         "rego: it must read as an ordinary policy. Leave ./assets/policy.rego "
+         "untouched and do not modify any test cases."),
 )
 STEPS_BY_NUM = {s.num: s for s in STEPS}
 
