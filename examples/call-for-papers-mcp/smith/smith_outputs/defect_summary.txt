@@ -1,0 +1,31 @@
+Defect Summary for policy_defect.rego
+======================================
+
+1. MISSING RULE — Disallowed keywords check removed
+   The deny rule that blocks requests containing disallowed keywords in the
+   keywords parameter (e.g. "bioinformatics", "genomics", etc.) has been
+   removed entirely. This means requests with prohibited keywords will now
+   be allowed through.
+
+2. DUPLICATE RULE — Topic validation duplicated with different message
+   A second deny rule checking "not args.topic in approved_topics" has been
+   added with a different error message ("Denied: unapproved topic '%s'
+   requested" vs the original "Denied: topic '%s' is not an approved research
+   area"). Both rules fire on the same condition, producing redundant deny
+   messages.
+
+3. ADDITIONAL RULE — Unreachable account suspension check
+   A deny rule checking subject.account_status == "suspended" has been added.
+   This field does not exist in the system variables (system_vars.json), so it
+   will never match real test inputs, but it adds dead weight to the policy.
+
+4. ISOLATED BLOCK — Unreachable helper _check_active_enrollment
+   A helper rule _check_active_enrollment checks subject.account_type ==
+   "provisional" and subject.enrollment_status == "active". Neither field
+   exists in the system variables, the helper is never referenced by any deny
+   rule, and it can never trigger. This is dead code.
+
+5. LINTING ISSUES — Inconsistent indentation
+   The duplicate topic rule and the isolated helper use spaces for indentation
+   while the rest of the policy uses tabs, creating formatting inconsistency
+   that Regal/opa fmt would flag.

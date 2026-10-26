@@ -1,7 +1,41 @@
-- `department` — one of `Corporate Leadership`, `Engineering`, `Product`, `HR`, `Finance`.
-- `organization` — one of `IBM Corporation`, `Red Hat`, `Kyndryl`.
-- Only **HR** may add a new employee.
-- An employee's `salary` may be updated only by **HR** or by that employee's **direct manager**.
-- Only **HR** may add or update a department, add or delete a country holiday, or set a leave allotment.
-- When an employee's **salary** is set or updated, it must be a positive amount (greater than zero).
-- A new or updated employee's work **email** must use their organization's corporate domain: `IBM Corporation` → `@ibm.com`, `Red Hat` → `@redhat.com`, `Kyndryl` → `@kyndryl.com`. This applies when the organization is provided in the same call.
+## 1. Only HR may perform these actions
+
+Decided from the caller's `department` alone.
+
+| Action | Tool |
+|---|---|
+| Add an employee | `add_employee` |
+| Set a salary when creating an employee | `add_employee` |
+| Add or update a department | `add_department`, `update_department` |
+| Add or delete a country holiday | `add_holiday`, `delete_holiday` |
+| Set a leave allotment | `set_leave_allotment` |
+
+## 2. Employees may only write their own records
+
+Allowed when it is the caller's **own record**, or the caller is **HR**.
+
+| Record | Tools |
+|---|---|
+| Employee record | `update_employee` |
+| Passport | `set_passport`, `update_passport` |
+| Visa | `set_visa`, `update_visa` |
+| Emergency contact | `set_emergency_contact`, `update_emergency_contact` |
+| Bank account | `set_bank_account`, `update_bank_account` |
+
+## 3. Employees may only request their own time off
+
+`create_time_off_request` is allowed only for the caller's own `user_id`.
+Unlike section 2, HR is not exempt: the rule is about who the leave is for.
+
+## 4. Values must be internally consistent
+
+These compare arguments inside a single call and need nothing about the caller.
+
+- **Salary must be greater than zero** — `add_employee`, `update_employee`.
+- **Work email must match the organization's domain** — `IBM Corporation` →
+  `@ibm.com`, `Red Hat` → `@redhat.com`, `Kyndryl` → `@kyndryl.com`. Checked only
+  when the organization is given in the same call.
+- **Issue date must be before expiry date** — `set_passport`, `update_passport`,
+  `set_visa`, `update_visa`.
+- **Time off may not exceed 90 days** — `end_date` minus `start_date` on
+  `create_time_off_request`.

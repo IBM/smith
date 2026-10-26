@@ -23,13 +23,15 @@ We use the five agent examples as the benchmark. They have different formats for
 
 | Agent | Guidance lines | MCP tools | Domain |
 |-------|---------------:|----------:|--------|
-| `A1: RagChatbot_MCPServer` | 13 | 12 | HR RAG chatbot |
+| `A1: RagChatbot_MCPServer` | 14 | 12 | HR RAG chatbot |
 | `A2: hr-agent` | 5 | 6 | HR agent |
-| `A3: employee` (TBD, guidance needs modification) | 79 | 33 | Employee hub |
-| `A4: call-for-papers-mcp` | 45 | 1 | Conference CFP |
-| `A5: car-price-mcp-main` | 49 | 3 | Car-price lookup |
+| `A3: employee` | 31 | 33 | Employee hub |
+| `A4: call-for-papers-mcp` | 29 | 1 | Conference CFP |
+| `A5: car-price-mcp-main` | 33 | 3 | Car-price lookup |
 
 The **MCP tools** column counts only valid, agent-exposed tools (functions registered as MCP tools), excluding internal helper functions and any commented-out/disabled tool definitions.
+
+The **Guidance lines** column counts non-empty lines in each agent's `smith/guidance.txt`; blank separator lines are excluded. `A3`, `A4` and `A5` use a sectioned format, so their counts include section headings (4, 8 and 7 respectively); their rule-bearing lines alone are 27, 21 and 26.
 
 ### Model settings
 
