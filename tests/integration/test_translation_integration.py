@@ -67,7 +67,7 @@ pytestmark = pytest.mark.integration
 
 #: A prompt that names the agent's one tool's job directly, so the resolution has
 #: a single defensible answer rather than depending on the model's latitude.
-CLEAR_PROMPT = "Search for academic conferences about Artificial intelligence."
+CLEAR_PROMPT = "Find upcoming conferences on Artificial intelligence."
 
 #: The four crafted cases, one per routing branch.
 RESOLVES = "test_case_resolves.json"  # -> translated in place

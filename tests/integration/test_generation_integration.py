@@ -66,13 +66,22 @@ from helpers import STDIO_MCP, load_json
 pytestmark = pytest.mark.integration
 
 
-#: Two rules, one clearly permissive and one clearly restrictive, so the pipeline
-#: has a reason to emit both an allow and a disallow case. Deliberately small: the
-#: per-rule LLM calls scale with this file.
 CRAFTED_GUIDANCE = (
     "1. Faculty may use the get_events tool to search for academic conferences.\n"
     "2. A guest must never be allowed to call the get_events tool.\n"
 )
+
+CRAFTED_SYSTEM_VARS = {
+    "action_list": ["get_events", "other"],
+    "action_description": {
+        "get_events": (
+            "Search for upcoming academic conferences and calls for papers."
+        ),
+        "other": "General Q&A not backed by a specific tool.",
+    },
+    "user_name": "Alice",
+    "user_role": ["faculty", "phd_student", "guest"],
+}
 
 #: Labels the pipeline may emit, mapped to the bucket each must land in.
 LABEL_BUCKET = {"allow": "allow", "disallow": "disallow"}
@@ -101,11 +110,21 @@ def completed_run():
     cases = env.test_cases
     # A throwaway guidance file, so the example's own guidance.txt is never touched.
     crafted_guidance = Path(env.base) / "references" / "__test_guidance__.txt"
+    # Likewise for the system variables the guidance above is paired with.
+    crafted_system_vars = (
+        Path(env.base) / "references" / "__test_system_vars__.json"
+    )
     # promptfoo's redteam output, pinned away from the example dir by the
     # PROMPTFOO_OUTPUT_FILE override below.
     redteam_output = Path(env.base) / "references" / "__test_redteam__.yaml"
 
-    protected = [*artifacts.values(), cases, crafted_guidance, redteam_output]
+    protected = [
+        *artifacts.values(),
+        cases,
+        crafted_guidance,
+        crafted_system_vars,
+        redteam_output,
+    ]
     backup_dir = Path(tempfile.mkdtemp(prefix="smith_gen_backup_"))
     saved = {}
     for i, path in enumerate(protected):
@@ -120,6 +139,7 @@ def completed_run():
     try:
         crafted_guidance.parent.mkdir(parents=True, exist_ok=True)
         crafted_guidance.write_text(CRAFTED_GUIDANCE)
+        crafted_system_vars.write_text(json.dumps(CRAFTED_SYSTEM_VARS, indent=2))
         # Start clean so nothing pre-existing is mistaken for this run's output.
         for path in (*artifacts.values(), cases):
             if path.is_dir():
@@ -135,6 +155,7 @@ def completed_run():
                 # this test can satisfy on its own.
                 **STDIO_MCP,
                 GUIDANCE_FILE=f"references/{crafted_guidance.name}",
+                SYSTEM_VAR_FILE=f"references/{crafted_system_vars.name}",
                 # ARES omitted: it needs a separate install plus its plugins.
                 ATTACK_TOOLS="promptfoo",
                 PROMPTFOO_CONFIG_FILE="tests/integration/fixtures/promptfoo/promptfooconfig.yaml",
