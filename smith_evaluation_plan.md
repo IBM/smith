@@ -56,7 +56,6 @@ reported per model setting.
 | Parameter | Value | Role |
 |-----------|-------|------|
 | `TEMP` (temperature) | 0.2 | low-variance, near-deterministic generation |
-| `max_tokens` | 4096 | per-call completion budget |
 | `CLUSTER_EPS` / `CLUSTER_MIN_SAMPLES` | 0.3 / 2 | DBSCAN clustering of failed cases in refinement |
 
 ### Evaluation metrics
@@ -89,7 +88,7 @@ rule, so validity and faithfulness are separate failures and are measured separa
 | Agent | opa fmt passes | Auto-fix iterations | TP | TN | FP | FN | Coverage | Policy lines |
 |-------|:--------------:|--------------------:|---:|---:|---:|---:|---------:|-------------:|
 | `A1` | | | | | | | | |
-| `A2` | Y | 0 | | | | | | |
+| `A2` | Y | 0| 61 | 14| 1| 1| 96.721|144 |
 | `A3` | | | | | | | | |
 | `A4` | | | | | | | | |
 | `A5` | | | | | | | | |
@@ -116,13 +115,13 @@ of the generated suite, for each model setting.
 
 **Table (suite composition, one per model setting M1/M2/M3)**
 
-| Agent | Legit. allow | Legit. disallow | Adv. native | Adv. bypass | Adv. Promptfoo | Total |
-|-------|-------------:|----------------:|------------:|------------:|---------------:|------:|
-| `A1` | — | — | — | — | — | — |
-| `A2` | — | — | — | — | — | — |
-| `A3` | — | — | — | — | — | — |
-| `A4` | — | — | — | — | — | — |
-| `A5` | — | — | — | — | — | — |
+| Agent | Legit. allow | Legit. disallow |Adv. bypass | Adv. Promptfoo | Total |
+|-------|-------------:|------------:|------------:|---------------:|------:|
+| `A1` | — | — | — | — | — | 
+| `A2` | 20 | 66 | 8 | 4 | 98 | 
+| `A3` | — | — | — | — | — | 
+| `A4` | — | — | — | — | — | 
+| `A5` | — | — | — | — | — | 
 
 ---
 
@@ -147,13 +146,13 @@ its own labels.
 
 **Table (filtering funnel and accuracy)**
 
-| Agent | Initial generated | Removed (tool-name mismatch) | Removed/corrected (cross-validation) | Final | Accuracy |
-|-------|------------------:|-----------------------------:|-------------------------------------:|------:|---------:|
-| `A1` | | | | | | 
-| `A2` | | | | | | 
-| `A3` | | | | | | 
-| `A4` | | | | | | 
-| `A5` | | | | | | 
+| Agent | Initial generated | Removed (tool-name mismatch) | Removed(cross-validation)| corrected (cross-validation) | Final | Accuracy |
+|-------|------------------:|-----------------------------:|-----:|-------------------------------------:|------:|---------:|
+| `A1` | | | | | | |
+| `A2` | 98| 18|3 |4 |95| |
+| `A3` | | | | | | |
+| `A4` | | | | | | |
+| `A5` | | | | | | |
 
 Accuracy is reported on the final suite under manual verification of the sampled
 subset, because cross-validation uses an LLM to check LLM-generated labels and the
@@ -178,38 +177,20 @@ improvement must be shown without regression or unbounded growth.
 
 **Table (failed-case patching)**
 
-| Agent | FP (before → after) | FN (before → after) | Iterations | Regressions | Policy lines (before → after) | Coverage (before → after) |
-|-------|:-------------------:|:-------------------:|-----------:|------------:|:-----------------------------:|:-------------------------:|
-| `A1` | | | | | | |
-| `A2` | | | | | | |
-| `A3` | | | | | | |
-| `A4` | | | | | | |
-| `A5` | | | | | | |
-
-**Regressions** counts cases passing at iteration *n* that fail at *n+1*, and
-**iterations** says whether the loop terminates or oscillates. A loop that reports
-only "failures went down" is not credible without both.
+| Agent | #cluster(before → after) |FP (before → after) | FN (before → after) | Policy lines (before → after) | Coverage (before → after) |
+|-------|:-------------------:|-----:|:-------------------:|:-----------------------------:|:-------------------------:|
+| `A1` | | | | | | 
+| `A2` |4/0 | 0/0| 23/0| 147/163| 84.8/87.8|
+| `A3` | | | | | | 
+| `A4` | | | | | | 
+| `A5` | | | | | | 
 
 **Table (linting and duplication)**
 
-| Agent | Linting problems found | Linting problems fixed | Duplicate rules merged | FP | FN | Policy lines (before → after) | Coverage |
+| Agent | Linting problems fixed | Duplication problems fixed | Failing cases | Policy lines (before → after) | Coverage (before → after) |
 |-------|-----------------------:|-----------------------:|-----------------------:|---:|---:|:-----------------------------:|---------:|
-| `A1` | | | | | | | |
-| `A2` | | | | | | | |
-| `A3` | | | | | | | |
-| `A4` | | | | | | | |
-| `A5` | | | | | | | |
-
-Lint and dedup must be **behaviour-preserving**: FP and FN must be unchanged from the
-patching table's post-refinement values. A dedup pass that changes any decision has
-broken the policy regardless of how much cleaner the result looks.
-
-**Table (comparison with baseline)**
-
-| Agent | FP (initial) | FP (refined) | FN (initial) | FN (refined) | Policy lines (initial → refined) | Coverage (initial → refined) |
-|-------|-------------:|-------------:|-------------:|-------------:|:--------------------------------:|:----------------------------:|
 | `A1` | | | | | | |
-| `A2` | | | | | | |
+| `A2` |2 | 1| | 163/163|87.8/87.8|
 | `A3` | | | | | | |
 | `A4` | | | | | | |
 | `A5` | | | | | | |
@@ -274,5 +255,3 @@ class, since the informative result is *which* class the author was blind to, no
 - A3 —
 - A4 —
 - A5 —
-
----
