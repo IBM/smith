@@ -5,7 +5,7 @@ from __future__ import annotations
 import subprocess
 from pathlib import Path
 
-from . import reports, scorecard
+from . import artifacts, reports, scorecard
 from .config import STEPS_BY_NUM, overlay_for
 from .console import out
 from .runner import Runner
@@ -15,7 +15,8 @@ from .services import Services
 class Pipeline:
     def __init__(self, root: Path, log_dir: Path, example: str,
                  steps: list[int], runner: Runner, services: Services, *,
-                 clean: bool, dry_run: bool) -> None:
+                 clean: bool, dry_run: bool,
+                 save_artifacts: Path | None = None) -> None:
         self.root = root
         self.log_dir = log_dir
         self.example = example
@@ -24,6 +25,7 @@ class Pipeline:
         self.services = services
         self.clean = clean
         self.dry_run = dry_run
+        self.save_artifacts = save_artifacts
 
     def wants(self, num: int) -> bool:
         return num in self.steps
@@ -123,6 +125,21 @@ class Pipeline:
         if table:
             table(self.root, self.log_dir)
 
+    # -- artifact saving -----------------------------------------------------
+    def save_step_artifacts(self, num: int, phase: str | None = None) -> None:
+        if self.save_artifacts is None or self.dry_run:
+            return
+        dest = self.save_artifacts / f"step{num}"
+        if phase:
+            dest = dest / phase
+        try:
+            artifacts.save_step(self.root, num, dest,
+                                agent=f"examples/{self.example}")
+        except (OSError, ValueError) as exc:
+            # Archiving is instrumentation: a failure here must not discard a
+            # long run's real work.
+            out.warn(f"Could not save step {num} artifacts: {exc}")
+
     # -- patching measurement ------------------------------------------------
     def cluster_results_path(self) -> Path:
         """Where red_suggestion writes its clusters, per the CLI's own layout."""
@@ -146,15 +163,15 @@ class Pipeline:
                          f"see {log.name}")
 
     def measure_lint(self, when: str):
-        """Re-run the regal analysis now and count what it reports."""
-        self.run_flags(when, "regal_suggestion")
-        return reports.read_lint(
-            self.root / "assets" / "opa" / "outputs" / "regal_suggestion.txt")
+        self.run_flags(when, "regal_suggestion", "policy_testing")
+        return (reports.read_lint(
+            self.root / "assets" / "opa" / "outputs" / "regal_suggestion.txt"),
+            reports.read_policy_score(self.root))
 
     def measure_duplication(self, when: str):
-        """Re-run the duplication analysis now and count what it reports."""
-        self.run_flags(when, "duplication_suggestion")
-        return reports.read_duplication(self.root)
+        self.run_flags(when, "duplication_suggestion", "policy_testing")
+        return (reports.read_duplication(self.root),
+                reports.read_policy_score(self.root))
 
     def measure_failures(self, when: str):
         """Re-score the policy and re-cluster its failures, right now."""
@@ -181,9 +198,6 @@ class Pipeline:
                 before = {path: (path.stat().st_mtime_ns if path.is_file()
                                  else None) for path in files}
             step = STEPS_BY_NUM[num]
-            # Step 6 is measured by re-running the testing/clustering pair on
-            # each side of it, so the baseline must be taken before patching
-            # has a chance to change the policy.
             measured = None
             if not self.dry_run and num in (6, 7, 8):
                 measure, what = {
@@ -195,6 +209,7 @@ class Pipeline:
                 }[num]
                 out.info(f"Measuring before step {num} ({what})")
                 measured = measure("before")
+                self.save_step_artifacts(num, "before")
             result = self.runner.run(step)
             if not result.ok:
                 return 1
@@ -206,12 +221,15 @@ class Pipeline:
                         measured[0], after[0], measured[1], after[1],
                         self.log_dir)
                 elif num == 7:
+                    after = self.measure_lint("after")
                     reports.show_lint_effect(
-                        measured, self.measure_lint("after"), self.log_dir)
+                        measured[0], after[0], self.log_dir,
+                        measured[1], after[1])
                 else:
+                    after = self.measure_duplication("after")
                     reports.show_duplication_effect(
-                        measured, self.measure_duplication("after"),
-                        self.log_dir)
+                        measured[0], after[0], self.log_dir,
+                        measured[1], after[1])
             # Keyed on the step's name, not its number, so inserting a step
             # cannot silently attach a table to the wrong stage.
             self.show_stage_report(step.name)
@@ -226,7 +244,12 @@ class Pipeline:
                 if card.failures:
                     out.err(f"Final policy testing has {card.failures} "
                             "failing case(s).")
+                    self.save_step_artifacts(num)
                     return 1
+            # Saved last, so a step's artifacts are captured after its
+            # measurement and reporting have run against them. A refinement
+            # step saved a "before" copy already, so this one is its pair.
+            self.save_step_artifacts(num, "after" if measured else None)
 
         return 0
 

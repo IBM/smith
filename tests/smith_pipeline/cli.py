@@ -103,6 +103,10 @@ def build_parser() -> argparse.ArgumentParser:
                    help="Do not echo each step's activity while it runs. By "
                         "default progress is streamed live; with this flag a "
                         "step prints nothing until it finishes.")
+    p.add_argument("--save-artifacts", metavar="DIR",
+                   help="After each step, copy the artifacts that step "
+                        "produced into DIR/step<N>/. The layout mirrors the "
+                        "source tree, so a saved step is readable on its own.")
     p.add_argument("--dry-run", action="store_true",
                    help="Print what would happen; run nothing.")
     return p
@@ -311,7 +315,9 @@ def main(argv: list[str] | None = None) -> int:
                     carry=(resolve_carry(root, args.carry, log_dir)
                            if args.carry else None))
     pipeline = Pipeline(root, log_dir, example, steps, runner, services,
-                        clean=args.clean, dry_run=args.dry_run)
+                        clean=args.clean, dry_run=args.dry_run,
+                        save_artifacts=(Path(args.save_artifacts).expanduser()
+                                        if args.save_artifacts else None))
 
     atexit.register(services.stop)
     try:

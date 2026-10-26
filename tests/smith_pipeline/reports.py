@@ -119,8 +119,6 @@ def show_suite(root: Path, log_dir: Path) -> SuiteComposition:
         ("adversarial ARES (native)", comp.ares),
     ]
     if comp.cross_validated:
-        # Present only on a re-run: apply_cross_validate renames corrected
-        # cases, so they are no longer attributable to their original source.
         rows.append(("cross-validated (relabelled)", comp.cross_validated))
 
     width = max(len(name) for name, _ in rows)
@@ -253,8 +251,8 @@ def show_cross_validation(root: Path, log_dir: Path) -> CrossValidation:
     rows = [
         ("failed cases examined", cv.total_failed),
         ("analyzed", cv.analyzed),
-        ("moved disallow -> allow", cv.move_to_allow),
         ("moved allow -> disallow", cv.move_to_disallow),
+        ("removed (moved disallow to allow)", cv.move_to_allow),
         ("removed (from disallow)", cv.removed_from_disallow),
         ("removed (from allow)", cv.removed_from_allow),
         ("kept as policy issues", cv.kept),
@@ -449,6 +447,10 @@ _CLUSTER_RE = re.compile(r"^Cluster\s+(\d+):", re.M)
 #: The two section headings the clustering writes, benign (fp) then malicious (fn).
 _FP_SECTION = "Benign commands that should be allowed:"
 _FN_SECTION = "Malicious commands that should not get allowed:"
+#: The node list a `subgraph N:` block prints, used to tell a real finding
+#: from a component that printed `node: []`.
+_SUBGRAPH_NODES_RE = re.compile(r"^subgraph\s+\d+:\s*\n\s*node:\s*\n(.*)$",
+                                re.M)
 
 
 @dataclass
@@ -511,6 +513,12 @@ def show_patch_effect(before: ClusterCount, after: ClusterCount,
             ("failing cases total",
              before_score.fp + before_score.fn,
              after_score.fp + after_score.fn),
+            ("policy lines", before_score.policy_lines,
+             after_score.policy_lines),
+            ("covered lines", before_score.covered_lines,
+             after_score.covered_lines),
+            ("uncovered lines", before_score.not_covered_lines,
+             after_score.not_covered_lines),
         ]
 
     width = max(len(name) for name, _, _ in rows)
@@ -527,6 +535,7 @@ def show_patch_effect(before: ClusterCount, after: ClusterCount,
             ("precision", before_score.precision, after_score.precision),
             ("recall", before_score.recall, after_score.recall),
             ("F1", before_score.f1, after_score.f1),
+            ("policy coverage", before_score.coverage, after_score.coverage),
         ):
             out.say(f"  {name:<{width}}  {lhs:>7.1f}%  {rhs:>7.1f}%  "
                     f"{rhs - lhs:>+7.1f}%")
@@ -572,6 +581,9 @@ class DuplicationCount:
     issues: int = 0
     by_category: dict[str, int] = field(default_factory=dict)
     subgraphs: int = 0
+    #: Blocks printed with `node: []` — a component with nothing nameable in
+    #: it. Tracked so a dropped count is explainable rather than just lower.
+    empty_subgraphs: int = 0
     present: bool = False
 
 
@@ -590,8 +602,11 @@ def read_duplication(root: Path) -> DuplicationCount:
     if graph.is_file():
         count.present = True
         text = graph.read_text(encoding="utf-8", errors="replace")
-        count.subgraphs = len(re.findall(r"^\s*subgraph\b", text,
-                                         re.M | re.I))
+        count.subgraphs = sum(
+            1 for nodes in _SUBGRAPH_NODES_RE.findall(text)
+            if nodes.strip() not in ("", "[]"))
+        count.empty_subgraphs = len(
+            re.findall(r"^\s*subgraph\b", text, re.M | re.I)) - count.subgraphs
     return count
 
 
@@ -615,26 +630,59 @@ def show_refinement_effect(title: str, before, after, rows: list[tuple],
                [(name, f"{lhs},{rhs}") for name, lhs, rhs in rows])
 
 
+def _policy_rows(before_score, after_score) -> list[tuple]:
+    if not (before_score is not None and after_score is not None
+            and before_score.present and after_score.present):
+        return []
+    return [
+        ("policy lines", before_score.policy_lines, after_score.policy_lines),
+        ("covered lines", before_score.covered_lines,
+         after_score.covered_lines),
+        ("uncovered lines", before_score.not_covered_lines,
+         after_score.not_covered_lines),
+        ("failing cases", before_score.fp + before_score.fn,
+         after_score.fp + after_score.fn),
+    ]
+
+
+def _show_coverage_delta(before_score, after_score, width: int) -> None:
+    if not (before_score is not None and after_score is not None
+            and before_score.present and after_score.present):
+        return
+    out.say("")
+    out.say(f"  {'policy coverage':<{width}}  {before_score.coverage:>7.1f}%  "
+            f"{after_score.coverage:>7.1f}%  "
+            f"{after_score.coverage - before_score.coverage:>+7.1f}%")
+
+
 def show_lint_effect(before: LintCount, after: LintCount,
-                     log_dir: Path) -> None:
+                     log_dir: Path, before_score=None,
+                     after_score=None) -> None:
     categories = sorted(set(before.by_category) | set(after.by_category))
     rows = [("regal violations", before.violations, after.violations),
             ("distinct rules", before.rules, after.rules)]
     rows += [(f"  {name}", before.by_category.get(name, 0),
               after.by_category.get(name, 0)) for name in categories]
+    rows += _policy_rows(before_score, after_score)
     show_refinement_effect("Regal effect (step 7)", before, after, rows,
                            log_dir, "regal_effect.csv")
+    _show_coverage_delta(before_score, after_score,
+                         max(len(n) for n, _, _ in rows))
 
 
 def show_duplication_effect(before: DuplicationCount, after: DuplicationCount,
-                            log_dir: Path) -> None:
+                            log_dir: Path, before_score=None,
+                            after_score=None) -> None:
     categories = sorted(set(before.by_category) | set(after.by_category))
     rows = [("redundancy issues", before.issues, after.issues)]
     rows += [(f"  {name}", before.by_category.get(name, 0),
               after.by_category.get(name, 0)) for name in categories]
     rows.append(("unreachable subgraphs", before.subgraphs, after.subgraphs))
+    rows += _policy_rows(before_score, after_score)
     show_refinement_effect("Duplication effect (step 8)", before, after, rows,
                            log_dir, "duplication_effect.csv")
+    _show_coverage_delta(before_score, after_score,
+                         max(len(n) for n, _, _ in rows))
 
 
 def _write_csv(path: Path, header: list[str],
