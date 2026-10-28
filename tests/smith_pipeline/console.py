@@ -1,9 +1,13 @@
 # Copyright 2026 Smith authors
 # SPDX-License-Identifier: Apache-2.0
-"""Terminal output helpers: colours, status lines, indented blocks."""
+
 from __future__ import annotations
 
+import re
 import sys
+from pathlib import Path
+
+_ANSI = re.compile(r"\033\[[0-9;]*m")
 
 
 class Console:
@@ -17,35 +21,58 @@ class Console:
         self.yellow = "\033[33m" if color else ""
         self.blue = "\033[36m" if color else ""
         self.off = "\033[0m" if color else ""
+        #: When set, every line printed is appended here with colours stripped.
+        self._capture: Path | None = None
 
+    # -- capture ----------------------------------------------------------
+    def capture_to(self, path: Path | None) -> Path | None:
+        previous = self._capture
+        self._capture = path
+        return previous
+
+    def _echo(self, msg: str) -> None:
+        if self._capture is None:
+            return
+        try:
+            with self._capture.open("a", encoding="utf-8") as fh:
+                fh.write(_ANSI.sub("", msg) + "\n")
+        except OSError:
+            # Capturing is instrumentation: never fail a run over it.
+            pass
+
+    def _emit(self, msg: str, *, err: bool = False) -> None:
+        print(msg, file=sys.stderr if err else sys.stdout, flush=True)
+        self._echo(msg)
+
+    # -- output -----------------------------------------------------------
     def say(self, msg: str = "") -> None:
-        print(msg, flush=True)
+        self._emit(msg)
 
     def info(self, msg: str) -> None:
-        print(f"{self.blue}==>{self.off} {msg}", flush=True)
+        self._emit(f"{self.blue}==>{self.off} {msg}")
 
     def ok(self, msg: str) -> None:
-        print(f"{self.green}  ok{self.off} {msg}", flush=True)
+        self._emit(f"{self.green}  ok{self.off} {msg}")
 
     def warn(self, msg: str) -> None:
-        print(f"{self.yellow}warn{self.off} {msg}", flush=True)
+        self._emit(f"{self.yellow}warn{self.off} {msg}")
 
     def err(self, msg: str) -> None:
-        print(f"{self.red} fail{self.off} {msg}", file=sys.stderr, flush=True)
+        self._emit(f"{self.red} fail{self.off} {msg}", err=True)
 
     def hdr(self, msg: str) -> None:
-        print(f"\n{self.bold}{msg}{self.off}\n{self.dim}{'-' * 72}{self.off}",
-              flush=True)
+        self._emit(f"\n{self.bold}{msg}{self.off}\n"
+                   f"{self.dim}{'-' * 72}{self.off}")
 
     def block(self, text: str, indent: str = "    ") -> None:
         """Print a dimmed, indented block (a log excerpt or command preview)."""
         if not text or not text.strip():
             return
         body = "\n".join(indent + line for line in text.rstrip().splitlines())
-        print(f"{self.dim}{body}{self.off}", flush=True)
+        self._emit(f"{self.dim}{body}{self.off}")
 
     def dry(self, msg: str) -> None:
-        print(f"  {self.dim}(dry run) {msg}{self.off}", flush=True)
+        self._emit(f"  {self.dim}(dry run) {msg}{self.off}")
 
 
 # Shared instance; the modules import this rather than constructing their own.

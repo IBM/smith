@@ -207,49 +207,72 @@ class Pipeline:
                     8: (self.measure_duplication,
                         "duplication_suggestion"),
                 }[num]
-                out.info(f"Measuring before step {num} ({what})")
-                measured = measure("before")
-                self.save_step_artifacts(num, "before")
+                # Captured to a side file: runner.run() rewrites the step log
+                # from the trace, so anything appended before it is lost.
+                pre_log = self.log_dir / f"step{num}-pre.log"
+                restore = out.capture_to(pre_log)
+                try:
+                    out.info(f"Measuring before step {num} ({what})")
+                    measured = measure("before")
+                    self.save_step_artifacts(num, "before")
+                finally:
+                    out.capture_to(restore)
             result = self.runner.run(step)
-            if not result.ok:
-                return 1
-            if measured is not None:
-                out.info(f"Measuring after step {num}")
-                if num == 6:
-                    after = self.measure_failures("after")
-                    reports.show_patch_effect(
-                        measured[0], after[0], measured[1], after[1],
-                        self.log_dir)
-                elif num == 7:
-                    after = self.measure_lint("after")
-                    reports.show_lint_effect(
-                        measured[0], after[0], self.log_dir,
-                        measured[1], after[1])
-                else:
-                    after = self.measure_duplication("after")
-                    reports.show_duplication_effect(
-                        measured[0], after[0], self.log_dir,
-                        measured[1], after[1])
-            # Keyed on the step's name, not its number, so inserting a step
-            # cannot silently attach a table to the wrong stage.
-            self.show_stage_report(step.name)
-            if num == 4:
-                if self.validate_scorecard(before) is None:
-                    return 1
-                self.show_scorecard("Scorecard after step 4")
-            elif num == 9:
-                if self.validate_scorecard(before) is None:
-                    return 1
-                card = self.show_scorecard("Final scorecard")
-                if card.failures:
-                    out.err(f"Final policy testing has {card.failures} "
-                            "failing case(s).")
-                    self.save_step_artifacts(num)
-                    return 1
-            # Saved last, so a step's artifacts are captured after its
-            # measurement and reporting have run against them. A refinement
-            # step saved a "before" copy already, so this one is its pair.
+            # From here the step log holds the agent transcript; append this
+            # step's own reporting to it so the tables are not terminal-only.
+            restore = out.capture_to(result.log)
+            try:
+                self._report(num, step, measured)
+                return_code = self._verdict(num, before)
+            finally:
+                out.capture_to(restore)
+            if return_code is not None:
+                return return_code
             self.save_step_artifacts(num, "after" if measured else None)
 
         return 0
+
+    def _report(self, num: int, step, measured) -> None:
+        """Print this step's evaluation tables.
+
+        Called with the console captured into the step's log, so every table
+        lands there as well as on the terminal.
+        """
+        if measured is not None:
+            out.info(f"Measuring after step {num}")
+            if num == 6:
+                after = self.measure_failures("after")
+                reports.show_patch_effect(
+                    measured[0], after[0], measured[1], after[1],
+                    self.log_dir)
+            elif num == 7:
+                after = self.measure_lint("after")
+                reports.show_lint_effect(
+                    measured[0], after[0], self.log_dir,
+                    measured[1], after[1])
+            else:
+                after = self.measure_duplication("after")
+                reports.show_duplication_effect(
+                    measured[0], after[0], self.log_dir,
+                    measured[1], after[1])
+        # Keyed on the step's name, not its number, so inserting a step
+        # cannot silently attach a table to the wrong stage.
+        self.show_stage_report(step.name)
+
+    def _verdict(self, num: int, before: dict) -> int | None:
+        """The exit code this step forces, or None to carry on."""
+        if num == 4:
+            if self.validate_scorecard(before) is None:
+                return 1
+            self.show_scorecard("Scorecard after step 4")
+        elif num == 9:
+            if self.validate_scorecard(before) is None:
+                return 1
+            card = self.show_scorecard("Final scorecard")
+            if card.failures:
+                out.err(f"Final policy testing has {card.failures} "
+                        "failing case(s).")
+                self.save_step_artifacts(num)
+                return 1
+        return None
 

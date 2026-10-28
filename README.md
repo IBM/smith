@@ -67,7 +67,9 @@ For instructions on using skills with different coding agents, see [Bob](https:/
 - [uv](https://docs.astral.sh/uv/) (package management)
 - [OPA](https://www.openpolicyagent.org/) + [Regal](https://github.com/StyraInc/regal#getting-started) (policy testing / linting; OPA runs in Docker for the scorecard)
 - [ARES](https://github.com/IBM/ares) (red-teaming framework) — **optional**
-- [Promptfoo](https://www.promptfoo.dev/) (red-teaming framework) — **optional**
+- [Promptfoo](https://www.promptfoo.dev/) (red-teaming framework) — **optional**; its
+  shipped config template attacks through a local [Ollama](https://ollama.com/) model,
+  so Ollama is needed too unless you swap the provider
 
 The `ATTACK_TOOLS` environment variable selects the red-teaming tools (see [Configuration](#configuration)). Set it to `none` to skip red-teaming. The default is `ATTACK_TOOLS=promptfoo`.
 The `ATTACK_TOOLS` environment variable selects the red-teaming tools (see [Configuration](#configuration)). Set it to `none` to skip red-teaming. The default is `ATTACK_TOOLS=promptfoo`.
@@ -110,6 +112,17 @@ export PROMPTFOO_DISABLE_TELEMETRY=1
 export PROMPTFOO_DISABLE_REDTEAM_REMOTE_GENERATION=true
 export PROMPTFOO_DISABLE_SHARING=true
 ```
+
+Promptfoo drives its red-team attacks with its own provider, which is separate from
+the target agent's `INFERENCE_MODEL`. The config template
+(`references/promptfoo_config_template.yaml`) ships with a local Ollama provider, so
+pull that model before running with `ATTACK_TOOLS=promptfoo`:
+
+```bash
+ollama pull qwen3.5:latest          # the provider in the shipped template
+```
+
+Set `OLLAMA_BASE_URL` (default `http://localhost:11434`) if Ollama runs elsewhere.
 
 ### Install Smith
 

@@ -413,8 +413,9 @@ def show_policy_score(root: Path, log_dir: Path,
         ("recall", f"{score.recall:.1f}%"),
         ("F1", f"{score.f1:.1f}%"),
         ("policy coverage", f"{score.coverage:.1f}%"),
-        ("covered / uncovered lines",
-         f"{score.covered_lines:,} / {score.not_covered_lines:,}"),
+        ("covered / coverable lines",
+         f"{score.covered_lines:,} / "
+         f"{score.covered_lines + score.not_covered_lines:,}"),
         ("policy lines", f"{score.policy_lines:,}"),
     ]
     width = max(len(name) for name, _ in metrics)
@@ -515,10 +516,11 @@ def show_patch_effect(before: ClusterCount, after: ClusterCount,
              after_score.fp + after_score.fn),
             ("policy lines", before_score.policy_lines,
              after_score.policy_lines),
+            ("coverable lines",
+             before_score.covered_lines + before_score.not_covered_lines,
+             after_score.covered_lines + after_score.not_covered_lines),
             ("covered lines", before_score.covered_lines,
              after_score.covered_lines),
-            ("uncovered lines", before_score.not_covered_lines,
-             after_score.not_covered_lines),
         ]
 
     width = max(len(name) for name, _, _ in rows)
@@ -636,10 +638,11 @@ def _policy_rows(before_score, after_score) -> list[tuple]:
         return []
     return [
         ("policy lines", before_score.policy_lines, after_score.policy_lines),
+        ("coverable lines",
+         before_score.covered_lines + before_score.not_covered_lines,
+         after_score.covered_lines + after_score.not_covered_lines),
         ("covered lines", before_score.covered_lines,
          after_score.covered_lines),
-        ("uncovered lines", before_score.not_covered_lines,
-         after_score.not_covered_lines),
         ("failing cases", before_score.fp + before_score.fn,
          after_score.fp + after_score.fn),
     ]

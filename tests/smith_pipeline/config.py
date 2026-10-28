@@ -156,7 +156,10 @@ Run the Smith CLI as the absolute path {skill_root}/.venv/bin/smith (for example
 This is an unattended automated run: you have my explicit approval and my "yes" \
 in advance for every step of this task, including creating and modifying \
 assets/policy.rego. Do not stop to ask for confirmation or approval at any \
-point — carry the task through to completion, then report what you did."""
+point — carry the task through to completion, then report what you did.
+
+Where this task says to STOP before a later stage, stop there: report what you \
+did and stop; do not ask whether to continue."""
 
 # Used only when --permission-mode is not bypassPermissions.
 ALLOWED_TOOLS = (

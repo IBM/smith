@@ -6,12 +6,13 @@ metrics that RQ promises.
 
 | RQ | Question | Limitation | Section |
 |----|----------|-----------|---------|
-| RQ1 | Does Smith produce a valid initial policy from the guidance? | I | [Policy creation](#rq2--policy-creation) |
-| RQ2 | Does Smith generate a useful suite of legitimate and adversarial cases? | II | [Test case generation](#rq3--test-case-generation) |
-| RQ3 | Are the generated labels correct enough to serve as ground truth? | II | [Label validation](#rq4--label-validation) |
-| RQ4 | Does refinement improve the policy without regressing or bloating it? | III | [Refinement loop](#rq5--refinement-loop) |
-| RQ5 | Is the automation cheap enough to be practical? | — | [Cost](#rq6--cost) |
-| RQ6 | Does the security analysis stage add requirements the guidance never contained? | I | [Security enhancement](#rq1--security-enhancement) |
+| RQ1 | Does Smith produce a valid initial policy from the guidance? | I | [Policy creation](#rq1--policy-creation) |
+| RQ2 | Does Smith generate a useful suite of legitimate and adversarial cases? | II | [Test case generation](#rq2--test-case-generation) |
+| RQ3 | Are the generated labels correct enough to serve as ground truth? | II | [Label validation](#rq3--label-validation) |
+| RQ4 | Does refinement improve the policy without regressing or bloating it? | III | [Refinement loop](#rq4--refinement-loop) |
+| RQ5 | Is the automation cheap enough to be practical? | — | [Cost](#rq5--cost) |
+| RQ6 | Does the security analysis stage add requirements the guidance never contained? | I | [Security enhancement](#rq6--security-enhancement) |
+| RQ7 | Does refinement recover a policy whose defects were introduced deliberately, and what does that cost? | III | [Seeded-defect policy](#rq7--refinement-and-cost-on-a-seeded-defect-policy) |
 
 **Dependency order.** RQ3 produce the validated suite that RQ1 and RQ4 are scored against.
 
@@ -50,7 +51,7 @@ Smith uses two distinct LLM roles, which we configure independently:
 | M3 (new) | Claude 5 opus | 
 
 Varying the pipeline model while holding the scaffolding fixed is what separates
-Smith's contribution from the underlying model's capability. Every RQ1-RQ5 table is
+Smith's contribution from the underlying model's capability. Every RQ1-RQ7 table is
 reported per model setting.
 
 ### Parameter settings
@@ -89,8 +90,8 @@ rule, so validity and faithfulness are separate failures and are measured separa
 
 | Agent | opa fmt passes | Auto-fix iterations | TP | TN | FP | FN | Coverage | Policy lines |
 |-------|:--------------:|--------------------:|---:|---:|---:|---:|---------:|-------------:|
-| `A1` | | | | | | | | |
-| `A2` | Y | 0| 61 | 14| 1| 1| 96.721|144 |
+| `A1` | Y| 0| 44| 20| 2| 8| 86.5%| 177|
+| `A2` | Y| 0| 27|17 | 0|6 | 94.1%|67 |
 | `A3` | | | | | | | | |
 | `A4` | | | | | | | | |
 | `A5` | | | | | | | | |
@@ -119,8 +120,8 @@ of the generated suite, for each model setting.
 
 | Agent | Legit. allow | Legit. disallow |Adv. bypass | Adv. Promptfoo | Total |
 |-------|-------------:|------------:|------------:|---------------:|------:|
-| `A1` | — | — | — | — | — | 
-| `A2` | 20 | 66 | 8 | 4 | 98 | 
+| `A1` | 23 | 55 | 18 | 8 | 104 | 
+| `A2` | 16 | 18 | 11 | 14 | 59 | 
 | `A3` | — | — | — | — | — | 
 | `A4` | — | — | — | — | — | 
 | `A5` | — | — | — | — | — | 
@@ -150,8 +151,8 @@ its own labels.
 
 | Agent | Initial generated | Removed (tool-name mismatch) | Removed(cross-validation)| corrected (cross-validation) | Final | Accuracy |
 |-------|------------------:|-----------------------------:|-----:|-------------------------------------:|------:|---------:|
-| `A1` | | | | | | |
-| `A2` | 98| 18|3 |4 |95| |
+| `A1` | 104| 15+13| 2| 0| 74| -|
+| `A2` |59 | 4| 2+3+2|1 | 41| -|
 | `A3` | | | | | | |
 | `A4` | | | | | | |
 | `A5` | | | | | | |
@@ -181,21 +182,21 @@ improvement must be shown without regression or unbounded growth.
 
 | Agent | #cluster(before → after) |FP (before → after) | FN (before → after) | Policy lines (before → after) | Coverage (before → after) |
 |-------|:-------------------:|-----:|:-------------------:|:-----------------------------:|:-------------------------:|
-| `A1` | | | | | | 
-| `A2` |4/0 | 0/0| 23/0| 147/163| 84.8/87.8|
+| `A1` |2/0 | 2/0| 8/0| 177/212| 86.5%/95.4%| 
+| `A2` | 2/0| 0/0| 6/0| 67/86|94.1%/100% |
 | `A3` | | | | | | 
 | `A4` | | | | | | 
 | `A5` | | | | | | 
 
 **Table (linting and duplication)**
 
-| Agent | Linting problems fixed | Duplication problems fixed | Failing cases | Policy lines (before → after) | Coverage (before → after) |
-|-------|-----------------------:|-----------------------:|-----------------------:|---:|---:|:-----------------------------:|---------:|
-| `A1` | | | | | | |
-| `A2` |2 | 1| | 163/163|87.8/87.8|
-| `A3` | | | | | | |
-| `A4` | | | | | | |
-| `A5` | | | | | | |
+| Agent | Linting problems fixed | Duplication problems fixed | Failing cases introduced | Policy lines (before → after) | Coverage (before → after) |
+|-------|-----------------------:|-----------------------:|-----------------------:|---:|---:|
+| `A1` |0 | 0| 0| 212/212| 95.4%/95.4%|
+| `A2` |3 | 0| 0| 86/86| 100%/100%|
+| `A3` | | | | | |
+| `A4` | | | | | |
+| `A5` | | | | | |
 
 ---
 
@@ -211,13 +212,13 @@ and capability trade off against each other.
 
 **Table (tokens per stage)**
 
-| Agent | Security analysis | Policy generation | Test generation | Label validation | Policy patching | Regal linting | Duplication | Total |
-|-------|------------------:|------------------:|----------------:|-----------------:|----------------:|--------------:|------------:|------:|
-| `A1` | | | | | | | | |
-| `A2` | | | | | | | | |
-| `A3` | | | | | | | | |
-| `A4` | | | | | | | | |
-| `A5` | | | | | | | | |
+| Agent |  Policy generation | Test generation | Label validation | Policy testing| Policy patching | Regal linting | Duplication |Security analysis | Total |
+|-------|------------------:|------------------:|----------------:|-----------------:|----------------:|--------------:|------------:|------:|------:|
+| `A1` |1126571 | 319691+343269| 569610|629898 |420269 |490400 | 1057026|31276344 |36243366 |
+| `A2` | | | | | | | | | |
+| `A3` | | | | | | | | | |
+| `A4` | | | | | | | | | |
+| `A5` | | | | | | | | | |
 
 
 The expected result, that test generation dominates as the only stage scaling with
@@ -242,11 +243,11 @@ rather than restatements of what the prose already said.
 
 | Agent | Guidance lines (before) | Guidance lines (after) | Added | 
 |-------|------------------------:|-----------------------:|------:|
-| `A1` | 13 | — | — |
-| `A2` | 5 | — | — | 
-| `A3` | 79 | — | — |
-| `A4` | 45 | — | — | 
-| `A5` | 49 | — | — |
+| `A1` | 14 | 15 | 1 |
+| `A2` |  | — | — | 
+| `A3` |  | — | — |
+| `A4` |  | — | — | 
+| `A5` |  | — | — |
 
 **Case studies.** One per agent, naming the overlooked requirement and its threat
 class, since the informative result is *which* class the author was blind to, not how many lines were added.
@@ -257,3 +258,71 @@ class, since the informative result is *which* class the author was blind to, no
 - A3 —
 - A4 —
 - A5 —
+
+---
+
+## RQ7 — Refinement and cost on a seeded-defect policy
+
+*Does refinement recover a policy whose defects were introduced deliberately, and
+what does that cost?*
+
+**Claim under test.** RQ4 scores refinement against whatever defects Smith's own
+generation happened to leave behind, so the defect population is uncontrolled and can
+be empty — `A1` had no linting and no duplication problems to fix, which makes its
+"0 fixed" uninterpretable rather than good. Seeding defects fixes the denominator:
+each class is present by construction, so detection becomes a recall measure.
+
+This RQ is reported separately, and **its tokens are excluded from RQ5**, so the cost
+in RQ5 remains the cost of producing and refining one policy from guidance. Mixing the
+two would make neither figure reproducible.
+
+**Steps**
+- Start from the validated policy and suite RQ4 finished with.
+- Run `-s 11`, which follows `opa_policy/policy_defect/policy_defect.md` to write
+  `<TARGET_AGENT_PATH>/smith/policy_defect.rego` and a `defect_summary.txt` recording
+  what it injected. Three classes are seeded: weakened or removed deny rules,
+  duplicated and unreachable rules, and style violations. No `DEFECT`/`DUPLICATE`
+  annotations are added, so refinement cannot pattern-match the seeds.
+- Copy the defective policy over `assets/policy.rego` and re-run steps 4–9 against
+  the unchanged suite, reporting the same two tables RQ4 does so the columns can be
+  read side by side.
+- Use `defect_summary.txt` to interpret them: it names what was seeded, so a class
+  that stays unfixed is a miss rather than an absent defect.
+
+**Table (failed-case patching)**
+
+| Agent | #cluster(before → after) |FP (before → after) | FN (before → after) | Policy lines (before → after) | Coverage (before → after) |
+|-------|:-------------------:|-----:|:-------------------:|:-----------------------------:|:-------------------------:|
+| `A1` | | | | | |
+| `A2` | | | | | |
+| `A3` | | | | | |
+| `A4` | | | | | |
+| `A5` | | | | | |
+
+**Table (linting and duplication)**
+
+| Agent | Linting problems fixed | Duplication problems fixed | Failing cases introduced | Policy lines (before → after) | Coverage (before → after) |
+|-------|-----------------------:|-----------------------:|-----------------------:|---:|---:|
+| `A1` | | | | | |
+| `A2` | | | | | |
+| `A3` | | | | | |
+| `A4` | | | | | |
+| `A5` | | | | | |
+
+**Table (tokens per stage)**
+
+Kept out of RQ5 so that table remains the cost of one policy from guidance. These are
+the refinement re-run only, so each column is directly comparable against RQ5's column
+of the same name.
+
+| Agent | Policy testing | Policy patching | Regal linting | Duplication | Total |
+|-------|---------------:|----------------:|--------------:|------------:|------:|
+| `A1` | | | | | |
+| `A2` | | | | | |
+| `A3` | | | | | |
+| `A4` | | | | | |
+| `A5` | | | | | |
+
+Whether the recovered policy matches the pre-defect one is the sharper question: if the
+suite passes again without the removed deny rule being restored, the suite is what is
+weak, not the refinement.
