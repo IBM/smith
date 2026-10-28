@@ -130,7 +130,7 @@ args := object.get(input, "args", {})
 # (rules that apply across all tools)
 
 # === Tool-Specific DENY/ALLOW Rules ===
-# (one deny block per guidance rule)
+# (one block per guidance rule, allow or deny as the rule reads)
 
 # === Final ALLOW ===
 allow if {
@@ -141,7 +141,8 @@ allow if {
 ### Key Principles:
 - **Use `input.args.*`** for tool-specific checks
 - **Use `input.extensions.subject.*`** for system variable checks (roles, teams, etc.)
-- **Each guidance rule → one `deny[msg]` block** with a clear error message
+- **Each guidance rule → one block**: an `allow if` condition where the rule grants
+  permission, a `deny[msg]` with a clear error message where it is a prohibition
 - **Reference values** (blocked domains, forbidden fields) become Rego set constants
 
 **Save to:** `<TARGET_AGENT_PATH>/smith/policy_generated.rego`
@@ -202,7 +203,7 @@ Ask users if they are satisfied with the policy. If not, ask them to provide fee
 ## Rules
 
 - The policy MUST only use data from `system_vars.json` and `tool_definitions.json`. Do NOT design the policy around hypothetical extension variables.
-- Do NOT invent rules not in the guidance. Each deny rule must trace back to a specific guidance line.
+- Do NOT invent rules not in the guidance. Each rule must trace back to a specific guidance line.
 - Do NOT modify any existing files. All outputs go to new files.
 - Always validate the policy compiles before presenting it to the user.
 - If guidance is ambiguous, ask the user for clarification before generating the rule.
