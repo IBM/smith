@@ -90,11 +90,11 @@ rule, so validity and faithfulness are separate failures and are measured separa
 
 | Agent | opa fmt passes | Auto-fix iterations | TP | TN | FP | FN | Coverage | Policy lines |
 |-------|:--------------:|--------------------:|---:|---:|---:|---:|---------:|-------------:|
-| `A1` | Y| 0| 44| 20| 2| 8| 86.5%| 177|
-| `A2` | Y| 0| 27|17 | 0|6 | 94.1%|67 |
-| `A3` | | | | | | | | |
-| `A4` | | | | | | | | |
-| `A5` | | | | | | | | |
+| `A1` | Y| 0| | | | | | |
+| `A2` | Y| 0| | | | | | |
+| `A3` | | | | | | | | | |
+| `A4` | | | | | | | | | |
+| `A5` | | | | | | | | | |
 
 ---
 
@@ -120,8 +120,8 @@ of the generated suite, for each model setting.
 
 | Agent | Legit. allow | Legit. disallow |Adv. bypass | Adv. Promptfoo | Total |
 |-------|-------------:|------------:|------------:|---------------:|------:|
-| `A1` | 23 | 55 | 18 | 8 | 104 | 
-| `A2` | 16 | 18 | 11 | 14 | 59 | 
+| `A1` |  |  |  |  |  | 
+| `A2` |  |  |  |  |  | 
 | `A3` | — | — | — | — | — | 
 | `A4` | — | — | — | — | — | 
 | `A5` | — | — | — | — | — | 
@@ -151,8 +151,8 @@ its own labels.
 
 | Agent | Initial generated | Removed (tool-name mismatch) | Removed(cross-validation)| corrected (cross-validation) | Final | Accuracy |
 |-------|------------------:|-----------------------------:|-----:|-------------------------------------:|------:|---------:|
-| `A1` | 104| 15+13| 2| 0| 74| -|
-| `A2` |59 | 4| 2+3+2|1 | 41| -|
+| `A1` | | | | | | -|
+| `A2` | | | | | | -|
 | `A3` | | | | | | |
 | `A4` | | | | | | |
 | `A5` | | | | | | |
@@ -182,8 +182,8 @@ improvement must be shown without regression or unbounded growth.
 
 | Agent | #cluster(before → after) |FP (before → after) | FN (before → after) | Policy lines (before → after) | Coverage (before → after) |
 |-------|:-------------------:|-----:|:-------------------:|:-----------------------------:|:-------------------------:|
-| `A1` |2/0 | 2/0| 8/0| 177/212| 86.5%/95.4%| 
-| `A2` | 2/0| 0/0| 6/0| 67/86|94.1%/100% |
+| `A1` | | | | | | 
+| `A2` | | | | | |
 | `A3` | | | | | | 
 | `A4` | | | | | | 
 | `A5` | | | | | | 
@@ -192,8 +192,8 @@ improvement must be shown without regression or unbounded growth.
 
 | Agent | Linting problems fixed | Duplication problems fixed | Failing cases introduced | Policy lines (before → after) | Coverage (before → after) |
 |-------|-----------------------:|-----------------------:|-----------------------:|---:|---:|
-| `A1` |0 | 0| 0| 212/212| 95.4%/95.4%|
-| `A2` |3 | 0| 0| 86/86| 100%/100%|
+| `A1` | | | | | |
+| `A2` | | | | | |
 | `A3` | | | | | |
 | `A4` | | | | | |
 | `A5` | | | | | |
@@ -214,7 +214,7 @@ and capability trade off against each other.
 
 | Agent |  Policy generation | Test generation | Label validation | Policy testing| Policy patching | Regal linting | Duplication |Security analysis | Total |
 |-------|------------------:|------------------:|----------------:|-----------------:|----------------:|--------------:|------------:|------:|------:|
-| `A1` |1126571 | 319691+343269| 569610|629898 |420269 |490400 | 1057026|31276344 |36243366 |
+| `A1` | | | | | | | | | |
 | `A2` | | | | | | | | | |
 | `A3` | | | | | | | | | |
 | `A4` | | | | | | | | | |
@@ -243,7 +243,7 @@ rather than restatements of what the prose already said.
 
 | Agent | Guidance lines (before) | Guidance lines (after) | Added | 
 |-------|------------------------:|-----------------------:|------:|
-| `A1` | 14 | 15 | 1 |
+| `A1` |  |  |  |
 | `A2` |  | — | — | 
 | `A3` |  | — | — |
 | `A4` |  | — | — | 
