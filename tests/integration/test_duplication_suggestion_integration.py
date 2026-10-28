@@ -210,7 +210,7 @@ def test_no_rule_reachable_from_allow_is_reported_as_dead(run_ok):
         reported |= {name.strip().strip("'\"") for name in match.group(1).split(",")}
     reported.discard("")
 
-    for live in ("allow", "valid_envelope", "any_deny"):
+    for live in ("allow", "valid_envelope", "any_deny", "deny"):
         assert live not in reported, (
             f"{live!r} is reachable from allow but was reported as redundant: "
             f"{sorted(reported)}"

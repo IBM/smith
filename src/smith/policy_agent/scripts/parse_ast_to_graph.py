@@ -16,6 +16,8 @@ global filter_functions
 filter_functions = ["parse_resource_types", "trim"]
 global filter_values
 filter_values = ["True", "None", "False", "     ", "s"]
+global keep_isolated_rules
+keep_isolated_rules = {"allow", "deny"}
 global index_to_count
 index_to_count = {}
 
@@ -124,11 +126,110 @@ def add_node(node_name, G, type=None):
     return G
 
 
+def is_call(term):
+    return isinstance(term, dict) and term.get("type") == "call"
+
+
+def is_local_temporary(name):
+    return str(name).startswith("__local")
+
+
+def merge_with_operands(operands, index, G):
+    """Add each operand to the graph and chain the ones that resolve to a node."""
+    first = -1
+    previous = -1
+    for operand in operands:
+        start, end, G = merge_with_operand(operand, index, G)
+        if start == -1:
+            continue
+        if first == -1:
+            first = start
+        if previous != -1:
+            G = add_edge_by_refs(previous, start, index, ["function_parameter"], G)
+        previous = end
+    return first, previous, G
+
+
+def merge_with_call(call, index, G):
+    """Link the operands of a call term.
+
+    The first call member names the builtin, so it becomes the edge relation
+    rather than a node. ``__local*`` temporaries are skipped because they are
+    compiler-generated and do not name policy rules. Returns the first and last
+    operand nodes, or ``(-1, -1)`` when the call has no usable operand.
+    """
+    values = call.get("value") or []
+    if not values:
+        return -1, -1, G
+    relation = process_list_name(values[0].get("value"))
+    if relation in {"", True}:
+        relation = "function_parameter"
+    first = -1
+    previous = -1
+    for operand in values[1:]:
+        start, end, G = merge_with_operand(operand, index, G)
+        if start == -1:
+            continue
+        if first == -1:
+            first = start
+        if previous != -1:
+            G = add_edge_by_refs(previous, start, index, [relation], G)
+        previous = end
+    return first, previous, G
+
+
+def merge_with_operand(target, index, G):
+    """Add one call operand to the graph and return its first and last node."""
+    if not isinstance(target, dict):
+        return -1, -1, G
+    target_type = target.get("type")
+    if target_type == "call":
+        return merge_with_call(target, index, G)
+    if target_type in {"array", "set"}:
+        return merge_with_operands(target.get("value") or [], index, G)
+    if target_type == "object":
+        values = [
+            value
+            for value in target.get("value") or []
+            if isinstance(value, list) and len(value) == 2
+        ]
+        return merge_with_operands([value[1] for value in values], index, G)
+    if target_type == "ref":
+        node_name = process_list_name(target.get("value"))
+        if node_name in {"", True}:
+            return -1, -1, G
+        G = add_node(node_name, G, type=target_type)
+        return node_name, node_name, G
+    node_name = target.get("value")
+    if node_name is None or isinstance(node_name, (dict, list)):
+        return -1, -1, G
+    if target_type == "var" and is_local_temporary(node_name):
+        return -1, -1, G
+    if target_type == "null":
+        node_name = "null"
+    G = add_node(node_name, G, type=target_type)
+    return node_name, node_name, G
+
+
 def merge_with_list(target_list, index, G):
     start = ""
     end = ""
 
     if len(target_list) == 2:
+        if is_call(target_list[0]) or is_call(target_list[1]):
+            left_start, left_end, G = merge_with_operand(target_list[0], index, G)
+            right_start, right_end, G = merge_with_operand(target_list[1], index, G)
+            if left_start == -1 and right_start == -1:
+                return -1, -1, G
+            if left_start == -1:
+                return right_start, right_end, G
+            if right_start == -1:
+                return left_start, left_end, G
+            G = add_edge_by_refs(
+                left_end, right_start, index, ["function_parameter"], G
+            )
+            return left_start, right_end, G
+
         internal_start = process_list_name(target_list[0].get("value"))
         internal_end = process_list_name(target_list[1].get("value"))
         start = internal_start
@@ -151,6 +252,18 @@ def merge_with_list(target_list, index, G):
 
     elif len(target_list) == 3:
         relations = process_list_name(target_list[0].get("value"))
+        if is_call(target_list[1]) or is_call(target_list[2]):
+            left_start, left_end, G = merge_with_operand(target_list[1], index, G)
+            right_start, right_end, G = merge_with_operand(target_list[2], index, G)
+            if left_start == -1 and right_start == -1:
+                return -1, -1, G
+            if left_start == -1:
+                return right_start, right_end, G
+            if right_start == -1:
+                return left_start, left_end, G
+            G = add_edge_by_refs(left_end, right_start, index, relations, G)
+            return left_start, right_end, G
+
         internal_start = process_list_name(target_list[1].get("value"))
         internal_end = process_list_name(target_list[2].get("value"))
         start = internal_start
@@ -162,12 +275,6 @@ def merge_with_list(target_list, index, G):
             else:
                 if len(internal_end) != 0:
                     internal_end = internal_end.get("value")
-
-        if target_list[2].get("type") == "call":
-            return start, -1, G
-
-        if target_list[1].get("type") == "call":
-            return -1, end, G
 
         if internal_start is True:
             start, internal_start, G = merge_with_list(
@@ -249,6 +356,16 @@ def merge_with_body(rule_name, rule_index, body_list, refs, G):
                 rule_name, final_start, rule_index, refs, G, nega=negative_flag
             )
             rule_name = final_end
+        elif is_call(target):
+            final_start, final_end, G = merge_with_call(target, rule_index, G)
+            if final_start == -1:
+                continue
+            G = add_node(final_start, G)
+            G = add_node(rule_name, G)
+            G = add_edge_by_refs(
+                rule_name, final_start, rule_index, refs, G, nega=negative_flag
+            )
+            rule_name = final_end
         else:
             target_node_name = target.get("value")
             if not target_node_name:
@@ -302,9 +419,40 @@ def clean_graph(G):
     for node in remove_nodes:
         G.remove_node(node)
 
-    isolated_nodes = list(nx.isolates(G))
+    # An allow or deny head with no outgoing edge is still a live entry point.
+    # Removing it loses the analysis root and hides the rules below it.
+    isolated_nodes = [
+        node
+        for node in nx.isolates(G)
+        if not node_rule_names(node) & keep_isolated_rules
+    ]
     G.remove_nodes_from(isolated_nodes)
     return G
+
+
+def node_rule_name(node):
+    text = str(node)
+    return text.split("& ", 1)[1] if "& " in text else ""
+
+
+def node_rule_names(node):
+    """Return every rule name in a node, including merged ``a+b`` node names."""
+    return {part.split("& ", 1)[1] for part in str(node).split("+") if "& " in part}
+
+
+def rule_head_name(head):
+    """Return the rule name for complete rules and partial set or object rules.
+
+    Complete rules carry ``head.name``. Partial rules such as ``deny[msg]`` do
+    not, and name the rule in the first element of ``head.ref``.
+    """
+    name = head.get("name")
+    if name is not None:
+        return name
+    ref = head.get("ref") or []
+    if ref and isinstance(ref[0], dict):
+        return ref[0].get("value")
+    return name
 
 
 def get_index(node_name):
@@ -321,7 +469,7 @@ def extract_rule_calls(module, G):
     rules = module.get("rules") or []
     for r in rules:
         head = r.get("head") or {}
-        rule_name = str(head.get("name"))
+        rule_name = str(rule_head_name(head))
         rule_name_list.append(process_node_name(rule_name))
         if rule_name == "audit_decision" and isinstance(
             head.get("value").get("value"), list
