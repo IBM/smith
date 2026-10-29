@@ -32,7 +32,7 @@ classifiers = [
     "Topic :: Software Development :: Quality Assurance",
 ]
 dependencies = [
-    "openai>=3.26.0",
+    "openai>=3.38.0",
     "python-dotenv>=1.2.3",
     "numpy>=2.4.6",
     "pandas>=3.0.6",
