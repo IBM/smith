@@ -76,7 +76,7 @@ def completed_run(tmp_path_factory):
     import subprocess
     import sys
 
-    from helpers import SmithEnv, which
+    from helpers import STDIO_MCP, SmithEnv, which
 
     env = SmithEnv()
     missing = env.missing("OPENAI_API_KEY", "OPENAI_BASE_URL", "MODEL_SONNET")
@@ -103,7 +103,9 @@ def completed_run(tmp_path_factory):
                 "generate_promptfoo_config",
             ],
             cwd=str(env.base),
-            env=env.override(PROMPTFOO_CONFIG_FILE=out_rel),
+            # The flag extracts tool definitions; stdio is the transport this
+            # test can satisfy on its own.
+            env=env.override(**STDIO_MCP, PROMPTFOO_CONFIG_FILE=out_rel),
             capture_output=True,
             text=True,
             timeout=1800,
