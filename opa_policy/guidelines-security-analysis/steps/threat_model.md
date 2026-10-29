@@ -6,13 +6,12 @@ and policy intent. The shared contract in the parent workflow applies.
 ### Inputs
 
 - Phase A and B structured data from `analysis_state.json`.
-- `src/smith/data/owasp_10_ai_catalog.json`.
+- `owasp_catalog_C.json`, written by `--prepare`: catalog IDs, names,
+  descriptions, aliases, and attack scenarios. Read the catalog only from this
+  file; it deliberately omits mitigations, which Phase D loads only for
+  applicable categories.
 - Structured output: `threat_model.json`; the checkpoint renders
   `threat_model.md`.
-
-Read only catalog IDs, names, descriptions, aliases, and attack scenarios in
-this phase. Do not read mitigations; Phase D loads those only for applicable
-categories.
 
 ### Build the model
 

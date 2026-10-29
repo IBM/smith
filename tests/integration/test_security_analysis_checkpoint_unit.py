@@ -20,11 +20,13 @@ from smith.tools.security_analysis_checkpoint import (
     _validate_addendum_contract,
     _validate_enforcement,
     _validate_questionnaire,
+    _snapshot_errors,
     _validate_threat_model,
     _verdict_tokens,
     checkpoint,
     prepare_phase,
 )
+from smith.tools.security_catalog import load_catalog
 
 pytestmark = pytest.mark.unit
 
@@ -38,6 +40,27 @@ def table(headers: list[str], rows: list[list[str]]) -> str:
         + "|\n"
         + "".join("| " + " | ".join(row) + " |\n" for row in rows)
     )
+
+
+def write_catalog(path: Path) -> Path:
+    path.write_text(
+        json.dumps(
+            {
+                "threats": [
+                    {"id": f"ASI{number:02d}", "attack_scenarios": ["scenario"]}
+                    for number in range(1, 11)
+                ]
+            }
+        )
+    )
+    return path
+
+
+def catalog_input(path: Path) -> dict:
+    return {
+        "path": str(path),
+        "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+    }
 
 
 def architecture() -> dict:
@@ -349,53 +372,12 @@ def test_addendum_counts_consolidated_guidance_groups(tmp_path: Path):
     assert _validate_addendum_contract(state, guidance) == []
 
 
-def test_checkpoint_runs_all_phases_from_structured_sources(tmp_path: Path):
+def checkpointed_through_c(tmp_path: Path, applicable: tuple[str, ...] = ()) -> dict:
+    """Prepare and checkpoint Phases A-C; return the paths later steps need."""
     analysis_dir = tmp_path / "analysis"
     analysis_dir.mkdir()
     (analysis_dir / "architecture.json").write_text(json.dumps(architecture()))
-
-    prepare_phase("B", analysis_dir)
-    questionnaire_path = analysis_dir / "policy_guidance_questionnaire.json"
-    questionnaire = json.loads(questionnaire_path.read_text())
-    questionnaire["status"] = "PASS"
-    questionnaire["handoff"]["Status"] = "PASS"
-    for row in questionnaire["tables"]["Answer Register"]:
-        row["Answer"] = "none"
-        row["Confidence"] = "[derived from guidance.txt]"
-    questionnaire_path.write_text(json.dumps(questionnaire))
-
-    prepare_phase("C", analysis_dir)
-    threat_path = analysis_dir / "threat_model.json"
-    threat = json.loads(threat_path.read_text())
-    threat["status"] = "PASS"
-    threat["handoff"]["Status"] = "PASS"
-    threat["tables"]["Category Assessment"] = [
-        {
-            "ASI": f"ASI{number:02d}",
-            "Name": f"Category {number}",
-            "Applicability": "No",
-            "OWASP summary": "Not applicable",
-            "Boundary (optional)": "—",
-        }
-        for number in range(1, 11)
-    ]
-    threat["tables"]["Scenario Coverage"] = [
-        {
-            "ASI": f"ASI{number:02d}",
-            "Scenario": "1",
-            "Disposition": "N/A — no substrate",
-        }
-        for number in range(1, 11)
-    ]
-    threat_path.write_text(json.dumps(threat))
-
-    prepare_phase("D", analysis_dir)
-    enforcement_path = analysis_dir / "owasp_policy_guidelines.json"
-    enforcement = json.loads(enforcement_path.read_text())
-    enforcement["status"] = "PASS"
-    enforcement["handoff"]["Status"] = "PASS"
-    enforcement_path.write_text(json.dumps(enforcement))
-
+    catalog = write_catalog(tmp_path / "catalog.json")
     tools = tmp_path / "tools.json"
     tools.write_text(
         json.dumps(
@@ -411,30 +393,91 @@ def test_checkpoint_runs_all_phases_from_structured_sources(tmp_path: Path):
     )
     subjects = tmp_path / "subjects.json"
     subjects.write_text("{}")
-    catalog = tmp_path / "catalog.json"
-    catalog.write_text(
-        json.dumps(
-            {
-                "threats": [
-                    {"id": f"ASI{number:02d}", "attack_scenarios": ["scenario"]}
-                    for number in range(1, 11)
-                ]
-            }
-        )
-    )
-    guidance = tmp_path / "guidance.txt"
-    guidance.write_text("1. Existing rule\n")
 
-    result = checkpoint(
-        "D",
-        analysis_dir,
-        tools,
-        subjects,
-        catalog,
-        analysis_dir / "analysis_state.json",
+    prepare_phase("B", analysis_dir)
+    questionnaire_path = analysis_dir / "policy_guidance_questionnaire.json"
+    questionnaire = json.loads(questionnaire_path.read_text())
+    questionnaire["status"] = "PASS"
+    questionnaire["handoff"]["Status"] = "PASS"
+    for row in questionnaire["tables"]["Answer Register"]:
+        row["Answer"] = "none"
+        row["Confidence"] = "[derived from guidance.txt]"
+    questionnaire_path.write_text(json.dumps(questionnaire))
+
+    prepare_phase("C", analysis_dir, catalog=catalog)
+    threat_path = analysis_dir / "threat_model.json"
+    threat = json.loads(threat_path.read_text())
+    threat["status"] = "PASS"
+    threat["handoff"]["Status"] = "PASS"
+    threat["tables"]["Category Assessment"] = [
+        {
+            "ASI": f"ASI{number:02d}",
+            "Name": f"Category {number}",
+            "Applicability": "Yes" if f"ASI{number:02d}" in applicable else "No",
+            "OWASP summary": "Not applicable",
+            "Boundary (optional)": "—",
+        }
+        for number in range(1, 11)
+    ]
+    threat["tables"]["Scenario Coverage"] = [
+        {
+            "ASI": f"ASI{number:02d}",
+            "Scenario": "1",
+            "Disposition": "N/A — no substrate",
+        }
+        for number in range(1, 11)
+    ]
+    threat_path.write_text(json.dumps(threat))
+    paths = {
+        "analysis_dir": analysis_dir,
+        "catalog": catalog,
+        "tools": tools,
+        "subjects": subjects,
+        "state": analysis_dir / "analysis_state.json",
+    }
+    run_checkpoint("C", paths)
+    return paths
+
+
+def run_checkpoint(phase: str, paths: dict, guidance: Path | None = None) -> str:
+    return checkpoint(
+        phase,
+        paths["analysis_dir"],
+        paths["tools"],
+        paths["subjects"],
+        paths["catalog"],
+        paths["state"],
         guidance,
     )
 
+
+def prepare_passing_d(paths: dict) -> Path:
+    prepare_phase("D", paths["analysis_dir"], catalog=paths["catalog"])
+    enforcement_path = paths["analysis_dir"] / "owasp_policy_guidelines.json"
+    enforcement = json.loads(enforcement_path.read_text())
+    enforcement["status"] = "PASS"
+    enforcement["handoff"]["Status"] = "PASS"
+    enforcement_path.write_text(json.dumps(enforcement))
+    guidance = paths["analysis_dir"].parent / "guidance.txt"
+    guidance.write_text("1. Existing rule\n")
+    return guidance
+
+
+def reword_scenario(catalog: Path, asi: str, text: str) -> None:
+    data = json.loads(catalog.read_text())
+    for entry in data["threats"]:
+        if entry["id"] == asi:
+            entry["attack_scenarios"][0] = text
+    catalog.write_text(json.dumps(data))
+
+
+def test_checkpoint_runs_all_phases_from_structured_sources(tmp_path: Path):
+    paths = checkpointed_through_c(tmp_path)
+    guidance = prepare_passing_d(paths)
+
+    result = run_checkpoint("D", paths, guidance)
+
+    analysis_dir = paths["analysis_dir"]
     assert result.startswith("Security analysis checkpoint D: PASS")
     for name in (
         "architecture.md",
@@ -443,6 +486,147 @@ def test_checkpoint_runs_all_phases_from_structured_sources(tmp_path: Path):
         "owasp_policy_guidelines.md",
     ):
         assert (analysis_dir / name).is_file()
+    inputs = json.loads(paths["state"].read_text())["inputs"]
+    assert inputs["owasp_catalog"] == catalog_input(paths["catalog"]), (
+        "the run must record which catalog bytes it validated against"
+    )
+    for phase in ("C", "D"):
+        snapshot = analysis_dir / f"owasp_catalog_{phase}.json"
+        assert inputs[f"owasp_catalog_{phase}"] == catalog_input(snapshot)
+
+
+# --- catalog snapshots and freshness ------------------------------------------
+
+
+def test_prepare_c_snapshot_has_discovery_fields_only(tmp_path: Path):
+    catalog = tmp_path / "catalog.json"
+    catalog.write_text(
+        json.dumps(
+            {
+                "threats": [
+                    {
+                        "id": f"ASI{number:02d}",
+                        "name": f"Category {number}",
+                        "attack_scenarios": ["scenario"],
+                        "mitigations": ["secret mitigation"],
+                        "impact": "secret impact",
+                    }
+                    for number in range(1, 11)
+                ]
+            }
+        )
+    )
+
+    result = prepare_phase("C", tmp_path, catalog=catalog)
+
+    snapshot = json.loads((tmp_path / "owasp_catalog_C.json").read_text())
+    assert "OWASP catalog snapshot:" in result
+    assert [entry["id"] for entry in snapshot["threats"]] == [
+        f"ASI{number:02d}" for number in range(1, 11)
+    ]
+    assert "secret" not in json.dumps(snapshot), (
+        "Phase C must not be able to read mitigations or impact"
+    )
+
+
+def test_prepare_d_snapshot_holds_exactly_the_applicable_categories(tmp_path: Path):
+    paths = checkpointed_through_c(tmp_path, applicable=("ASI02", "ASI06"))
+
+    prepare_phase("D", paths["analysis_dir"], catalog=paths["catalog"])
+
+    snapshot = json.loads(
+        (paths["analysis_dir"] / "owasp_catalog_D.json").read_text()
+    )
+    assert [entry["id"] for entry in snapshot["threats"]] == ["ASI02", "ASI06"]
+    assert "attack_scenarios" not in snapshot["threats"][0]
+
+
+def test_prepare_d_requires_a_checkpointed_phase_c(tmp_path: Path):
+    catalog = write_catalog(tmp_path / "catalog.json")
+
+    with pytest.raises(ReconciliationError, match="passing Phase C checkpoint"):
+        prepare_phase("D", tmp_path / "analysis", catalog=catalog)
+
+    assert not (tmp_path / "analysis" / "owasp_catalog_D.json").exists()
+
+
+def test_reworded_scenario_fails_the_phase_d_checkpoint(tmp_path: Path):
+    """Acceptance test: the per-ASI count check alone passes this edit."""
+    paths = checkpointed_through_c(tmp_path)
+    guidance = prepare_passing_d(paths)
+    reword_scenario(paths["catalog"], "ASI03", "reworded")
+
+    with pytest.raises(
+        ReconciliationError, match=r"since Phase C was prepared \(ASI03#1\)"
+    ):
+        run_checkpoint("D", paths, guidance)
+
+    assert not (paths["analysis_dir"] / "owasp_policy_guidelines.md").exists(), (
+        "a stale run must not render artifacts"
+    )
+
+
+def test_catalog_edit_between_prepare_and_checkpoint_fails(tmp_path: Path):
+    catalog = write_catalog(tmp_path / "catalog.json")
+    analysis_dir = tmp_path / "analysis"
+    prepare_phase("C", analysis_dir, catalog=catalog)
+    reword_scenario(catalog, "ASI01", "edited mid-phase")
+    snapshot = load_catalog(catalog)
+
+    errors = _snapshot_errors(["A", "B", "C"], analysis_dir, snapshot, {})
+
+    assert len(errors) == 1 and "ASI01#1" in errors[0]
+
+
+def test_mitigation_edit_fails_phase_d_but_not_phase_c(tmp_path: Path):
+    paths = checkpointed_through_c(tmp_path, applicable=("ASI02",))
+    prepare_passing_d(paths)
+    data = json.loads(paths["catalog"].read_text())
+    data["threats"][1]["mitigations"] = ["new mitigation"]
+    paths["catalog"].write_text(json.dumps(data))
+    catalog = load_catalog(paths["catalog"])
+    threat_state = json.loads(paths["state"].read_text())["phases"]
+
+    errors = _snapshot_errors(
+        ["A", "B", "C", "D"], paths["analysis_dir"], catalog, threat_state
+    )
+
+    assert errors == [
+        "OWASP catalog changed since Phase D was prepared (ASI02 mitigations); "
+        "re-run smith --flag security_analysis_checkpoint --phase D --prepare "
+        "and redo the phase"
+    ]
+
+
+def test_edit_outside_the_applicable_set_does_not_fail_phase_d(tmp_path: Path):
+    paths = checkpointed_through_c(tmp_path, applicable=("ASI02",))
+    guidance = prepare_passing_d(paths)
+    data = json.loads(paths["catalog"].read_text())
+    data["threats"][2]["mitigations"] = ["ASI03 is not applicable"]
+    paths["catalog"].write_text(json.dumps(data))
+
+    assert run_checkpoint("D", paths, guidance).startswith(
+        "Security analysis checkpoint D: PASS"
+    )
+
+
+def test_missing_snapshot_names_the_prepare_remediation(tmp_path: Path):
+    paths = checkpointed_through_c(tmp_path)
+    (paths["analysis_dir"] / "owasp_catalog_C.json").unlink()
+
+    with pytest.raises(ReconciliationError, match="--phase C --prepare"):
+        run_checkpoint("C", paths)
+
+
+def test_reset_removes_current_and_later_catalog_snapshots(tmp_path: Path):
+    paths = checkpointed_through_c(tmp_path)
+    prepare_passing_d(paths)
+    analysis_dir = paths["analysis_dir"]
+
+    prepare_phase("C", analysis_dir)
+
+    assert not (analysis_dir / "owasp_catalog_C.json").exists()
+    assert not (analysis_dir / "owasp_catalog_D.json").exists()
 
 
 def test_questionnaire_requires_q1_through_q22_and_q13b():
@@ -458,17 +642,7 @@ def test_questionnaire_requires_q1_through_q22_and_q13b():
 def test_threat_validation_handles_numeric_surfaces_and_multi_tool_fields(
     tmp_path: Path,
 ):
-    catalog = tmp_path / "catalog.json"
-    catalog.write_text(
-        json.dumps(
-            {
-                "threats": [
-                    {"id": f"ASI{number:02d}", "attack_scenarios": ["scenario"]}
-                    for number in range(1, 11)
-                ]
-            }
-        )
-    )
+    catalog = load_catalog(write_catalog(tmp_path / "catalog.json"))
     tools = tmp_path / "tools.json"
     tools.write_text(
         json.dumps(
@@ -590,6 +764,7 @@ def test_explicit_merge_preserves_original_bytes_and_removes_addendum(tmp_path: 
     addendum = tmp_path / "guidance_updated.txt"
     enforcement = tmp_path / "owasp_policy_guidelines.md"
     state = tmp_path / "analysis_state.json"
+    catalog = write_catalog(tmp_path / "catalog.json")
     guidance.write_bytes(b"1. Existing rule")
     addendum.write_bytes(b"2. New rule\n")
     enforcement.write_text("validated")
@@ -607,6 +782,7 @@ def test_explicit_merge_preserves_original_bytes_and_removes_addendum(tmp_path: 
                         "path": str(addendum),
                         "sha256": hashlib.sha256(addendum.read_bytes()).hexdigest(),
                     },
+                    "owasp_catalog": catalog_input(catalog),
                 },
                 "phases": {
                     "D": {
@@ -619,7 +795,7 @@ def test_explicit_merge_preserves_original_bytes_and_removes_addendum(tmp_path: 
         )
     )
 
-    result = merge_guidance(guidance, addendum, state, enforcement)
+    result = merge_guidance(guidance, addendum, state, enforcement, catalog)
 
     assert result.startswith("Merged 1 guidance rule")
     assert guidance.read_bytes() == b"1. Existing rule\n2. New rule\n"
@@ -631,6 +807,7 @@ def test_explicit_merge_separates_markdown_addendum(tmp_path: Path):
     addendum = tmp_path / "guidance_updated.txt"
     enforcement = tmp_path / "owasp_policy_guidelines.md"
     state = tmp_path / "analysis_state.json"
+    catalog = write_catalog(tmp_path / "catalog.json")
     guidance.write_text("# Scenario\n\n## Rules\n\n- Existing rule\n")
     addendum.write_text("- New rule\n")
     enforcement.write_text("validated")
@@ -648,6 +825,7 @@ def test_explicit_merge_separates_markdown_addendum(tmp_path: Path):
                         "path": str(addendum),
                         "sha256": hashlib.sha256(addendum.read_bytes()).hexdigest(),
                     },
+                    "owasp_catalog": catalog_input(catalog),
                 },
                 "phases": {
                     "D": {
@@ -660,7 +838,7 @@ def test_explicit_merge_separates_markdown_addendum(tmp_path: Path):
         )
     )
 
-    result = merge_guidance(guidance, addendum, state, enforcement)
+    result = merge_guidance(guidance, addendum, state, enforcement, catalog)
 
     assert result.startswith("Merged 1 guidance rule")
     assert guidance.read_text() == (
@@ -674,6 +852,7 @@ def test_merge_rejects_a_stale_checkpoint_without_changes(tmp_path: Path):
     addendum = tmp_path / "guidance_updated.txt"
     enforcement = tmp_path / "owasp_policy_guidelines.md"
     state = tmp_path / "analysis_state.json"
+    catalog = write_catalog(tmp_path / "catalog.json")
     guidance.write_text("1. Existing rule\n")
     addendum.write_text("2. New rule\n")
     enforcement.write_text("changed")
@@ -691,6 +870,7 @@ def test_merge_rejects_a_stale_checkpoint_without_changes(tmp_path: Path):
                         "path": str(addendum),
                         "sha256": hashlib.sha256(addendum.read_bytes()).hexdigest(),
                     },
+                    "owasp_catalog": catalog_input(catalog),
                 },
                 "phases": {
                     "D": {
@@ -705,6 +885,44 @@ def test_merge_rejects_a_stale_checkpoint_without_changes(tmp_path: Path):
     before = guidance.read_bytes(), addendum.read_bytes()
 
     with pytest.raises(ReconciliationError, match="changed after"):
-        merge_guidance(guidance, addendum, state, enforcement)
+        merge_guidance(guidance, addendum, state, enforcement, catalog)
+
+    assert (guidance.read_bytes(), addendum.read_bytes()) == before
+
+
+def test_merge_rejects_guidance_derived_from_an_older_catalog(tmp_path: Path):
+    guidance = tmp_path / "guidance.txt"
+    addendum = tmp_path / "guidance_updated.txt"
+    enforcement = tmp_path / "owasp_policy_guidelines.md"
+    state = tmp_path / "analysis_state.json"
+    catalog = write_catalog(tmp_path / "catalog.json")
+    guidance.write_text("1. Existing rule\n")
+    addendum.write_text("2. New rule\n")
+    enforcement.write_text("validated")
+    state.write_text(
+        json.dumps(
+            {
+                "schema": "security-analysis-state-v1",
+                "latest_phase": "D",
+                "inputs": {
+                    "guidance": catalog_input(guidance),
+                    "guidance_updated": catalog_input(addendum),
+                    "owasp_catalog": catalog_input(catalog),
+                },
+                "phases": {
+                    "D": {
+                        "artifact": str(enforcement),
+                        "status": "PASS",
+                        "sha256": hashlib.sha256(enforcement.read_bytes()).hexdigest(),
+                    }
+                },
+            }
+        )
+    )
+    reword_scenario(catalog, "ASI01", "reworded after Phase D")
+    before = guidance.read_bytes(), addendum.read_bytes()
+
+    with pytest.raises(ReconciliationError, match="catalog.json changed after"):
+        merge_guidance(guidance, addendum, state, enforcement, catalog)
 
     assert (guidance.read_bytes(), addendum.read_bytes()) == before

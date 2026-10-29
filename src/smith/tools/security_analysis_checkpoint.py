@@ -21,6 +21,15 @@ from smith.tools.guidance_reconciliation import (
     validate_candidates,
     validate_existing_rule_numbers,
 )
+from smith.tools.security_catalog import (
+    CATALOG_PATH,
+    Catalog,
+    build_snapshot,
+    load_catalog,
+    snapshot_drift,
+    snapshot_path,
+    write_snapshot,
+)
 
 PHASES = {
     "A": ("architecture", "architecture-v2", "Architecture Analysis"),
@@ -466,6 +475,10 @@ def _reset_phase_outputs(phase: str, analysis_dir: Path) -> None:
         stem = PHASES[current][0]
         for suffix in (".json", ".md", ".json.tmp", ".md.tmp"):
             (analysis_dir / f"{stem}{suffix}").unlink(missing_ok=True)
+        if current in ("C", "D"):
+            snapshot = snapshot_path(analysis_dir, current)
+            snapshot.unlink(missing_ok=True)
+            snapshot.with_suffix(".json.tmp").unlink(missing_ok=True)
     if phase == "A":
         inspection = analysis_dir / "architecture_inspection.json"
         inspection.unlink(missing_ok=True)
@@ -473,11 +486,53 @@ def _reset_phase_outputs(phase: str, analysis_dir: Path) -> None:
     _prune_checkpoint_state(phase, analysis_dir / "analysis_state.json")
 
 
-def prepare_phase(phase: str, analysis_dir: Path, guidance: Path | None = None) -> str:
-    """Reset stale phase outputs and create a fresh structured template."""
+def _applicable_categories(threat_state: dict[str, Any]) -> list[str]:
+    """Categories Phase C marked ``Yes`` or ``Partial``, in assessment order."""
+    rows = threat_state.get("tables", {}).get("Category Assessment", [])
+    return [
+        _column(row, "ASI")
+        for row in rows
+        if _column(row, "Applicability").strip().casefold() in {"yes", "partial"}
+    ]
+
+
+def _checkpointed_threat_state(analysis_dir: Path) -> dict[str, Any]:
+    state_path = analysis_dir / "analysis_state.json"
+    try:
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        threat_state = state["phases"]["C"]
+        if not isinstance(threat_state, dict):
+            raise TypeError("Phase C state is not an object")
+    except (OSError, json.JSONDecodeError, KeyError, TypeError) as exc:
+        raise ReconciliationError(
+            "Phase D needs a passing Phase C checkpoint; run "
+            "smith --flag security_analysis_checkpoint --phase C first"
+        ) from exc
+    return threat_state
+
+
+def prepare_phase(
+    phase: str,
+    analysis_dir: Path,
+    guidance: Path | None = None,
+    catalog: Path | None = None,
+) -> str:
+    """Reset stale phase outputs and create a fresh structured template.
+
+    With ``catalog``, Phases C and D also get the catalog snapshot they read.
+    """
     phase = phase.upper()
     if phase not in PHASES:
         raise ReconciliationError("phase must be one of A, B, C, or D")
+    snapshot: dict[str, Any] | None = None
+    if catalog is not None and phase in ("C", "D"):
+        loaded = load_catalog(catalog)
+        applicable = (
+            _applicable_categories(_checkpointed_threat_state(analysis_dir))
+            if phase == "D"
+            else None
+        )
+        snapshot = build_snapshot(loaded, phase, applicable)
     analysis_dir.mkdir(parents=True, exist_ok=True)
     _reset_phase_outputs(phase, analysis_dir)
     if guidance is not None:
@@ -504,7 +559,12 @@ def prepare_phase(phase: str, analysis_dir: Path, guidance: Path | None = None) 
             for question, prompt in QUESTIONNAIRE_PROMPTS.items()
         ]
     path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
-    return f"Security analysis phase {phase} draft: {path}"
+    result = f"Security analysis phase {phase} draft: {path}"
+    if snapshot is not None:
+        snapshot_file = snapshot_path(analysis_dir, phase)
+        write_snapshot(snapshot_file, snapshot)
+        result += f"\nOWASP catalog snapshot: {snapshot_file}"
+    return result
 
 
 def _validate_phase_shape(
@@ -566,22 +626,9 @@ def _validate_architecture(
     return errors
 
 
-def _catalog_scenario_counts(path: Path) -> dict[str, int]:
-    if not path.is_file():
-        raise ReconciliationError(f"OWASP catalog is missing: {path}")
-    try:
-        data = json.loads(path.read_text(encoding="utf-8"))
-        threats = data["threats"]
-        return {
-            entry["id"]: len(entry.get("attack_scenarios", [])) for entry in threats
-        }
-    except (OSError, json.JSONDecodeError, KeyError, TypeError) as exc:
-        raise ReconciliationError(f"OWASP catalog is malformed: {path}: {exc}") from exc
-
-
 def _validate_threat_model(
     state: dict[str, Any],
-    catalog: Path,
+    catalog: Catalog,
     questionnaire_state: dict[str, Any],
     tools_path: Path,
     subjects_path: Path,
@@ -617,7 +664,7 @@ def _validate_threat_model(
         errors.append("Threat Instances contains duplicate IDs")
     if len(surfaces) != len(surface_ids):
         errors.append("Attack Surfaces contains duplicate IDs")
-    scenario_counts = _catalog_scenario_counts(catalog)
+    scenario_counts = catalog.scenario_counts
     answer_rows = questionnaire_state["tables"].get("Answer Register", [])
     answers = {_column(row, "Q"): row for row in answer_rows}
     tools = load_tool_schema(tools_path)
@@ -869,6 +916,48 @@ def _validate_addendum_contract(state: dict[str, Any], guidance: Path) -> list[s
     return []
 
 
+def _snapshot_errors(
+    selected: list[str],
+    analysis_dir: Path,
+    catalog: Catalog,
+    states: dict[str, Any],
+) -> list[str]:
+    """Check each catalog snapshot a phase read against the current catalog."""
+    errors: list[str] = []
+    for current in ("C", "D"):
+        if current not in selected:
+            continue
+        path = snapshot_path(analysis_dir, current)
+        rerun = (
+            "re-run smith --flag security_analysis_checkpoint "
+            f"--phase {current} --prepare"
+        )
+        if not path.is_file():
+            errors.append(
+                f"OWASP catalog snapshot for Phase {current} is missing: {path}; "
+                + rerun
+            )
+            continue
+        try:
+            recorded = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            errors.append(
+                f"OWASP catalog snapshot for Phase {current} is malformed: "
+                f"{exc}; {rerun}"
+            )
+            continue
+        applicable = (
+            _applicable_categories(states.get("C", {})) if current == "D" else None
+        )
+        drift = snapshot_drift(build_snapshot(catalog, current, applicable), recorded)
+        if drift:
+            errors.append(
+                f"OWASP catalog changed since Phase {current} was prepared "
+                f"({drift}); {rerun} and redo the phase"
+            )
+    return errors
+
+
 def checkpoint(
     phase: str,
     analysis_dir: Path,
@@ -889,6 +978,9 @@ def checkpoint(
             (analysis_dir / f"{stem}{suffix}").unlink(missing_ok=True)
     _prune_checkpoint_state(phase, state_path)
     selected = list(PHASES)[: list(PHASES).index(phase) + 1]
+    # One read per checkpoint: every validation and the provenance record
+    # below see the same catalog bytes.
+    loaded_catalog = load_catalog(catalog) if "C" in selected else None
     states: dict[str, Any] = {}
     errors: list[str] = []
     for current in selected:
@@ -909,7 +1001,7 @@ def checkpoint(
             errors.extend(
                 _validate_threat_model(
                     states[current],
-                    catalog,
+                    loaded_catalog,
                     states["B"],
                     tool_definitions,
                     system_vars,
@@ -929,6 +1021,8 @@ def checkpoint(
                 errors.append("GUIDANCE_FILE is required for Phase D validation")
             else:
                 errors.extend(_validate_addendum_contract(states[current], guidance))
+    if loaded_catalog is not None:
+        errors.extend(_snapshot_errors(selected, analysis_dir, loaded_catalog, states))
     if errors:
         raise ReconciliationError(
             "checkpoint validation failed:\n- " + "\n- ".join(errors)
@@ -947,6 +1041,12 @@ def checkpoint(
         "guidance_updated": (
             guidance.with_name("guidance_updated.txt") if guidance else None
         ),
+        "owasp_catalog_C": (
+            snapshot_path(analysis_dir, "C") if "C" in selected else None
+        ),
+        "owasp_catalog_D": (
+            snapshot_path(analysis_dir, "D") if "D" in selected else None
+        ),
     }
     payload = {
         "schema": "security-analysis-state-v1",
@@ -964,6 +1064,12 @@ def checkpoint(
         },
         "phases": states,
     }
+    # Record the hash of the bytes validated above, not a later re-read.
+    payload["inputs"]["owasp_catalog"] = (
+        {"path": str(catalog), "sha256": loaded_catalog.sha256}
+        if loaded_catalog is not None
+        else None
+    )
     state_path.parent.mkdir(parents=True, exist_ok=True)
     temporary = state_path.with_suffix(".json.tmp")
     temporary.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
@@ -983,13 +1089,12 @@ def checkpoint_for_target(
     if phase.upper() == "D" and guidance is None:
         raise ReconciliationError("GUIDANCE_FILE is not configured")
     analysis_dir = target / "smith" / "guidelines-security-analysis"
-    catalog = Path(__file__).resolve().parents[1] / "data" / "owasp_10_ai_catalog.json"
     return checkpoint(
         phase,
         analysis_dir,
         target / "smith" / "tool_definitions.json",
         system_vars,
-        catalog,
+        CATALOG_PATH,
         analysis_dir / "analysis_state.json",
         guidance,
     )
@@ -1001,6 +1106,7 @@ def prepare_for_target(phase: str, target: Path, guidance: Path | None = None) -
         phase,
         target / "smith" / "guidelines-security-analysis",
         guidance,
+        CATALOG_PATH,
     )
     if phase.upper() == "A":
         from smith.tools.security_analysis_inspection import inspect_architecture

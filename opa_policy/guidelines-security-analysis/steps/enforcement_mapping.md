@@ -8,7 +8,9 @@ applies.
 
 - Phase A-C structured data from `analysis_state.json`.
 - `tool_definitions.json`, `system_vars.json`, and existing guidance.
-- OWASP mitigations only for categories marked applicable in Phase C.
+- `owasp_catalog_D.json`, written by `--prepare`: OWASP mitigations for exactly
+  the categories Phase C marked `Yes` or `Partial`. Read mitigations only from
+  this file.
 - Any existing `guidance_updated.txt`, solely for prior-proposal disposition.
 - Structured output: `owasp_policy_guidelines.json`; the checkpoint renders
   `owasp_policy_guidelines.md`.

@@ -11,6 +11,7 @@ import re
 from pathlib import Path
 
 from smith.tools.guidance_reconciliation import ReconciliationError
+from smith.tools.security_catalog import CATALOG_PATH
 
 RULE = re.compile(r"^(\d+)\.\s+(\S.*)$")
 BULLET_RULE = re.compile(r"^[-*+]\s+(\S.*)$")
@@ -168,7 +169,11 @@ def validate_addendum(guidance: Path, addendum: Path) -> list[tuple[int, str]]:
 
 
 def _verify_checkpoint(
-    state_path: Path, enforcement_path: Path, guidance: Path, addendum: Path
+    state_path: Path,
+    enforcement_path: Path,
+    guidance: Path,
+    addendum: Path,
+    catalog: Path,
 ) -> None:
     if not state_path.is_file():
         raise ReconciliationError(
@@ -198,7 +203,11 @@ def _verify_checkpoint(
         raise ReconciliationError(
             "owasp_policy_guidelines.md changed after its Phase D checkpoint"
         )
-    for name, path in (("guidance", guidance), ("guidance_updated", addendum)):
+    for name, path in (
+        ("guidance", guidance),
+        ("guidance_updated", addendum),
+        ("owasp_catalog", catalog),
+    ):
         recorded = state.get("inputs", {}).get(name)
         actual = (
             hashlib.sha256(path.read_bytes()).hexdigest() if path.is_file() else None
@@ -218,9 +227,10 @@ def merge_guidance(
     addendum: Path,
     state_path: Path,
     enforcement_path: Path,
+    catalog: Path = CATALOG_PATH,
 ) -> str:
     """Append a verified addendum atomically, then remove the pending file."""
-    _verify_checkpoint(state_path, enforcement_path, guidance, addendum)
+    _verify_checkpoint(state_path, enforcement_path, guidance, addendum, catalog)
     proposed = validate_addendum(guidance, addendum)
     original = guidance.read_bytes()
     addition = addendum.read_bytes()

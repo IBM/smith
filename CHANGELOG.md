@@ -15,6 +15,19 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+
+- **OWASP catalog provenance**: `security_analysis_checkpoint --prepare` writes the catalog slice Phases C and D read (`owasp_catalog_C.json`, `owasp_catalog_D.json`), and `analysis_state.json` records the catalog and snapshot hashes. Phase C's snapshot omits mitigations; Phase D's holds only the categories Phase C marked applicable.
+
+### Changed
+
+- The checkpoint fails when the catalog changed within a phase's snapshot since `--prepare`, naming the changed scenario or field; `guidance_merge` refuses guidance derived from an older catalog. Runs already in progress must re-run `--prepare` for Phases C and D.
+- The catalog loader rejects duplicate or missing `ASI01`–`ASI10` IDs and entries without attack scenarios, which previously dropped that category from mandatory coverage.
+
+### Fixed
+
+- The OWASP catalog is now included in built packages; a non-editable install previously failed Phase C with "OWASP catalog is missing".
+
 ## [0.2.0] - 2026-10-17
 
 ### Security
