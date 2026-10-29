@@ -3,7 +3,7 @@ name = "enterprise-employee-hub"
 version = "0.1.0"
 requires-python = ">=3.10"
 dependencies = [
-    "mcp>=1.2.0",
+    "mcp>=1.30.0",
     "langgraph>=0.2.0",
     "langchain-mcp-adapters>=0.1.0",
     "langchain-openai>=0.2.0",
