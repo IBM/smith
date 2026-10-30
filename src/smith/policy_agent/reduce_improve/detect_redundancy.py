@@ -48,11 +48,11 @@ def save_unreachable_components_dot(
     return H_all
 
 
-def find_node_by_name(G, node_name):
+def find_node_by_name(G, node_name) -> Optional[Hashable]:
     for i in G.nodes():
         if node_name in i:
             return i
-    return ""
+    return None
 
 
 EdgeStep = Tuple[Hashable, Optional[object], str, Hashable]
@@ -267,9 +267,16 @@ def clean_graph(G):
 
 def write_graph_suggestion(file_path, suggestion_path):
     G = read_graph(file_path=file_path)
-    G_allow = save_unreachable_components_dot(
-        G, find_node_by_name(G, "& allow"), save=True
-    )
+    allow_node = find_node_by_name(G, "& allow")
+    if allow_node is None:
+        message = (
+            "No allow rule was found in the policy graph, so the unreachable-rule "
+            "analysis was skipped."
+        )
+        with open(suggestion_path, "w", encoding="utf-8") as f:
+            f.write(message + "\n")
+        return message
+    G_allow = save_unreachable_components_dot(G, allow_node, save=True)
     G_allow = clean_graph(G_allow)
     return print_subgraphs(G_allow, suggestion_path)
     # G_deny=save_unreachable_components_dot(G, find_node_by_name(G, '& deny'))

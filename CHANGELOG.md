@@ -15,6 +15,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- `duplication_suggestion` no longer crashes when an `allow` rule body is a call term such as `count(deny) == 0`. The graph parser now links call operands, skips builtins and `__local*` temporaries, names partial set rules from their head ref, keeps isolated `allow` and `deny` heads, and skips the unreachable-rule report with a clear message when the policy has no `allow` rule ([#117]).
+
 ## [0.2.0] - 2026-10-17
 
 ### Security
@@ -146,3 +150,4 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 [#109]: https://github.com/IBM/smith/pull/109
 [#110]: https://github.com/IBM/smith/pull/110
 [#111]: https://github.com/IBM/smith/pull/111
+[#117]: https://github.com/IBM/smith/issues/117
