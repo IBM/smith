@@ -1,18 +1,37 @@
-# Smith Evaluation Plan
+# Smith Evaluation
 
-This plan implements the research questions stated in `motivation.tex`
-(§Research Questions). Each section below answers exactly one RQ and reports the
-metrics that RQ promises.
+This reports the evaluation results.
+Each section below answers exactly one RQ with the numbers a run produced. 
 
-| RQ | Question | Limitation | Section |
-|----|----------|-----------|---------|
-| RQ1 | Does Smith produce a valid initial policy from the guidance? | I | [Policy creation](#rq1--policy-creation) |
-| RQ2 | Does Smith generate a useful suite of legitimate and adversarial cases? | II | [Test case generation](#rq2--test-case-generation) |
-| RQ3 | Are the generated labels correct enough to serve as ground truth? | II | [Label validation](#rq3--label-validation) |
-| RQ4 | Does refinement improve the policy without regressing or bloating it? | III | [Refinement loop](#rq4--refinement-loop) |
-| RQ5 | Is the automation cheap enough to be practical? | — | [Cost](#rq5--cost) |
-| RQ6 | Does the security analysis stage add requirements the guidance never contained? | I | [Security enhancement](#rq6--security-enhancement) |
-| RQ7 | Does refinement recover a policy whose defects were introduced deliberately, and what does that cost? | III | [Seeded-defect policy](#rq7--refinement-and-cost-on-a-seeded-defect-policy) |
+## Run details
+
+| | |
+|---|---|
+| **Completed** | 2026-10-30 (runs of 2026-10-28/20/30) |
+| **Smith version** | 0.2.1 |
+| **Machine** | macOS 15.6.1, Apple silicon (arm64) |
+| **Python** | 3.12.9 |
+| **OPA** | 1.10.1 |
+| **Pipeline model** | M2 — Claude 5 Sonnet (`aws/claude-sonnet-5`) |
+| **Target-agent model** | Claude 4.5 Haiku (`aws/claude-haiku-4-5`), via `INFERENCE_MODEL` |
+| **Harness** | `tests/run_smith_pipeline.py`, steps 1–10, one invocation per step |
+| **Artifacts** | `baseline/<agent>/step<N>/`, per-step logs and CSVs under `baseline/<agent>/logs/` |
+
+Detailed commands and how the numbers were counted please refer to `example.md`. Each
+step prints its own table and writes the same figures as CSV beside the run's logs
+(`suite_composition.csv`, `translation_funnel.csv`, `policy_score.csv`,
+`cross_validation.csv`, `patch_effect.csv`, `regal_effect.csv`,
+`duplication_effect.csv`). 
+
+| RQ | Question  | Section |
+|----|----------|---------|
+| RQ1 | Does Smith produce a valid initial policy from the guidance? | [Policy creation](#rq1--policy-creation) |
+| RQ2 | Does Smith generate a useful suite of legitimate and adversarial cases? | [Test case generation](#rq2--test-case-generation) |
+| RQ3 | Are the generated labels correct enough to serve as ground truth? | [Label validation](#rq3--label-validation) |
+| RQ4 | Does refinement improve the policy without regressing or bloating it? | [Refinement loop](#rq4--refinement-loop) |
+| RQ5 | Is the automation cheap enough to be practical? | [Cost](#rq5--cost) |
+| RQ6 | Does the security analysis stage add requirements the guidance never contained? | [Security enhancement](#rq6--security-enhancement) |
+| RQ7 | Does refinement recover a policy whose defects were introduced deliberately, and what does that cost? | [Defected policy](#rq7--refinement-and-cost-on-a-seeded-defect-policy) |
 
 **Dependency order.** RQ3 produce the validated suite that RQ1 and RQ4 are scored against.
 
@@ -32,7 +51,7 @@ We use the five agent examples as the benchmark. They have different formats for
 
 The **MCP tools** column counts only valid, agent-exposed tools (functions registered as MCP tools), excluding internal helper functions and any commented-out/disabled tool definitions.
 
-The **Guidance lines** column counts non-empty lines in each agent's `smith/guidance.txt`; blank separator lines are excluded. `A3`, `A4` and `A5` use a sectioned format, so their counts include section headings (4, 8 and 7 respectively); their rule-bearing lines alone are 27, 21 and 26.
+The **Guidance lines** column counts non-empty lines in each agent's `smith/guidance.txt`. Blank separator lines are excluded. 
 
 ### Model settings
 
@@ -51,8 +70,7 @@ Smith uses two distinct LLM roles, which we configure independently:
 | M3 (new) | Claude 5 opus | 
 
 Varying the pipeline model while holding the scaffolding fixed is what separates
-Smith's contribution from the underlying model's capability. Every RQ1-RQ7 table is
-reported per model setting.
+Smith's contribution from the underlying model's capability. 
 
 ### Parameter settings
 
@@ -64,11 +82,9 @@ reported per model setting.
 ### Evaluation metrics
 
 - **TP / TN / FP / FN** — scorecard outcome per test case. 
-- **Coverage** — fraction of policy reached by existing test cases.
-- **Policy lines** — length of `policy.rego`, reported as a reviewability proxy.
+- **Coverage** — fraction of coverable policyy lines reached by existing test cases.
+- **Policy lines** — length of `policy.rego`.
 - **Tokens** — per stage, per agent.
-
----
 
 
 
@@ -80,10 +96,10 @@ reported per model setting.
 rule, so validity and faithfulness are separate failures and are measured separately.
 
 **Steps**
-- Run `policy_creation` per agent, from the RQ1-enhanced guidance.
-- Check whether `opa fmt` / Regal passes, and count the automatic fix iterations
-  needed to reach a parsing policy.
-- Score the **initial** policy, before any refinement, against the RQ4-validated
+- Run `step1: policy_creation` per agent.
+- Check whether `opa fmt` / `validation` passes, and count the automatic fix iterations
+  needed to reach a satisfied policy.
+- Score the **initial** policy, before any refinement, against the RQ3-validated
   suite via the scorecard.
 
 **Table**
@@ -94,7 +110,7 @@ rule, so validity and faithfulness are separate failures and are measured separa
 | `A2` | Y| 0| 26| 20| 0| 8| 94.4%| 77|
 | `A3` | Y| 0| 45| 9| 0| 2| 92.6%| 126|
 | `A4` |Y | 0|112 | 125| 0| 10| 100%| 108|
-| `A5` | | | | | | | | | |
+| `A5` |Y | 1| 73| 73| 0| 1| 100%| 121|
 
 ---
 
@@ -102,16 +118,16 @@ rule, so validity and faithfulness are separate failures and are measured separa
 
 *Does Smith generate a useful suite of legitimate and adversarial cases?*
 
-**Claim under test.** Limitation II asserts that a comprehensive suite needs
+**Claim under test.** we asserts that a comprehensive suite needs
 legitimate, adversarial, and policy-based bypass cases together, and that existing
 red-teaming frameworks supply only the prompt-level kind. 
 
 The test datasets are **not hand-curated**: they are produced by Smith's own
 test-case generation phase. For each agent we therefore report the exact composition
-of the generated suite, for each model setting.
+of the generated suite.
 
 **Steps**
-- Run `test_generation` per agent (legitimate allow/disallow, Promptfoo).
+- Run `Step2: test_generation` per agent (legitimate allow/disallow, Promptfoo based adversarial cases).
 - Run `bypass_case_generation` to synthesize cases from guidance-vs-policy
   divergences.
 - Report composition by provenance, one table per model setting.
@@ -124,7 +140,7 @@ of the generated suite, for each model setting.
 | `A2` | 18 |  18| 12 | 10 | 58 | 
 | `A3` | 14 | 49 | 6 | 8 | 77 | 
 | `A4` | 134 | 121 | 12 | 10 | 277 | 
-| `A5` | — | — | — | — | — | 
+| `A5` | 78 | 60 | 12 | 6 | 156 | 
 
 ---
 
@@ -138,28 +154,25 @@ degrades the policy while reporting success. No existing generation tool validat
 its own labels.
 
 **Steps**
-- Run `cross_validate` on failed cases, then `apply_cross_validate`.
-- Manually verify a sampled subset of the final suite; report sample size.
+- Run `Step3: translation` to translate each test case to CMF.
+- Run `Step4: policy testing` to obtain failed test cases.
+- Run `Step 5: cross validation` on failed cases, it will diagonosis labels and `apply_cross_validate`.
 
 **Metrics**
 - Initial generated case count.
-- Removed by tool-name mismatch.
+- Removed by tool-name mismatch (translation phase).
 - Removed or corrected by cross-validation.
-- Final count, and accuracy under manual verification.
+- Final count.
 
 **Table (filtering funnel and accuracy)**
 
-| Agent | Initial generated | Removed (tool-name mismatch) | Removed(cross-validation)| corrected (cross-validation) | Final | 
+| Agent | Initial generated | Removed (tool-name mismatch, translation phase) | Removed(cross-validation, from disallow+from allow)| corrected (cross-validation, moved to disallow+moved to allow) | Final | 
 |-------|------------------:|-----------------------------:|-----:|-------------------------------------:|------:|
 | `A1` |96 |16+21 |3+0 | 1+1| 56| 
 | `A2` |58 | 1+0| 3+0| 1+1| 54| 
 | `A3` | 77| 0+20| 1+0| 5+0| 56|
 | `A4` | 277| 3+23| 2+2| 10+4| 243|
-| `A5` | | | | | |
-
-Accuracy is reported on the final suite under manual verification of the sampled
-subset, because cross-validation uses an LLM to check LLM-generated labels and the
-manual sample is what bounds that circularity.
+| `A5` |156 |1+7 | 1+0| 8+0| 147|
 
 ---
 
@@ -171,43 +184,41 @@ manual sample is what bounds that circularity.
 classes: failed test cases, formatting violations, and duplicated rules. Patching a
 failing cluster is also the operation most likely to break a neighbouring case, so
 improvement must be shown without regression or unbounded growth.
+Notice that, the failed-case patching can also identify mislabeled cases by itseif, which provides addtional guratees beside the cross validation phase. 
 
 **Steps**
-- Start from RQ2's initial policy and RQ4's validated suite.
-- Run the refinement contract: `red_suggestion` (cluster failed cases) → patch →
-  `regal_suggestion` → `duplication_suggestion`, re-running `policy_testing` after
-  each step.
+- Start from initial policy and validated suite.
+- Run `Step 4: policcy testing` to report initial results in RQ1. 
+- Run the refinement contract: `Step 6: patching` (cluster failed cases) → red_suggestion → patch →
+  `Step 7: regal_suggestion` → `Step 8: duplication_suggestion`.
 
 **Table (failed-case patching)**
 
 | Agent | #cluster(before → after) |FP (before → after) | FN (before → after) | Policy lines (before → after) | Coverage (before → after) |
 |-------|:-------------------:|-----:|:-------------------:|:-----------------------------:|:-------------------------:|
-| `A1` |2/0 |2/0 |4/0 |157/177 |73.8%/79.4% | #note: passed cases increased the coverage rate
+| `A1` |2/0 |2/0 |4/0 |157/177 |73.8%/79.4% | 
 | `A2` |3/0 | 0/0|8/0 | 77/95| 94.4%/95.7%| 
 | `A3` |1/0 | 0/0| 2/0|126/130 | 92.6%/92.9%| 
 | `A4` |3/0 | 0/6*|10/0 | 53/54| 100%/100%|   #note the 6 are identified mislabeled during patching. 
-| `A5` | | | | | | 
+| `A5` |1/0 |0/0 |1/0 | 121/138| 100%/98.4%| 
+
+**note1: passed cases usually make more test cases testable and increase the coverage rate, it is not always certain and also depends on which lines the model added to solved failed test cases**
+
+**note2: In A4, the model introduced 6 false positives, these cases are originally generated as benign cases, but during patching, model identified them as mislabeled cases so it choose to not patch for them.**
 
 **Table (linting and duplication)**
 
 | Agent | Linting problems fixed | Duplication problems fixed | Failing cases introduced | Policy lines (before → after linting -> after duplication) | Coverage (before → after linting -> after duplication) |
 |-------|-----------------------:|-----------------------:|-----------------------:|---:|---:|
-| `A1` |2 | 0| 0| 177/177/177| 79.4%/79.4%/79.4%|
-| `A2` |1 | 1| 0|95/95/100 | 95.7%/95.7%/95.9%| #note: why fixing duplication makes the line increases? the coverage increases. 
-| `A3` | 5|0 | 0|130/133/133 |92.9%/93.0%/93.0% |
+| `A1` |2 |0 | 0| 177/177/177| 79.4%/79.4%/79.4%|
+| `A2` |1 |1 | 0|95/95/100 | 95.7%/95.7%/95.9%| 
+| `A3` |5 |0 | 0|130/133/133 |92.9%/93.0%/93.0% |
 | `A4` |3 |0 |0 |112/117/117 |100%/100%/100% |
-| `A5` | | | | | |
+| `A5` | 5|0 |0 |138/136/136 |98.4%/98.4%/98.4% |
 
-<!-- The semantics argument holds. The agent reasoned that
+**note3: In A2, the policy lines increases after deduplication, which is correct. The policy is behaviourally identical and conceptually less redundant, at the cost of 5 lines (rather than remove one rule, the model makes them identical). Whether that counts as success depends on what we are measuring, redundant evaluation paths went down, coverage went up, textual size went up.**
 
-subject-match ∪ body-match ∪ combined-match
-  ==  subject-match ∪ body-match ∪ (combined-match AND NOT subject-match AND NOT body-match)
 
-which is correct — excluding cases already covered by the earlier rules can't change the deny set. And it verified empirically: FP=0, FN=0, 54/54 passing, coverage 95.7% → 95.9%.
-
-So the policy is behaviourally identical and conceptually less redundant, at the cost of 5 lines. Whether that counts as success depends on what you're measuring — redundant evaluation paths went down, textual size went up. -->
-
----
 
 ## RQ5 — Cost
 
@@ -221,17 +232,13 @@ and capability trade off against each other.
 
 **Table (tokens per stage)**
 
-| Agent |  Policy generation | Test generation | Label validation | Policy testing| Policy patching | Regal linting | Duplication |Security analysis | Total |
+| Agent |  Policy generation (step 1) | Test generation (step 2,3) | Label validation (step 4,5) | Policy testing (step 4)| Policy patching (step 6) | Regal linting (step 7) | Duplication (step 8) |Security analysis (step 9) | Total |
 |-------|------------------:|------------------:|----------------:|-----------------:|----------------:|--------------:|------------:|------:|------:|
-| `A1` |533096 |72354+79448 |85860+98074 | 104980| 3354414| 2324819| 894541| 2090517| 9639345|
-| `A2` |562994 |213050+151591 | 323776+359013|301232 | 253983|2466371 |2116601 | 24245004|31003339 |
-| `A3` |604333 |215073+233559  |249992+362916  | 300263 |229220 |3969814 |2962109 |16192943 |25328188 |
-| `A4` |633087 | 226620+249748| 271809+723747|227887 | 727835|335866 |875663 |20897371 | 25169633|
-| `A5` | | | | | | | | | |
-
-
-The expected result, that test generation dominates as the only stage scaling with
-guidance line count, is worth confirming rather than assuming.
+| `A1` |533,096 |72,354+79,448 |85,860+98,074 | 104,980| 3,354,414| 2,324,819| 894,541| 2,090,517| 9,639,345|
+| `A2` |562,994 |213,050+151,591 | 323,776+359,013|301,232 | 253,983|2,466,371 |2,116,601 | 24,245,004|31,003,339 |
+| `A3` |604,333 |215,073+233,559  |249,992+362,916  | 300,263 |229,220 |3,969,814 |2,962,109 |16,192,943 |25,328,188 |
+| `A4` |633,087 | 226,620+249,748| 271,809+723,747|227,887 | 727,835|335,866 |875,663 |20,897,371 | 25,169,633|
+| `A5` | 1,351,871|271,996+291,242 |412,152+572,489 |3,372,273 | 424,838|480,637 | 1,520,897| 28,178,383| 33,886,310|
 
 ---
 
@@ -244,7 +251,7 @@ than a threat model, so requirements originating in security standards are absen
 rather than restatements of what the prose already said.
 
 **Steps**
-- Run the guidelines security analysis per agent.
+- Run the `Step 9: guidelines security analysis` per agent.
 - Record guidance length before and after the stage.
 - For each agent, identify the requirement its prose was missing.
 
@@ -256,46 +263,23 @@ rather than restatements of what the prose already said.
 | `A2` | 5 | 5 | 0 | 
 | `A3` | 29 | 29 | 0 |
 | `A4` | 33 | 33 | 0 | 
-| `A5` |  | — | — |
+| `A5` |  31| 31 | 0 |
 
-**Case studies.** One per agent, naming the overlooked requirement and its threat
-class, since the informative result is *which* class the author was blind to, not how many lines were added.
-
-- A1 —
-- A2 — 
-- A3 —
-- A4 —
-- A5 —
-
+**note 4: no security enhanchment for current guidancies**
 ---
 
 ## RQ7 — Refinement and cost on a seeded-defect policy
 
-*Does refinement recover a policy whose defects were introduced deliberately, and
-what does that cost?*
-
 **Claim under test.** RQ4 scores refinement against whatever defects Smith's own
-generation happened to leave behind, so the defect population is uncontrolled and can
-be empty — `A1` had no linting and no duplication problems to fix, which makes its
-"0 fixed" uninterpretable rather than good. Seeding defects fixes the denominator:
-each class is present by construction, so detection becomes a recall measure.
-
-This RQ is reported separately, and **its tokens are excluded from RQ5**, so the cost
-in RQ5 remains the cost of producing and refining one policy from guidance. Mixing the
-two would make neither figure reproducible.
+generation happened to leave behind, so the policy can be perfect: have no failed cases/linting issues/duplication e.g., `A1` , which makes its
+"0 fixed" uninterpretable rather than good. 
+Seeding defects fixes the denominator:
+each class is present by construction. This RQ is reported separately.
 
 **Steps**
-- Start from the validated policy and suite RQ4 finished with.
-- Run `-s 11`, which follows `opa_policy/policy_defect/policy_defect.md` to write
-  `<TARGET_AGENT_PATH>/smith/policy_defect.rego` and a `defect_summary.txt` recording
-  what it injected. Three classes are seeded: weakened or removed deny rules,
-  duplicated and unreachable rules, and style violations. No `DEFECT`/`DUPLICATE`
-  annotations are added, so refinement cannot pattern-match the seeds.
 - Copy the defective policy over `assets/policy.rego` and re-run steps 4–9 against
   the unchanged suite, reporting the same two tables RQ4 does so the columns can be
   read side by side.
-- Use `defect_summary.txt` to interpret them: it names what was seeded, so a class
-  that stays unfixed is a miss rather than an absent defect.
 
 **Table (failed-case patching)**
 
@@ -305,14 +289,20 @@ two would make neither figure reproducible.
 | `A2` | 3/0| 0/0| 8/0| 100/127| 87.2%/90.0%|
 | `A3` |3/0 |0/0 |15/0 | 147/156|81.8%/84.9% |
 | `A4` |8/0 |0/0 |29/0 |127/137 |91.8%/94.1% |
-| `A5` | | | | | |
+| `A5` |2/0 | 0/0|6/0 |141/157 |89.6%/90.9%|
 
 **Table (linting and duplication)**
 
 | Agent | Linting problems fixed | Duplication problems fixed | Failing cases introduced | Policy lines (before → after linting -> after duplication) | Coverage (before → after linting -> after duplication) |
 |-------|-----------------------:|-----------------------:|-----------------------:|---:|---:|
-| `A1` |5 | 1| 0|150/151/144 |75.3%/75.3%/73.7%| #note: why the coverage decreases? deny[msg] lines?
-| `A2` |5 | 1+1 | 0| 127/126/118| 90.0%/89.8%/96.4%|
+| `A1` |5 | 1+0| 0|150/151/144 |75.3%/75.3%/73.7%|
+| `A2` |5 | 1+1| 0| 127/126/118| 90.0%/89.8%/96.4%|
 | `A3` |1 | 1+1| 0| 156/156/145| 84.9%/84.9%/90.0%|
 | `A4` |2 | 2+0| 0| 137/137/118| 94.1%/94.1%/98.2%|
-| `A5` | | | | | |
+| `A5` |5 | 0+1| 0| 77/73/67|90.9%/90.4%/98.5% |
+
+**note 5: why the coverage decreases in A1: Because the duplicate it removed was fully covered by tests
+Coverable lines: 
+before:  61 / 81 = 75.3%
+after:   56 / 76 = 73.7%
+Both numbers dropped by exactly 5 — so all 5 removed lines were covered. Taking fully-tested code out of a policy that's only 75% covered pulls the ratio down.**
