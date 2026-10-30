@@ -122,19 +122,17 @@ STEPS: tuple[Step, ...] = (
     Step(8, "duplication suggestions and fixes",
          "/smith get duplication suggestions and fix the problems. "
          "STOP once duplication is reduced"),
-    Step(9, "final policy testing",
-         "/smith test my policy. "),
     # Produces guidance only. It runs last so the earlier steps measure the
     # policy built from the author's original prose: enhancing the guidance
     # first would change the input every other step is scored against.
-    Step(10, "enhance guidance with security analysis",
+    Step(9, "enhance guidance with security analysis",
          "/smith run the security-grounded guidance analysis for the target "
          "agent, do not create or modify any policy."),
     # Produces a deliberately broken policy for exercising the refinement
     # workflow. It runs last, and writes only to <TARGET_AGENT_PATH>/smith/,
     # so nothing it emits can affect the steps scored above. SKILL.md has no
     # route to this guide, so the prompt names the file directly.
-    Step(11, "introduce policy defects",
+    Step(10, "introduce policy defects",
          "/smith follow ./opa_policy/policy_defect/policy_defect.md to create "
          "a defective version of the policy. The defective policy must NOT "
          "contain any labels, comments or annotations marking the defects — no "

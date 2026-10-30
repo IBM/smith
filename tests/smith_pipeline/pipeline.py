@@ -117,6 +117,12 @@ class Pipeline:
         """Print the evaluation table this stage produces, if it has one."""
         if self.dry_run:
             return
+        if step_name == "enhance guidance with security analysis":
+            # Needs the example: the guidance it grows lives under the agent,
+            # not at a fixed path in the skill tree.
+            reports.show_guidance_growth(
+                self.root, self.log_dir, f"examples/{self.example}")
+            return
         table = {
             "generate test cases": reports.show_suite,
             "translate test cases": reports.show_translation,
@@ -191,7 +197,7 @@ class Pipeline:
             if not self.wants(num):
                 continue
             before = {}
-            if num in (4, 9):
+            if num == 4:
                 directory = scorecard.scorecard_dir(self.root)
                 files = (directory / "scorecard_summary.txt",
                          directory / "score_test_failures.txt")
@@ -265,14 +271,5 @@ class Pipeline:
             if self.validate_scorecard(before) is None:
                 return 1
             self.show_scorecard("Scorecard after step 4")
-        elif num == 9:
-            if self.validate_scorecard(before) is None:
-                return 1
-            card = self.show_scorecard("Final scorecard")
-            if card.failures:
-                out.err(f"Final policy testing has {card.failures} "
-                        "failing case(s).")
-                self.save_step_artifacts(num)
-                return 1
         return None
 

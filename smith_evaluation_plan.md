@@ -26,9 +26,9 @@ We use the five agent examples as the benchmark. They have different formats for
 |-------|---------------:|----------:|--------|
 | `A1: RagChatbot_MCPServer` | 14 | 12 | HR RAG chatbot |
 | `A2: hr-agent` | 5 | 6 | HR agent |
-| `A3: employee` | 31 | 33 | Employee hub |
-| `A4: call-for-papers-mcp` | 29 | 1 | Conference CFP |
-| `A5: car-price-mcp-main` | 33 | 3 | Car-price lookup |
+| `A3: call-for-papers-mcp` | 29 | 1 | Conference CFP |
+| `A4: car-price-mcp-main` | 33 | 3 | Car-price lookup |
+| `A5: employee` | 31 | 33 | Employee hub |
 
 The **MCP tools** column counts only valid, agent-exposed tools (functions registered as MCP tools), excluding internal helper functions and any commented-out/disabled tool definitions.
 
@@ -90,10 +90,10 @@ rule, so validity and faithfulness are separate failures and are measured separa
 
 | Agent | opa fmt passes | Auto-fix iterations | TP | TN | FP | FN | Coverage | Policy lines |
 |-------|:--------------:|--------------------:|---:|---:|---:|---:|---------:|-------------:|
-| `A1` | Y| 0| | | | | | |
-| `A2` | Y| 0| | | | | | |
-| `A3` | | | | | | | | | |
-| `A4` | | | | | | | | | |
+| `A1` | Y| 0| 32| 18| 2| 4| 73.8%| 157|
+| `A2` | Y| 0| 26| 20| 0| 8| 94.4%| 77|
+| `A3` | Y| 0| 45| 9| 0| 2| 92.6%| 126|
+| `A4` |Y | 0|112 | 125| 0| 10| 100%| 108|
 | `A5` | | | | | | | | | |
 
 ---
@@ -120,10 +120,10 @@ of the generated suite, for each model setting.
 
 | Agent | Legit. allow | Legit. disallow |Adv. bypass | Adv. Promptfoo | Total |
 |-------|-------------:|------------:|------------:|---------------:|------:|
-| `A1` |  |  |  |  |  | 
-| `A2` |  |  |  |  |  | 
-| `A3` | — | — | — | — | — | 
-| `A4` | — | — | — | — | — | 
+| `A1` | 21 |53  | 16 | 6 |96  | 
+| `A2` | 18 |  18| 12 | 10 | 58 | 
+| `A3` | 14 | 49 | 6 | 8 | 77 | 
+| `A4` | 134 | 121 | 12 | 10 | 277 | 
 | `A5` | — | — | — | — | — | 
 
 ---
@@ -149,13 +149,13 @@ its own labels.
 
 **Table (filtering funnel and accuracy)**
 
-| Agent | Initial generated | Removed (tool-name mismatch) | Removed(cross-validation)| corrected (cross-validation) | Final | Accuracy |
-|-------|------------------:|-----------------------------:|-----:|-------------------------------------:|------:|---------:|
-| `A1` | | | | | | -|
-| `A2` | | | | | | -|
-| `A3` | | | | | | |
-| `A4` | | | | | | |
-| `A5` | | | | | | |
+| Agent | Initial generated | Removed (tool-name mismatch) | Removed(cross-validation)| corrected (cross-validation) | Final | 
+|-------|------------------:|-----------------------------:|-----:|-------------------------------------:|------:|
+| `A1` |96 |16+21 |3+0 | 1+1| 56| 
+| `A2` |58 | 1+0| 3+0| 1+1| 54| 
+| `A3` | 77| 0+20| 1+0| 5+0| 56|
+| `A4` | 277| 3+23| 2+2| 10+4| 243|
+| `A5` | | | | | |
 
 Accuracy is reported on the final suite under manual verification of the sampled
 subset, because cross-validation uses an LLM to check LLM-generated labels and the
@@ -182,21 +182,30 @@ improvement must be shown without regression or unbounded growth.
 
 | Agent | #cluster(before → after) |FP (before → after) | FN (before → after) | Policy lines (before → after) | Coverage (before → after) |
 |-------|:-------------------:|-----:|:-------------------:|:-----------------------------:|:-------------------------:|
-| `A1` | | | | | | 
-| `A2` | | | | | |
-| `A3` | | | | | | 
-| `A4` | | | | | | 
+| `A1` |2/0 |2/0 |4/0 |157/177 |73.8%/79.4% | #note: passed cases increased the coverage rate
+| `A2` |3/0 | 0/0|8/0 | 77/95| 94.4%/95.7%| 
+| `A3` |1/0 | 0/0| 2/0|126/130 | 92.6%/92.9%| 
+| `A4` |3/0 | 0/6*|10/0 | 53/54| 100%/100%|   #note the 6 are identified mislabeled during patching. 
 | `A5` | | | | | | 
 
 **Table (linting and duplication)**
 
-| Agent | Linting problems fixed | Duplication problems fixed | Failing cases introduced | Policy lines (before → after) | Coverage (before → after) |
+| Agent | Linting problems fixed | Duplication problems fixed | Failing cases introduced | Policy lines (before → after linting -> after duplication) | Coverage (before → after linting -> after duplication) |
 |-------|-----------------------:|-----------------------:|-----------------------:|---:|---:|
-| `A1` | | | | | |
-| `A2` | | | | | |
-| `A3` | | | | | |
-| `A4` | | | | | |
+| `A1` |2 | 0| 0| 177/177/177| 79.4%/79.4%/79.4%|
+| `A2` |1 | 1| 0|95/95/100 | 95.7%/95.7%/95.9%| #note: why fixing duplication makes the line increases? the coverage increases. 
+| `A3` | 5|0 | 0|130/133/133 |92.9%/93.0%/93.0% |
+| `A4` |3 |0 |0 |112/117/117 |100%/100%/100% |
 | `A5` | | | | | |
+
+<!-- The semantics argument holds. The agent reasoned that
+
+subject-match ∪ body-match ∪ combined-match
+  ==  subject-match ∪ body-match ∪ (combined-match AND NOT subject-match AND NOT body-match)
+
+which is correct — excluding cases already covered by the earlier rules can't change the deny set. And it verified empirically: FP=0, FN=0, 54/54 passing, coverage 95.7% → 95.9%.
+
+So the policy is behaviourally identical and conceptually less redundant, at the cost of 5 lines. Whether that counts as success depends on what you're measuring — redundant evaluation paths went down, textual size went up. -->
 
 ---
 
@@ -214,10 +223,10 @@ and capability trade off against each other.
 
 | Agent |  Policy generation | Test generation | Label validation | Policy testing| Policy patching | Regal linting | Duplication |Security analysis | Total |
 |-------|------------------:|------------------:|----------------:|-----------------:|----------------:|--------------:|------------:|------:|------:|
-| `A1` | | | | | | | | | |
-| `A2` | | | | | | | | | |
-| `A3` | | | | | | | | | |
-| `A4` | | | | | | | | | |
+| `A1` |533096 |72354+79448 |85860+98074 | 104980| 3354414| 2324819| 894541| 2090517| 9639345|
+| `A2` |562994 |213050+151591 | 323776+359013|301232 | 253983|2466371 |2116601 | 24245004|31003339 |
+| `A3` |604333 |215073+233559  |249992+362916  | 300263 |229220 |3969814 |2962109 |16192943 |25328188 |
+| `A4` |633087 | 226620+249748| 271809+723747|227887 | 727835|335866 |875663 |20897371 | 25169633|
 | `A5` | | | | | | | | | |
 
 
@@ -239,22 +248,21 @@ rather than restatements of what the prose already said.
 - Record guidance length before and after the stage.
 - For each agent, identify the requirement its prose was missing.
 
-**Table (guidance growth)**
+**Table (guidance growth)** #note: no added guidance
 
 | Agent | Guidance lines (before) | Guidance lines (after) | Added | 
 |-------|------------------------:|-----------------------:|------:|
-| `A1` |  |  |  |
-| `A2` |  | — | — | 
-| `A3` |  | — | — |
-| `A4` |  | — | — | 
+| `A1` | 14 |  14|  0|
+| `A2` | 5 | 5 | 0 | 
+| `A3` | 29 | 29 | 0 |
+| `A4` | 33 | 33 | 0 | 
 | `A5` |  | — | — |
 
 **Case studies.** One per agent, naming the overlooked requirement and its threat
 class, since the informative result is *which* class the author was blind to, not how many lines were added.
 
 - A1 —
-- A2 — expected: `adjust_compensation` is an unguarded write, as G1-G5 govern only
-  reads. (This is the case `motivation.tex` uses.)
+- A2 — 
 - A3 —
 - A4 —
 - A5 —
@@ -293,36 +301,18 @@ two would make neither figure reproducible.
 
 | Agent | #cluster(before → after) |FP (before → after) | FN (before → after) | Policy lines (before → after) | Coverage (before → after) |
 |-------|:-------------------:|-----:|:-------------------:|:-----------------------------:|:-------------------------:|
-| `A1` | | | | | |
-| `A2` | | | | | |
-| `A3` | | | | | |
-| `A4` | | | | | |
+| `A1` | 4/0| 0/0| 25/0| 141/150| 47.4%/75.3%|
+| `A2` | 3/0| 0/0| 8/0| 100/127| 87.2%/90.0%|
+| `A3` |3/0 |0/0 |15/0 | 147/156|81.8%/84.9% |
+| `A4` |8/0 |0/0 |29/0 |127/137 |91.8%/94.1% |
 | `A5` | | | | | |
 
 **Table (linting and duplication)**
 
-| Agent | Linting problems fixed | Duplication problems fixed | Failing cases introduced | Policy lines (before → after) | Coverage (before → after) |
+| Agent | Linting problems fixed | Duplication problems fixed | Failing cases introduced | Policy lines (before → after linting -> after duplication) | Coverage (before → after linting -> after duplication) |
 |-------|-----------------------:|-----------------------:|-----------------------:|---:|---:|
-| `A1` | | | | | |
-| `A2` | | | | | |
-| `A3` | | | | | |
-| `A4` | | | | | |
+| `A1` |5 | 1| 0|150/151/144 |75.3%/75.3%/73.7%| #note: why the coverage decreases? deny[msg] lines?
+| `A2` |5 | 1+1 | 0| 127/126/118| 90.0%/89.8%/96.4%|
+| `A3` |1 | 1+1| 0| 156/156/145| 84.9%/84.9%/90.0%|
+| `A4` |2 | 2+0| 0| 137/137/118| 94.1%/94.1%/98.2%|
 | `A5` | | | | | |
-
-**Table (tokens per stage)**
-
-Kept out of RQ5 so that table remains the cost of one policy from guidance. These are
-the refinement re-run only, so each column is directly comparable against RQ5's column
-of the same name.
-
-| Agent | Policy testing | Policy patching | Regal linting | Duplication | Total |
-|-------|---------------:|----------------:|--------------:|------------:|------:|
-| `A1` | | | | | |
-| `A2` | | | | | |
-| `A3` | | | | | |
-| `A4` | | | | | |
-| `A5` | | | | | |
-
-Whether the recovered policy matches the pre-defect one is the sharper question: if the
-suite passes again without the removed deny rule being restored, the suite is what is
-weak, not the refinement.

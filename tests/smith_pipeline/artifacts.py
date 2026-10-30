@@ -72,12 +72,8 @@ STEP_ARTIFACTS: dict[int, tuple[str, tuple[str, ...]]] = {
         "assets/opa/ast.json",
         "assets/opa/ast.dot",
     )),
-    9: ("final policy testing", (
-        "assets/policy.rego",
-        "references/scorecard/",
-    )),
-    10: ("enhance guidance with security analysis", ()),
-    11: ("introduce policy defects", ()),
+    9: ("enhance guidance with security analysis", ()),
+    10: ("introduce policy defects", ()),
 }
 
 #: Steps whose artifacts live under the target agent rather than the skill
@@ -85,9 +81,9 @@ STEP_ARTIFACTS: dict[int, tuple[str, tuple[str, ...]]] = {
 AGENT_ARTIFACTS: dict[int, tuple[str, ...]] = {
     1: ("smith/tool_definitions.json",),
     2: ("smith/promptfooconfig.yaml",),
-    10: ("smith/guidance.txt", "smith/guidance_updated.txt",
-         "smith/guidelines-security-analysis/"),
-    11: ("smith/policy_defect.rego", "smith/defect_summary.txt"),
+    9: ("smith/guidance.txt", "smith/guidance_updated.txt",
+        "smith/guidelines-security-analysis/"),
+    10: ("smith/policy_defect.rego", "smith/defect_summary.txt"),
 }
 
 

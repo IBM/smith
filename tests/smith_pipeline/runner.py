@@ -189,15 +189,24 @@ class Runner:
 
     # -- verdict ------------------------------------------------------------
     @staticmethod
-    def classify(text: str) -> str:
-        """Return "" when the transcript looks like real work, else a reason."""
+    def classify(text: str) -> tuple[bool, str]:
+        """``(ok, reason)`` for a transcript that exited 0.
+
+        A step whose skill never resolved ran nothing, so it fails. A step that
+        closed with a question is different: these prompts tell the agent to
+        stop before the next stage, so a trailing "shall I proceed?" usually
+        follows work that did finish. That is reported as a warning and the
+        step's own results are kept, rather than discarding a completed step
+        over its sign-off.
+        """
         if UNKNOWN_CMD.search(text):
-            return "the '/smith' skill did not resolve — nothing was run"
+            return False, "the '/smith' skill did not resolve — nothing was run"
         # Only inspect the tail: "approval" can legitimately appear mid-run.
         tail = "\n".join(text.splitlines()[-5:])
         if ASKED_PATTERNS.search(tail):
-            return "ended by asking for confirmation — it did not finish"
-        return ""
+            return True, ("ended by asking whether to continue; treating the "
+                          "step as finished")
+        return True, ""
 
     # -- execution ----------------------------------------------------------
     def run(self, step: Step) -> StepResult:
@@ -291,12 +300,15 @@ class Runner:
             out.err(f"Step {step.num} {reason} after {elapsed}s "
                     f"(log: {log.name})")
             return StepResult(False, elapsed, log, result_trace, reason, usage)
-        if reason := self.classify(text):
+        ok, reason = self.classify(text)
+        if not ok:
             out.err(f"Step {step.num}: {reason}.")
             out.err(f"Log: {log.name}")
             return StepResult(False, elapsed, log, result_trace, reason, usage)
+        if reason:
+            out.warn(f"Step {step.num}: {reason}.")
 
-        result = StepResult(True, elapsed, log, result_trace, "", usage)
+        result = StepResult(True, elapsed, log, result_trace, reason, usage)
         suffix = f"  {cost}" if (cost := result.cost_line()) else ""
         out.ok(f"Step {step.num} finished in {elapsed}s (log: {log.name})"
                f"{suffix}")

@@ -252,7 +252,7 @@ def show_cross_validation(root: Path, log_dir: Path) -> CrossValidation:
         ("failed cases examined", cv.total_failed),
         ("analyzed", cv.analyzed),
         ("moved allow -> disallow", cv.move_to_disallow),
-        ("removed (moved disallow to allow)", cv.move_to_allow),
+        ("moved disallow -> allow", cv.move_to_allow),
         ("removed (from disallow)", cv.removed_from_disallow),
         ("removed (from allow)", cv.removed_from_allow),
         ("kept as policy issues", cv.kept),
@@ -686,6 +686,72 @@ def show_duplication_effect(before: DuplicationCount, after: DuplicationCount,
                            log_dir, "duplication_effect.csv")
     _show_coverage_delta(before_score, after_score,
                          max(len(n) for n, _, _ in rows))
+
+
+@dataclass
+class GuidanceGrowth:
+    """Guidance size before and after the security-analysis stage."""
+
+    before: int = 0
+    after: int = 0
+    present: bool = False
+
+    @property
+    def added(self) -> int:
+        return self.after - self.before
+
+
+def _guidance_lines(path: Path) -> int:
+    """Non-empty lines, matching how the evaluation plan counts guidance."""
+    try:
+        text = path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return 0
+    return sum(1 for line in text.splitlines() if line.strip())
+
+
+def read_guidance_growth(root: Path, agent: str) -> GuidanceGrowth:
+    """Compare the agent's guidance against the stage's updated copy.
+
+    The stage writes `guidance_updated.txt` beside `guidance.txt` rather than
+    editing in place, so the pair is the before/after. When no updated file
+    exists the stage proposed nothing (or has not run), which is reported as
+    absent rather than as zero growth.
+    """
+    growth = GuidanceGrowth()
+    smith_dir = root / agent / "smith"
+    before = smith_dir / "guidance.txt"
+    after = smith_dir / "guidance_updated.txt"
+    if not before.is_file():
+        return growth
+    growth.before = _guidance_lines(before)
+    if after.is_file():
+        growth.present = True
+        growth.after = _guidance_lines(after)
+    return growth
+
+
+def show_guidance_growth(root: Path, log_dir: Path, agent: str) -> GuidanceGrowth:
+    """RQ6: did the security analysis add requirements the prose lacked?"""
+    growth = read_guidance_growth(root, agent)
+    out.hdr("Guidance growth")
+    if not growth.present:
+        out.warn("No guidance_updated.txt beside the agent's guidance — the "
+                 "security analysis proposed no new guidance lines.")
+        if growth.before:
+            out.say(f"  guidance lines (unchanged)  {growth.before:>6,}")
+        return growth
+
+    rows = [
+        ("guidance lines (before)", growth.before),
+        ("guidance lines (after)", growth.after),
+        ("added", growth.added),
+    ]
+    width = max(len(name) for name, _ in rows)
+    for name, value in rows:
+        out.say(f"  {name:<{width}}  {value:>6,}")
+    _write_csv(log_dir / "guidance_growth.csv", ["metric", "lines"], rows)
+    return growth
 
 
 def _write_csv(path: Path, header: list[str],
