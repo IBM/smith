@@ -130,10 +130,19 @@ args := object.get(input, "args", {})
 # (rules that apply across all tools)
 
 # === Tool-Specific DENY/ALLOW Rules ===
-# (one block per guidance rule, allow or deny as the rule reads)
+# (one block per guidance rule: permitted for grants, deny for prohibitions)
+
+# Grant conditions use a separate predicate, never another `allow` rule.
+# permitted if { ... }
+# deny contains msg if { ... }
+
+any_deny if {
+    count(deny) > 0
+}
 
 # === Final ALLOW ===
 allow if {
+    permitted
     not any_deny
 }
 ```
@@ -141,8 +150,15 @@ allow if {
 ### Key Principles:
 - **Use `input.args.*`** for tool-specific checks
 - **Use `input.extensions.subject.*`** for system variable checks (roles, teams, etc.)
-- **Each guidance rule → one block**: an `allow if` condition where the rule grants
-  permission, a `deny[msg]` with a clear error message where it is a prohibition
+- **Each guidance rule → one block**: a `permitted if` condition where the rule grants
+  permission, a `deny contains msg if` with a clear error message where it is a prohibition.
+- **Keep a single final `allow` rule** requiring both a grant and no matching denies.
+  Rego combines multiple `allow` rules with OR; a separate grant using `allow if`
+  would bypass the final deny check. For guidance consisting only of prohibitions,
+  define the permitted scope from the listed MCP tools; do not invent extra restrictions.
+- **Define `deny := set()` if there are no prohibitions**, so the final deny check
+  remains defined. Validate a request satisfying a grant and violating a prohibition
+  returns `allow: false`, and a request with no applicable grant also returns false.
 - **Reference values** (blocked domains, forbidden fields) become Rego set constants
 
 **Save to:** `<TARGET_AGENT_PATH>/smith/policy_generated.rego`
