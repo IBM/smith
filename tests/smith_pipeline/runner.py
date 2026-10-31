@@ -56,6 +56,12 @@ def read_usage_csv(path: Path) -> list[dict[str, float | int | str]]:
             row["cost_usd"] = 0.0
         row["step"] = raw.get("step") or "?"
         row["name"] = raw.get("name") or ""
+        row["session_id"] = raw.get("session_id") or ""
+        # Older CSVs omitted the session ID, but their sibling traces have it.
+        if not row["session_id"]:
+            traces = path.parent.glob(f"step{row['step']}-*.trace.jsonl")
+            row["session_id"] = next(
+                (sid for trace in traces if (sid := session_id(trace))), "")
         rows.append(row)
     return rows
 
@@ -337,23 +343,24 @@ class Runner:
         tot = {k: 0 for k in ("input_tokens", "output_tokens",
                               "cache_read_input_tokens",
                               "cache_creation_input_tokens")}
-        # `cost_usd` is a SESSION total, not a per-step figure: with steps
-        # chained by --resume, each one already includes every earlier step's
-        # cost. So the run's cost is the LARGEST value seen, never the sum.
-        tot_cost = 0.0
+        # Costs are cumulative within a resumed Claude session. Independent
+        # sessions must be summed, while each session contributes its maximum.
+        session_costs: dict[str, float] = {}
         tot_time = 0
         csv = ["step,name,input_tokens,output_tokens,cache_read_tokens,"
-               "cache_creation_tokens,total_tokens,turns,cost_usd,seconds,ok"]
+               "cache_creation_tokens,total_tokens,turns,cost_usd,seconds,ok,session_id"]
 
         # Carried-in rows first, dimmed, so the cumulative total is auditable:
         # the reader can see which steps came from an earlier invocation.
-        for row in self.carried:
+        for index, row in enumerate(self.carried):
             tot["input_tokens"] += int(row["input_tokens"])
             tot["output_tokens"] += int(row["output_tokens"])
             tot["cache_read_input_tokens"] += int(row["cache_read_tokens"])
             tot["cache_creation_input_tokens"] += int(
                 row["cache_creation_tokens"])
-            tot_cost = max(tot_cost, float(row["cost_usd"]))
+            sid = str(row.get("session_id") or "")
+            key = sid or f"carried-{index}"
+            session_costs[key] = max(session_costs.get(key, 0.0), float(row["cost_usd"]))
             tot_time += int(row["seconds"])
             mark = "  (carried)" if int(row.get("ok", 1)) else \
                    "  (carried, failed)"
@@ -371,14 +378,16 @@ class Runner:
                 f"{int(row['cache_creation_tokens'])},"
                 f"{int(row['total_tokens'])},{int(row['turns'])},"
                 f"{float(row['cost_usd']):.6f},{int(row['seconds'])},"
-                f"{int(row.get('ok', 1))}"
+                f"{int(row.get('ok', 1))},{sid}"
             )
 
-        for step, r in rows:
+        for index, (step, r) in enumerate(rows):
             for k in tot:
                 tot[k] += g(r, k)
             cost = float(r.usage.get("cost_usd", 0.0) or 0.0)
-            tot_cost = max(tot_cost, cost)
+            sid = session_id(r.trace) if r.trace else None
+            key = sid or f"current-{index}"
+            session_costs[key] = max(session_costs.get(key, 0.0), cost)
             tot_time += r.elapsed
             mark = "" if r.ok else "  (failed)"
             label = f"{step.num} {step.name}"[:32] + mark
@@ -394,10 +403,11 @@ class Runner:
                 f"{g(r, 'output_tokens')},{g(r, 'cache_read_input_tokens')},"
                 f"{g(r, 'cache_creation_input_tokens')},{r.tokens()},"
                 f"{int(r.usage.get('turns', 0) or 0)},{cost:.6f},"
-                f"{r.elapsed},{int(r.ok)}"
+                f"{r.elapsed},{int(r.ok)},{sid or ''}"
             )
 
         grand = sum(tot.values())
+        tot_cost = sum(session_costs.values())
         out.say(f"  {out.dim}{'-' * (len(head) - 2)}{out.off}")
         label = "total (cumulative)" if self.carried else "total"
         out.say(f"  {label:<34}{tot['input_tokens']:>10,}"
@@ -409,10 +419,9 @@ class Runner:
         if cc := tot["cache_creation_input_tokens"]:
             out.say(f"  {out.dim}cache-creation tokens: {cc:,} "
                     f"(included in total){out.off}")
-        out.say(f"  {out.dim}* cost is the session total as of that step, not "
-                f"the step alone: chained steps share one session, so the "
-                f"figures are cumulative and the total is the final value, "
-                f"not their sum.{out.off}")
+        out.say(f"  {out.dim}* cost is cumulative within each session. The "
+                f"total sums distinct sessions, counting resumed and carried "
+                f"steps from the same session once.{out.off}")
 
         path = self.log_dir / "usage.csv"
         try:

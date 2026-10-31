@@ -9,11 +9,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from urllib.parse import urlparse
 
-from dotenv import load_dotenv
-load_dotenv()
-
-SKILL_ROOT = Path(os.environ["BASE_URL"].rstrip("/"))
-PARENT = SKILL_ROOT.parents[2]
+SKILL_ROOT = Path(os.getenv("BASE_URL") or Path(__file__).resolve().parents[2])
+PARENT = SKILL_ROOT.parent.parent.parent
 
 # ---------------------------------------------------------------------------
 # Ports and URLs, read from the environment .env was just loaded into.

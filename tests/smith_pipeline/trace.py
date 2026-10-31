@@ -182,7 +182,7 @@ def usage_totals(path: Path) -> dict[str, float | int]:
             continue
         if ev.get("type") != "result":
             continue
-        # `total_cost_usd` is the SESSION total, not this step's. When
+        # Cost is cumulative within a resumed session; token usage is per run.
         if (cost := ev.get("total_cost_usd")) is not None:
             totals["cost_usd"] = cost
         if (turns := ev.get("num_turns")) is not None:

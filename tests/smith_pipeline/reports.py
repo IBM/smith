@@ -567,6 +567,8 @@ def read_lint(path: Path) -> LintCount:
     if not path.is_file():
         return count
     text = path.read_text(encoding="utf-8", errors="replace")
+    if text.startswith(("regal lint failed", "regal lint could not be run")):
+        return count
     count.present = True
     names = _REGAL_RULE_RE.findall(text)
     count.violations = len(names)
@@ -593,7 +595,7 @@ def read_duplication(root: Path) -> DuplicationCount:
     count = DuplicationCount()
     outputs = root / "assets" / "opa" / "outputs"
     report = _load(outputs / "linting_feedback_de-duplication.json")
-    if isinstance(report, dict):
+    if isinstance(report, dict) and isinstance(report.get("issues"), list):
         count.present = True
         for issue in report.get("issues") or []:
             count.issues += 1
@@ -602,7 +604,6 @@ def read_duplication(root: Path) -> DuplicationCount:
 
     graph = outputs / "graph_suggestion.txt"
     if graph.is_file():
-        count.present = True
         text = graph.read_text(encoding="utf-8", errors="replace")
         count.subgraphs = sum(
             1 for nodes in _SUBGRAPH_NODES_RE.findall(text)

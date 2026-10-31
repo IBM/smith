@@ -33,6 +33,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- Duplication analysis resolves policy-directory symlinks before mounting them into Docker, reports OPA parse failures, and preserves the earlier AST when parsing fails ([#105]).
+- Evaluation runs now stop on failed steps or incomplete refinement measurements, use the selected example's environment for measurements, and sum distinct session costs without counting resumed or carried sessions twice ([#105]).
+- Policy creation keeps permission grants separate from the final `allow` decision so a matching deny cannot be bypassed by another grant ([#105]).
 - `duplication_suggestion` no longer crashes when an `allow` rule body is a call term such as `count(deny) == 0`. The graph parser now links call operands, skips builtins and `__local*` temporaries, names partial set rules from their head ref, keeps isolated `allow` and `deny` heads, and skips the unreachable-rule report with a clear message when the policy has no `allow` rule ([#117]).
 - `generate_promptfoo_config` now sets `max_tokens`, so a config for a larger guidance file is no longer truncated into a `JSONDecodeError` ([#105]).
 - Integration tests no longer take their system variables from whatever agent `.env` points at. `decompose` may only choose an action from `action_list`, so a mismatched pair left `"other"` as the only valid answer and no generated case could target the extracted tool ([#119], [#120]).

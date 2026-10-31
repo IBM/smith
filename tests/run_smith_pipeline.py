@@ -34,10 +34,15 @@ from __future__ import annotations
 import os
 import sys
 from pathlib import Path
+from dotenv import load_dotenv
+
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 os.chdir(Path(__file__).resolve().parents[1])
 
-from smith_pipeline.cli import main  
+# Configure only the executable; importing pipeline modules stays env-free.
+load_dotenv(Path(__file__).resolve().parents[1] / ".env")
+
+from smith_pipeline.cli import main  # noqa: E402 — load settings before config imports
 
 if __name__ == "__main__":
     sys.exit(main())

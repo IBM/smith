@@ -112,7 +112,7 @@ target-version = ["py311"]
 # `-m integration` to override and run the live suite, which drives the real smith
 # CLI and needs external services (some of it a real LLM, gated on requires_llm).
 testpaths = ["tests/integration"]
-pythonpath = ["src"]
+pythonpath = ["src", "tests"]
 addopts = "-q --strict-markers -m unit"
 asyncio_mode = "auto"
 markers = [
