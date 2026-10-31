@@ -55,7 +55,7 @@ dependencies = [
     # Capped below 2.0: langchain-mcp-adapters (used by the example agents)
     # requires mcp<2.0.0, and mcp 2.x removed mcp.shared.context.RequestContext,
     # which it imports. 1.30.0 is the patched 1.x release for GHSA-84m7-p3x7-pcfv.
-    "mcp[cli]>=1.30.0,<2.0.0",
+    "mcp[cli]>=2.3.0,<3.0.0",
 ]
 
 [project.optional-dependencies]
