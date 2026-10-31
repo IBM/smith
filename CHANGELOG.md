@@ -15,29 +15,34 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-10-31
+
 ### Security
 
 - Enabled TLS certificate verification for every OpenAI-compatible HTTP client: `verify=False` is removed from all 16 call sites across 15 files ([#120]).
-- Bumped mcp to 1.30.0 to fix [#118], and brought `uv.lock` back in step with `pyproject.toml`. mcp 2.x is capped out because it removes `mcp.shared.context.RequestContext`, which the example agents' `langchain-mcp-adapters` imports ([#120], [#121]).
+- Constrained mcp to `>=1.30.0,<2.0.0` to fix [#118], and brought `uv.lock` back in step with `pyproject.toml`. mcp 2.x is capped out because it removes `mcp.shared.context.RequestContext`, which the example agents' `langchain-mcp-adapters` imports ([#120], [#121]).
 
 ### Added
 
 - **Evaluation pipeline** (`tests/run_smith_pipeline.py`): drives the full workflow for one example agent as headless `/smith` prompts, one step at a time, with `--steps`, `--resume`, `--carry` and `--dry-run` ([#105]).
 - **Per-step result tables**: each step prints the table its research question needs — suite composition, translation funnel, confusion matrix with coverage, cross-validation verdicts, and before/after effect tables for patching, Regal and duplication — and writes the same figures as CSV beside the run's logs. The refinement steps measure by re-running the analysis flags on each side of the step, so a delta is a fresh measurement; those runs are excluded from the cost table ([#105]).
 - **`--save-artifacts DIR`**: archives each step's artifacts under `DIR/step<N>/`, mirroring the source tree. Refinement steps are saved twice, `before/` and `after/`, because the measurement rewrites the same suggestion files ([#105]).
-- **`smith_evaluationn.md`**: the research questions, agent dataset, metrics and result tables ([#105]).
+- **`tests/smith_evaluation.md`**: the research questions, agent dataset, metrics and result tables ([#105]).
 
 ### Changed
 
 - Reduced the LLM client timeout from 300s to 100s ([#120]).
+- Updated the development dependency on Black to 26.10.1 ([#120]).
 
 ### Fixed
 
 - Duplication analysis resolves policy-directory symlinks before mounting them into Docker, reports OPA parse failures, and preserves the earlier AST when parsing fails ([#105]).
 - Evaluation runs now stop on failed steps or incomplete refinement measurements, use the selected example's environment for measurements, and sum distinct session costs without counting resumed or carried sessions twice ([#105]).
 - Policy creation keeps permission grants separate from the final `allow` decision so a matching deny cannot be bypassed by another grant ([#105]).
-- `duplication_suggestion` no longer crashes when an `allow` rule body is a call term such as `count(deny) == 0`. The graph parser now links call operands, skips builtins and `__local*` temporaries, names partial set rules from their head ref, keeps isolated `allow` and `deny` heads, and skips the unreachable-rule report with a clear message when the policy has no `allow` rule ([#117]).
+- `duplication_suggestion` no longer crashes when an `allow` rule body is a call term such as `count(deny) == 0`. The graph parser now links call operands, skips builtins and `__local*` temporaries, names partial set rules from their head ref, keeps isolated `allow` and `deny` heads, and skips the unreachable-rule report with a clear message when the policy has no `allow` rule ([#117], [#122]).
 - `generate_promptfoo_config` now sets `max_tokens`, so a config for a larger guidance file is no longer truncated into a `JSONDecodeError` ([#105]).
+- Grey-condition generation now sets `max_tokens`, warns when batches produce no results, and writes an empty result on invalid JSON so stale guidance is not reused ([#120]).
+- `reset_policy` works without a populated `.env` ([#105]).
 - Integration tests no longer take their system variables from whatever agent `.env` points at. `decompose` may only choose an action from `action_list`, so a mismatched pair left `"other"` as the only valid answer and no generated case could target the extracted tool ([#119], [#120]).
 - Fixed an over-strict assertion in `test_guidance_reconciliation_integration.py` that failed on a third-party import notice written to stderr ([#120]).
 
@@ -129,7 +134,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Runtime configuration driven entirely from `.env` (see `.env_template`); target-agent selection via `TARGET_AGENT_PATH`, `GUIDANCE_FILE`, `SYSTEM_VAR_FILE`, `MCP_*`, and `AGENT_URL`.
 - Example target agents under `examples/`, each carrying its Smith inputs (`guidance.txt`, `tool_definitions.json`, `system_vars.json`).
 
-[Unreleased]: https://github.com/IBM/smith/compare/0.2.0...HEAD
+[Unreleased]: https://github.com/IBM/smith/compare/0.2.1...HEAD
+[0.2.1]: https://github.com/IBM/smith/compare/0.2.0...0.2.1
 [0.2.0]: https://github.com/IBM/smith/compare/0.1.1...0.2.0
 [0.1.1]: https://github.com/IBM/smith/compare/0.1.0...0.1.1
 [0.1.0]: https://github.com/IBM/smith/releases/tag/0.1.0
@@ -167,14 +173,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 [#99]: https://github.com/IBM/smith/pull/99
 [#101]: https://github.com/IBM/smith/pull/101
 [#103]: https://github.com/IBM/smith/pull/103
+[#105]: https://github.com/IBM/smith/pull/105
 [#107]: https://github.com/IBM/smith/pull/107
 [#108]: https://github.com/IBM/smith/pull/108
 [#109]: https://github.com/IBM/smith/pull/109
 [#110]: https://github.com/IBM/smith/pull/110
 [#111]: https://github.com/IBM/smith/pull/111
-[#105]: https://github.com/IBM/smith/pull/105
 [#117]: https://github.com/IBM/smith/issues/117
 [#118]: https://github.com/IBM/smith/issues/118
 [#119]: https://github.com/IBM/smith/issues/119
 [#120]: https://github.com/IBM/smith/pull/120
 [#121]: https://github.com/IBM/smith/issues/121
+[#122]: https://github.com/IBM/smith/pull/122
