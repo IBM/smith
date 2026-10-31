@@ -15,6 +15,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Capped mcp below 2 in the call-for-papers MCP example's `requirements.txt`; the unpinned `mcp` resolved 2.x, where `mcp.server.fastmcp` no longer exists, so the example server failed on import.
+
 ## [0.2.1] - 2026-10-31
 
 ### Security
