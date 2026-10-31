@@ -4,8 +4,8 @@
 
 | Version | Supported                          |
 | ------- | ---------------------------------- |
-| `0.1.x` | Yes (current development line)     |
-| `< 0.1` | No                                 |
+| `0.2.x` | Yes (current development line)     |
+| `< 0.2` | No                                 |
 
 Only the latest patch release of the supported minor version receives fixes.
 Smith is pre-`1.0`; APIs and the security model may change between minor versions.

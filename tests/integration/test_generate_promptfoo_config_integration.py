@@ -55,6 +55,7 @@ Requires an LLM (``OPENAI_*``/``MODEL_SONNET``) and the MCP server's ``python``.
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
@@ -68,6 +69,28 @@ REQUIRED_CONTEXT_FIELDS = {"id", "purpose", "vars"}
 
 #: Smith-internal plumbing that must never reach a red-teaming config.
 INTERNAL_VARS = {"action_list", "action_description"}
+
+CRAFTED_GUIDANCE = (
+    "1. Faculty may use the get_events tool to search for academic conferences.\n"
+    "2. A guest must never be allowed to call the get_events tool.\n"
+)
+
+CRAFTED_SYSTEM_VARS = {
+    "action_list": ["get_events", "other"],
+    "action_description": {
+        "get_events": (
+            "Search for upcoming academic conferences and calls for papers."
+        ),
+        "other": "General Q&A not backed by a specific tool.",
+    },
+    # List-valued, so these are what reach the generated `vars` block.
+    "user_role": ["faculty", "phd_student", "guest"],
+    "research_area": [
+        "Artificial intelligence",
+        "Cybersecurity and privacy",
+        "Software engineering",
+    ],
+}
 
 
 @pytest.fixture(scope="module")
@@ -85,15 +108,22 @@ def completed_run(tmp_path_factory):
     if not which("python"):
         pytest.skip("python not on PATH (the MCP server is spawned over stdio)")
 
-    # A throwaway output path. This override is what protects the example's
-    # COMMITTED promptfooconfig.yaml, which is what PROMPTFOO_CONFIG_FILE points
-    # at by default — the flag would otherwise regenerate a tracked file in place.
     out_rel = "references/__test_promptfooconfig__.yaml"
     out_path = Path(env.base) / out_rel
     if out_path.exists():
         out_path.unlink()
 
+    # Throwaway inputs, so no example's committed guidance or system variables
+    # are read and the two content-dependent assertions have a fixed basis.
+    guidance_rel = "references/__promptfoo_guidance__.txt"
+    sysvars_rel = "references/__promptfoo_system_vars__.json"
+    guidance_path = Path(env.base) / guidance_rel
+    sysvars_path = Path(env.base) / sysvars_rel
+
     try:
+        guidance_path.parent.mkdir(parents=True, exist_ok=True)
+        guidance_path.write_text(CRAFTED_GUIDANCE)
+        sysvars_path.write_text(json.dumps(CRAFTED_SYSTEM_VARS, indent=2))
         result = subprocess.run(
             [
                 sys.executable,
@@ -105,15 +135,21 @@ def completed_run(tmp_path_factory):
             cwd=str(env.base),
             # The flag extracts tool definitions; stdio is the transport this
             # test can satisfy on its own.
-            env=env.override(**STDIO_MCP, PROMPTFOO_CONFIG_FILE=out_rel),
+            env=env.override(
+                **STDIO_MCP,
+                PROMPTFOO_CONFIG_FILE=out_rel,
+                GUIDANCE_FILE=guidance_rel,
+                SYSTEM_VAR_FILE=sysvars_rel,
+            ),
             capture_output=True,
             text=True,
             timeout=1800,
         )
-        yield {"result": result, "path": out_path, "guidance": env.guidance_file}
+        yield {"result": result, "path": out_path, "guidance": guidance_path}
     finally:
-        if out_path.exists():
-            out_path.unlink()
+        for path in (out_path, guidance_path, sysvars_path):
+            if path.exists():
+                path.unlink()
 
 
 @pytest.fixture(scope="module")
