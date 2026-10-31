@@ -161,6 +161,7 @@ def _call_llm(api_key, openai_base_url, model, temp, top_p, system_prompt, user_
             {"role": "user", "content": user_prompt},
         ],
         temperature=temp,
+        max_tokens=30000,
     )
 
     raw = response.choices[0].message.content.strip()

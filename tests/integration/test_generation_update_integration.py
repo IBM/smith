@@ -45,9 +45,38 @@ GUIDANCE_AFTER = (
     "3. A phd_student may set the limit parameter up to 4 per request.\n"
 )
 
+CRAFTED_SYSTEM_VARS = {
+    "action_list": ["get_events", "other"],
+    "action_description": {
+        "get_events": (
+            "Search for upcoming academic conferences and calls for papers."
+        ),
+        "other": "General Q&A not backed by a specific tool.",
+    },
+    "user_name": "Alice",
+    "user_role": ["faculty", "phd_student", "guest"],
+}
+
+#: Written beside each run's guidance, so no example's own file is touched.
+SYSTEM_VARS_NAME = "__update_system_vars__.json"
+
+
+@pytest.fixture(scope="module", autouse=True)
+def _remove_crafted_system_vars():
+    yield
+    from helpers import SmithEnv
+
+    (Path(SmithEnv().base) / "references" / SYSTEM_VARS_NAME).unlink(
+        missing_ok=True
+    )
+
 
 def run_flag(env, *extra_args, guidance_name, **overrides):
     """Invoke the CLI in-process-free, returning the CompletedProcess."""
+    system_vars = Path(env.base) / "references" / SYSTEM_VARS_NAME
+    system_vars.parent.mkdir(parents=True, exist_ok=True)
+    system_vars.write_text(json.dumps(CRAFTED_SYSTEM_VARS, indent=2))
+    overrides.setdefault("SYSTEM_VAR_FILE", f"references/{SYSTEM_VARS_NAME}")
     return subprocess.run(
         [sys.executable, "-m", "smith.cli", "--flag", "test_generation", *extra_args],
         cwd=str(env.base),

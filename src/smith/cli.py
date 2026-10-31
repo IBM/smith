@@ -1023,6 +1023,7 @@ def main():
         "save_snapshot",
         "generate_promptfoo_config",
         "get_current_agent",
+        "reset_policy",
         "guidance_reconciliation",
         "security_analysis_checkpoint",
         "security_analysis_inspection",
