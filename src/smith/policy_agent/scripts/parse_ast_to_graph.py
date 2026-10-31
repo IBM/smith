@@ -3,6 +3,7 @@
 
 import json
 from collections import defaultdict
+from pathlib import Path
 import networkx as nx
 from typing import Iterable, List, Tuple, Set, Dict, Hashable
 from dotenv import load_dotenv
@@ -76,23 +77,32 @@ def compress_by_constant_index_paths(
 
 
 def create_ast(policy_dir, opa_ast_path):
-    print(
-        "docker run --rm -v "
-        + policy_dir
-        + ":/policies openpolicyagent/opa:1.8.0-static parse /policies/policy.rego --format=json > "
-        + opa_ast_path
-    )
-    subprocess.run(
+    # Docker's VM may not share a symlink's target via the lexical mount path.
+    # Resolve it on the host, and pass argv directly so spaces are preserved.
+    policy_root = Path(policy_dir).resolve()
+    result = subprocess.run(
         [
-            "docker run --rm -v "
-            + policy_dir
-            + ":/policies openpolicyagent/opa:1.8.0-static parse /policies/policy.rego --format=json > "
-            + opa_ast_path
+            "docker",
+            "run",
+            "--rm",
+            "-v",
+            f"{policy_root}:/policies",
+            "openpolicyagent/opa:1.8.0-static",
+            "parse",
+            "/policies/policy.rego",
+            "--format=json",
         ],
-        shell=True,
         capture_output=True,
         text=True,
+        timeout=120,
     )
+    if result.returncode != 0:
+        raise RuntimeError(f"OPA parse failed: {result.stderr or result.stdout}")
+    # Keep an existing AST intact when parsing fails or returns invalid output.
+    json.loads(result.stdout)
+    output = Path(opa_ast_path)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(result.stdout, encoding="utf-8")
 
 
 def load_ast(path):

@@ -25,6 +25,8 @@ FUNCTIONS UNDER TEST
 Listed — and laid out in this file — in the order the flag executes them.
 
 STEP 1 · ``smith.policy_agent.scripts.parse_ast_to_graph``
+    ``create_ast``                      — canonical Docker mount paths, safe argv,
+                                          and no overwrite after a parse failure
     ``init_graph``                      — the module-level index reset, so two
                                           graphs built in one process agree
     ``merge_with_body`` / ``merge_with_list``
@@ -55,6 +57,9 @@ Env-free: graphs are built in memory; no OPA, no Docker, no LLM.
 """
 
 from __future__ import annotations
+
+import json
+import subprocess
 
 import networkx as nx
 import pytest
@@ -130,6 +135,62 @@ def graph_from_rules(*rules):
 # ===========================================================================
 # STEP 1 · init_graph — the state reset
 # ===========================================================================
+
+
+def test_ast_extraction_resolves_symlinks_and_preserves_spaces(unit_env, monkeypatch):
+    real = unit_env.root / "policies with spaces"
+    real.mkdir()
+    link = unit_env.root / "skill policies"
+    link.symlink_to(real, target_is_directory=True)
+    output = unit_env.root / "outputs/ast.json"
+    calls = []
+
+    def run(argv, **kwargs):
+        calls.append((argv, kwargs))
+        return subprocess.CompletedProcess(argv, 0, stdout='{"rules": []}', stderr="")
+
+    monkeypatch.setattr(ast_mod.subprocess, "run", run)
+    ast_mod.create_ast(str(link), str(output))
+
+    argv, kwargs = calls[0]
+    assert argv[argv.index("-v") + 1] == f"{real.resolve()}:/policies"
+    assert not kwargs.get("shell"), "the mount must be a single argv item"
+    assert json.loads(output.read_text()) == {"rules": []}
+
+
+@pytest.mark.parametrize("exists", [False, True])
+def test_failed_opa_parse_reports_its_error_without_overwriting_ast(
+    unit_env, monkeypatch, exists
+):
+    output = unit_env.root / "ast.json"
+    if exists:
+        output.write_text('{"old": "AST"}')
+    monkeypatch.setattr(
+        ast_mod.subprocess,
+        "run",
+        lambda argv, **_: subprocess.CompletedProcess(
+            argv, 1, stdout="", stderr="policy.rego: no such file or directory"
+        ),
+    )
+
+    with pytest.raises(RuntimeError, match="policy.rego: no such file"):
+        ast_mod.create_ast(str(unit_env.root), str(output))
+    assert output.exists() is exists
+    if exists:
+        assert output.read_text() == '{"old": "AST"}'
+
+
+def test_empty_opa_output_does_not_replace_an_existing_ast(unit_env, monkeypatch):
+    output = unit_env.root / "ast.json"
+    output.write_text('{"old": "AST"}')
+    monkeypatch.setattr(
+        ast_mod.subprocess,
+        "run",
+        lambda argv, **_: subprocess.CompletedProcess(argv, 0, stdout="", stderr=""),
+    )
+    with pytest.raises(json.JSONDecodeError):
+        ast_mod.create_ast(str(unit_env.root), str(output))
+    assert output.read_text() == '{"old": "AST"}'
 
 
 def test_repeated_graph_builds_do_not_inherit_earlier_node_indices(monkeypatch):
@@ -248,9 +309,7 @@ def test_a_policy_without_an_allow_rule_returns_none():
 def test_write_graph_suggestion_skips_cleanly_without_an_allow_rule(tmp_path):
     graph_path = tmp_path / "graph.dot"
     suggestion_path = tmp_path / "suggestion.txt"
-    nx.nx_pydot.write_dot(
-        nx.MultiDiGraph([("0& deny", "1& something")]), graph_path
-    )
+    nx.nx_pydot.write_dot(nx.MultiDiGraph([("0& deny", "1& something")]), graph_path)
 
     text = write_graph_suggestion(str(graph_path), str(suggestion_path))
 
@@ -340,6 +399,7 @@ def test_the_dot_file_is_written_only_when_asked(unit_env):
     )
     assert out.exists()
 
+
 # ===========================================================================
 # STEP 2 · clean_graph — the white-list prune
 # ===========================================================================
@@ -392,6 +452,7 @@ def test_the_node_list_names_the_rules_without_their_index_prefixes(unit_env):
     assert (
         "3&" not in node_line
     ), f"the graph index leaked into the node list: {node_line}"
+
 
 def test_the_report_is_written_and_returned(unit_env):
     # The return value is concatenated into the flag's stdout; the file is what a
