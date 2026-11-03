@@ -1,4 +1,4 @@
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 from create_ticket import raw_submit_ticket, raw_create_ticket, raw_purchase, raw_return
 from rag_pipeline import raw_ask_for_workpolicy
 from rag_salary import raw_ask_for_salary
@@ -10,7 +10,7 @@ import csv
 import io
 
 # Auto open in port 8000
-mcp = FastMCP("Unified MCP Server - Complete Test Coverage")
+mcp = MCPServer("Unified MCP Server - Complete Test Coverage")
 
 # ===== BASIC TOOLS FROM ORIGINAL MCP_SERVER =====
 
