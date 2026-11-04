@@ -35,27 +35,24 @@ dependencies = [
     "openai>=3.38.0",
     "python-dotenv>=1.2.3",
     "numpy>=2.4.6",
-    "pandas>=3.0.6",
+    "pandas>=3.1.0",
     "pydantic>=2.13.5",
     "PyYAML>=6.0.3",
     "networkx>=3.6.1",
     "pydot>=4.0.1",
     "matplotlib>=3.11.2",
     "seaborn>=0.12.0",
-    "scikit-learn>=1.3.0",
+    "scikit-learn>=1.9.1",
     "sentence-transformers>=6.2.0",
     "typer>=0.27.2",
     "rich>=13.0.0",
-    "termcolor>=2.0.0",
+    "termcolor>=3.3.0",
     "httpx>=0.28.1",
     "requests>=2.34.2",
     "tqdm>=4.70.1",
     "tenacity>=9.2.1",
     "jinja2>=3.1.0",
-    # Capped below 2.0: langchain-mcp-adapters (used by the example agents)
-    # requires mcp<2.0.0, and mcp 2.x removed mcp.shared.context.RequestContext,
-    # which it imports. 1.30.0 is the patched 1.x release for GHSA-84m7-p3x7-pcfv.
-    "mcp[cli]>=1.30.0,<2.0.0",
+    "mcp[cli]>=2.3.0,<3.0.0",
 ]
 
 [project.optional-dependencies]
@@ -63,13 +60,22 @@ dev = [
     "ruff==0.17.0",
     "black==26.10.1",
     "pytest>=7.4.0",
-    "pytest-asyncio>=0.21.0",
+    "pytest-asyncio>=1.4.1",
     "pytest-mock>=3.11.0",
     "pytest-cov>=7.1.0",
     "pytest-socket>=0.8.1",
     "pip-audit>=2.10.1",
     "build>=1.5.0",
     "twine>=7.0.0",
+    # The integration test suite launches an example agent (`uvicorn agent:app`) and
+    # its MCP server from this environment, so their imports have to resolve
+    # here too — including the call-for-papers scraper's beautifulsoup4.
+    "langchain[mcp]>=1.4.0",
+    "langchain-openai>=1.7.2",
+    "langgraph>=1.2.14",
+    "fastapi>=0.141.1",
+    "uvicorn>=0.32.0",
+    "beautifulsoup4>=4.11.0",
 ]
 
 [project.urls]
@@ -118,4 +124,10 @@ asyncio_mode = "auto"
 markers = [
     "unit: isolated tests with controlled local inputs and mocked external boundaries; env-free, run by `make ci`.",
     "integration: real CLI, tool, service, or model tests (incl. real-LLM ones); run by `make integration`.",
+]
+filterwarnings = [
+    # pydot 4.0.1 (latest) still calls pyparsing's deprecated setParseAction in
+    # its own dot_parser module, which networkx's nx_pydot imports. Nothing in
+    # Smith can avoid it; drop this once pydot ships the renamed calls.
+    "ignore:'setParseAction' deprecated:DeprecationWarning:pydot.dot_parser",
 ]

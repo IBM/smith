@@ -15,6 +15,18 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- Migrated to mcp 2.x, lifting the `<2.0.0` cap added in 0.2.1 ([#140]).
+- Moved the example agents off `langchain-mcp-adapters` to the `langchain.mcp` namespace shipped in `langchain[mcp]`. The standalone adapter is archived upstream and cannot support mcp 2.x. The in-tree namespace is where MCP support is maintained going forward.
+- Updated the example MCP servers for mcp 2.x.
+- Updated the dependencies proposed in the other open dependency PRs: pandas ([#142]), scikit-learn ([#144]), termcolor ([#143]) and pytest-asyncio ([#141]).
+
+### Fixed
+
+- Tool definitions are extracted correctly from mcp 2.x servers.
+- Removed the deprecation warnings printed by `make unit`.
+
 ## [0.2.1] - 2026-10-31
 
 ### Security
@@ -185,3 +197,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 [#120]: https://github.com/IBM/smith/pull/120
 [#121]: https://github.com/IBM/smith/issues/121
 [#122]: https://github.com/IBM/smith/pull/122
+[#140]: https://github.com/IBM/smith/pull/140
+[#141]: https://github.com/IBM/smith/pull/141
+[#142]: https://github.com/IBM/smith/pull/142
+[#143]: https://github.com/IBM/smith/pull/143
+[#144]: https://github.com/IBM/smith/pull/144

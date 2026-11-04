@@ -116,7 +116,9 @@ async def lifespan(app: FastAPI):
             "function": {
                 "name": tool.name,
                 "description": tool.description,
-                "parameters": tool.inputSchema,
+                "parameters": getattr(tool, "input_schema", None)
+                or getattr(tool, "inputSchema", None)
+                or {},
             },
         }
         for tool in tool_objects

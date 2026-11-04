@@ -1,23 +1,28 @@
-"""FastMCP server exposing the Employee Hub API as tools (stdio transport).
+"""MCP server exposing the Employee Hub API as tools (stdio transport).
 
 Each tool is a thin wrapper over an api.* function using a shared on-disk
 connection. ValueError is converted to {"error": <message>} so the agent gets
 a clean signal. Docstrings mirror the API layer's param/output documentation.
 """
+import threading
 from typing import Optional
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 from db import get_connection, init_db
 from api import employees, org, departments, personal, leave, holidays_api
 
-mcp = FastMCP("enterprise-employee-hub")
+mcp = MCPServer("enterprise-employee-hub")
 
 _conn = get_connection()
 init_db(_conn)  # idempotent; ensures tables exist
 
 
+_lock = threading.Lock()
+
+
 def _safe(fn, *args, **kwargs):
     try:
-        return fn(_conn, *args, **kwargs)
+        with _lock:
+            return fn(_conn, *args, **kwargs)
     except ValueError as e:
         return {"error": str(e)}
 
