@@ -18,9 +18,16 @@ Introduces intentional defects into the policy for testing the refinement workfl
    smith --flag policy_validation --policy_path <TARGET_AGENT_PATH>/smith/policy_defect.rego
    ```
 
-4. Save defect details to `<TARGET_AGENT_PATH>/smith/defect_summary.txt`
+4. Verify the defects actually produce false positives or false negatives against the
+   existing test suite. Weakening a rule that no test case reaches changes nothing, so the
+   scorecard reports 0 FP and 0 FN and refinement has nothing to fix. Only target rules
+   listed as COVERED in `references/scorecard/coverage_analysis.txt`, and prefer deleting
+   a condition outright over narrowing one. If FP + FN is 0, go back to step 2 and pick a
+   rule that more cases depend on.
 
-5. Remind user: "Defective policy at `<TARGET_AGENT_PATH>/smith/policy_defect.rego`. Make sure do not add DEFECT labels or annotations in the policy. Copy to `./assets/policy.rego` and run policy testing to exercise the refinement workflow."
+5. Save defect details to `<TARGET_AGENT_PATH>/smith/defect_summary.txt`, including the measured FP and FN counts
+
+6. Remind user: "Defective policy at `<TARGET_AGENT_PATH>/smith/policy_defect.rego`. Make sure do not add DEFECT labels or annotations in the policy. Copy to `./assets/policy.rego` and run policy testing to exercise the refinement workflow."
 
 ---
 
@@ -28,5 +35,6 @@ Introduces intentional defects into the policy for testing the refinement workfl
 
 - Never modify `./assets/policy.rego` directly
 - Defective policy must still compile
+- Defects must produce at least one false positive or false negative; a defect set scoring 0/0 is a failed run
 - Do not add DEFECT labels or annotations in the policy, make sure the policy looks like a normal policy. 
 - Do not modify test cases
