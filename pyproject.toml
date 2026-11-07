@@ -71,7 +71,7 @@ dev = [
     # its MCP server from this environment, so their imports have to resolve
     # here too — including the call-for-papers scraper's beautifulsoup4.
     "langchain[mcp]>=1.4.0",
-    "langchain-openai>=1.7.2",
+    "langchain-openai>=1.7.3",
     "langgraph>=1.2.14",
     "fastapi>=0.141.1",
     "uvicorn>=0.32.0",
