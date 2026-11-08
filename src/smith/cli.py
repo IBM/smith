@@ -524,6 +524,27 @@ def main():
         action="store_true",
         help="create the structured input template for a security-analysis phase",
     )
+    parser.add_argument(
+        "--build",
+        action="store_true",
+        help="build the OWASP catalog embedding index (security_catalog_index)",
+    )
+    parser.add_argument(
+        "--query",
+        help="text to rank catalog items against (security_catalog_index)",
+    )
+    parser.add_argument(
+        "--asi",
+        help=(
+            "comma-separated ASI IDs to rank within; with --phase D, the rest "
+            "are searched for cross-category candidates (security_catalog_index)"
+        ),
+    )
+    parser.add_argument(
+        "--no-prefix",
+        action="store_true",
+        help="embed items without the category-name prefix (security_catalog_index)",
+    )
     args = parser.parse_args()
 
     if not args.flag:
@@ -663,6 +684,46 @@ def main():
                     analysis_dir / "architecture_inspection.json",
                 )
             )
+        except ReconciliationError as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            sys.exit(1)
+        sys.exit(0)
+
+    if args.flag == "security_catalog_index":
+        from smith.tools.guidance_reconciliation import ReconciliationError
+        from smith.tools.security_catalog import CATALOG_PATH
+        from smith.tools.security_catalog_index import (
+            build_index,
+            describe_index,
+            query_index,
+        )
+
+        try:
+            base_url = Path(os.getenv("BASE_URL") or ".").resolve()
+            index_dir = _optional_security_analysis_path(
+                base_url, "SECURITY_CATALOG_INDEX_DIR"
+            ) or (base_url / "references" / "security_catalog_index")
+            if args.build:
+                print(build_index(CATALOG_PATH, index_dir, prefix=not args.no_prefix))
+            elif args.query:
+                if args.phase not in ("C", "D"):
+                    raise ReconciliationError("--query requires --phase C or D")
+                restrict = tuple(
+                    item.strip().upper()
+                    for item in (args.asi or "").split(",")
+                    if item.strip()
+                )
+                print(
+                    query_index(
+                        index_dir,
+                        CATALOG_PATH,
+                        args.query,
+                        args.phase,
+                        restrict_asi=restrict,
+                    )
+                )
+            else:
+                print(describe_index(index_dir, CATALOG_PATH))
         except ReconciliationError as exc:
             print(f"ERROR: {exc}", file=sys.stderr)
             sys.exit(1)
@@ -1026,6 +1087,7 @@ def main():
         "guidance_reconciliation",
         "security_analysis_checkpoint",
         "security_analysis_inspection",
+        "security_catalog_index",
         "guidance_merge",
     ]
     if args.flag and args.flag not in allowed_flags:
