@@ -59,6 +59,7 @@ examples/sre/
 
 # ---- Generated: security-analysis runtime state ----
 **/smith/guidelines-security-analysis/analysis_state.json
+**/smith/guidelines-security-analysis/owasp_catalog_*.json
 **/smith/guidelines-security-analysis/architecture_inspection.json
 **/smith/guidelines-security-analysis/.superseded_*/
 
