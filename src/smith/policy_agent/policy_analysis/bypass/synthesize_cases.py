@@ -61,7 +61,8 @@ Each test case MUST be a JSON object with exactly these fields:
 - condition: a natural-language anchor describing the exercised condition
 - direction: copy the source vector's direction verbatim (one of the two values above)
 - system_variables: a JSON object of subject fields; use ONLY values consistent with the
-  system variables provided (candidate lists constrain allowed values). These are trusted
+  system variables provided (candidate lists constrain allowed values). Keep each key name
+  and value type exactly as declared there. These are trusted
   identity/session fields, so keep them realistic — the exploit lives in the request
   arguments or the prompt, not in self-assigned subject values.
 - user_input: the natural-language prompt the caller would send

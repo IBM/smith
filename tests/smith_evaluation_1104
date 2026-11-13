@@ -122,6 +122,18 @@ rule, so validity and faithfulness are separate failures and are measured separa
 | `A4` |Y | 0| 32| 25|0 |3 |93.8% |86 |
 | `A5` | Y| 1|50 |31 | 0| 0|80.7% | 121|
 
+
+**Table (haiku)**
+
+| Agent | opa fmt passes | Auto-fix iterations | TP | TN | FP | FN | Coverage | Policy lines |
+|-------|:--------------:|--------------------:|---:|---:|---:|---:|---------:|-------------:|
+| `A1` | Y| 2| 38|14 | 10|0 | 74.7%| 164|
+| `A2` | Y| 2| 31| 18| 4| 3|100% |70 |
+| `A3` |Y |0 |67| 22|0 |1 | 94.7%|92 |
+| `A4` | Y|1 |100 |109 |0 | 0| 98.5%| 114|
+| `A5` | Y| 1| 51| 65| 1|0 |100% |142 |
+
+# haiku is weak on generating the policy 
 ---
 
 ## RQ2 — Test case generation
@@ -161,6 +173,16 @@ of the generated suite.
 | `A3` | 13 | 42 | 2 | 14 | 71 | 
 | `A4` | 28 | 32 | 2 | 10 | 72 | 
 | `A5` | 46 | 37 | 2 | 6 |  91| 
+
+**Table (haiku, suite composition, one per model setting M1/M2/M3)**
+
+| Agent | Legit. allow | Legit. disallow |Adv. bypass | Adv. Promptfoo | Total |
+|-------|-------------:|------------:|------------:|---------------:|------:|
+| `A1` |19  |  43| 20 | 4 | 86 | 
+| `A2` | 20 | 20 | 11 | 10 | 61 | 
+| `A3` |  27| 64 | 8 | 6 | 105 | 
+| `A4` |  113| 83 | 3 | 12 |  211| 
+| `A5` | 66 | 50 |11  |  2|129  | 
 ---
 
 ## RQ3 — Label validation
@@ -203,6 +225,15 @@ its own labels.
 | `A4` | 72| 0+8|4+0 |0 | 60| 100%|
 | `A5` | 91| 1+4| 1+4|11+0 |81 | 100%|
 
+**Table (Haiku, filtering funnel and accuracy)**
+
+| Agent | Initial generated | Removed (tool-name mismatch, translation phase) | Removed(cross-validation, from disallow+from allow)| corrected (cross-validation, moved to disallow+moved to allow) | Final | Accuracy|
+|-------|------------------:|-----------------------------:|-----:|-------------------------------------:|------:|-----:|
+| `A1` |86 |9+14 |1+0 |0+2 | 62| 100% |
+| `A2` |61 |1+4 | 0|2+0 |56 | 100% |
+| `A3` |105 |6+6 |3+0 |6+3 | 90| 100% |
+| `A4` |211 |0+2 |0 | 10+4| 109| 100% |
+| `A5` |129 |0+10 | 1+1| 0| 117| 100% |
 ---
 
 ## RQ4 — Refinement loop
@@ -245,6 +276,21 @@ Notice that, the failed-case patching can also identify mislabeled cases by itse
 | `A4` |1/0 | 0/0| 3/0|86/93 |93.8%/96.2%  | 
 | `A5` |0/0 |0/0 |0/0 | 121/121|80.7%/80.7% | 
 
+**Table (Haiku, failed-case patching)**
+
+| Agent | #cluster(before → after) |FP (before → after) | FN (before → after) | Policy lines (before → after) | Coverage (before → after) |
+|-------|:-------------------:|-----:|:-------------------:|:-----------------------------:|:-------------------------:|
+| `A1` |2/1 | 10/1| 0/0| 164/170| 74.7%/77.7%| 
+| `A2` |3/2 | 4/4| 3/0| 70/76| 100%/100%| 
+| `A3` |1/0 | 0/0|1/0 | 92/92| 94.7%/94.7%|  
+| `A4` |0/0 |0/0 | 0/0|114/114 |98.5%/98.5% | 
+| `A5` |1/0 |1/0 |0/0 | 142/142| 100%/100%| 
+
+# haiku is weak on cross validate test cases and test case generation. 
+
+# note, the one failed test case in A1 is the same as note 2.
+# In A2, Three of the four are genuinely mislabeled; one is out of scope. bypass_test_case1: adjust_compensation for a $2500 raise, caller roles: ["hr"].
+No guidance line mentions adjust_compensation at all. It is from an unused mcp tool and out of the scope generation process asked/constrained. 
 
 **Table (Sonnet, linting and duplication)**
 
@@ -268,10 +314,25 @@ Notice that, the failed-case patching can also identify mislabeled cases by itse
 | `A4` | 8| 0| 0|93/99/99 | 96.2%/96.4%/96.4%|
 | `A5` | 3|1+0 | 0| 121/121/122|80.7%/80.7%/81.0% |
 
+
 **note4: A2 why coverage drops when lines of policy drop: Coverage is a ratio, covered / coverable. Removing a duplicate removes lines from both the numerator and the denominator — and because both merged rules were being exercised by test cases, the removed lines were covered lines.**
 **note5: lines does not change after deduplication, because it replaced inline checks with existing helper (substitution)**
 **note6: deduplicate increases the line number, same as Sonnet-run note 3, the model equalized two rules rather than deleting one**
 
+**Table (Haiku, linting and duplication)**
+
+| Agent | Linting problems fixed | Duplication problems fixed | Failing cases introduced | Policy lines (before → after linting -> after duplication) | Coverage (before → after linting -> after duplication) |
+|-------|-----------------------:|-----------------------:|-----------------------:|---:|---:|
+| `A1` | 4| 1| 0|170/179/173 | 77.7%/77.7%/81.1%|
+| `A2` | 1| 0| 0|76/76/65 |100%/100%/100% |
+| `A3` |1 | 0| 0| 92/92/92|94.7%/94.7%/94.7% |
+| `A4` | 2|4+0 |0 |114/127/124 | 98.5%/98.5%/98.4|
+| `A5` | 1|0 | 0| 142/142/142| 100%/100%/100%|
+
+# note why A4 decreases the coverage after deduplication
+# note why line decreases but non redundancy number reduced? A2-> it fixed a real duplication without either detector reporting it.
+
+ 
 ## RQ5 — Cost
 
 *Is the automation cheap enough to be practical, and where is the cost concentrated?*
@@ -303,6 +364,16 @@ and capability trade off against each other.
 | `A4` |183,186 |1,518,909+335,035 | 182,249 +594,953| 164,950 |606,440  |1,475,672 |627,549 |3,728,454 | 9,424,984|
 | `A5` |331,239|2,038,844+619,944 | 196,349+1,082,999|161,729 | 166,296|1,327,190 |858,542 |6,840,983 |13,639,884 |
 
+**Table (Haiku, tokens per stage)**
+
+| Agent |  Policy generation (step 1) | Test generation (step 2,3) | Label validation (step 4,5) | Policy testing (step 4)| Policy patching (step 6) | Regal linting (step 7) | Duplication (step 8) |Security analysis (step 9) | Total |
+|-------|------------------:|------------------:|----------------:|-----------------:|----------------:|--------------:|------------:|------:|------:|
+| `A1` | 489,695| 288,344+69,040| 223,900+327,766| 182,840|1,144,478 |1,060,812 |769,725 |7,849,606 | 12,414,660|
+| `A2` |267,770 | 324,434+158,813|172,529+394,002| 145,597| 763,942| 478,328| 513,495|7,105,572 |10,324,482 |
+| `A3` |251,191|102,437+112,043 | 186,492+217,994| 159,691|193,510 |321,739 |344,605 | 4,525,102|6,414,804 |
+| `A4` | 266,772|444,362+225,551 |248,653+648,344 |254,157 |365,318| 806,654| 894,406|5,430,170 |9,607,609|
+| `A5` | 490,927| 70,847+153,075| 164,165 +365,849 |97,958 | 626,895| 675,744|844,628  | 9,090,013| 12,580,101|
+
 ---
 
 ## RQ6 — Security enhancement
@@ -331,6 +402,17 @@ rather than restatements of what the prose already said.
 **note 7: no security enhanchment for current guidancies**
 
 **Table (GPT, guidance growth)** 
+
+| Agent | Guidance lines (before) | Guidance lines (after) | Added | 
+|-------|------------------------:|-----------------------:|------:|
+| `A1` | 14 |  14|  0|
+| `A2` | 5 | 5 | 0 | 
+| `A3` | 29 | 29 | 0 |
+| `A4` | 33 | 33 | 0 | 
+| `A5` |  31| 31 | 0 |
+
+
+**Table (Haiku, guidance growth)** 
 
 | Agent | Guidance lines (before) | Guidance lines (after) | Added | 
 |-------|------------------------:|-----------------------:|------:|
@@ -377,6 +459,18 @@ each class is present by construction. This RQ is reported separately.
 
 **note8: why coverage drop in A4-> depends on how the model fix the failed cases. 
 
+
+**Table (Haiku, failed-case patching)**
+
+| Agent | #cluster(before → after) |FP (before → after) | FN (before → after) | Policy lines (before → after) | Coverage (before → after) |
+|-------|:-------------------:|-----:|:-------------------:|:-----------------------------:|:-------------------------:|
+| `A1` |1/0 |0/0 | 4/0|100/105 | 73.0%/77.1%|
+| `A2` | 1/0|0/0 | 4/0|87/95 |58.7%/62.7% |
+| `A3` |4/0 |0/0 |17/0 | 103/105| 79.1%/80.0%|
+| `A4` |3/0 |0/0 | 7/0| 152/153| 80.2%/81.7%|
+| `A5` | 5/0| 24/0| 6/0|154/163 | 91.3%/94.7%|
+
+
 **Table (Sonnet, linting and duplication)**
 
 | Agent | Linting problems fixed | Duplication problems fixed | Failing cases introduced | Policy lines (before → after linting -> after duplication) | Coverage (before → after linting -> after duplication) |
@@ -402,3 +496,23 @@ Both numbers dropped by exactly 5 — so all 5 removed lines were covered. Takin
 | `A3` |1 | 1+0| 0|126/126/113 |91.5%/91.5%/93.5% |
 | `A4` |6 | 0+1| 0| 99/99/88| 89.7%/89.7%/96.2%|
 | `A5` |2 | 1+0| 0|132/132/126 |75.0%/75.0%/76.7% |
+
+**Table (Haiku, linting and duplication)**
+
+| Agent | Linting problems fixed | Duplication problems fixed | Failing cases introduced | Policy lines (before → after linting -> after duplication) | Coverage (before → after linting -> after duplication) |
+|-------|-----------------------:|-----------------------:|-----------------------:|---:|---:|
+| `A1` |2 | 0| 0|208/202/194 |77.1%/78.2%/82.3%|
+| `A2` |1 |2 | 0| 95/95/70|62.7%/62.7%/91.4% |
+| `A3` |1 |1+2 |0 |105/105/92 |80/0%/80.0%/94.7% |
+| `A4` | 3| 3+2| 0| 153/153/124| 81.7%/81.7%/98.4%|
+| `A5` | 3|2+0 | 0| 163/163/143| 94.7%/94.7%/98.4%|
+
+# note A1 reduced suggestions from graph and LLM, while - before report (1 issue): the unsatisfiable purchase + retired_tool deny rule.
+- Agent removes it, plus the unused legacy_purchase_cap — that's the 8 lines (202 → 194).
+- after report (1 issue): a new finding — the dead export_compensation_data branch inside the sensitive_requested deny rule. It was always present, but it was never flagged until the bigger one was gone.
+# haiku is weak on finding duplications
+
+### Conclusion 
+- weak model cannot generate good initial policy without autofix, they mostly have format issues. 
+- weak model cannot generate good test cases.
+- weak model cannot identify duplications effectively.
