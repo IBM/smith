@@ -47,7 +47,10 @@ For each phase, load only its guide and use the resolved paths for
 
 For phase `<P>`:
 
-1. Run `smith --flag security_analysis_checkpoint --phase <P> --prepare`.
+1. Run `smith --flag security_analysis_checkpoint --phase <P> --prepare`. For
+   Phases C and D this also writes the phase's OWASP catalog snapshot
+   (`owasp_catalog_<P>.json`); the checkpoint fails if the catalog has since
+   changed within that snapshot.
 2. Fill the generated phase JSON. It is the primary intermediate; preserve its
    keys and table columns, use strings for cell values, and use empty arrays for
    tables with no rows.

@@ -15,17 +15,26 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+
+- **OWASP catalog provenance**: `security_analysis_checkpoint --prepare` writes the catalog slice Phases C and D read (`owasp_catalog_C.json`, `owasp_catalog_D.json`), and `analysis_state.json` records the catalog and snapshot hashes. Phase C's snapshot omits mitigations; Phase D's holds only the categories Phase C marked applicable.
+
 ### Changed
 
 - Migrated to mcp 2.x, lifting the `<2.0.0` cap added in 0.2.1 ([#140]).
 - Moved the example agents off `langchain-mcp-adapters` to the `langchain.mcp` namespace shipped in `langchain[mcp]`. The standalone adapter is archived upstream and cannot support mcp 2.x. The in-tree namespace is where MCP support is maintained going forward.
 - Updated the example MCP servers for mcp 2.x.
 - Updated the dependencies proposed in the other open dependency PRs: pandas ([#142]), scikit-learn ([#144]), termcolor ([#143]) and pytest-asyncio ([#141]).
+- The checkpoint fails when the catalog changed within a phase's snapshot since `--prepare`, naming the changed scenario or field; `guidance_merge` refuses guidance derived from an older catalog. Runs already in progress must re-run `--prepare` for Phases C and D.
+- The catalog loader rejects duplicate, missing or non-string `ASI01`–`ASI10` IDs, non-object entries, and entries without attack scenarios, which previously dropped that category from mandatory coverage.
+- Snapshots are validated whole: duplicate or non-object rows and unexpected keys fail the checkpoint instead of being skipped, and the recorded snapshot hash is of the bytes that were validated.
 
 ### Fixed
 
 - Tool definitions are extracted correctly from mcp 2.x servers.
 - Removed the deprecation warnings printed by `make unit`.
+- The OWASP catalog is now included in built packages; a non-editable install previously failed Phase C with "OWASP catalog is missing".
+- Guidance whose rules are numbered Markdown sections (`## 1. Title`, as in the `employee` example) now works through Phase D: the existing-rule check recognizes the headings, and `guidance_updated.txt` must add rules as the next numbered sections at the same heading level, so merged guidance keeps the target's format. Previously every reference to an existing rule failed the Phase D checkpoint, and an addendum could only be bare bullets appended under the last section.
 
 ## [0.2.1] - 2026-10-31
 

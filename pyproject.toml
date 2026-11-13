@@ -91,9 +91,10 @@ smith = "smith.cli:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-# Non-Python runtime data shipped with the package: the OPA scorecard harness
-# (shell + coverage rego) and the ARES red-teaming input configs.
+# Non-Python runtime data shipped with the package: the OWASP catalog, the OPA
+# scorecard harness (shell + coverage rego) and the ARES red-teaming input configs.
 smith = [
+    "data/*.json",
     "policy_testing/*.sh",
     "policy_testing/tools/*",
     "test_generation/ares_config/*",

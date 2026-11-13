@@ -805,10 +805,12 @@ def find_normalized_text_duplicates(
 def validate_existing_rule_numbers(
     existing_rules: list[Candidate], guidance_text: str
 ) -> list[ValidationFinding]:
+    # A rule is numbered either as a line (``1. Rule``) or as a Markdown
+    # section heading (``## 1. Rule``).
     numbered = {
         int(match.group(1))
         for line in guidance_text.splitlines()
-        if (match := re.match(r"^\s*(\d+)[.)]\s+", line))
+        if (match := re.match(r"^\s*(?:#{1,6}\s+)?(\d+)[.)]\s+", line))
     }
     findings: list[ValidationFinding] = []
     for rule in existing_rules:
