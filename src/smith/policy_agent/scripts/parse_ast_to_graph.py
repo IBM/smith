@@ -317,6 +317,10 @@ def process_name_list(name_list):
 
 
 def add_relations(source, end, index, relations, G, nega=False):
+    if isinstance(relations, bool) or relations is None:
+        return G
+    if isinstance(relations, (str, dict)):
+        relations = [relations]
     for ref in relations:
         if isinstance(ref, dict):
             G.add_edge(
