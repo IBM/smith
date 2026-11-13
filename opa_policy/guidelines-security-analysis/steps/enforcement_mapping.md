@@ -115,7 +115,11 @@ Record every previous addendum rule in Prior Proposal Reconciliation as
 structural conventions of that target's `guidance.txt`; never impose another
 example's format or rewrite the additions as generic policy-engine commands.
 Use sequential numbered rules only when the existing guidance uses numbered
-rules. For sectioned Markdown, emit one top-level bullet per guidance group,
+rules. When rules are numbered Markdown sections (for example `## 4. Title`),
+emit one section per guidance group at the same heading level, numbered on from
+the last existing section, with a body written the way the existing sections
+write theirs (sentences, bullets, or a table); add no other headings. For other
+sectioned Markdown, emit one top-level bullet per guidance group,
 without adding an addendum heading, phase label, explanation, or other metadata.
 For plain one-rule-per-line guidance, emit one plain line per guidance group. Do
 not copy headings, scenario background, or existing rules into the addendum.

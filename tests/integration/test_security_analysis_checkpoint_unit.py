@@ -12,7 +12,11 @@ from pathlib import Path
 import pytest
 
 from smith.tools.guidance_merge import merge_guidance, validate_addendum
-from smith.tools.guidance_reconciliation import ReconciliationError
+from smith.tools.guidance_reconciliation import (
+    Candidate,
+    ReconciliationError,
+    validate_existing_rule_numbers,
+)
 from smith.tools.security_analysis_checkpoint import (
     PHASES,
     _is_emitted_verdict,
@@ -780,6 +784,86 @@ def test_validate_addendum_preserves_sectioned_markdown_style(tmp_path: Path):
         validate_addendum(guidance, addendum)
 
 
+NUMBERED_SECTIONS = (
+    "## 1. Only HR may perform these actions\n\n"
+    "Decided from the caller's `department` alone.\n\n"
+    "| Action | Tool |\n|---|---|\n| Add an employee | `add_employee` |\n\n"
+    "## 2. Employees may only write their own records\n\n"
+    "- **Passport** — `set_passport`.\n"
+)
+
+
+def test_existing_rule_numbers_accept_numbered_section_headings():
+    """Review case: employee's ``## 1.`` headings were invisible to this check."""
+    rules = [
+        Candidate(
+            candidate_id=f"E{number}.1",
+            tool="add_employee",
+            subject_scope=None,
+            fields=("department",),
+            operator="neq",
+            values=("HR",),
+            action="deny",
+            sources=(str(number),),
+            related_rule="",
+            verdict="Covered",
+            guidance_group="",
+        )
+        for number in (1, 2, 3)
+    ]
+
+    findings = validate_existing_rule_numbers(rules, NUMBERED_SECTIONS)
+
+    assert [finding.messages for finding in findings] == [
+        (),
+        (),
+        ("references missing guidance rule '3'",),
+    ]
+
+
+def test_validate_addendum_continues_numbered_sections(tmp_path: Path):
+    guidance = tmp_path / "guidance.txt"
+    addendum = tmp_path / "guidance_updated.txt"
+    guidance.write_text(NUMBERED_SECTIONS)
+    addendum.write_text(
+        "## 3. Time off may not overlap\n\n"
+        "`create_time_off_request` is denied when the dates overlap.\n\n"
+        "## 4. Visas need a passport\n\n"
+        "- **Visa** — `set_visa` requires a passport on file.\n"
+    )
+
+    assert validate_addendum(guidance, addendum) == [
+        (3, "Time off may not overlap"),
+        (4, "Visas need a passport"),
+    ]
+
+
+@pytest.mark.parametrize(
+    ("addendum_text", "error"),
+    [
+        ("## 4. Skips a number\n\nBody.\n", r"numbering is \[4\]; expected \[3\]"),
+        ("- A bare bullet rule\n", "must start with a '## <number>. <title>'"),
+        ("### 3. Wrong level\n\nBody.\n", "must start with a '## <number>. <title>'"),
+        ("## 3. New rule\n\n## Rationale\n\nWhy.\n", "line 3 is a heading other than"),
+        (
+            "## 3. Employees may only write their own records\n\nBody.\n",
+            "repeats existing guidance",
+        ),
+    ],
+    ids=["skipped-number", "bullet", "wrong-level", "extra-heading", "duplicate"],
+)
+def test_validate_addendum_rejects_other_formats_for_numbered_sections(
+    tmp_path: Path, addendum_text: str, error: str
+):
+    guidance = tmp_path / "guidance.txt"
+    addendum = tmp_path / "guidance_updated.txt"
+    guidance.write_text(NUMBERED_SECTIONS)
+    addendum.write_text(addendum_text)
+
+    with pytest.raises(ReconciliationError, match=error):
+        validate_addendum(guidance, addendum)
+
+
 def test_validate_addendum_preserves_plain_line_style(tmp_path: Path):
     guidance = tmp_path / "guidance.txt"
     addendum = tmp_path / "guidance_updated.txt"
@@ -882,6 +966,44 @@ def test_explicit_merge_separates_markdown_addendum(tmp_path: Path):
         "# Scenario\n\n## Rules\n\n- Existing rule\n\n- New rule\n"
     )
     assert not addendum.exists()
+
+
+def test_explicit_merge_appends_a_numbered_section(tmp_path: Path):
+    guidance = tmp_path / "guidance.txt"
+    addendum = tmp_path / "guidance_updated.txt"
+    enforcement = tmp_path / "owasp_policy_guidelines.md"
+    state = tmp_path / "analysis_state.json"
+    catalog = write_catalog(tmp_path / "catalog.json")
+    guidance.write_text(NUMBERED_SECTIONS)
+    addendum.write_text("## 3. Visas need a passport\n\n- `set_visa` only.\n")
+    enforcement.write_text("validated")
+    state.write_text(
+        json.dumps(
+            {
+                "schema": "security-analysis-state-v1",
+                "latest_phase": "D",
+                "inputs": {
+                    "guidance": catalog_input(guidance),
+                    "guidance_updated": catalog_input(addendum),
+                    "owasp_catalog": catalog_input(catalog),
+                },
+                "phases": {
+                    "D": {
+                        "artifact": str(enforcement),
+                        "status": "PASS",
+                        "sha256": hashlib.sha256(enforcement.read_bytes()).hexdigest(),
+                    }
+                },
+            }
+        )
+    )
+
+    result = merge_guidance(guidance, addendum, state, enforcement, catalog)
+
+    assert result.startswith("Merged 1 guidance rule")
+    assert guidance.read_text() == (
+        NUMBERED_SECTIONS + "\n## 3. Visas need a passport\n\n- `set_visa` only.\n"
+    ), "the new rule must arrive as the next numbered section, after a blank line"
 
 
 def test_merge_rejects_a_stale_checkpoint_without_changes(tmp_path: Path):

@@ -34,6 +34,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Tool definitions are extracted correctly from mcp 2.x servers.
 - Removed the deprecation warnings printed by `make unit`.
 - The OWASP catalog is now included in built packages; a non-editable install previously failed Phase C with "OWASP catalog is missing".
+- Guidance whose rules are numbered Markdown sections (`## 1. Title`, as in the `employee` example) now works through Phase D: the existing-rule check recognizes the headings, and `guidance_updated.txt` must add rules as the next numbered sections at the same heading level, so merged guidance keeps the target's format. Previously every reference to an existing rule failed the Phase D checkpoint, and an addendum could only be bare bullets appended under the last section.
 
 ## [0.2.1] - 2026-10-31
 

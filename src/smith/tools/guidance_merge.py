@@ -16,6 +16,8 @@ from smith.tools.security_catalog import CATALOG_PATH
 RULE = re.compile(r"^(\d+)\.\s+(\S.*)$")
 BULLET_RULE = re.compile(r"^[-*+]\s+(\S.*)$")
 HEADING = re.compile(r"^#{1,6}\s+\S")
+HEADING_LEVEL = re.compile(r"^(#{1,6})\s")
+NUMBERED_HEADING = re.compile(r"^(#{1,6})\s+(\d+)[.)]\s+(\S.*)$")
 
 
 def _numbered_rules(text: str, label: str) -> list[tuple[int, str]]:
@@ -39,6 +41,8 @@ def _numbered_rules(text: str, label: str) -> list[tuple[int, str]]:
 
 def _guidance_style(text: str) -> str:
     lines = [line for line in text.splitlines() if line.strip()]
+    if any(NUMBERED_HEADING.match(line) for line in lines):
+        return "numbered_sections"
     if any(HEADING.match(line) for line in lines):
         return "markdown"
     if lines and all(RULE.fullmatch(line) for line in lines):
@@ -73,6 +77,51 @@ def _markdown_rules(text: str, label: str) -> list[tuple[int, str]]:
     return rules
 
 
+def _section_level(text: str) -> int:
+    """Heading level of the numbered rule sections in guidance.txt."""
+    for line in text.splitlines():
+        if match := NUMBERED_HEADING.match(line):
+            return len(match.group(1))
+    raise ReconciliationError("guidance.txt contains no numbered rule sections")
+
+
+def _existing_sections(text: str) -> list[tuple[int, str]]:
+    return [
+        (int(match.group(2)), match.group(3))
+        for line in text.splitlines()
+        if (match := NUMBERED_HEADING.match(line))
+    ]
+
+
+def _section_rules(text: str, label: str, level: int) -> list[tuple[int, str]]:
+    """Parse an addendum of ``<level> <number>. <title>`` sections.
+
+    Each section is one rule: its heading, then a body in any form the
+    existing sections use. Headings deeper than ``level`` may appear inside a
+    section; any other heading would break the guidance's structure.
+    """
+    rules: list[tuple[int, str]] = []
+    expected = f"'{'#' * level} <number>. <title>'"
+    for line_number, line in enumerate(text.splitlines(), 1):
+        if not line.strip():
+            continue
+        match = NUMBERED_HEADING.match(line)
+        if match and len(match.group(1)) == level:
+            rules.append((int(match.group(2)), match.group(3)))
+            continue
+        heading = HEADING_LEVEL.match(line)
+        if not rules:
+            raise ReconciliationError(
+                f"{label} must start with a {expected} section, as guidance.txt does"
+            )
+        if heading and len(heading.group(1)) <= level:
+            raise ReconciliationError(
+                f"{label} line {line_number} is a heading other than a {expected} "
+                "section, which guidance.txt does not use for rules"
+            )
+    return rules
+
+
 def _plain_rules(text: str, label: str) -> list[tuple[int, str]]:
     rules: list[tuple[int, str]] = []
     for line_number, line in enumerate(text.splitlines(), 1):
@@ -95,6 +144,8 @@ def _plain_rules(text: str, label: str) -> list[tuple[int, str]]:
 def _existing_rule_entries(text: str, style: str) -> list[tuple[int, str]]:
     if style == "numbered":
         return _numbered_rules(text, "guidance.txt")
+    if style == "numbered_sections":
+        return _existing_sections(text)
     if style == "markdown":
         return [
             (line_number, match.group(1))
@@ -134,9 +185,15 @@ def validate_addendum(guidance: Path, addendum: Path) -> list[tuple[int, str]]:
     if not addendum_text:
         raise ReconciliationError("guidance_updated.txt is empty")
     style = _guidance_style(guidance_text)
-    if style == "numbered":
-        existing = _numbered_rules(guidance_text, "guidance.txt")
-        proposed = _numbered_rules(addendum_text, "guidance_updated.txt")
+    if style in ("numbered", "numbered_sections"):
+        if style == "numbered":
+            existing = _numbered_rules(guidance_text, "guidance.txt")
+            proposed = _numbered_rules(addendum_text, "guidance_updated.txt")
+        else:
+            existing = _existing_sections(guidance_text)
+            proposed = _section_rules(
+                addendum_text, "guidance_updated.txt", _section_level(guidance_text)
+            )
         if not proposed:
             raise ReconciliationError("guidance_updated.txt contains no numbered rules")
         start = max(number for number, _ in existing) + 1
@@ -234,7 +291,7 @@ def merge_guidance(
     proposed = validate_addendum(guidance, addendum)
     original = guidance.read_bytes()
     addition = addendum.read_bytes()
-    if _guidance_style(original.decode("utf-8")) == "markdown":
+    if _guidance_style(original.decode("utf-8")) in ("markdown", "numbered_sections"):
         separator = (
             b""
             if not original or original.endswith(b"\n\n")
