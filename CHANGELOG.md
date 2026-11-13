@@ -22,7 +22,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - The checkpoint fails when the catalog changed within a phase's snapshot since `--prepare`, naming the changed scenario or field; `guidance_merge` refuses guidance derived from an older catalog. Runs already in progress must re-run `--prepare` for Phases C and D.
-- The catalog loader rejects duplicate or missing `ASI01`–`ASI10` IDs and entries without attack scenarios, which previously dropped that category from mandatory coverage.
+- The catalog loader rejects duplicate, missing or non-string `ASI01`–`ASI10` IDs, non-object entries, and entries without attack scenarios, which previously dropped that category from mandatory coverage.
+- Snapshots are validated whole: duplicate or non-object rows and unexpected keys fail the checkpoint instead of being skipped, and the recorded snapshot hash is of the bytes that were validated.
 
 ### Fixed
 

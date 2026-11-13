@@ -51,8 +51,15 @@ def load_catalog(path: Path) -> Catalog:
     try:
         raw = path.read_bytes()
         data = json.loads(raw.decode("utf-8"))
-        threats = tuple(data["threats"])
+        threats = data["threats"]
+        if not isinstance(threats, list) or not all(
+            isinstance(entry, dict) for entry in threats
+        ):
+            raise TypeError("threats must be a list of objects")
+        threats = tuple(threats)
         ids = [entry["id"] for entry in threats]
+        if not all(isinstance(asi, str) for asi in ids):
+            raise TypeError("threat IDs must be strings")
         empty = [
             entry["id"]
             for entry in threats
@@ -139,8 +146,10 @@ def write_snapshot(path: Path, snapshot: dict[str, Any]) -> None:
 def snapshot_drift(expected: dict[str, Any], actual: Any) -> str | None:
     """Name the first item where a snapshot differs from the current projection.
 
-    Only catalog content is compared. The snapshot's recorded catalog hash is
-    informational, so an edit outside a phase's slice does not invalidate it.
+    The whole snapshot is checked, since all of it reaches the model: unexpected
+    keys, non-object rows and duplicate IDs are drift, not skipped. The recorded
+    catalog hash is informational, so an edit outside a phase's slice does not
+    invalidate it.
     """
     if (
         not isinstance(actual, dict)
@@ -149,13 +158,29 @@ def snapshot_drift(expected: dict[str, Any], actual: Any) -> str | None:
         or not isinstance(actual.get("threats"), list)
     ):
         return "snapshot format"
+    unexpected = sorted(set(actual) - set(expected))
+    if unexpected:
+        return f"unexpected snapshot keys: {', '.join(unexpected)}"
+    header = actual.get("catalog")
+    if not isinstance(header, dict) or set(header) != set(expected["catalog"]):
+        return "snapshot catalog header"
+    for field in ("framework", "version"):
+        if header[field] != expected["catalog"][field]:
+            return f"catalog {field}"
+    rows = actual["threats"]
+    if not all(isinstance(row, dict) for row in rows):
+        return "snapshot rows must be objects"
+    ids = [row.get("id") for row in rows]
+    if not all(isinstance(asi, str) for asi in ids):
+        return "snapshot row IDs must be strings"
+    duplicates = sorted({asi for asi in ids if ids.count(asi) > 1})
+    if duplicates:
+        return f"duplicate snapshot rows: {', '.join(duplicates)}"
     current = {entry["id"]: entry for entry in expected["threats"]}
-    recorded = {
-        entry.get("id"): entry for entry in actual["threats"] if isinstance(entry, dict)
-    }
-    if list(current) != list(recorded):
+    recorded = dict(zip(ids, rows))
+    if list(current) != ids:
         return (
-            f"category set (snapshot has {', '.join(map(str, recorded)) or 'none'}; "
+            f"category set (snapshot has {', '.join(ids) or 'none'}; "
             f"expected {', '.join(current) or 'none'})"
         )
     for asi, entry in current.items():

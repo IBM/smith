@@ -573,7 +573,7 @@ def test_catalog_edit_between_prepare_and_checkpoint_fails(tmp_path: Path):
     reword_scenario(catalog, "ASI01", "edited mid-phase")
     snapshot = load_catalog(catalog)
 
-    errors = _snapshot_errors(["A", "B", "C"], analysis_dir, snapshot, {})
+    errors, _ = _snapshot_errors(["A", "B", "C"], analysis_dir, snapshot, {})
 
     assert len(errors) == 1 and "ASI01#1" in errors[0]
 
@@ -587,7 +587,7 @@ def test_mitigation_edit_fails_phase_d_but_not_phase_c(tmp_path: Path):
     catalog = load_catalog(paths["catalog"])
     threat_state = json.loads(paths["state"].read_text())["phases"]
 
-    errors = _snapshot_errors(
+    errors, _ = _snapshot_errors(
         ["A", "B", "C", "D"], paths["analysis_dir"], catalog, threat_state
     )
 
@@ -608,6 +608,43 @@ def test_edit_outside_the_applicable_set_does_not_fail_phase_d(tmp_path: Path):
     assert run_checkpoint("D", paths, guidance).startswith(
         "Security analysis checkpoint D: PASS"
     )
+
+
+def test_recorded_snapshot_hash_is_of_the_validated_bytes(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    """Replacing a snapshot after validation must not change what is recorded."""
+    paths = checkpointed_through_c(tmp_path)
+    snapshot = paths["analysis_dir"] / "owasp_catalog_C.json"
+    validated = snapshot.read_bytes()
+    replacement = json.loads(validated)
+    replacement["threats"][0]["attack_scenarios"][0] = "never validated"
+    swapped = False
+
+    def replace_after_first_read(original):
+        def read(self: Path, *args, **kwargs):
+            nonlocal swapped
+            data = original(self, *args, **kwargs)
+            if self == snapshot and not swapped:
+                swapped = True
+                self.write_text(json.dumps(replacement))
+            return data
+
+        return read
+
+    # The first read of the snapshot, by either API, sees the validated bytes;
+    # any later read sees the replacement.
+    for name in ("read_bytes", "read_text"):
+        monkeypatch.setattr(Path, name, replace_after_first_read(getattr(Path, name)))
+    run_checkpoint("C", paths)
+    monkeypatch.undo()
+
+    recorded = json.loads(paths["state"].read_text())["inputs"]["owasp_catalog_C"]
+    assert recorded["sha256"] == hashlib.sha256(validated).hexdigest(), (
+        "the state must describe the bytes that were checked, not the replacement"
+    )
+    with pytest.raises(ReconciliationError, match=r"\(ASI01#1\)"):
+        run_checkpoint("C", paths)
 
 
 def test_missing_snapshot_names_the_prepare_remediation(tmp_path: Path):

@@ -119,6 +119,23 @@ def test_duplicate_or_missing_ids_are_rejected(tmp_path: Path):
         load_catalog(write(tmp_path / "catalog.json", data))
 
 
+def test_non_string_id_keeps_the_malformed_message(tmp_path: Path):
+    """A numeric ID used to escape as a TypeError from sorting the IDs."""
+    data = catalog_data()
+    data["threats"][0]["id"] = 1
+
+    with pytest.raises(ReconciliationError, match="threat IDs must be strings"):
+        load_catalog(write(tmp_path / "catalog.json", data))
+
+
+def test_non_object_entry_keeps_the_malformed_message(tmp_path: Path):
+    data = catalog_data()
+    data["threats"].insert(0, "ASI01")
+
+    with pytest.raises(ReconciliationError, match="list of objects"):
+        load_catalog(write(tmp_path / "catalog.json", data))
+
+
 def test_entry_without_scenarios_is_rejected(tmp_path: Path):
     """Previously this silently removed the ASI from mandatory coverage."""
     data = catalog_data()
@@ -254,3 +271,56 @@ def test_unreadable_snapshot_shape_is_drift(tmp_path: Path, recorded):
     catalog = load_catalog(write(tmp_path / "catalog.json", catalog_data()))
 
     assert snapshot_drift(build_snapshot(catalog, "C"), recorded) == "snapshot format"
+
+
+def snapshot_and_copy(tmp_path: Path) -> tuple[dict, dict]:
+    """The current Phase C projection and an editable copy as read from disk."""
+    catalog = load_catalog(write(tmp_path / "catalog.json", catalog_data()))
+    expected = build_snapshot(catalog, "C")
+    return expected, json.loads(json.dumps(expected))
+
+
+def test_duplicate_row_before_the_real_one_is_drift(tmp_path: Path):
+    """Review case: an edited ASI01 inserted first used to pass with 11 rows."""
+    expected, recorded = snapshot_and_copy(tmp_path)
+    impostor = copy.deepcopy(recorded["threats"][0])
+    impostor["attack_scenarios"] = ["different scenario text"]
+    recorded["threats"].insert(0, impostor)
+
+    assert snapshot_drift(expected, recorded) == "duplicate snapshot rows: ASI01"
+
+
+def test_non_object_row_is_drift_not_skipped(tmp_path: Path):
+    expected, recorded = snapshot_and_copy(tmp_path)
+    recorded["threats"].append("ASI11 smuggled text")
+
+    assert snapshot_drift(expected, recorded) == "snapshot rows must be objects"
+
+
+def test_unexpected_top_level_key_is_drift(tmp_path: Path):
+    """Review case: a top-level ``mitigations`` field in a Phase C snapshot."""
+    expected, recorded = snapshot_and_copy(tmp_path)
+    recorded["mitigations"] = ["visible to Phase C"]
+
+    assert snapshot_drift(expected, recorded) == "unexpected snapshot keys: mitigations"
+
+
+def test_non_string_row_id_is_drift(tmp_path: Path):
+    expected, recorded = snapshot_and_copy(tmp_path)
+    recorded["threats"][0]["id"] = 1
+
+    assert snapshot_drift(expected, recorded) == "snapshot row IDs must be strings"
+
+
+def test_unexpected_entry_field_is_drift(tmp_path: Path):
+    expected, recorded = snapshot_and_copy(tmp_path)
+    recorded["threats"][3]["mitigations"] = ["visible to Phase C"]
+
+    assert snapshot_drift(expected, recorded) == "ASI04 fields"
+
+
+def test_edited_catalog_header_is_drift(tmp_path: Path):
+    expected, recorded = snapshot_and_copy(tmp_path)
+    recorded["catalog"]["version"] = "9.9"
+
+    assert snapshot_drift(expected, recorded) == "catalog version"

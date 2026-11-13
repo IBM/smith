@@ -921,9 +921,14 @@ def _snapshot_errors(
     analysis_dir: Path,
     catalog: Catalog,
     states: dict[str, Any],
-) -> list[str]:
-    """Check each catalog snapshot a phase read against the current catalog."""
+) -> tuple[list[str], dict[str, dict[str, str]]]:
+    """Check each catalog snapshot a phase read against the current catalog.
+
+    Each snapshot is read once. The returned provenance records hash those
+    validated bytes, so a file replaced after validation cannot be recorded.
+    """
     errors: list[str] = []
+    records: dict[str, dict[str, str]] = {}
     for current in ("C", "D"):
         if current not in selected:
             continue
@@ -939,8 +944,9 @@ def _snapshot_errors(
             )
             continue
         try:
-            recorded = json.loads(path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError) as exc:
+            raw = path.read_bytes()
+            recorded = json.loads(raw.decode("utf-8"))
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
             errors.append(
                 f"OWASP catalog snapshot for Phase {current} is malformed: "
                 f"{exc}; {rerun}"
@@ -955,7 +961,12 @@ def _snapshot_errors(
                 f"OWASP catalog changed since Phase {current} was prepared "
                 f"({drift}); {rerun} and redo the phase"
             )
-    return errors
+            continue
+        records[f"owasp_catalog_{current}"] = {
+            "path": str(path),
+            "sha256": hashlib.sha256(raw).hexdigest(),
+        }
+    return errors, records
 
 
 def checkpoint(
@@ -1021,8 +1032,12 @@ def checkpoint(
                 errors.append("GUIDANCE_FILE is required for Phase D validation")
             else:
                 errors.extend(_validate_addendum_contract(states[current], guidance))
+    snapshot_inputs: dict[str, dict[str, str]] = {}
     if loaded_catalog is not None:
-        errors.extend(_snapshot_errors(selected, analysis_dir, loaded_catalog, states))
+        snapshot_errors, snapshot_inputs = _snapshot_errors(
+            selected, analysis_dir, loaded_catalog, states
+        )
+        errors.extend(snapshot_errors)
     if errors:
         raise ReconciliationError(
             "checkpoint validation failed:\n- " + "\n- ".join(errors)
@@ -1041,12 +1056,6 @@ def checkpoint(
         "guidance_updated": (
             guidance.with_name("guidance_updated.txt") if guidance else None
         ),
-        "owasp_catalog_C": (
-            snapshot_path(analysis_dir, "C") if "C" in selected else None
-        ),
-        "owasp_catalog_D": (
-            snapshot_path(analysis_dir, "D") if "D" in selected else None
-        ),
     }
     payload = {
         "schema": "security-analysis-state-v1",
@@ -1064,7 +1073,10 @@ def checkpoint(
         },
         "phases": states,
     }
-    # Record the hash of the bytes validated above, not a later re-read.
+    # Record the hashes of the bytes validated above, not a later re-read.
+    for current in ("C", "D"):
+        name = f"owasp_catalog_{current}"
+        payload["inputs"][name] = snapshot_inputs.get(name)
     payload["inputs"]["owasp_catalog"] = (
         {"path": str(catalog), "sha256": loaded_catalog.sha256}
         if loaded_catalog is not None
