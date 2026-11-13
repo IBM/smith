@@ -15,7 +15,7 @@ def get_connection(db_path: Optional[str] = None) -> sqlite3.Connection:
                  employee_hub.db next to this module.
     Returns: sqlite3.Connection with row_factory=sqlite3.Row.
     """
-    conn = sqlite3.connect(db_path or DEFAULT_DB_PATH)
+    conn = sqlite3.connect(db_path or DEFAULT_DB_PATH, check_same_thread=False)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
     return conn

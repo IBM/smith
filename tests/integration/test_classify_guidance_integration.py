@@ -62,7 +62,7 @@ import urllib.request
 
 import pytest
 
-from helpers import SmithEnv
+from helpers import STDIO_MCP, SmithEnv
 
 pytestmark = pytest.mark.integration
 
@@ -150,7 +150,9 @@ def classifier_server():
     proc = subprocess.Popen(
         [sys.executable, "-m", "smith.cli", "--flag", "classify_guidance"],
         cwd=str(env.base),
-        env=env.override(),
+        # The flag extracts tool definitions before serving the UI; stdio is the
+        # transport this test can satisfy on its own.
+        env=env.override(**STDIO_MCP),
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,

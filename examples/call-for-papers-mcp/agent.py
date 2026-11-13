@@ -1,4 +1,5 @@
 import os
+import sys
 from contextlib import asynccontextmanager
 from typing import Dict, Any, Optional
 
@@ -7,7 +8,7 @@ from pydantic import BaseModel
 
 from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import create_react_agent
-from langchain_mcp_adapters.client import MultiServerMCPClient
+from langchain.mcp import MCPAdapter
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -36,7 +37,6 @@ class ExtractToolCallResponse(BaseModel):
 
 
 agent = None
-mcp_client = None
 llm_with_tools = None
 
 
@@ -55,37 +55,38 @@ def build_system_prompt(system_variables: Optional[Dict[str, Any]] = None) -> st
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global agent, mcp_client, llm_with_tools
+    global agent, llm_with_tools
 
-    mcp_client = MultiServerMCPClient(
-        {
+    config = {
+        "mcpServers": {
             "call-for-papers-mcp": {
-                "transport": "stdio",
-                "command": "python",
+                "command": sys.executable,
                 "args": ["server.py"],
             }
         }
-    )
-    tools = await mcp_client.get_tools()
+    }
 
-    api_key = os.getenv("INFERENCE_API_KEY", "ollama")
-    api_url = os.getenv("INFERENCE_BASE_URL", "http://localhost:11434/v1")
-    model = os.getenv("INFERENCE_MODEL", "qwen3.5:latest")
+    async with MCPAdapter(config) as mcp_adapter:
+        tools = await mcp_adapter.list_tools()
 
-    llm = ChatOpenAI(
-        model=model,
-        api_key=api_key,
-        base_url=api_url,
-    )
+        api_key = os.getenv("INFERENCE_API_KEY", "ollama")
+        api_url = os.getenv("INFERENCE_BASE_URL", "http://localhost:11434/v1")
+        model = os.getenv("INFERENCE_MODEL", "qwen3.5:latest")
 
-    agent = create_react_agent(
-        model=llm,
-        tools=tools,
-    )
+        llm = ChatOpenAI(
+            model=model,
+            api_key=api_key,
+            base_url=api_url,
+        )
 
-    llm_with_tools = llm.bind_tools(tools)
+        agent = create_react_agent(
+            model=llm,
+            tools=tools,
+        )
 
-    yield
+        llm_with_tools = llm.bind_tools(tools)
+
+        yield
 
 
 app = FastAPI(lifespan=lifespan)

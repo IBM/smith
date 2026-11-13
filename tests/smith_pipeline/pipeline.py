@@ -1,0 +1,368 @@
+# Copyright 2026 Smith authors
+# SPDX-License-Identifier: Apache-2.0
+from __future__ import annotations
+
+import os
+import subprocess
+from pathlib import Path
+
+from . import artifacts, reports, scorecard
+from .config import STEPS_BY_NUM, overlay_for
+from .console import out
+from .runner import Runner
+from .services import Services
+
+
+class MeasurementError(RuntimeError):
+    """A refinement measurement did not produce complete, current artifacts."""
+
+
+class Pipeline:
+    def __init__(
+        self,
+        root: Path,
+        log_dir: Path,
+        example: str,
+        steps: list[int],
+        runner: Runner,
+        services: Services,
+        *,
+        clean: bool,
+        dry_run: bool,
+        save_artifacts: Path | None = None,
+    ) -> None:
+        self.root = root
+        self.log_dir = log_dir
+        self.example = example
+        self.steps = steps
+        self.runner = runner
+        self.services = services
+        self.clean = clean
+        self.dry_run = dry_run
+        self.save_artifacts = save_artifacts
+
+    def wants(self, num: int) -> bool:
+        return num in self.steps
+
+    # -- setup --------------------------------------------------------------
+    def resolve_env(self) -> dict[str, str]:
+        overlay = overlay_for(self.root, self.example)
+        out.info(f"Environment for examples/{self.example}/")
+        for key in sorted(overlay):
+            out.say(f"  {out.dim}{key}={overlay[key]}{out.off}")
+        return overlay
+
+    def clean_artifacts(self) -> None:
+        if not self.clean:
+            return
+        # The cleaner empties assets/policy.rego, so only run it when the policy
+        # is about to be regenerated.
+        if not self.wants(1):
+            out.warn(
+                "Skipping clean: step 1 is not selected, so existing "
+                "artifacts are being reused."
+            )
+            return
+
+        out.info(
+            "Cleaning generated artifacts (references/, ares assets, "
+            "assets/policy.rego)"
+        )
+        if self.dry_run:
+            out.dry("bash scripts/clean.sh")
+            return
+
+        script = self.root / "scripts" / "clean.sh"
+        with (self.log_dir / "clean.log").open("wb") as fh:
+            rc = subprocess.run(
+                ["bash", str(script), str(self.root)],
+                stdout=fh,
+                stderr=subprocess.STDOUT,
+            ).returncode
+        if rc == 0:
+            out.ok("Cleaned")
+        else:
+            out.err("clean.sh failed — see logs/clean.log")
+            raise SystemExit(1)
+
+    # -- reporting ----------------------------------------------------------
+    def show_scorecard(self, header: str) -> scorecard.Scorecard:
+        """Print the policy-testing scorecard. Returned for callers that want it."""
+        card = scorecard.read(self.root)
+        reports.show_policy_score(self.root, self.log_dir, header)
+        if not card.summary.strip():
+            out.warn("No scorecard at references/scorecard/" "scorecard_summary.txt")
+        return card
+
+    def validate_scorecard(
+        self, before: dict[Path, int | None]
+    ) -> scorecard.Scorecard | None:
+        """Require this testing step to score every case without OPA errors."""
+        for path, previous_mtime in before.items():
+            if not path.is_file():
+                out.err(f"Policy testing did not create {path.name}.")
+                return None
+            if path.stat().st_mtime_ns == previous_mtime:
+                out.err(
+                    f"Policy testing did not update {path.name}; refusing "
+                    "to use a stale scorecard."
+                )
+                return None
+
+        errors_file = scorecard.scorecard_dir(self.root) / "errors.txt"
+        if not errors_file.is_file():
+            out.err("Policy testing did not create errors.txt.")
+            return None
+        errors = [
+            line
+            for line in errors_file.read_text(
+                encoding="utf-8", errors="replace"
+            ).splitlines()
+            if line.strip()
+        ]
+        if errors:
+            out.err(
+                f"Policy testing could not score {len(errors)} case(s); "
+                "see references/scorecard/errors.txt."
+            )
+            return None
+
+        case_root = self.root / "references" / "test_cases"
+        expected = sum(
+            1
+            for label in ("allow", "disallow")
+            for _ in (case_root / label).rglob("*.json")
+        )
+        card = scorecard.read(self.root)
+        if expected == 0:
+            out.err("No allow/disallow test cases exist to score.")
+            return None
+        if card.scored != expected:
+            out.err(
+                f"Policy testing scored {card.scored} of {expected} "
+                "test cases; see references/scorecard/."
+            )
+            return None
+        return card
+
+    @staticmethod
+    def artifact_times(*paths: Path) -> dict[Path, int | None]:
+        return {
+            path: path.stat().st_mtime_ns if path.is_file() else None for path in paths
+        }
+
+    @staticmethod
+    def require_fresh(before: dict[Path, int | None]) -> None:
+        for path, previous_mtime in before.items():
+            if not path.is_file() or path.stat().st_mtime_ns == previous_mtime:
+                raise MeasurementError(
+                    f"Measurement did not update {path}; "
+                    "refusing to reuse an earlier result."
+                )
+
+    # -- per-stage evaluation tables ----------------------------------------
+    def show_stage_report(self, step_name: str) -> None:
+        """Print the evaluation table this stage produces, if it has one."""
+        if self.dry_run:
+            return
+        if step_name == "enhance guidance with security analysis":
+            # Needs the example: the guidance it grows lives under the agent,
+            # not at a fixed path in the skill tree.
+            reports.show_guidance_growth(
+                self.root, self.log_dir, f"examples/{self.example}"
+            )
+            return
+        table = {
+            "generate test cases": reports.show_suite,
+            "translate test cases": reports.show_translation,
+            "cross-validate failed test cases": reports.show_cross_validation,
+        }.get(step_name)
+        if table:
+            table(self.root, self.log_dir)
+
+    # -- artifact saving -----------------------------------------------------
+    def save_step_artifacts(self, num: int, phase: str | None = None) -> None:
+        if self.save_artifacts is None or self.dry_run:
+            return
+        dest = self.save_artifacts / f"step{num}"
+        if phase:
+            dest = dest / phase
+        try:
+            artifacts.save_step(self.root, num, dest, agent=f"examples/{self.example}")
+        except (OSError, ValueError) as exc:
+            # Archiving is instrumentation: a failure here must not discard a
+            # long run's real work.
+            out.warn(f"Could not save step {num} artifacts: {exc}")
+
+    # -- patching measurement ------------------------------------------------
+    def cluster_results_path(self) -> Path:
+        """Where red_suggestion writes its clusters, per the CLI's own layout."""
+        return self.root / "assets" / "opa" / "outputs" / "cluster_results.txt"
+
+    def run_flags(self, when: str, *flags: str) -> None:
+        """Run `smith --flag <f>` for each flag, logging each one separately."""
+        python = self.root / ".venv" / "bin" / "python"
+        interpreter = str(python) if python.exists() else "python3"
+        for flag in flags:
+            log = self.log_dir / f"measure-{when}-{flag}.log"
+            with log.open("wb") as fh:
+                rc = subprocess.run(
+                    [interpreter, "-m", "smith.cli", "--flag", flag],
+                    cwd=str(self.root),
+                    stdout=fh,
+                    stderr=subprocess.STDOUT,
+                    env={**os.environ, **self.runner.overlay},
+                    timeout=self.runner.timeout,
+                ).returncode
+            if rc != 0:
+                raise MeasurementError(
+                    f"{flag} failed while measuring '{when}' "
+                    f"(exit {rc}) — see {log.name}"
+                )
+
+    def measure_policy_score(self, when: str):
+        directory = scorecard.scorecard_dir(self.root)
+        before = self.artifact_times(
+            directory / "scorecard_summary.txt",
+            directory / "score_test_failures.txt",
+            directory / "errors.txt",
+        )
+        self.run_flags(when, "policy_testing")
+        card = self.validate_scorecard(before)
+        score = reports.read_policy_score(self.root)
+        if card is None or not score.present or score.scored != card.scored:
+            raise MeasurementError(f"Incomplete policy score while measuring '{when}'.")
+        return score
+
+    def measure_lint(self, when: str):
+        path = self.root / "assets" / "opa" / "outputs" / "regal_suggestion.txt"
+        before = self.artifact_times(path)
+        self.run_flags(when, "regal_suggestion")
+        self.require_fresh(before)
+        lint = reports.read_lint(path)
+        if not lint.present:
+            raise MeasurementError(f"Regal did not run while measuring '{when}'.")
+        return lint, self.measure_policy_score(when)
+
+    def measure_duplication(self, when: str):
+        outputs = self.root / "assets" / "opa" / "outputs"
+        before = self.artifact_times(
+            outputs / "linting_feedback_de-duplication.json",
+            outputs / "graph_suggestion.txt",
+        )
+        self.run_flags(when, "duplication_suggestion")
+        self.require_fresh(before)
+        duplication = reports.read_duplication(self.root)
+        if not duplication.present:
+            raise MeasurementError(
+                f"Invalid duplication report while measuring '{when}'."
+            )
+        return duplication, self.measure_policy_score(when)
+
+    def measure_failures(self, when: str):
+        """Re-score the policy and re-cluster its failures, right now."""
+        score = self.measure_policy_score(when)
+        path = self.cluster_results_path()
+        before = self.artifact_times(path)
+        self.run_flags(when, "red_suggestion")
+        self.require_fresh(before)
+        return reports.read_clusters(path), score
+
+    # -- the workflow -------------------------------------------------------
+    def run(self) -> int:
+        # Order matters: an SSE example's agent connects to MCP on startup.
+        if not self.services.start_mcp(self.example):
+            return 1
+        if not self.services.start_agent(self.example):
+            return 1
+
+        for num in sorted(STEPS_BY_NUM):
+            if not self.wants(num):
+                continue
+            before = {}
+            if num == 4:
+                directory = scorecard.scorecard_dir(self.root)
+                files = (
+                    directory / "scorecard_summary.txt",
+                    directory / "score_test_failures.txt",
+                )
+                before = {
+                    path: (path.stat().st_mtime_ns if path.is_file() else None)
+                    for path in files
+                }
+            step = STEPS_BY_NUM[num]
+            measured = None
+            if not self.dry_run and num in (6, 7, 8):
+                measure, what = {
+                    6: (self.measure_failures, "policy_testing + red_suggestion"),
+                    7: (self.measure_lint, "regal_suggestion"),
+                    8: (self.measure_duplication, "duplication_suggestion"),
+                }[num]
+                # Captured to a side file: runner.run() rewrites the step log
+                # from the trace, so anything appended before it is lost.
+                pre_log = self.log_dir / f"step{num}-pre.log"
+                restore = out.capture_to(pre_log)
+                try:
+                    out.info(f"Measuring before step {num} ({what})")
+                    measured = measure("before")
+                    self.save_step_artifacts(num, "before")
+                except (MeasurementError, OSError, subprocess.SubprocessError) as exc:
+                    out.err(str(exc))
+                    return 1
+                finally:
+                    out.capture_to(restore)
+            result = self.runner.run(step)
+            if not result.ok:
+                out.err(f"Stopping after failed step {num}: {result.reason}")
+                return 1
+            # From here the step log holds the agent transcript; append this
+            # step's own reporting to it so the tables are not terminal-only.
+            restore = out.capture_to(result.log)
+            try:
+                self._report(num, step, measured)
+                return_code = self._verdict(num, before)
+            except (MeasurementError, OSError, subprocess.SubprocessError) as exc:
+                out.err(str(exc))
+                return 1
+            finally:
+                out.capture_to(restore)
+            if return_code is not None:
+                return return_code
+            self.save_step_artifacts(num, "after" if measured else None)
+
+        return 0
+
+    def _report(self, num: int, step, measured) -> None:
+        """Print this step's evaluation tables.
+
+        Called with the console captured into the step's log, so every table
+        lands there as well as on the terminal.
+        """
+        if measured is not None:
+            out.info(f"Measuring after step {num}")
+            if num == 6:
+                after = self.measure_failures("after")
+                reports.show_patch_effect(
+                    measured[0], after[0], measured[1], after[1], self.log_dir
+                )
+            elif num == 7:
+                after = self.measure_lint("after")
+                reports.show_lint_effect(
+                    measured[0], after[0], self.log_dir, measured[1], after[1]
+                )
+            else:
+                after = self.measure_duplication("after")
+                reports.show_duplication_effect(
+                    measured[0], after[0], self.log_dir, measured[1], after[1]
+                )
+        # Keyed on the step's name, not its number, so inserting a step
+        # cannot silently attach a table to the wrong stage.
+        self.show_stage_report(step.name)
+
+    def _verdict(self, num: int, before: dict) -> int | None:
+        """The exit code this step forces, or None to carry on."""
+        if num == 4:
+            if self.validate_scorecard(before) is None:
+                return 1
+            self.show_scorecard("Scorecard after step 4")
+        return None

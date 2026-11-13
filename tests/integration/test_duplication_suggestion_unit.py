@@ -25,13 +25,24 @@ FUNCTIONS UNDER TEST
 Listed — and laid out in this file — in the order the flag executes them.
 
 STEP 1 · ``smith.policy_agent.scripts.parse_ast_to_graph``
+    ``create_ast``                      — canonical Docker mount paths, safe argv,
+                                          and no overwrite after a parse failure
     ``init_graph``                      — the module-level index reset, so two
                                           graphs built in one process agree
+    ``merge_with_body`` / ``merge_with_list``
+                                        — call operands are linked to the rule
+                                          head, and partial rule heads use their
+                                          ref name; ``__local*`` temporaries are
+                                          skipped
+    ``clean_graph``                     — isolated allow and deny heads survive
+                                          the prune
 
 STEP 2 · ``smith.policy_agent.reduce_improve.detect_redundancy``
     ``find_node_by_name``               — locating the ``allow`` root by substring
     ``save_unreachable_components_dot`` — reachability: what is NOT reachable from
                                           ``allow``, grouped into components
+    ``write_graph_suggestion``          — skips with a clear message when there is
+                                          no ``allow`` node to analyse
     ``clean_graph``                     — the white-list prune
     ``print_subgraphs``                 — the report a human reads, and the file
 
@@ -47,6 +58,9 @@ Env-free: graphs are built in memory; no OPA, no Docker, no LLM.
 
 from __future__ import annotations
 
+import json
+import subprocess
+
 import networkx as nx
 import pytest
 
@@ -55,7 +69,9 @@ from smith.policy_agent.reduce_improve.detect_redundancy import (
     find_node_by_name,
     print_subgraphs,
     save_unreachable_components_dot,
+    write_graph_suggestion,
 )
+from smith.policy_agent.scripts import parse_ast_to_graph as ast_mod
 
 pytestmark = pytest.mark.unit
 
@@ -69,14 +85,115 @@ def policy_graph():
     return graph
 
 
+def var(name):
+    return {"type": "var", "value": name}
+
+
+def ref(*path):
+    return {"type": "ref", "value": [var(part) for part in path]}
+
+
+def call(name, *args):
+    return {"type": "call", "value": [ref(name), *args]}
+
+
+def string(value):
+    return {"type": "string", "value": value}
+
+
+def number(value):
+    return {"type": "number", "value": value}
+
+
+def term(terms):
+    return {"terms": terms}
+
+
+def rule(name, body, key=None):
+    if key is None:
+        head = {
+            "name": name,
+            "value": {"type": "boolean", "value": True},
+            "ref": [var(name)],
+        }
+    else:
+        head = {
+            "key": var(key),
+            "value": {"type": "boolean", "value": True},
+            "ref": [var(name), var(key)],
+        }
+    return {"head": head, "body": body}
+
+
+def graph_from_rules(*rules):
+    ast_mod.head_rule_index.clear()
+    ast_mod.index_to_count.clear()
+    graph, _ = ast_mod.extract_rule_calls({"rules": list(rules)}, nx.MultiDiGraph())
+    return graph, {ast_mod.node_rule_name(node): node for node in graph.nodes()}
+
+
 # ===========================================================================
 # STEP 1 · init_graph — the state reset
 # ===========================================================================
 
 
-def test_repeated_graph_builds_do_not_inherit_earlier_node_indices(monkeypatch):
-    from smith.policy_agent.scripts import parse_ast_to_graph as ast_mod
+def test_ast_extraction_resolves_symlinks_and_preserves_spaces(unit_env, monkeypatch):
+    real = unit_env.root / "policies with spaces"
+    real.mkdir()
+    link = unit_env.root / "skill policies"
+    link.symlink_to(real, target_is_directory=True)
+    output = unit_env.root / "outputs/ast.json"
+    calls = []
 
+    def run(argv, **kwargs):
+        calls.append((argv, kwargs))
+        return subprocess.CompletedProcess(argv, 0, stdout='{"rules": []}', stderr="")
+
+    monkeypatch.setattr(ast_mod.subprocess, "run", run)
+    ast_mod.create_ast(str(link), str(output))
+
+    argv, kwargs = calls[0]
+    assert argv[argv.index("-v") + 1] == f"{real.resolve()}:/policies"
+    assert not kwargs.get("shell"), "the mount must be a single argv item"
+    assert json.loads(output.read_text()) == {"rules": []}
+
+
+@pytest.mark.parametrize("exists", [False, True])
+def test_failed_opa_parse_reports_its_error_without_overwriting_ast(
+    unit_env, monkeypatch, exists
+):
+    output = unit_env.root / "ast.json"
+    if exists:
+        output.write_text('{"old": "AST"}')
+    monkeypatch.setattr(
+        ast_mod.subprocess,
+        "run",
+        lambda argv, **_: subprocess.CompletedProcess(
+            argv, 1, stdout="", stderr="policy.rego: no such file or directory"
+        ),
+    )
+
+    with pytest.raises(RuntimeError, match="policy.rego: no such file"):
+        ast_mod.create_ast(str(unit_env.root), str(output))
+    assert output.exists() is exists
+    if exists:
+        assert output.read_text() == '{"old": "AST"}'
+
+
+def test_empty_opa_output_does_not_replace_an_existing_ast(unit_env, monkeypatch):
+    output = unit_env.root / "ast.json"
+    output.write_text('{"old": "AST"}')
+    monkeypatch.setattr(
+        ast_mod.subprocess,
+        "run",
+        lambda argv, **_: subprocess.CompletedProcess(argv, 0, stdout="", stderr=""),
+    )
+    with pytest.raises(json.JSONDecodeError):
+        ast_mod.create_ast(str(unit_env.root), str(output))
+    assert output.read_text() == '{"old": "AST"}'
+
+
+def test_repeated_graph_builds_do_not_inherit_earlier_node_indices(monkeypatch):
     # Seed the module state as a previous parse would have left it.
     ast_mod.head_rule_index["stale_rule"] = "7"
     ast_mod.index_to_count["7"] = 3
@@ -95,6 +212,83 @@ def test_repeated_graph_builds_do_not_inherit_earlier_node_indices(monkeypatch):
 
 
 # ===========================================================================
+# STEP 1b · call terms in rule bodies
+# ===========================================================================
+
+
+def test_a_call_operand_links_the_rule_head_to_the_referenced_rule():
+    """CORRECTNESS: a term such as ``count(deny) == 0`` must keep ``deny`` live.
+
+    The parser used to discard any term with a call operand. ``allow`` then had no
+    edge to ``deny``, and every rule behind it looked unreachable.
+    """
+    graph, nodes = graph_from_rules(
+        rule("allow", [term([ref("equal"), call("count", var("deny")), number(0)])]),
+        rule("deny", [term([ref("equal"), ref("input", "x"), number(1)])], key="msg"),
+    )
+
+    assert "allow" in nodes and "deny" in nodes
+    assert graph.has_edge(nodes["allow"], nodes["deny"])
+    assert "None" not in nodes, "a partial rule head should use its ref name"
+    assert "count" not in nodes, "the builtin function name should not become a node"
+
+
+def test_a_nested_call_operand_is_linked_through_its_own_operand():
+    graph, nodes = graph_from_rules(
+        rule(
+            "allow",
+            [
+                term(
+                    [
+                        ref("contains"),
+                        call("lower", ref("input", "y")),
+                        string("b"),
+                    ]
+                )
+            ],
+        )
+    )
+
+    assert graph.has_edge(nodes["allow"], nodes["input.y"])
+    assert "lower" not in nodes
+
+
+def test_call_linkage_skips_local_temporaries():
+    graph, nodes = graph_from_rules(
+        rule(
+            "allow",
+            [
+                term(
+                    [
+                        ref("equal"),
+                        call("count", var("__local0__"), var("deny")),
+                        number(0),
+                    ]
+                )
+            ],
+        )
+    )
+
+    assert "__local0__" not in nodes
+    assert graph.has_edge(nodes["allow"], nodes["deny"])
+
+
+def test_parser_clean_graph_keeps_isolated_allow_and_deny_heads():
+    graph = nx.MultiDiGraph()
+    graph.add_node("0& allow")
+    graph.add_node("1& deny")
+    graph.add_node("2& dead")
+    graph.add_node("3& allow+4& deny")
+
+    result = ast_mod.clean_graph(graph)
+
+    assert "0& allow" in result
+    assert "1& deny" in result
+    assert "3& allow+4& deny" in result
+    assert "2& dead" not in result
+
+
+# ===========================================================================
 # STEP 2 · find_node_by_name — locating the root
 # ===========================================================================
 
@@ -105,20 +299,23 @@ def test_the_allow_root_is_found_by_substring():
     assert find_node_by_name(policy_graph(), "& allow") == "0& allow"
 
 
-def test_a_policy_without_an_allow_rule_yields_an_empty_root():
-    """Pinned: the miss returns ``""``, not ``None`` — and that then raises.
-
-    ``write_graph_suggestion`` passes the result straight to
-    ``save_unreachable_components_dot``, which rejects a source that is not in the
-    graph. So a policy with no ``allow`` rule fails with "source '' not in graph".
-    """
+def test_a_policy_without_an_allow_rule_returns_none():
     graph = nx.DiGraph()
     graph.add_edge("0& deny", "1& something")
 
-    assert find_node_by_name(graph, "& allow") == ""
+    assert find_node_by_name(graph, "& allow") is None
 
-    with pytest.raises(ValueError, match="not in graph"):
-        save_unreachable_components_dot(graph, "", save=False)
+
+def test_write_graph_suggestion_skips_cleanly_without_an_allow_rule(tmp_path):
+    graph_path = tmp_path / "graph.dot"
+    suggestion_path = tmp_path / "suggestion.txt"
+    nx.nx_pydot.write_dot(nx.MultiDiGraph([("0& deny", "1& something")]), graph_path)
+
+    text = write_graph_suggestion(str(graph_path), str(suggestion_path))
+
+    assert "No allow rule" in text
+    assert "skipped" in text
+    assert suggestion_path.read_text() == text + "\n"
 
 
 # ===========================================================================
@@ -202,6 +399,7 @@ def test_the_dot_file_is_written_only_when_asked(unit_env):
     )
     assert out.exists()
 
+
 # ===========================================================================
 # STEP 2 · clean_graph — the white-list prune
 # ===========================================================================
@@ -254,6 +452,7 @@ def test_the_node_list_names_the_rules_without_their_index_prefixes(unit_env):
     assert (
         "3&" not in node_line
     ), f"the graph index leaked into the node list: {node_line}"
+
 
 def test_the_report_is_written_and_returned(unit_env):
     # The return value is concatenated into the flag's stdout; the file is what a

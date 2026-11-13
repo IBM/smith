@@ -1,0 +1,37 @@
+Defect summary for examples/employee/smith/policy_defect.rego
+(generated from ./assets/policy.rego, which was left untouched)
+
+1. Missing / weakened rules
+   - Removed the "time off request may not exceed 90 days" deny rule entirely
+     (previously the last deny rule, tied to create_time_off_request + date math).
+   - Weakened own_record_tools by dropping "set_bank_account" from the set, so
+     set_bank_account calls on another user's record are no longer denied by the
+     "own record" rule (update_bank_account is still covered).
+
+2. Duplication / isolated block
+   - Duplicated the "only HR may set a salary when creating an employee" deny
+     rule immediately after the original (same logic/message, no new name since
+     deny is a partial set — functionally a redundant duplicate rule body).
+   - Added an isolated rule, is_super_admin, that references a tool name
+     ("__never_matches_super_admin_tool__") that no real tool call will ever
+     produce, so the rule is defined but can never evaluate true in practice.
+
+3. Linting issues
+   - Inside is_super_admin: compares an already-bound local (region == "us-east-1")
+     instead of just using it, and declares unused_flag := true, which is never
+     referenced afterward (unused variable).
+   - Line 87 (second salary-HR duplicate rule) uses space indentation instead of
+     the tab indentation used everywhere else in the file (inconsistent
+     indentation), which also shows up as an opa fmt diff.
+
+Validation: `smith --flag policy_validation --policy_path examples/employee/smith/policy_defect.rego`
+-> opa check: PASS, opa eval smoke test: PASS, opa fmt: reports formatting
+   differences (expected, from the inconsistent indentation above).
+
+Note: this OPA version requires the `if` keyword before every rule body, so the
+"omit if keyword" linting idea from policy_defect.md could not be applied without
+breaking compilation; it was substituted with the unused-variable /
+redundant-comparison / inconsistent-indentation issues above to keep the policy
+syntactically valid per the "Defective policy must still compile" rule.
+
+./assets/policy.rego was not modified. No test cases were modified.

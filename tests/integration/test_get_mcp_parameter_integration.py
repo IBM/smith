@@ -83,7 +83,7 @@ def completed_run():
     """Run ``get_mcp_parameter`` ONCE; yield the file it wrote."""
     import os
 
-    from helpers import SmithEnv, which
+    from helpers import STDIO_MCP, SmithEnv, which
 
     env = SmithEnv()
     if not which("python"):
@@ -96,7 +96,7 @@ def completed_run():
         result = subprocess.run(
             [sys.executable, "-m", "smith.cli", "--flag", "get_mcp_parameter"],
             cwd=str(env.base),
-            env=env.override(TARGET_AGENT_PATH=relative),
+            env=env.override(**STDIO_MCP, TARGET_AGENT_PATH=relative),
             capture_output=True,
             text=True,
             timeout=600,

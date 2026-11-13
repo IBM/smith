@@ -1,0 +1,38 @@
+Defect Summary — policy_defect.rego
+Source: assets/policy.rego (untouched)
+Output: examples/car-price-mcp-main/smith/policy_defect.rego
+
+1. Missing/weakened rules
+   - Removed the "journalist brand restriction" deny rule entirely (previously
+     blocked journalists from searching brands outside journalist_brands).
+     Journalists can now search_car_price for any brand.
+   - Narrowed the "get_vehicles_by_type role-specific vehicle_type
+     restrictions" rule's role set from
+     {"fleet_manager", "consumer", "journalist", "analyst"} to
+     {"fleet_manager", "consumer", "journalist"}, dropping "analyst".
+     Analysts can now request any vehicle_type value without the
+     per-role restriction applying (the recognized-value check still
+     applies via the separate rule).
+
+2. Duplication
+   - Added a second deny rule ("restrict fleet operator brand lookups")
+     that duplicates the existing fleet_manager brand-restriction logic
+     under a different message/rule position.
+   - Added a third deny rule ("legacy guest brand lookup restriction")
+     that can never trigger, since it requires role == "guest" and
+     role == "fleet_manager" simultaneously (unreachable).
+
+3. Linting issues
+   - Changed `args := object.get(...)` style assignment for a new
+     `request_id` accessor to use `=` instead of `:=`.
+   - `request_id` is assigned but never referenced elsewhere (unused
+     variable).
+   - Mixed tabs/spaces indentation in the duplicated fleet-operator
+     deny rule body.
+
+Validation: `smith --flag policy_validation --policy_path
+examples/car-price-mcp-main/smith/policy_defect.rego` passes opa check
+and opa eval; opa fmt reports formatting differences (expected, by design).
+
+No DEFECT/DUPLICATE/ADDITIONAL/ISOLATED labels or markers were added to
+the rego file itself — it reads as an ordinary policy.

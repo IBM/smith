@@ -1,6 +1,6 @@
 # Enterprise Employee Hub — Smith Example (Experimental example)
 
-An SQLite-backed employee hub exposed through a FastMCP tool server and a
+An SQLite-backed employee hub exposed through an MCP tool server and a
 LangGraph ReAct agent. The hub covers employee records, the org chart,
 departments, sensitive personal records (passport, visa, emergency contact,
 bank account), country holidays, and time-off (allotments, requests, and

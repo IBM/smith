@@ -37,6 +37,15 @@ FIXTURE_POLICY = FIXTURES / "policy" / "policy.rego"
 FIXTURE_TEST_CASES = FIXTURES / "test_cases"
 FIXTURE_PROMPTFOO_CONFIG = FIXTURES / "promptfoo" / "promptfooconfig.yaml"
 
+STDIO_MCP = {
+    "MCP_TRANSPORT": "stdio",
+    "MCP_COMMAND": "python",
+    "MCP_ARGS": "server.py",
+    "MCP_CWD": "examples/call-for-papers-mcp/",
+    # Unset, so a leftover value cannot be mistaken for the live transport.
+    "MCP_URL": None,
+}
+
 EXPECTED = {
     # confusion counts (allow-allowed=tn, allow-denied=fp,
     # disallow-denied=tp, disallow-allowed=fn)

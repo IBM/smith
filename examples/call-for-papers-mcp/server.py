@@ -1,9 +1,9 @@
 from typing import Dict, Any
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 from app import getEvents
 
 # Initialize MCP server
-mcp = FastMCP("call-for-papers-mcp")
+mcp = MCPServer("call-for-papers-mcp")
 
 @mcp.tool()
 async def get_events(keywords: str, topic: str, limit: int = 10) -> Dict[str, Any]:

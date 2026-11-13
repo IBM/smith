@@ -63,7 +63,7 @@ from pathlib import Path
 
 import pytest
 
-from helpers import FIXTURE_POLICY, load_json
+from helpers import FIXTURE_POLICY, STDIO_MCP, load_json
 
 pytestmark = pytest.mark.integration
 
@@ -135,7 +135,9 @@ def completed_run():
         result = subprocess.run(
             [sys.executable, "-m", "smith.cli", "--flag", "bypass_case_generation"],
             cwd=str(env.base),
-            env=env.override(),
+            # The flag extracts tool definitions; stdio is the transport this
+            # test can satisfy on its own (the CLI spawns the example server).
+            env=env.override(**STDIO_MCP),
             capture_output=True,
             text=True,
             timeout=1800,

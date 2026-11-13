@@ -15,7 +15,7 @@ from typing import Any, Dict, Optional
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from pydantic import BaseModel
-from langchain_mcp_adapters.client import MultiServerMCPClient
+from langchain.mcp import MCPAdapter
 from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import create_react_agent
 
@@ -32,34 +32,39 @@ SYSTEM_PROMPT = (
 )
 
 
+@asynccontextmanager
 async def build_agent():
     """Build the ReAct agent and a tool-bound LLM.
 
-    Returns (agent, llm_with_tools). The agent runs tools (used by /chat and
-    the REPL); llm_with_tools is a single non-executing call used by
-    /extract_tool_call to surface the intended tool + arguments.
+    Yields (agent, llm_with_tools) for the duration of the MCP session. The
+    agent runs tools (used by /chat and the REPL); llm_with_tools is a single
+    non-executing call used by /extract_tool_call to surface the intended
+    tool + arguments.
     """
     server_path = str(Path(__file__).parent / "server.py")
-    client = MultiServerMCPClient({
-        "employee_hub": {
-            "command": sys.executable,
-            "args": [server_path],
-            "transport": "stdio",
+    config = {
+        "mcpServers": {
+            "employee_hub": {
+                "command": sys.executable,
+                "args": [server_path],
+            }
         }
-    })
-    tools = await client.get_tools()
+    }
 
-    api_key = os.getenv("INFERENCE_API_KEY", "ollama")
-    api_url = os.getenv("INFERENCE_BASE_URL", "http://localhost:11434/v1")
-    model_name = os.getenv("INFERENCE_MODEL", "qwen3.5:latest")
+    async with MCPAdapter(config) as adapter:
+        tools = await adapter.list_tools()
 
-    model = ChatOpenAI(
-        model=model_name,
-        api_key=api_key,
-        base_url=api_url,
-    )
-    agent = create_react_agent(model, tools, prompt=SYSTEM_PROMPT)
-    return agent, model.bind_tools(tools)
+        api_key = os.getenv("INFERENCE_API_KEY", "ollama")
+        api_url = os.getenv("INFERENCE_BASE_URL", "http://localhost:11434/v1")
+        model_name = os.getenv("INFERENCE_MODEL", "qwen3.5:latest")
+
+        model = ChatOpenAI(
+            model=model_name,
+            api_key=api_key,
+            base_url=api_url,
+        )
+        agent = create_react_agent(model, tools, prompt=SYSTEM_PROMPT)
+        yield agent, model.bind_tools(tools)
 
 
 class ChatRequest(BaseModel):
@@ -101,8 +106,8 @@ def build_system_prompt(system_variables: Optional[Dict[str, Any]] = None) -> st
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global agent, llm_with_tools
-    agent, llm_with_tools = await build_agent()
-    yield
+    async with build_agent() as (agent, llm_with_tools):
+        yield
 
 
 app = FastAPI(lifespan=lifespan)
@@ -155,23 +160,23 @@ async def health():
 
 
 async def main():
-    agent, _ = await build_agent()
-    print("Employee Hub agent ready. Type a request (Ctrl-D to exit).")
-    messages = []
-    loop = asyncio.get_event_loop()
-    while True:
-        try:
-            user = await loop.run_in_executor(None, input, "\n> ")
-        except EOFError:
-            break
-        messages.append({"role": "user", "content": user})
-        try:
-            result = await agent.ainvoke({"messages": messages})
-        except Exception as exc:
-            print(f"Error: {exc}")
-            continue
-        messages = result["messages"]
-        print(messages[-1].content)
+    async with build_agent() as (agent, _):
+        print("Employee Hub agent ready. Type a request (Ctrl-D to exit).")
+        messages = []
+        loop = asyncio.get_event_loop()
+        while True:
+            try:
+                user = await loop.run_in_executor(None, input, "\n> ")
+            except EOFError:
+                break
+            messages.append({"role": "user", "content": user})
+            try:
+                result = await agent.ainvoke({"messages": messages})
+            except Exception as exc:
+                print(f"Error: {exc}")
+                continue
+            messages = result["messages"]
+            print(messages[-1].content)
 
 
 if __name__ == "__main__":

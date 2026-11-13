@@ -1,8 +1,8 @@
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 from app import getCarBrands, searchCarPrice, getCarsByType
 
 # Initialize MCP server
-mcp = FastMCP("car-price-mcp")
+mcp = MCPServer("car-price-mcp")
 
 @mcp.tool()
 async def get_car_brands() -> str:

@@ -1,0 +1,31 @@
+Defect summary for examples/hr-agent/smith/policy_defect.rego
+(generated from assets/policy.rego; the source file was left untouched)
+
+1. Missing rule (false negative)
+   - Removed the deny block that checked args.subject for an SSN pattern
+     in the send_email rule. The policy now only inspects args.body, so an
+     email with an SSN in the subject line (and a clean body) is allowed.
+
+2. Duplication / isolated dead code
+   - Added `repo_search_authorized`, a near-duplicate of `role_can_search_repos`
+     (same role/subject check) with an extra condition against a new
+     `legacy_visibility_filter` set. Nothing in the policy calls
+     `repo_search_authorized`, so it is dead code that never affects `allow`.
+   - Added the unused constant `legacy_visibility_filter` that only the dead
+     rule above references.
+
+3. Linting issues
+   - `security_allowed_visibility` uses `=` instead of `:=`.
+   - Added an unused local variable `attempted_recipient := args.to` inside
+     the send_email deny rule.
+   - Inconsistent indentation: the `attempted_recipient` line uses spaces
+     while the rest of the file uses tabs.
+   (Note: omitting the `if` keyword before a rule body was attempted for two
+   rules but rejected by `opa check`/`opa fmt` as a hard parse error in this
+   OPA version, so both rules kept their `if` keyword to satisfy the "must
+   still compile" requirement.)
+
+Validation: `smith --flag policy_validation --policy_path examples/hr-agent/smith/policy_defect.rego`
+-> opa fmt: PASS (reports formatting differences, as expected)
+-> opa check: PASS
+-> opa eval (smoke): PASS

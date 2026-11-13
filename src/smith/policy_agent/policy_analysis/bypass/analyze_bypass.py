@@ -118,7 +118,7 @@ Output a JSON array; each element must follow this schema:
 Output only JSON. No Markdown, no explanations.
 """
 
-    http_client = httpx.Client(verify=False, timeout=300.0)
+    http_client = httpx.Client(timeout=100.0)
     client = OpenAI(api_key=api_key, base_url=openai_base_url, http_client=http_client)
 
     # Query the model, retrying on malformed JSON. Each attempt is a fresh model

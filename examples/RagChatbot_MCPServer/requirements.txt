@@ -1,4 +1,4 @@
-mcp[cli]
+mcp[cli]>=2.3.0,<3.0.0
 openai
 langchain
 langchain-community
